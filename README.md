@@ -27,6 +27,7 @@ Además:
 ## Formato de cada lección
 
 - Demos en vivo (**laboratorios**): el código que ves es exactamente el que se ejecuta. «Editar» lo convierte en un editor y la demo se actualiza al escribir; «Deshacer cambios» lo restaura; «Ver en móvil» la muestra a 390 px.
+- Cada lección tiene identidad propia (paleta y tipografía en un `<style>` que redefine los tokens de `base.css`) y una portada a pantalla completa con la técnica de la lección funcionando.
 - Recuadros **Criterio** (decisiones de diseño), **En el móvil**, **Ojo** (trampas) y **Soporte** (navegadores, con datos de Baseline de noviembre de 2026).
 - Tests de predicción y comprobación, «Entender más» plegado, resumen de tres puntos y un reto práctico.
 - El progreso se guarda en el `localStorage` del navegador: en la portada, cada lección terminada enciende una planta de la torre.
@@ -57,7 +58,7 @@ assets/js/cuaderno.js     motor: temario, barra, índice lateral, laboratorios, 
 assets/js/radar-data.js   datos del radar y de la tabla de soporte
 assets/js/chuleta-data.js generado con tools/generar_chuleta.py
 assets/media/             vídeo de la torre para la demo de currentTime
-assets/fonts/             Bricolage Grotesque, Newsreader, JetBrains Mono, Instrument Serif, Inter Tight
+assets/fonts/             12 familias (Bricolage, Newsreader, Fraunces, Bodoni Moda, Syne, Archivo…); ver assets/css/fonts.css
 vendor/                   GSAP 3.15 (ScrollTrigger, SplitText, Flip), Lenis 1.3 y Prism, en local
 landing/                  la landing Vésper (ver abajo)
 tools/                    scripts de mantenimiento
