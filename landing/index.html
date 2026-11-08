@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vésper, residencias frente al mar</title>
+<meta name="description" content="Proyecto final del cuaderno Hora azul: landing de una torre residencial ficticia con scroll cinematográfico, plantas interactivas y la residencia en 3D.">
+<meta name="theme-color" content="#1a1430">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<!-- Carga inicial: se esconde cuando están listos los primeros fotogramas -->
+<div class="loader" aria-hidden="true">
+  <p class="loader-brand">Vésper</p>
+  <p class="loader-count"><span data-count>0</span></p>
+</div>
+
+<header class="nav" data-nav>
+  <a class="logo" href="#inicio" aria-label="Vésper, inicio">Vésper</a>
+  <nav class="nav-links" id="menu" aria-label="Principal">
+    <a href="#plantas">Plantas</a>
+    <a href="#residencia">La residencia</a>
+    <a href="#vida">Vida en Vésper</a>
+    <a href="../index.html">Volver al cuaderno</a>
+  </nav>
+  <a class="btn btn-light nav-cta" href="#visita">Visita privada</a>
+  <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu"><span class="vh">Abrir menú</span><i></i><i></i></button>
+</header>
+
+<main id="contenido">
+
+  <!-- 1. Llegada: secuencia de fotogramas controlada por el scroll -->
+  <section class="arrival" id="inicio" aria-label="Llegada a la torre">
+    <div class="arrival-stage">
+      <canvas class="arrival-canvas" aria-hidden="true"></canvas>
+      <div class="arrival-shade" aria-hidden="true"></div>
+
+      <div class="arrival-copy phase-1">
+        <p class="kicker">Treinta plantas sobre el agua</p>
+        <h1 class="display" data-split>Vivir a la altura de la hora azul</h1>
+        <p class="lead">Ochenta y cuatro residencias orientadas al poniente, en el único momento del día en que el cielo y la ciudad se encienden a la vez.</p>
+      </div>
+
+      <div class="arrival-copy phase-2" aria-hidden="true">
+        <p class="big-note">Cada residencia mira al mar y a la ciudad. Ninguna mira a otra.</p>
+      </div>
+
+      <div class="arrival-copy phase-3" aria-hidden="true">
+        <p class="floor-tag"><span>Planta</span> <b>18</b></p>
+        <p class="big-note">La Residencia. 148 m² y una terraza que da la vuelta al salón.</p>
+      </div>
+
+      <p class="scroll-cue" aria-hidden="true"><span></span>Desliza para llegar</p>
+      <div class="arrival-progress" aria-hidden="true"><i></i></div>
+    </div>
+  </section>
+
+  <!-- 2. Elige tu planta: imagen con polígonos interactivos encima -->
+  <section class="floors" id="plantas" aria-labelledby="plantas-t">
+    <div class="floors-copy">
+      <h2 id="plantas-t" class="h2">Elige tu planta</h2>
+      <p class="muted">Pasa por la torre o toca una planta. Las disponibles se iluminan.</p>
+      <div class="floor-readout" aria-live="polite">
+        <p class="floor-num"><span data-floor-num>18</span></p>
+        <dl class="floor-data">
+          <div><dt>Disponibles</dt><dd data-floor-avail>2 de 3</dd></div>
+          <div><dt>Desde</dt><dd data-floor-price>1,85 M€</dd></div>
+          <div><dt>Vistas</dt><dd data-floor-view>Mar y ciudad</dd></div>
+        </dl>
+        <button class="btn btn-warm" type="button" data-open-res>Ver la residencia de esta planta</button>
+      </div>
+    </div>
+    <figure class="floors-figure">
+      <picture>
+        <source media="(max-aspect-ratio: 1/1)" srcset="media/torre-plantas-mob.webp" width="800" height="1267">
+        <img src="media/torre-plantas.webp" width="1600" height="1000" alt="La torre Vésper al atardecer, con treinta plantas y sus ventanas encendidas" loading="lazy" decoding="async">
+      </picture>
+      <svg class="floors-svg" viewBox="0 0 1 1" preserveAspectRatio="none" role="group" aria-label="Plantas de la torre"></svg>
+      <div class="floor-tip" role="status" hidden></div>
+    </figure>
+  </section>
+
+  <!-- 3. La residencia: planta isométrica en 3D en tiempo real -->
+  <section class="residence" id="residencia" aria-labelledby="res-t">
+    <div class="residence-stage">
+      <canvas class="residence-canvas" aria-label="Maqueta 3D de la residencia. Elige una estancia en la lista para acercarte."></canvas>
+      <p class="residence-hint" aria-hidden="true">Toca una estancia</p>
+    </div>
+    <aside class="residence-panel">
+      <p class="kicker"><span data-res-floor>Planta 18</span>, orientación oeste</p>
+      <h2 id="res-t" class="h2">La Residencia</h2>
+      <p class="price">desde <b>1,85 M€</b></p>
+      <dl class="specs">
+        <div><dt>Superficie</dt><dd>148 m²</dd></div>
+        <div><dt>Terraza</dt><dd>31 m²</dd></div>
+        <div><dt>Dormitorios</dt><dd>2 + estudio</dd></div>
+        <div><dt>Baños</dt><dd>2</dd></div>
+      </dl>
+      <ol class="rooms" data-rooms></ol>
+      <div class="room-detail" data-room-detail aria-live="polite">
+        <p>Elige una estancia para entrar en ella.</p>
+      </div>
+      <div class="residence-actions">
+        <button class="btn btn-ghost" type="button" data-res-reset>Vista general</button>
+        <a class="btn btn-warm" href="#visita">Solicitar planos</a>
+      </div>
+    </aside>
+  </section>
+
+  <!-- 4. Vida en Vésper: historia con imagen fija y texto que avanza -->
+  <section class="life" id="vida" aria-labelledby="vida-t">
+    <h2 id="vida-t" class="h2 life-title">Lo que pasa entre el agua y el cielo</h2>
+    <div class="life-grid">
+      <div class="life-media" aria-hidden="true">
+        <img data-life="0" src="media/azotea.webp" alt="" width="1600" height="1000" loading="lazy" decoding="async">
+        <img data-life="1" src="media/balcones.webp" alt="" width="1600" height="1000" loading="lazy" decoding="async">
+        <img data-life="2" src="media/torre-plantas.webp" alt="" width="1600" height="1000" loading="lazy" decoding="async">
+      </div>
+      <ol class="life-list">
+        <li data-step="0">
+          <h3>Azotea con piscina infinita</h3>
+          <p>Veinticinco metros de agua iluminada en la planta treinta, reservada a los residentes. Al anochecer, la lámina se ve desde toda la bahía.</p>
+        </li>
+        <li data-step="1">
+          <h3>Terrazas que siguen la curva</h3>
+          <p>Las losas se ondulan planta a planta. Cada terraza tiene sombra al mediodía y sol al caer la tarde, sin mamparas entre vecinos.</p>
+        </li>
+        <li data-step="2">
+          <h3>Conserjería y club</h3>
+          <p>Recepción veinticuatro horas, gimnasio con vistas al puerto y una sala de cine para cuarenta personas en la planta baja.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 5. Frase final con cambio de color al hacer scroll -->
+  <section class="statement" aria-label="Manifiesto">
+    <p class="statement-text">Al caer la tarde el edificio no se apaga. <span>Se enciende, planta a planta, como la ciudad que tiene enfrente.</span></p>
+  </section>
+
+  <!-- 6. Contacto -->
+  <section class="visit" id="visita" aria-labelledby="visita-t">
+    <div class="visit-copy">
+      <h2 id="visita-t" class="h2">Visita privada</h2>
+      <p class="muted">Recorremos contigo la planta que elijas a la hora que da nombre al proyecto: media hora antes del anochecer.</p>
+    </div>
+    <form class="visit-form" novalidate>
+      <label>Nombre<input name="nombre" autocomplete="name" required></label>
+      <label>Correo<input name="correo" type="email" autocomplete="email" required></label>
+      <label>Planta de interés
+        <select name="planta" data-floor-select></select>
+      </label>
+      <button class="btn btn-warm" type="submit">Solicitar visita</button>
+      <p class="form-note" role="status">Es una demo del cuaderno: el formulario no envía datos.</p>
+    </form>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Vésper es un proyecto ficticio. Imágenes renderizadas con Three.js para el cuaderno <a href="../index.html">Hora azul</a>.</p>
+  <p><a href="../lecciones/13-proyecto.html">Cómo está hecha esta web</a></p>
+</footer>
+
+<script src="../vendor/gsap/gsap.min.js" defer></script>
+<script src="../vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="../vendor/gsap/SplitText.min.js" defer></script>
+<script src="../vendor/lenis/lenis.min.js" defer></script>
+<script type="module" src="js/landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paletas con criterio | Hora azul</title>
+<meta name="description" content="Base, tinta y acento; 60/30/10; neutros con tono; cielos de hora azul en oklch; un tema entero con tres variables; light-dark(), contraste medible y color en el móvil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Altura propia de cada demo en pantallas estrechas (data-height-mobile + --hm) */
+  @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="paletas">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Paletas con criterio</h1>
+    <p class="lede">Tres colores bien elegidos valen más que treinta. Cómo se construyen las paletas de los vídeos, cómo sacar un tema entero de tres variables y cómo comprobar que se lee, también al sol y en modo oscuro.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En la lección 01 aprendiste a pensar en OKLCH: luminosidad, croma y tono. Ahora toca usarlo para algo que se ve: paletas completas. La buena noticia es que las webs que te gustan usan muy pocos colores. La mala, que elegirlos bien es casi todo el trabajo.</p>
+
+      <h2>Base, tinta y acento</h2>
+      <p>Mira las dos landings de los vídeos. Las dos usan la misma estructura de tres papeles:</p>
+      <ul>
+        <li><strong>Base</strong>: el fondo, la superficie más grande. Casi nunca es blanco puro.</li>
+        <li><strong>Tinta</strong>: el texto y los elementos estructurales. Casi nunca es negro puro, aunque en <em>mesa</em> se acerca mucho.</li>
+        <li><strong>Acento</strong>: el único color saturado. Marca la acción y lo que debes recordar.</li>
+      </ul>
+      <div class="swatches">
+        <div class="swatch" style="--s:#F3EEE3"><i></i><span><b>Cream</b><small>#F3EEE3</small></span></div>
+        <div class="swatch" style="--s:#111111"><i></i><span><b>Ink</b><small>#111111</small></span></div>
+        <div class="swatch" style="--s:#D9541E"><i></i><span><b>Burnt Orange</b><small>#D9541E</small></span></div>
+      </div>
+      <div class="swatches">
+        <div class="swatch" style="--s:#0F1B3D"><i></i><span><b>Navy</b><small>#0F1B3D</small></span></div>
+        <div class="swatch" style="--s:#FFFFFF"><i></i><span><b>White</b><small>#FFFFFF</small></span></div>
+        <div class="swatch" style="--s:#FF3D8B"><i></i><span><b>Hot Pink</b><small>#FF3D8B</small></span></div>
+      </div>
+      <p>¿Por qué funciona un solo acento? Porque el ojo va a lo saturado. Si solo hay una cosa saturada, el ojo sabe adónde ir. Si hay cuatro, salta entre ellas y la página parece nerviosa. Por eso <em>mesa</em> pone la foto en blanco y negro: cualquier color en la foto competiría con el naranja.</p>
+      <p>La regla clásica de interiorismo, <strong>60/30/10</strong>, traduce esto a superficie: 60&nbsp;% base, 30&nbsp;% tinta (texto, filetes, fotos oscuras), 10&nbsp;% acento. No es una ley, es una alarma: si el acento pasa del 15–20&nbsp;%, deja de ser acento. Compruébalo.</p>
+
+      <figure class="lab" data-title="60/30/10: cuánto acento aguanta una página" data-hint="Sube la cantidad de acento" data-height="480" data-height-mobile="640" style="--hm:640px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <label for="lvl">Acento</label><input type="range" id="lvl" min="1" max="5" value="1">
+            <div class="bar" aria-hidden="true"><i class="b"></i><i class="t"></i><i class="a"></i></div>
+            <output id="pct">10 %</output>
+          </div>
+          <main class="page" id="page">
+            <nav class="x3"><b>Casa Ferrer</b><span>Colección</span><span>Taller</span><a class="btn" href="#">Visitar el taller</a></nav>
+            <section class="hero x4">
+              <p class="k x2">Cerámica de Manises desde 1926</p>
+              <h1>Piezas que <em>se usan</em> todos los días.</h1>
+              <p class="sub">Torneadas a mano en nuestro taller de la calle Valencia, con esmaltes de la casa.</p>
+              <a class="btn" href="#">Ver la colección</a>
+            </section>
+            <ul class="cols x5"><li><b class="x2">Vajilla</b>Platos y cuencos de gres</li><li><b class="x2">Azulejo</b>Series cortas por encargo</li><li><b class="x2">Taller</b>Cursos los sábados</li></ul>
+          </main>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { --base: #F3EEE3; --tinta: #111; --acento: #D9541E; background: var(--base); color: var(--tinta); }
+          .ctrl { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #111; color: #f3eee3; font-size: 13px; }
+          .ctrl input { flex: 1; max-width: 220px; height: 44px; accent-color: var(--acento); }
+          .bar { display: flex; width: 120px; height: 10px; border-radius: 99px; overflow: hidden; }
+          .bar i { transition: flex-grow .4s; } .b { background: var(--base); flex: 60; } .t { background: #555; flex: 30; } .a { background: var(--acento); flex: 10; }
+          output { width: 40px; font-variant-numeric: tabular-nums; }
+          a { color: inherit; text-decoration: none; }
+          nav { display: flex; align-items: center; gap: 22px; padding: 16px clamp(16px, 5vw, 40px); font-size: 14px; }
+          nav b { font: 400 22px var(--f-serif); margin-right: auto; }
+          .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 99px; background: var(--acento); color: #111; font-weight: 600; font-size: 14px; }
+          .hero { padding: 26px clamp(16px, 5vw, 40px) 30px; }
+          .k { margin: 0 0 12px; font-size: 13px; opacity: .7; }
+          h1 { margin: 0 0 16px; max-width: 13ch; font: 600 clamp(36px, 6vw, 56px)/.98 var(--f-sans); letter-spacing: -.045em; }
+          h1 em { font: italic 400 1.08em var(--f-serif); color: var(--acento); }
+          .sub { max-width: 40ch; margin: 0 0 22px; opacity: .72; }
+          .cols { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 clamp(16px, 5vw, 40px); padding: 16px 0; border-top: 1px solid #1112; font-size: 14px; }
+          .cols b { display: block; font: 400 22px var(--f-serif); }
+
+          /* Cada nivel pinta más superficies con el acento */
+          .lv2 .x2 { color: var(--acento); opacity: 1; }
+          .lv3 .x3 { background: var(--acento); }
+          .lv3 .x3 .btn { background: #111; color: #fff; }
+          .lv4 .x4 { background: color-mix(in oklab, var(--acento) 85%, #fff); }
+          .lv4 .x4 em, .lv4 .x4 .x2 { color: #111; }
+          .lv5 .page, .lv5 .x5 { background: var(--acento); }
+          @media (max-width: 560px) { nav span { display: none; } .cols { grid-template-columns: 1fr; gap: 10px; } .bar { display: none; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const lvl = document.querySelector('#lvl'), page = document.querySelector('#page');
+          const share = [10, 16, 28, 48, 75];                     // % aproximado de superficie con acento
+          lvl.addEventListener('input', () => {
+            const n = +lvl.value, a = share[n - 1];
+            document.body.className = Array.from({ length: n }, (_, i) => 'lv' + (i + 1)).join(' ');
+            pct.textContent = a + ' %';
+            document.querySelector('.a').style.flexGrow = a;
+            document.querySelector('.b').style.flexGrow = Math.max(5, 70 - a);
+          });
+        </script>
+        <figcaption>En el nivel 1 el naranja solo está en los botones y en dos palabras: es lo primero que ves. En el 2 todavía aguanta. A partir del 3 el naranja deja de señalar nada: es decoración. En el 5 la página es naranja y el acento ha desaparecido, aunque haya más color que nunca.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un acento caro tiene croma alto pero no máximo, y una luminosidad media: el naranja de <em>mesa</em> ronda <code>oklch(60% 0.18 40)</code>. Los acentos «de plantilla» suelen ser azules o violetas genéricos de croma máximo. Elige el tono por la marca (tierra, vino, mar, neón) y no por costumbre.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil el acento ocupa más porcentaje de pantalla sin que lo decidas: un botón de ancho completo en 390&nbsp;px es mucha superficie naranja. Si en escritorio el CTA es una píldora, en el móvil puede ser ancho completo, pero entonces quita el acento de otros sitios (el subrayado, la etiqueta) para que el reparto siga siendo 60/30/10.</p>
+      </div>
+
+      <h2>Neutros con un toque de tono</h2>
+      <p>La base y la tinta son neutros, pero un neutro caro casi nunca es gris puro. Un gris con croma <code>0</code> parece muerto, de interfaz de sistema. Añádele un croma mínimo, entre <code>0.005</code> y <code>0.03</code>, con un tono que tenga que ver con la marca, y la página gana temperatura sin que nadie sepa decir por qué.</p>
+
+      <figure class="lab" data-title="Neutros con temperatura" data-hint="Prueba los presets o mueve tono y croma" data-height="410" data-height-mobile="700" style="--hm:700px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <div class="presets"><button data-h="0" data-c="0">Gris puro</button><button data-h="75" data-c=".016" aria-pressed="true">Cálido</button><button data-h="250" data-c=".014">Frío</button><button data-h="145" data-c=".016">Salvia</button></div>
+            <label>Tono <input id="h" type="range" min="0" max="360" value="75"></label>
+            <label>Croma <input id="c" type="range" min="0" max="0.04" step="0.002" value="0.016"></label>
+          </div>
+          <div class="ui">
+            <aside><b>Diario de obra</b><a class="on">Casa Godella</a><a>Ático Russafa</a><a>Masía Bétera</a></aside>
+            <article>
+              <p class="meta">Semana 14 · Cubierta</p>
+              <h2>Llegan las tejas árabes recuperadas</h2>
+              <p>Cuatro palés de teja del derribo de una alquería de Meliana. Las limpiamos a mano antes de colocarlas.</p>
+              <a class="btn" href="#">Ver fotos de la obra</a>
+            </article>
+          </div>
+          <div class="strip" id="strip"></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --h: 75; --c: 0.016;
+            --n-0: oklch(98% calc(var(--c) * .5) var(--h));   /* superficie */
+            --n-1: oklch(95% var(--c) var(--h));               /* base */
+            --n-2: oklch(89% var(--c) var(--h));               /* filetes, hover */
+            --n-5: oklch(55% var(--c) var(--h));               /* texto suave */
+            --n-8: oklch(28% var(--c) var(--h));
+            --n-9: oklch(19% var(--c) var(--h));               /* tinta */
+            --acento: #D9541E; }
+          body { background: var(--n-1); color: var(--n-9); font-size: 14px; }
+          .ctrl { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 10px 14px; background: #111; color: #eee; font-size: 13px; }
+          .presets { display: flex; gap: 4px; overflow-x: auto; }
+          .presets button { min-height: 40px; padding: 0 12px; border: 1px solid #fff3; border-radius: 99px; background: none; color: inherit; cursor: pointer; white-space: nowrap; }
+          .presets [aria-pressed="true"] { background: #fff; color: #111; }
+          label { display: flex; align-items: center; gap: 8px; } label input { width: 110px; height: 40px; }
+          .ui { display: grid; grid-template-columns: 180px 1fr; gap: 14px; margin: 16px; }
+          aside { display: grid; align-content: start; gap: 2px; padding: 14px; border-radius: 14px; background: var(--n-0); border: 1px solid var(--n-2); }
+          aside b { font: 400 20px var(--f-serif); margin-bottom: 8px; }
+          aside a { padding: 8px 10px; border-radius: 8px; color: var(--n-5); }
+          aside a.on { background: var(--n-1); color: var(--n-9); }
+          article { padding: 22px; border-radius: 14px; background: var(--n-0); border: 1px solid var(--n-2); }
+          .meta { margin: 0 0 6px; color: var(--n-5); }
+          h2 { margin: 0 0 10px; font: 400 clamp(24px, 4vw, 32px)/1.05 var(--f-serif); }
+          article p { max-width: 46ch; color: var(--n-8); }
+          .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 99px; background: var(--acento); color: #111; font-weight: 600; text-decoration: none; }
+          .strip { display: grid; grid-template-columns: repeat(6, 1fr); margin: 0 16px; border-radius: 10px; overflow: hidden; }
+          .strip i { height: 34px; display: grid; place-items: center; font: 500 10px var(--f-mono); }
+          @media (max-width: 560px) { .ui { grid-template-columns: 1fr; } aside { grid-auto-flow: column; overflow-x: auto; } aside b { display: none; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const root = document.documentElement, h = document.querySelector('#h'), c = document.querySelector('#c');
+          const steps = ['0', '1', '2', '5', '8', '9'];
+          strip.innerHTML = steps.map(s => `<i style="background:var(--n-${s});color:${+s > 4 ? '#fff' : '#111'}">n-${s}</i>`).join('');
+          function set(hv, cv) { root.style.setProperty('--h', hv); root.style.setProperty('--c', cv); h.value = hv; c.value = cv; }
+          [h, c].forEach(i => i.addEventListener('input', () => set(h.value, c.value)));
+          document.querySelectorAll('.presets button').forEach(b => b.addEventListener('click', () => {
+            set(b.dataset.h, b.dataset.c);
+            document.querySelectorAll('.presets button').forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+        </script>
+        <figcaption>Con «Gris puro» todo funciona, pero parece una herramienta interna. «Cálido» (tono 75, el del crema de <em>mesa</em>) hace que el naranja parezca de la familia. «Frío» crea tensión con el naranja: puede ser bonito, pero es una decisión, no un accidente. Todos los neutros salen de dos variables.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Inclina los neutros hacia el tono del acento (crema con naranja, gris azulado con un acento frío) o hacia su opuesto si quieres contraste. Lo que nunca funciona es mezclar neutros de temperaturas distintas en la misma página: un fondo cálido con tarjetas gris azulado parece una web a medio migrar.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los croma muy bajos (por debajo de <code>0.008</code>) se pierden en pantallas OLED con brillo alto o con modo de tono automático (True Tone, Night Shift). Si la calidez es parte de la marca, sube algo el croma del fondo y compruébalo en un móvil real, no solo en el monitor calibrado.</p>
+      </div>
+
+      <h2>Un tema entero con tres variables</h2>
+      <p>Si la base, la tinta y el acento son datos, todo lo demás se puede derivar: superficies, filetes, texto suave, hover, fondos tintados. Con la sintaxis relativa de la lección 01 y <code>color-mix()</code>, un tema completo cabe en tres líneas de entrada.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Tres variables de entrada, el resto derivado">
+        .tema {
+          --base: #F3EEE3;  --tinta: #111111;  --acento: #D9541E;
+
+          --superficie:   color-mix(in oklab, var(--tinta) 5%, var(--base));
+          --suave:        color-mix(in oklab, var(--tinta) 62%, var(--base));  /* texto secundario */
+          --linea:        color-mix(in oklab, var(--tinta) 14%, transparent);
+          --acento-hover: oklch(from var(--acento) calc(l - 0.07) c h);
+          --acento-suave: color-mix(in oklab, var(--acento) 14%, var(--base));
+          --sobre-acento: contrast-color(var(--acento));                   /* blanco o negro */
+        }
+      </script>
+
+      <p>Ir un paso más allá: partir de <strong>un solo color</strong>, el de la marca, y generar base y tinta inclinadas hacia su tono. Es lo que harás cuando un cliente te dé un único HEX y nada más.</p>
+
+      <figure class="lab" data-title="Generador: un color, un tema" data-hint="Elige un color o un preset" data-height="500" data-height-mobile="860" style="--hm:860px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <label class="pick">Semilla <input type="color" id="seed" value="#d9541e"></label>
+            <div class="presets"><button data-c="#d9541e">Teja</button><button data-c="#7a1f3d">Vino</button><button data-c="#1f6f5c">Pino</button><button data-c="#2f4bd8">Cobalto</button><button data-c="#e3b23c">Mostaza</button></div>
+          </div>
+          <div class="wrap">
+            <section class="card">
+              <p class="tag">Visita con cata</p>
+              <h2>Bodega Alto Turia</h2>
+              <p class="txt">Recorrido por las cepas de bobal centenarias y cata de cuatro vinos con quesos de la Serranía.</p>
+              <ul><li><span>Sábado 14</span><b>11:00</b></li><li><span>Duración</span><b>2 h 30 min</b></li><li><span>Por persona</span><b>32 €</b></li></ul>
+              <a class="btn" href="#">Reservar plaza</a>
+              <a class="sec" href="#">Ver otras fechas</a>
+            </section>
+            <div class="tokens" id="tokens"></div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root {
+            --semilla: #d9541e;
+            --acento:       oklch(from var(--semilla) l c h);
+            --base:         oklch(from var(--semilla) 96% calc(c * .1) h);    /* el tono de la marca, casi sin croma */
+            --superficie:   oklch(from var(--semilla) 99% calc(c * .03) h);
+            --tinta:        oklch(from var(--semilla) 21% calc(c * .18) h);
+            --suave:        oklch(from var(--semilla) 47% calc(c * .14) h);
+            --linea:        oklch(from var(--semilla) 21% calc(c * .18) h / .12);
+            --acento-hover: oklch(from var(--semilla) calc(l - .07) c h);
+            --acento-suave: oklch(from var(--semilla) 92% calc(c * .28) h);
+            --sobre-acento: #fff;
+          }
+          /* Mejora progresiva: si el navegador sabe elegir, que elija */
+          @supports (color: contrast-color(red)) { :root { --sobre-acento: contrast-color(var(--acento)); } }
+
+          body { background: var(--base); color: var(--tinta); transition: background-color .4s; }
+          .ctrl { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; background: #111; color: #eee; font-size: 13px; }
+          .pick { display: flex; align-items: center; gap: 8px; } .pick input { width: 44px; height: 40px; border: 0; padding: 0; background: none; }
+          .presets { display: flex; gap: 4px; overflow-x: auto; }
+          .presets button { min-height: 40px; padding: 0 12px; border: 1px solid #fff3; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 20px; padding: 20px; }
+          .card { padding: 24px; border-radius: 20px; background: var(--superficie); border: 1px solid var(--linea); box-shadow: 0 20px 40px -24px oklch(from var(--semilla) 25% .05 h / .35); }
+          .tag { display: inline-block; margin: 0 0 12px; padding: 4px 10px; border-radius: 99px; background: var(--acento-suave); color: oklch(from var(--semilla) 38% c h); font-size: 12px; font-weight: 600; }
+          h2 { margin: 0 0 8px; font: 400 34px/1 var(--f-serif); }
+          .txt { margin: 0 0 16px; color: var(--suave); font-size: 14px; max-width: 40ch; }
+          ul { list-style: none; margin: 0 0 18px; padding: 0; font-size: 14px; }
+          li { display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--linea); }
+          li span { color: var(--suave); } li b { font-weight: 600; font-variant-numeric: tabular-nums; }
+          .btn { display: flex; justify-content: center; align-items: center; min-height: 48px; border-radius: 12px; background: var(--acento); color: var(--sobre-acento); font-weight: 600; text-decoration: none; transition: background-color .2s; }
+          .btn:hover { background: var(--acento-hover); }
+          .sec { display: block; margin-top: 12px; text-align: center; color: var(--tinta); font-size: 14px; }
+          .tokens { display: grid; align-content: start; gap: 6px; font: 500 11px/1.3 var(--f-mono); }
+          .tokens div { display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: center; }
+          .tokens i { height: 26px; border-radius: 6px; border: 1px solid var(--linea); }
+          .tokens small { display: block; color: var(--suave); }
+          @media (max-width: 600px) { .wrap { grid-template-columns: 1fr; padding: 14px; } .tokens { grid-template-columns: 1fr 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const names = ['base', 'superficie', 'tinta', 'suave', 'acento', 'acento-hover', 'acento-suave', 'sobre-acento'];
+          tokens.innerHTML = names.map(n => `<div><i style="background:var(--${n})"></i><span>--${n}<small></small></span></div>`).join('');
+          function paint(hex) {
+            document.documentElement.style.setProperty('--semilla', hex);
+            seed.value = hex;
+            // Leemos el color ya calculado por el navegador y lo mostramos redondeado
+            tokens.querySelectorAll('i').forEach(i => {
+              const v = getComputedStyle(i).backgroundColor;
+              i.nextElementSibling.querySelector('small').textContent = v.replace(/(\d\.\d{3})\d+/g, '$1');
+            });
+          }
+          seed.addEventListener('input', () => paint(seed.value));
+          document.querySelectorAll('.presets button').forEach(b => b.addEventListener('click', () => paint(b.dataset.c)));
+          paint(seed.value);
+        </script>
+        <figcaption>Prueba «Vino» y «Mostaza». Con el vino, el fondo se vuelve un rosado casi imperceptible y el botón lleva texto blanco. Con la mostaza, <code>contrast-color()</code> cambia solo a texto negro, porque el blanco no se leería. Cada token muestra su valor real calculado.</figcaption>
+      </figure>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p>La sintaxis relativa (<code>oklch(from …)</code>) es Baseline recién disponible desde septiembre de 2024: Chrome 125, Safari 18 y Firefox 128. <code>contrast-color()</code> llegó a los tres motores en abril de 2026 (Chrome 147, Safari 26, Firefox 146). Por eso la demo declara primero <code>--sobre-acento: #fff</code> y solo lo sustituye dentro de <code>@supports</code>.</p>
+      </div>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Un generador no sustituye al ojo. Con semillas muy claras (amarillos, verdes lima) el acento derivado puede quedarse sin contraste sobre la base, y con semillas muy oscuras el acento y la tinta se confunden. Usa el generador como punto de partida y ajusta a mano la L del acento.</p>
+      </div>
+
+      <h2>El laboratorio de paletas</h2>
+      <p>Ahora el mismo sistema aplicado a una landing entera. Seis paletas: las dos de los vídeos, la de la torre y tres propias. Cada una son solo tres variables; todo lo demás (superficies, filetes, el cielo de la imagen, el texto del botón) se deriva. Fíjate en que la página cambia de carácter por completo sin tocar ni una línea de maquetación.</p>
+
+      <figure class="lab" data-title="Seis paletas, una landing" data-hint="Cambia de paleta" data-height="560" data-height-mobile="900" style="--hm:900px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="picker" role="group" aria-label="Paleta">
+            <button data-p="mesa" aria-pressed="true"><i style="--a:#F3EEE3;--b:#111;--c:#D9541E"></i>Mesa</button>
+            <button data-p="tab"><i style="--a:#0F1B3D;--b:#fff;--c:#FF3D8B"></i>Tab</button>
+            <button data-p="hora"><i style="--a:#1d1836;--b:#f3ede2;--c:#f2b85c"></i>Hora azul</button>
+            <button data-p="olivar"><i style="--a:#ECEADF;--b:#23301F;--c:#B5832A"></i>Olivar</button>
+            <button data-p="salitre"><i style="--a:#E7EDEF;--b:#0E2A36;--c:#E8553D"></i>Salitre</button>
+            <button data-p="grafito"><i style="--a:#141414;--b:#ECEAE4;--c:#C8F23A"></i>Grafito</button>
+          </div>
+          <main class="site" id="site" data-p="mesa">
+            <nav><b class="logo">Marjal</b><span class="links"><a href="#">Proyectos</a><a href="#">Estudio</a><a href="#">Contacto</a></span><a class="cta" href="#">Hablemos</a></nav>
+            <section class="hero">
+              <div>
+                <p class="k">Estudio de arquitectura, Valencia</p>
+                <h1>Casas que <em>envejecen bien.</em></h1>
+                <p class="sub">Vivienda unifamiliar y rehabilitación en la huerta. Doce proyectos al año, ninguno igual.</p>
+                <div class="ctas"><a class="cta big" href="#">Ver proyectos</a><a class="link" href="#">Nuestro método</a></div>
+              </div>
+              <figure class="img"><span class="sol"></span><span class="casa"></span><figcaption>Casa Alboraia, 2025</figcaption></figure>
+            </section>
+            <section class="datos">
+              <p><b>148</b>viviendas entregadas</p><p><b>12</b>proyectos al año</p>
+              <div class="visita"><small>Próxima visita de obra</small><strong>Jueves, 10:00</strong><span>Casa Godella, fase de cubierta</span></div>
+            </section>
+            <p class="tokens" id="tokens"></p>
+          </main>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          /* Tres variables por paleta. Nada más. */
+          .site                  { --base: #F3EEE3; --tinta: #111111; --acento: #D9541E; }
+          [data-p="tab"]         { --base: #0F1B3D; --tinta: #FFFFFF; --acento: #FF3D8B; }
+          [data-p="hora"]        { --base: oklch(22% .06 290); --tinta: oklch(95% .02 80); --acento: oklch(82% .13 72); }
+          [data-p="olivar"]      { --base: #ECEADF; --tinta: #23301F; --acento: #B5832A; }
+          [data-p="salitre"]     { --base: #E7EDEF; --tinta: #0E2A36; --acento: #E8553D; }
+          [data-p="grafito"]     { --base: #141414; --tinta: #ECEAE4; --acento: #C8F23A; }
+
+          /* Derivados: sirven para todas */
+          .site { --superficie: color-mix(in oklab, var(--tinta) 6%, var(--base));
+            --suave: color-mix(in oklab, var(--tinta) 64%, var(--base));
+            --linea: color-mix(in oklab, var(--tinta) 15%, transparent);
+            --cielo: color-mix(in oklch, var(--acento) 35%, var(--base));
+            --sobre-acento: contrast-color(var(--acento));
+            min-height: 100vh; background: var(--base); color: var(--tinta); }
+          .site * { transition: background-color .45s, color .45s, border-color .45s; }
+          a { color: inherit; text-decoration: none; }
+          nav { display: flex; align-items: center; gap: 24px; padding: 18px clamp(16px, 5vw, 40px); font-size: 14px; }
+          .logo { margin-right: auto; font: 400 24px var(--f-serif); }
+          .links { display: flex; gap: 22px; color: var(--suave); }
+          .cta { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 99px; background: var(--acento); color: var(--sobre-acento); font-weight: 600; }
+          .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(20px, 4vw, 44px); align-items: center; padding: 10px clamp(16px, 5vw, 40px) 22px; }
+          .k { margin: 0 0 14px; font-size: 13px; color: var(--suave); }
+          h1 { margin: 0 0 18px; font: 600 clamp(38px, 6.4vw, 62px)/.95 var(--f-sans); letter-spacing: -.05em; }
+          h1 em { font: italic 400 1.08em var(--f-serif); letter-spacing: -.02em; color: var(--acento); }
+          .sub { max-width: 36ch; margin: 0 0 24px; color: var(--suave); }
+          .ctas { display: flex; align-items: center; gap: 20px; font-size: 15px; } .big { min-height: 50px; padding: 0 24px; }
+          .link { border-bottom: 1px solid var(--linea); padding-bottom: 2px; }
+          .img { position: relative; margin: 0; aspect-ratio: 6 / 5; overflow: hidden; border-radius: 4px; background: linear-gradient(var(--cielo), var(--base) 75%); }
+          .sol { position: absolute; top: 16%; right: 18%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: var(--acento); }
+          .casa { position: absolute; inset: 44% 10% 0 14%;
+            background: linear-gradient(var(--tinta), var(--tinta)) 16% 100% / 12% 42% no-repeat, linear-gradient(color-mix(in oklab, var(--tinta) 70%, var(--base)), color-mix(in oklab, var(--tinta) 70%, var(--base))) 40% 62% / 12% 22% no-repeat,
+              linear-gradient(90deg, var(--superficie) 0 58%, color-mix(in oklab, var(--tinta) 22%, var(--base)) 58%);
+            clip-path: polygon(0 22%, 58% 0, 100% 22%, 100% 100%, 0 100%); }
+          .img figcaption { position: absolute; left: 12px; top: 10px; font-size: 12px; color: var(--suave); }
+          .datos { display: grid; grid-template-columns: auto auto 1fr; gap: clamp(20px, 4vw, 48px); align-items: center; margin: 0 clamp(16px, 5vw, 40px); padding: 18px 0; border-top: 1px solid var(--linea); font-size: 13px; color: var(--suave); }
+          .datos p { margin: 0; } .datos b { display: block; font: 400 34px/1 var(--f-serif); color: var(--tinta); }
+          .visita { justify-self: end; display: grid; padding: 14px 16px; border-radius: 14px; background: var(--superficie); border: 1px solid var(--linea); }
+          .visita strong { color: var(--tinta); font-size: 16px; }
+          .tokens { margin: 0; padding: 0 clamp(16px, 5vw, 40px) 16px; font: 500 11px var(--f-mono); color: var(--suave); }
+
+          .picker { position: sticky; top: 0; z-index: 3; display: flex; gap: 4px; padding: 8px 10px; background: #0d0d0f; overflow-x: auto; }
+          .picker button { flex: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 8px; border: 1px solid #fff2; border-radius: 99px; background: none; color: #eee; font-size: 13px; cursor: pointer; }
+          .picker i { width: 30px; height: 18px; border-radius: 99px; background: linear-gradient(90deg, var(--a) 0 40%, var(--b) 40% 70%, var(--c) 70%); box-shadow: 0 0 0 1px #fff3; }
+          .picker [aria-pressed="true"] { background: #fff; color: #111; }
+          @media (max-width: 600px) {
+            .links { display: none; }
+            .hero { grid-template-columns: 1fr; }
+            .img { aspect-ratio: 4 / 3; }
+            .datos { grid-template-columns: 1fr 1fr; } .visita { grid-column: 1 / -1; justify-self: stretch; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const site = document.querySelector('#site'), out = document.querySelector('#tokens');
+          const btns = document.querySelectorAll('.picker button');
+          function show() {
+            const cs = getComputedStyle(site);
+            out.textContent = ['--base', '--tinta', '--acento'].map(v => `${v}: ${cs.getPropertyValue(v).trim()};`).join('  ');
+          }
+          btns.forEach(b => b.addEventListener('click', () => {
+            site.dataset.p = b.dataset.p;
+            btns.forEach(x => x.setAttribute('aria-pressed', x === b));
+            show();
+          }));
+          show();
+        </script>
+        <figcaption>El cielo de la imagen es <code>color-mix()</code> entre acento y base, así que cada paleta pinta su propio atardecer. En «Hora azul» el titular en crema sobre violeta y el acento de luz de ventana es exactamente la paleta de la torre. En «Grafito» la lima ácida solo funciona porque todo lo demás es gris cálido: con un segundo color vivo sería una discoteca.</figcaption>
+      </figure>
+
+      <p>Las tres paletas propias tienen una lógica que puedes reutilizar:</p>
+      <ul>
+        <li><strong>Olivar</strong>: hueso verdoso, verde casi negro y azafrán. Paleta de tierra para una bodega, un aceite, un hotel rural. El acento es poco saturado: elegancia antes que energía.</li>
+        <li><strong>Salitre</strong>: blanco frío con un punto de azul, tinta petróleo y coral. El coral es el complementario del azul: el contraste de temperatura hace el trabajo que en <em>mesa</em> hace la saturación.</li>
+        <li><strong>Grafito</strong>: casi negro, hueso cálido y lima. Tecnología o diseño con un punto de riesgo. En fondos oscuros el acento necesita una L alta (en torno a 90&nbsp;%) para brillar.</li>
+      </ul>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">En la paleta «Tab», ¿qué color de texto elige <code>contrast-color()</code> sobre el rosa <code>#FF3D8B</code>?</p>
+        <ol>
+          <li>Blanco, porque el rosa es un color saturado.</li>
+          <li>Negro, porque el rosa es bastante luminoso y el negro da más contraste.</li>
+          <li>Depende del fondo de la página.</li>
+        </ol>
+        <p class="why">El rosa tiene una luminancia relativa alta (alrededor de 0,26). Contra negro da más de 6:1 y contra blanco unos 3,3:1. <code>contrast-color()</code> solo mira el color que le pasas, no lo que hay alrededor. Pruébalo en la demo.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Pulsa «Ver en móvil»: el selector de paletas se convierte en una fila que se desliza con el dedo, y la tarjeta de visita pasa a ancho completo. En tus webs, cuando un cliente quiere elegir entre varias paletas o temas, una fila deslizable de muestras es mucho mejor que un desplegable.</p>
+      </div>
+
+      <h2>Hora azul: degradados de cielo</h2>
+      <p>La paleta de la torre no son tres colores planos: es un cielo. Violeta noche arriba, rosa en la mitad, una franja cálida en el horizonte y la luz de las ventanas. Para pintar cielos en CSS, el espacio de interpolación lo es todo. Mueve la hora y cambia el espacio.</p>
+
+      <figure class="lab" data-title="Un cielo que anochece" data-hint="Mueve la hora y prueba los espacios" data-height="470" data-height-mobile="560" data-stage="dark" style="--hm:560px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="cielo" id="cielo">
+            <div class="estrellas"></div>
+            <div class="torre" id="torre"></div>
+            <div class="agua"></div>
+            <p class="hora" id="hora">20:40</p>
+          </div>
+          <div class="ctrl">
+            <label>Hora <input id="t" type="range" min="0" max="1" step="0.01" value="0.25"></label>
+            <div class="esp" role="group" aria-label="Espacio de interpolación"><button>srgb</button><button>oklab</button><button aria-pressed="true">oklch</button></div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --t: .25; --esp: oklch;
+            /* Cada franja del cielo mezcla atardecer y noche según --t */
+            --alto:      color-mix(in oklch, oklch(46% .13 285), oklch(15% .04 280) calc(var(--t) * 100%));
+            --medio:     color-mix(in oklch, oklch(68% .15 350), oklch(27% .08 295) calc(var(--t) * 100%));
+            --horizonte: color-mix(in oklch, oklch(86% .11 62),  oklch(45% .11 330) calc(var(--t) * 100%));
+            --luz: oklch(84% .13 72); }
+          body { background: #000; }
+          .cielo { position: relative; height: calc(100vh - 64px); overflow: hidden;
+            background: linear-gradient(in var(--esp), var(--alto), var(--medio) 52%, var(--horizonte) 72%); }
+          .estrellas { position: absolute; inset: 0 0 40%; opacity: calc(var(--t) * 1.4 - .4);
+            background: radial-gradient(1px 1px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 34% 8%, #fff, transparent), radial-gradient(1.5px 1.5px at 58% 22%, #fff, transparent), radial-gradient(1px 1px at 76% 12%, #fff, transparent), radial-gradient(1px 1px at 88% 30%, #fff, transparent), radial-gradient(1px 1px at 22% 34%, #fff, transparent); }
+          .torre { position: absolute; left: 50%; bottom: 28%; translate: -50% 0; width: clamp(56px, 10vw, 84px); height: 58%; display: flex; flex-direction: column-reverse; gap: 2px; padding: 4px 5px;
+            background: color-mix(in oklch, oklch(30% .06 300), oklch(12% .03 285) calc(var(--t) * 100%)); clip-path: polygon(10% 0, 90% 1.5%, 100% 100%, 0 100%); }
+          .torre i { flex: 1; background: repeating-linear-gradient(90deg, transparent 0 21%, oklch(14% .03 285) 21% 25%), var(--luz); opacity: clamp(0, (var(--t) - var(--u)) * 8, .95); box-shadow: 0 0 8px var(--luz); }
+          .agua { position: absolute; inset: 72% 0 0; background: repeating-linear-gradient(transparent 0 5px, oklch(100% 0 0 / .05) 5px 6px), linear-gradient(in var(--esp), var(--horizonte), var(--alto)); }
+          .hora { position: absolute; left: 20px; top: 14px; margin: 0; font: 300 42px/1 var(--f-read); color: oklch(96% .02 80); font-variant-numeric: tabular-nums; }
+          .ctrl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; height: 64px; padding: 0 16px; background: #0d0c14; color: #ddd; font-size: 13px; }
+          .ctrl label { display: flex; align-items: center; gap: 10px; } .ctrl input { width: 160px; height: 44px; accent-color: #f2b85c; }
+          .esp { display: flex; gap: 4px; }
+          .esp button { min-height: 40px; padding: 0 12px; border: 1px solid #fff3; border-radius: 99px; background: none; color: inherit; font: 500 12px var(--f-mono); cursor: pointer; }
+          .esp [aria-pressed="true"] { background: #fff; color: #111; }
+          @media (max-width: 480px) { .ctrl { height: auto; padding: 8px 12px; } .cielo { height: calc(100vh - 100px); } .ctrl input { width: 120px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const root = document.documentElement, t = document.querySelector('#t');
+          // 30 plantas; cada una se enciende a partir de su propio umbral --u
+          torre.innerHTML = Array.from({ length: 30 }, (_, i) => `<i style="--u:${(Math.sin(i * 7.3) * .5 + .5) * .8}"></i>`).join('');
+          t.addEventListener('input', () => {
+            root.style.setProperty('--t', t.value);
+            const min = 40 + Math.round(t.value * 70);                       // de 20:40 a 21:50
+            hora.textContent = `${20 + Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`;
+          });
+          document.querySelectorAll('.esp button').forEach(b => b.addEventListener('click', () => {
+            root.style.setProperty('--esp', b.textContent);
+            document.querySelectorAll('.esp button').forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+        </script>
+        <figcaption>En <code>srgb</code> la franja entre violeta y rosa se apaga y pierde viveza, sobre todo al anochecer. En <code>oklab</code> la transición es limpia y natural. En <code>oklch</code> el tono recorre la rueda y aparece un magenta más vivo: es el más «de póster». A partir de las 21:10 las ventanas empiezan a encenderse una a una.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un degradado parece caro cuando representa una luz real (un cielo, un foco, un reflejo) y barato cuando es un lavado decorativo de dos colores de moda. La regla de la torre: el cielo puede tener cinco colores porque es una imagen, pero la interfaz encima sigue teniendo tres. El crema del texto y la luz de las ventanas son los únicos colores de UI.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los degradados largos en pantallas de 8 bits pueden mostrar bandas visibles, sobre todo en tonos oscuros. Una capa de ruido sutil (un SVG <code>feTurbulence</code> al 3–5&nbsp;% de opacidad) las disimula. Y en vertical el horizonte cambia de sitio: en una pantalla 9:16 coloca la franja cálida más abajo (en torno al 80&nbsp;%) para que el cielo ocupe la mayor parte.</p>
+      </div>
+
+      <h2>Modo oscuro que mantiene la marca</h2>
+      <p>El modo oscuro barato invierte los colores. El bueno es otra versión de la misma paleta: la base pasa a un oscuro con el mismo tono que el crema, la tinta a un claro cálido y el acento sube un poco de luminosidad y baja algo de croma para no vibrar sobre negro. <code>light-dark()</code> te deja escribir las dos versiones en la misma línea.</p>
+
+      <figure class="lab" data-title="Claro, oscuro e invertido" data-hint="Compara las tres opciones" data-height="470" data-height-mobile="640" style="--hm:640px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pagina" id="pagina">
+          <div class="modo" role="group" aria-label="Modo"><button data-m="light" aria-pressed="true">Claro</button><button data-m="dark">Oscuro</button><button data-m="invert">Invertido</button></div>
+          <section class="app">
+            <header><b class="logo">mesa</b><span class="hoy">Martes, 07:02</span></header>
+            <h2>Mientras <em>dormías</em></h2>
+            <ul>
+              <li><i></i>14 incidencias cerradas<small>Zendesk</small></li>
+              <li><i></i>Pagos de Stripe conciliados<small>312 movimientos</small></li>
+              <li><i></i>Informe semanal enviado<small>a dirección@</small></li>
+            </ul>
+            <div class="foot"><a class="btn" href="#">Ver el informe</a><span>1 tarea necesita tu revisión</span></div>
+          </section>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { color-scheme: light;
+            --base:       light-dark(#F3EEE3, oklch(17% .012 70));     /* oscuro del mismo tono que el crema */
+            --superficie: light-dark(#FFFFFF, oklch(22% .014 70));
+            --tinta:      light-dark(#111111, oklch(94% .014 80));
+            --suave:      light-dark(oklch(45% .012 70), oklch(72% .014 80));
+            --linea:      light-dark(oklch(20% .01 70 / .12), oklch(95% .01 80 / .12));
+            --acento:     light-dark(#D9541E, oklch(70% .16 42));     /* más luz, algo menos croma */
+          }
+          .pagina { min-height: 100vh; padding: 16px; background: var(--base); color: var(--tinta); transition: background-color .3s, color .3s; }
+          .modo { display: flex; gap: 4px; margin: 0 auto 14px; width: max-content; padding: 4px; border-radius: 99px; background: var(--superficie); border: 1px solid var(--linea); }
+          .modo button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: none; color: inherit; cursor: pointer; font-size: 14px; }
+          .modo [aria-pressed="true"] { background: var(--tinta); color: var(--base); }
+          .app { max-width: 520px; margin: auto; padding: 22px; border-radius: 20px; background: var(--superficie); border: 1px solid var(--linea); }
+          header { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--suave); }
+          .logo { font: 700 20px var(--f-sans); letter-spacing: -.05em; color: var(--tinta); }
+          h2 { margin: 18px 0 12px; font: 600 34px/1 var(--f-sans); letter-spacing: -.045em; }
+          h2 em { font: italic 400 1.1em var(--f-serif); color: var(--acento); }
+          ul { list-style: none; margin: 0; padding: 0; }
+          li { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid var(--linea); font-size: 15px; }
+          li i { width: 16px; height: 16px; border-radius: 50%; background: var(--acento) radial-gradient(circle, var(--superficie) 0 22%, transparent 25%); }
+          li small { color: var(--suave); font-size: 12px; }
+          .foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-top: 14px; font-size: 13px; color: var(--suave); }
+          .btn { display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 99px; background: var(--acento); color: #111; font-weight: 600; text-decoration: none; }
+          .invert { filter: invert(1) hue-rotate(180deg); }      /* el atajo que NO debes usar */
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const root = document.documentElement, btns = document.querySelectorAll('.modo button');
+          btns.forEach(b => b.addEventListener('click', () => {
+            const m = b.dataset.m;
+            root.style.colorScheme = m === 'dark' ? 'dark' : 'light';   // light-dark() lee color-scheme
+            pagina.classList.toggle('invert', m === 'invert');
+            btns.forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+        </script>
+        <figcaption>«Oscuro» mantiene el carácter: fondo marrón casi negro, texto crema y el mismo naranja algo más luminoso. «Invertido» parece pasable a primera vista, pero mira los detalles: la tarjeta es negro puro, el naranja cambia de tono y de luz sin control (<code>hue-rotate</code> no devuelve los tonos exactos) y en una web real las fotos saldrían en negativo y las sombras se convertirían en halos claros. En un producto real, <code>color-scheme: light dark</code> en <code>:root</code> deja que decida el sistema.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="css" data-label="En producción: que decida el sistema y que el usuario pueda forzarlo">
+        :root { color-scheme: light dark; }          /* sigue a prefers-color-scheme */
+        :root[data-tema="claro"]  { color-scheme: light; }
+        :root[data-tema="oscuro"] { color-scheme: dark; }
+        /* light-dark(claro, oscuro) elige según el color-scheme del elemento */
+      </script>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>light-dark()</code> funciona en Chrome 123, Safari 17.5 y Firefox 120. Es Baseline recién disponible desde mayo de 2024 y pasará a ampliamente disponible a mediados de noviembre de 2026. Solo acepta colores (la versión con imágenes es muy reciente) y solo funciona si <code>color-scheme</code> está declarado.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En pantallas OLED el negro puro (<code>#000</code>) apaga los píxeles: ahorra batería, pero el texto blanco sobre negro absoluto «emborrona» al hacer scroll (un rastro visible en algunos móviles). Un fondo como <code>oklch(17% 0.012 70)</code> evita ese efecto y mantiene la marca. Y declara <code>theme-color</code> para que la barra del navegador se funda con tu base en cada modo:</p>
+      </div>
+
+      <script type="text/x-code" data-lang="html" data-label="La barra del navegador con el color de la base">
+        <meta name="color-scheme" content="light dark">
+        <meta name="theme-color" content="#F3EEE3" media="(prefers-color-scheme: light)">
+        <meta name="theme-color" content="#1A1612" media="(prefers-color-scheme: dark)">
+      </script>
+      <!-- verificar soporte: theme-color con atributo media (Safari iOS y Chrome Android lo usan; no está en research.md) -->
+
+      <h2>Contraste que se mide</h2>
+      <p>El criterio visual no basta para saber si un texto se lee. Las pautas WCAG 2 miden el contraste como una relación entre la luminancia de dos colores, de 1:1 (iguales) a 21:1 (negro sobre blanco). Los mínimos que importan:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Caso</th><th>Mínimo AA</th><th>AAA</th></tr></thead>
+          <tbody>
+            <tr><td>Texto normal</td><td>4,5:1</td><td>7:1</td></tr>
+            <tr><td>Texto grande (24&nbsp;px, o 18,66&nbsp;px en negrita)</td><td>3:1</td><td>4,5:1</td></tr>
+            <tr><td>Bordes de campos, iconos, estados de foco</td><td>3:1</td><td>-</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <figure class="lab" data-title="Contraste en vivo" data-hint="Elige colores o un par de las paletas" data-height="480" data-height-mobile="760" style="--hm:760px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pairs"><button data-f="#111111" data-b="#F3EEE3">Tinta / crema</button><button data-f="#D9541E" data-b="#F3EEE3">Naranja / crema</button><button data-f="#FFFFFF" data-b="#D9541E">Blanco / naranja</button><button data-f="#FF3D8B" data-b="#0F1B3D">Rosa / marino</button><button data-f="#9A9A9A" data-b="#FFFFFF">Gris / blanco</button></div>
+          <div class="main">
+            <div class="sample" id="sample">
+              <p class="big">Residencias desde 1,2 M€</p>
+              <p class="small">Entrega de llaves en la primavera de 2027. Visitas privadas de lunes a sábado.</p>
+              <span class="auto">contrast-color()</span>
+            </div>
+            <div class="panel">
+              <label>Texto <input type="color" id="fg" value="#d9541e"></label>
+              <label>Fondo <input type="color" id="bg" value="#f3eee3"></label>
+              <p class="ratio"><b id="ratio">3,5</b>:1</p>
+              <ul id="checks"></ul>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f6f5f2; color: #111; }
+          .pairs { display: flex; gap: 4px; padding: 10px 12px; background: #111; overflow-x: auto; }
+          .pairs button { flex: none; min-height: 40px; padding: 0 12px; border: 1px solid #fff3; border-radius: 99px; background: none; color: #eee; font-size: 13px; cursor: pointer; }
+          .main { display: grid; grid-template-columns: 1fr 220px; gap: 16px; padding: 16px; }
+          .sample { --f: #d9541e; --b: #f3eee3; display: grid; align-content: center; gap: 8px; padding: 26px; border-radius: 16px; background: var(--b); color: var(--f); }
+          .big { margin: 0; font: 400 clamp(30px, 5vw, 42px)/1 var(--f-serif); }
+          .small { margin: 0; max-width: 38ch; font-size: 15px; }
+          /* El navegador elige blanco o negro sobre el color de fondo */
+          .auto { justify-self: start; margin-top: 10px; padding: 10px 16px; border-radius: 99px; background: var(--f); color: contrast-color(var(--f)); font: 600 13px var(--f-mono); }
+          .panel { display: grid; align-content: start; gap: 10px; font-size: 14px; }
+          .panel label { display: flex; justify-content: space-between; align-items: center; }
+          .panel input { width: 64px; height: 40px; border: 0; padding: 0; background: none; }
+          .ratio { margin: 4px 0 0; font: 400 20px var(--f-serif); } .ratio b { font-size: 56px; font-weight: 400; font-variant-numeric: tabular-nums; }
+          ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+          li { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 8px; background: #fff; font-size: 13px; }
+          li b { font-weight: 600; } li.ok b { color: #1d7a46; } li.ko b { color: #b3261e; }
+          @media (max-width: 560px) { .main { grid-template-columns: 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Luminancia relativa WCAG 2 a partir de un HEX
+          const lum = hex => {
+            const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+              .map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          };
+          const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
+          const tests = [['Texto normal AA', 4.5], ['Texto grande AA', 3], ['Texto normal AAA', 7], ['Componentes de UI', 3]];
+          function paint() {
+            const r = ratio(fg.value, bg.value);
+            sample.style.setProperty('--f', fg.value); sample.style.setProperty('--b', bg.value);
+            document.querySelector('#ratio').textContent = r.toFixed(1).replace('.', ',');
+            checks.innerHTML = tests.map(([n, min]) => `<li class="${r >= min ? 'ok' : 'ko'}">${n} <b>${r >= min ? 'Pasa' : 'No pasa'}</b></li>`).join('');
+          }
+          [fg, bg].forEach(i => i.addEventListener('input', paint));
+          document.querySelectorAll('.pairs button').forEach(b => b.addEventListener('click', () => { fg.value = b.dataset.f.toLowerCase(); bg.value = b.dataset.b.toLowerCase(); paint(); }));
+          paint();
+        </script>
+        <figcaption>El naranja de <em>mesa</em> sobre su crema da 3,5:1: vale para el titular grande, no para un párrafo. El blanco sobre el naranja da 4,0:1: aprobado solo como texto grande, así que el botón del vídeo, con letra de 15&nbsp;px, técnicamente no pasa. La píldora de abajo usa <code>contrast-color()</code> y elige negro sobre el naranja.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Muchas webs premium usan acentos que no pasan AA con texto blanco. La solución profesional no es renunciar al color: es usarlo donde no lleva texto pequeño (subrayados, paneles, fondos de imagen), oscurecer un poco el acento solo para los botones o poner el texto del botón en la tinta. Decídelo tú, no lo dejes al azar.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: WCAG 2 frente a APCA</summary>
+        <p>La fórmula de WCAG 2 es antigua y tiene fallos conocidos: sobrestima el contraste de los colores oscuros (texto gris oscuro sobre negro «pasa» aunque se lea mal) y no tiene en cuenta el peso ni el tamaño real de la letra. APCA, el método que se estudia para futuras pautas, corrige esto y da valores distintos según la polaridad (claro sobre oscuro o al revés). Hoy la referencia legal sigue siendo WCAG 2; usa APCA como segunda opinión en modos oscuros.</p>
+      </details>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>contrast-color()</code> es Baseline recién disponible desde el 10 de abril de 2026: Chrome 147, Safari 26 y Firefox 146. Devuelve blanco o negro, nada más; para un acento de marca con texto en tinta personalizada sigue siendo mejor decidirlo a mano. Pon siempre un valor de respaldo antes.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El móvil se usa en la calle, con el sol de frente y el brillo a medias. Un contraste de 4,5:1 que en la oficina parece holgado, al sol se queda corto. Para texto de lectura en el móvil apunta a 7:1, no uses grises claros para información importante y no confíes en tonos pastel para estados (un verde menta de «disponible» desaparece al sol).</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Tu acento naranja da 3,4:1 con texto blanco. El botón principal lleva texto de 15&nbsp;px. ¿Qué haces?</p>
+        <ol>
+          <li>Nada: es la marca.</li>
+          <li>Subir el texto del botón a 24&nbsp;px.</li>
+          <li>Usar texto en tinta oscura sobre el naranja, u oscurecer el naranja solo en el botón hasta pasar 4,5:1.</li>
+        </ol>
+        <p class="why">Mantener la marca y pasar AA no son incompatibles. Un botón con letra de 24&nbsp;px es desproporcionado; oscurecer la L del acento en el botón unos puntos (<code>oklch(from var(--acento) calc(l - 0.08) c h)</code>) o cambiar el texto a tinta resuelve el problema sin que nadie note el cambio de color.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Base, tinta y un solo acento saturado; neutros con un croma mínimo inclinado hacia la marca; el acento por debajo del 15–20&nbsp;% de la superficie.</li>
+          <li>Un tema entero se deriva de tres variables (o de una) con sintaxis relativa, <code>color-mix()</code>, <code>light-dark()</code> y <code>contrast-color()</code>.</li>
+          <li>Mide el contraste (4,5:1 texto, 3:1 grande y UI), apunta más alto en el móvil y usa <code>theme-color</code> y oscuros con tono para que la marca sobreviva al modo oscuro.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Recupera la escala que guardaste en el reto de la lección 01. Con ese color como semilla, crea una paleta completa de tres variables más sus derivados, en claro y en oscuro con <code>light-dark()</code>. Mete los dos pares principales (tinta sobre base y texto del botón sobre acento) en el laboratorio de contraste y ajusta hasta que los dos pasen AA. Dale un nombre como «Olivar» o «Salitre»: si no se te ocurre ninguno, la paleta todavía no tiene carácter.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

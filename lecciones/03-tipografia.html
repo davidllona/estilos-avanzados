@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tipografía que manda | Hora azul</title>
+<meta name="description" content="Escala fluida con clamp(), titulares con tracking negativo, sans con serif cursiva y cuándo es cliché, medida, text-wrap, fuentes variables, cifras tabulares y tipografía en el móvil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Altura propia de cada demo en pantallas estrechas (data-height-mobile + --hm) */
+  @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="tipografia">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Tipografía que manda</h1>
+    <p class="lede">En una web cara, la tipografía hace la mitad del diseño. Escalas que se adaptan solas, titulares apretados que pesan, mezclas con intención y números que no bailan, desde 1440 hasta 360 píxeles.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Quita las fotos de las tres webs de referencia y seguirían pareciendo caras. El titular de <em>mesa</em> en sans muy apretada con la cursiva, la serif fina de la torre, el contraste brutal entre el titular y el texto: todo eso es tipografía. Y casi todo se controla con cinco o seis propiedades.</p>
+
+      <h2>Una escala fluida con clamp()</h2>
+      <p>Una escala tipográfica es una serie de tamaños relacionados por una proporción: cada paso es el anterior multiplicado por un <strong>ratio</strong>. Con 1,25, de 16&nbsp;px pasas a 20, 25, 31, 39, 49, 61. El truco profesional es usar <strong>dos ratios</strong>: uno pequeño para el móvil (los saltos grandes no caben) y uno grande para escritorio (donde quieres drama), y que <code>clamp()</code> interpole entre los dos según el ancho de pantalla.</p>
+
+      <figure class="lab" data-title="Generador de escala fluida" data-hint="Mueve los controles y el ancho simulado" data-height="560" data-height-mobile="980" style="--hm:980px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="app">
+            <form class="ctrl" id="ctrl">
+              <label>Base en móvil <output></output><input name="bmin" type="range" min="14" max="18" step="1" value="16"></label>
+              <label>Base en escritorio <output></output><input name="bmax" type="range" min="16" max="22" step="1" value="18"></label>
+              <label>Ratio en móvil <output></output><input name="rmin" type="range" min="1.125" max="1.25" step="0.005" value="1.2"></label>
+              <label>Ratio en escritorio <output></output><input name="rmax" type="range" min="1.2" max="1.5" step="0.01" value="1.333"></label>
+              <label class="w">Ancho simulado <output></output><input name="w" type="range" min="360" max="1440" step="10" value="1440"></label>
+            </form>
+            <div class="preview" id="preview"></div>
+          </div>
+          <pre class="code" id="code"></pre>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F3EEE3; color: #111; }
+          .app { display: grid; grid-template-columns: 230px 1fr; gap: 20px; padding: 18px; }
+          .ctrl { display: grid; align-content: start; gap: 4px; font-size: 13px; }
+          .ctrl label { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+          .ctrl output { font: 500 12px var(--f-mono); color: #D9541E; }
+          .ctrl input { grid-column: 1 / -1; height: 36px; accent-color: #D9541E; }
+          .w { margin-top: 8px; padding-top: 10px; border-top: 1px solid #1112; }
+          .preview { min-width: 0; display: grid; align-content: start; gap: 6px; overflow: hidden; }
+          .row { display: grid; grid-template-columns: 74px 1fr; align-items: baseline; gap: 10px; }
+          .row small { font: 500 11px var(--f-mono); color: #8a8172; }
+          .row p { margin: 0; line-height: 1.05; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .row.s5 p, .row.s4 p { font-family: var(--f-serif); letter-spacing: -.01em; }
+          .row.s0 p, .row.s-1 p { letter-spacing: 0; line-height: 1.4; }
+          .code { margin: 0 18px 18px; padding: 14px 16px; border-radius: 12px; background: #111; color: #e9e4d8; font: 12px/1.6 var(--f-mono); overflow-x: auto; }
+          @media (max-width: 600px) { .app { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; gap: 0; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const f = document.querySelector('#ctrl');
+          const textos = { 5: 'Torre Alba', 4: 'Residencias en el cielo', 3: 'La planta 31', 2: 'Tres dormitorios y terraza',
+            1: 'Entrega en primavera de 2027', 0: 'Texto de lectura para la ficha de cada residencia.', '-1': 'Pies de foto y notas legales' };
+          const VMIN = 360, VMAX = 1440, r = n => +n.toFixed(3);
+          function escala() {
+            const v = Object.fromEntries(new FormData(f));
+            f.querySelectorAll('label').forEach(l => l.querySelector('output').textContent = l.querySelector('input').value);
+            let filas = '', css = ':root {\n';
+            for (let n = 5; n >= -1; n--) {
+              const min = v.bmin * v.rmin ** n, max = v.bmax * v.rmax ** n;
+              const pend = (max - min) / (VMAX - VMIN), base = min - pend * VMIN;     // recta entre los dos puntos
+              const ahora = Math.min(max, Math.max(min, base + pend * v.w));
+              css += `  --paso-${n < 0 ? 'menos' + -n : n}: clamp(${r(min / 16)}rem, ${r(base / 16)}rem + ${r(pend * 100)}vw, ${r(max / 16)}rem);\n`;
+              filas += `<div class="row s${n}"><small>paso ${n} · ${Math.round(ahora)}px</small><p style="font-size:${ahora}px">${textos[n]}</p></div>`;
+            }
+            preview.innerHTML = filas; code.textContent = css + '}';
+          }
+          f.addEventListener('input', escala); escala();
+        </script>
+        <figcaption>Baja el ancho simulado a 360: el paso 5 pasa de unos 75&nbsp;px a unos 40, pero el paso 0 apenas cambia. Eso es lo que quieres: los titulares se encogen mucho, el texto de lectura casi nada. Copia el bloque generado y tienes la escala de un proyecto.</figcaption>
+      </figure>
+
+      <p>La fórmula de cada paso es la recta que une dos puntos: el tamaño a 360&nbsp;px y el tamaño a 1440&nbsp;px. <code>clamp(mínimo, preferido, máximo)</code> usa el valor preferido (<code>rem + vw</code>) y lo limita por los dos extremos.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="El paso 5 de la escala por defecto">
+        h1 {
+          /* 33 px a 360 de ancho, 75 px a 1440, en línea recta entre medias */
+          font-size: clamp(2.064rem, 1.188rem + 3.89vw, 4.684rem);
+        }
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>No uses solo <code>vw</code> (<code>font-size: 5vw</code>): si el usuario hace zoom, el texto no crece, porque depende del ancho de la ventana y no de su preferencia. La parte en <code>rem</code> del valor preferido es la que respeta el zoom. Por eso la fórmula siempre lleva las dos.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El ratio pequeño (1,2 o menos) es lo que salva el móvil: con 1,333 el paso 5 a 16&nbsp;px de base serían 67&nbsp;px, y «Mediterráneo» no cabría en 390&nbsp;px. El texto de lectura no baja de 16&nbsp;px nunca; si quieres más jerarquía en el móvil, juega con el peso y el color, no con hacer el texto pequeño.</p>
+      </div>
+
+      <h2>Titulares que mandan</h2>
+      <p>Un titular grande no es solo un titular con más píxeles. A partir de unos 48&nbsp;px, los valores por defecto de una sans (espaciado normal, interlineado 1,2) se ven flojos: las letras parecen separadas y las líneas, distantes. Los titulares de los vídeos hacen tres cosas a la vez: <strong>tracking negativo</strong> (<code>letter-spacing</code> entre <code>-0.03em</code> y <code>-0.06em</code>), <strong>interlineado por debajo de 1</strong> (0,9–0,98) y un <strong>peso intermedio</strong> (500–600, no 800).</p>
+
+      <figure class="lab" data-title="Editor de titular" data-hint="Compara antes y después, luego afina" data-height="540" data-height-mobile="780" style="--hm:780px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar">
+            <div class="seg" role="group" aria-label="Preset"><button data-p="antes">Antes</button><button data-p="despues" aria-pressed="true">Después</button></div>
+            <label>Tracking <input id="ls" type="range" min="-0.08" max="0.04" step="0.005"></label>
+            <label>Interlineado <input id="lh" type="range" min="0.8" max="1.3" step="0.01"></label>
+            <label>Peso <input id="fw" type="range" min="300" max="800" step="10"></label>
+            <label class="chk"><input id="it" type="checkbox"> Serif cursiva</label>
+          </div>
+          <section class="hero">
+            <p class="k">Estudio Marjal, arquitectura en Valencia</p>
+            <h1 id="h">Arquitectura que <em>se vive despacio.</em></h1>
+            <p class="sub">Doce viviendas al año en la huerta y en la costa. Proyecto, licencia y obra con el mismo equipo.</p>
+          </section>
+          <pre id="out"></pre>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F3EEE3; color: #111; }
+          .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 10px 14px; background: #111; color: #eee; font-size: 13px; }
+          .bar label { display: flex; align-items: center; gap: 8px; } .bar input[type=range] { width: 100px; height: 40px; accent-color: #D9541E; }
+          .chk input { width: 18px; height: 18px; accent-color: #D9541E; }
+          .seg { display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: #fff1; }
+          .seg button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .seg [aria-pressed="true"] { background: #fff; color: #111; }
+          .hero { padding: clamp(24px, 5vw, 48px) clamp(18px, 5vw, 48px) 18px; }
+          .k { margin: 0 0 16px; font-size: 13px; opacity: .65; }
+          h1 { --ls: -.055em; --lh: .92; --fw: 600;
+            margin: 0 0 22px; max-width: 12ch; font-family: var(--f-sans); font-size: clamp(42px, 8.6vw, 92px);
+            letter-spacing: var(--ls); line-height: var(--lh); font-weight: var(--fw); }
+          h1 em { font-style: normal; }
+          .serif h1 em { font: italic 400 1.06em/1 var(--f-serif); letter-spacing: -.015em; }   /* la cursiva compensa: algo más grande, menos apretada */
+          .sub { max-width: 40ch; margin: 0; font-size: 16px; opacity: .72; }
+          pre { margin: 18px clamp(18px, 5vw, 48px); padding: 12px 14px; border-radius: 10px; background: #111; color: #e9e4d8; font: 12px/1.6 var(--f-mono); overflow-x: auto; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const h = document.querySelector('#h'), presets = {
+            antes:   { ls: 0, lh: 1.25, fw: 700, it: false },
+            despues: { ls: -0.055, lh: 0.92, fw: 600, it: true } };
+          function apply(v) {
+            ls.value = v.ls; lh.value = v.lh; fw.value = v.fw; it.checked = v.it; update();
+          }
+          function update() {
+            h.style.setProperty('--ls', ls.value + 'em'); h.style.setProperty('--lh', lh.value); h.style.setProperty('--fw', fw.value);
+            document.body.classList.toggle('serif', it.checked);
+            out.textContent = `h1 {\n  letter-spacing: ${ls.value}em;\n  line-height: ${lh.value};\n  font-weight: ${fw.value};\n}` + (it.checked ? '\nh1 em { font: italic 400 1.06em/1 var(--f-serif); }' : '');
+          }
+          [ls, lh, fw, it].forEach(i => i.addEventListener('input', update));
+          document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+            apply(presets[b.dataset.p]);
+            document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+          apply(presets.despues);
+        </script>
+        <figcaption>«Antes» son los valores por defecto de cualquier plantilla: correcto y sin carácter. «Después» aprieta letras y líneas hasta que el titular se lee como un bloque. Lleva el tracking a <code>-0.08em</code> para ver dónde se rompe: las letras se tocan y la «r» se pega a la «q». El buen punto está justo antes.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El tracking negativo es proporcional al tamaño: cuanto más grande el texto, más se puede apretar. A 90&nbsp;px, <code>-0.055em</code>; a 32&nbsp;px, <code>-0.02em</code>; el texto de lectura, a <code>0</code>. Y las mayúsculas pequeñas van al revés: una etiqueta en mayúsculas a 12&nbsp;px necesita <code>+0.06em</code> o más para respirar.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Un titular a 44&nbsp;px con el mismo <code>-0.055em</code> pensado para 92 queda demasiado apretado: el tracking en <code>em</code> escala con la letra, pero el ojo tolera menos aprieto en tamaños pequeños. Interpola también el tracking con <code>clamp()</code>. Y con interlineados de 0,92 vigila que los acentos de una línea no choquen con los descendentes de la anterior: «Mediterráneo» debajo de una «g» es el caso típico.</p>
+      </div>
+
+      <script type="text/x-code" data-lang="css" data-label="Tracking que se relaja al encoger">
+        h1 {
+          font-size: clamp(2.6rem, 1.4rem + 5.4vw, 5.75rem);
+          /* -0.36vw son unos -1,4 px a 390 de ancho (≈ -0.03em) y -5 px a 1440 (≈ -0.055em) */
+          letter-spacing: clamp(-0.055em, -0.36vw, -0.025em);
+          line-height: 0.94;
+        }
+        @media (max-width: 600px) {
+          h1 { line-height: 1.02; }   /* más aire: acentos y descendentes no chocan */
+        }
+      </script>
+      <p>El interlineado sin unidad no se puede interpolar con <code>vw</code> dentro de <code>clamp()</code> (mezclaría un número con una longitud), así que para él basta una media query. El tracking sí: un valor en <code>vw</code> acotado por dos valores en <code>em</code>.</p>
+
+      <h2>Sans y serif cursiva: recurso o cliché</h2>
+      <p>La mezcla de los vídeos (una sans apretada que cambia a serif cursiva en una palabra) funciona por <strong>contraste de voz</strong>: la sans habla en tono de producto y la cursiva añade una emoción, como si alguien bajara la voz. Por eso tiene que caer en las palabras que llevan la carga («nunca duerme», «no la amistad»), no en las que tocan por posición.</p>
+      <p>El problema es que hoy es el recurso más copiado de las landings de producto. Usado sin motivo, delata plantilla igual que un degradado violeta. Compara cuatro parejas sobre el mismo hotel y lee la nota de cada una.</p>
+
+      <figure class="lab" data-title="Cuatro parejas, un hotel" data-hint="Cambia de pareja" data-height="540" data-height-mobile="820" style="--hm:820px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pick" role="group" aria-label="Pareja tipográfica">
+            <button data-t="mix" aria-pressed="true">Sans + cursiva</button><button data-t="lujo">Serif + sans</button><button data-t="grot">Una grotesca</button><button data-t="edit">Editorial</button>
+          </div>
+          <main class="hotel mix" id="hotel">
+            <p class="k">Hotel Bruma, Altea</p>
+            <h1>Doce habitaciones <em>y&nbsp;el&nbsp;mar</em> delante.</h1>
+            <div class="row">
+              <p class="txt">Una casa de pescadores de 1912 reformada por Estudio Marjal. Desayuno en la terraza, sin televisión en las habitaciones.</p>
+              <div class="room"><b>Habitación Llebeig</b><span>Terraza, 28 m²</span><strong>desde 190 € la noche</strong></div>
+            </div>
+          </main>
+          <p class="nota" id="nota"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          @font-face { font-family: "Newsreader"; src: url("../assets/fonts/newsreader-italic.woff2") format("woff2"); font-style: italic; font-weight: 200 800; }
+          body { background: #EFEBE3; color: #1b1a17; }
+          .pick { display: flex; gap: 4px; padding: 8px 10px; background: #111; overflow-x: auto; }
+          .pick button { flex: none; min-height: 44px; padding: 0 14px; border: 1px solid #fff2; border-radius: 99px; background: none; color: #eee; font-size: 13px; cursor: pointer; }
+          .pick [aria-pressed="true"] { background: #fff; color: #111; }
+          .hotel { padding: clamp(22px, 5vw, 44px) clamp(18px, 5vw, 44px) 10px; }
+          .k { margin: 0 0 14px; font-size: 13px; opacity: .65; }
+          h1 { margin: 0 0 24px; max-width: 14ch; font-size: clamp(40px, 7.4vw, 78px); }
+          .row { display: grid; grid-template-columns: 1fr 230px; gap: 28px; align-items: end; }
+          .txt { margin: 0; max-width: 42ch; font-size: 16px; line-height: 1.55; }
+          .room { display: grid; gap: 2px; padding-top: 12px; border-top: 1px solid #1b1a1733; font-size: 14px; }
+          .room b { font-size: 17px; } .room span { opacity: .65; }
+          .nota { margin: 0 clamp(18px, 5vw, 44px); padding: 14px 16px; border-left: 2px solid #b4532a; background: #fff8; font-size: 14px; line-height: 1.5; }
+
+          /* 1. Sans apretada + serif cursiva (los vídeos) */
+          .mix h1 { font: 600 clamp(40px, 7.4vw, 78px)/.94 var(--f-sans); letter-spacing: -.055em; }
+          .mix h1 em { font: italic 400 1.07em var(--f-serif); letter-spacing: -.015em; color: #b4532a; }
+          .mix .txt, .mix .room { font-family: var(--f-sans); }
+          /* 2. Serif de display + sans de texto: lujo clásico */
+          .lujo h1 { font: 400 clamp(42px, 7.8vw, 84px)/.98 var(--f-serif); letter-spacing: -.01em; }
+          .lujo h1 em { font-style: normal; }
+          .lujo .txt, .lujo .room { font-family: var(--f-sans); } .lujo .room b { font: 400 22px var(--f-serif); }
+          /* 3. Una sola grotesca variable, con ejes */
+          .grot h1 { font: 760 clamp(40px, 7.4vw, 80px)/.9 var(--f-grotesk); font-variation-settings: "wdth" 78, "opsz" 96; letter-spacing: -.03em; text-transform: lowercase; }
+          .grot h1 em { font-style: normal; color: #b4532a; }
+          .grot .txt, .grot .room { font-family: var(--f-grotesk); font-variation-settings: "opsz" 14; }
+          /* 4. Editorial: serif de lectura con tamaño óptico */
+          .edit h1 { font: 300 clamp(40px, 7.2vw, 76px)/1 var(--f-read); letter-spacing: -.025em; }
+          .edit h1 em { font-weight: 300; }
+          .edit .txt, .edit .room { font-family: var(--f-read); font-size: 17px; } .edit .room strong { font-weight: 500; }
+
+          @media (max-width: 600px) { .row { grid-template-columns: 1fr; gap: 18px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const notas = {
+            mix: 'Sans + serif cursiva. Funciona cuando la cursiva cae en la emoción («y el mar»). Es el recurso de moda: úsalo una vez por página, solo en el hero, y nunca en todos los titulares.',
+            lujo: 'Serif de display + sans de texto. La apuesta segura de hoteles e inmobiliarias de lujo: elegante y tranquila. El riesgo es la falta de personalidad si la serif es la de siempre.',
+            grot: 'Una sola grotesca variable. Bricolage estrecha (wdth 78) y pesada en el titular, normal en el texto: personalidad sin mezclar familias. Ideal para marcas jóvenes; demasiado ruidosa para lujo.',
+            edit: 'Editorial con Newsreader. Titular fino y texto con tamaño óptico pequeño. Pide textos largos y bien escritos: con copy pobre, se nota todavía más.' };
+          const hotel = document.querySelector('#hotel'), btns = document.querySelectorAll('.pick button');
+          btns.forEach(b => b.addEventListener('click', () => {
+            hotel.className = 'hotel ' + b.dataset.t; nota.textContent = notas[b.dataset.t];
+            btns.forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+          nota.textContent = notas.mix;
+        </script>
+        <figcaption>Ninguna pareja es «la buena»: cada una dice algo distinto del mismo hotel. «Sans + cursiva» parece una startup de viajes; «Serif + sans», un hotel de lujo; «Una grotesca», un hotel de diseño para gente joven; «Editorial», una casa con historia. Elegir pareja es elegir posicionamiento.</figcaption>
+      </figure>
+
+      <h3>Reglas para emparejar</h3>
+      <ul>
+        <li><strong>Contraste claro o ninguno.</strong> Dos sans parecidas (Inter y Roboto) se ven como un error. Mezcla familias de estructura distinta (sans geométrica y serif de contraste) o usa una sola familia con varios pesos y anchos.</li>
+        <li><strong>Un papel por fuente.</strong> La serif para titulares y la sans para texto e interfaz, o al revés, pero sin intercambiarlas a mitad de página.</li>
+        <li><strong>Máximo dos familias</strong> (tres si una es monoespaciada para datos). Cada familia extra es otra voz y otro archivo que descargar.</li>
+        <li><strong>La cursiva, como un acento de color</strong>: escasa, en las palabras con carga y, si quieres, con el color de acento.</li>
+      </ul>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">Tu landing tiene seis secciones y en todos los titulares pones la última palabra en serif cursiva naranja. ¿Qué percibe el visitante?</p>
+        <ol>
+          <li>Coherencia: es el estilo de la marca.</li>
+          <li>Más emoción, porque hay más cursivas.</li>
+          <li>Un tic de plantilla: la cursiva deja de significar nada porque está en todas partes.</li>
+        </ol>
+        <p class="why">La cursiva funciona por contraste, igual que el acento de color. Si aparece en cada titular, el ojo deja de verla como énfasis. Una vez en el hero y, como mucho, otra en una cita o en el cierre.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>La mezcla sans + cursiva tiene una trampa en el móvil: si la palabra en cursiva queda sola en una línea, pierde la conexión con la frase. Une con <code>&amp;nbsp;</code> las palabras de la cursiva («y&amp;nbsp;el&amp;nbsp;mar», como en la demo) o <code>text-wrap: balance</code> para que el corte caiga en un sitio que tenga sentido.</p>
+      </div>
+
+      <h2>Medida, balance y pretty</h2>
+      <p>La <strong>medida</strong> es la longitud de la línea. Para lectura cómoda, entre 45 y 75 caracteres; 66 es el clásico. En CSS se controla con <code>max-width</code> en unidades <code>ch</code> (el ancho del «0» de la fuente: unos 60–65 <code>ch</code> dan esos 66 caracteres). Y hay dos valores de <code>text-wrap</code> que arreglan lo que antes se hacía a mano con <code>&lt;br&gt;</code>:</p>
+      <ul>
+        <li><code>text-wrap: balance</code> reparte las palabras para que todas las líneas midan parecido. Para titulares y textos cortos (el navegador lo limita a unas pocas líneas).</li>
+        <li><code>text-wrap: pretty</code> evita que la última línea de un párrafo se quede con una sola palabra (una viuda) y mejora los cortes. Para párrafos.</li>
+      </ul>
+
+      <figure class="lab" data-title="Ficha editorial de una residencia" data-hint="Cambia la medida y activa los ajustes" data-height="560" data-height-mobile="880" style="--hm:880px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar">
+            <label>Medida <input id="m" type="range" min="34" max="80" value="62"><output id="mv">62ch</output></label>
+            <label><input type="checkbox" id="bal" checked> balance</label>
+            <label><input type="checkbox" id="pre" checked> pretty</label>
+            <label><input type="checkbox" id="hyp"> guiones</label>
+          </div>
+          <article class="ficha" id="ficha" lang="es">
+            <div class="txt">
+              <p class="k">Torre Alba, planta 31</p>
+              <h1>Una planta entera para mirar el Mediterráneo</h1>
+              <aside>
+                <p class="precio">1.240.000 €</p>
+                <dl><dt>Superficie</dt><dd>184 m²</dd><dt>Dormitorios</dt><dd>3</dd><dt>Terraza</dt><dd>41 m²</dd><dt>Orientación</dt><dd>Sureste</dd></dl>
+              </aside>
+              <p class="entra">La Residencia 31B ocupa la esquina sureste de la torre: el sol entra por la mañana en los dormitorios y por la tarde en el salón.</p>
+              <p>El salón y la cocina forman una sola pieza de catorce metros de fachada acristalada, con la terraza corrida delante. Los tres dormitorios tienen baño propio y el principal, vestidor y una bañera exenta junto a la ventana. Los suelos son de roble natural en todas las estancias secas y de piedra caliza de Borriol en baños y terraza.</p>
+              <p>La entrega está prevista para la primavera de 2027, con plaza de garaje doble y trastero incluidos.</p>
+            </div>
+          </article>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F6F2EA; color: #1c1a17; }
+          .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; padding: 8px 14px; background: #111; color: #eee; font-size: 13px; }
+          .bar label { display: flex; align-items: center; gap: 8px; min-height: 40px; } .bar input[type=range] { width: 130px; accent-color: #b4532a; }
+          .bar input[type=checkbox] { width: 18px; height: 18px; accent-color: #b4532a; } output { font: 12px var(--f-mono); width: 40px; }
+          .ficha { --medida: 62ch; padding: clamp(20px, 4vw, 36px); }
+          aside { display: flex; margin: 0 0 20px; flex-wrap: wrap; align-items: baseline; gap: 10px 32px; padding: 12px 0; border-block: 1px solid #1c1a1740; font: 14px var(--f-sans); }
+          .precio { margin: 0; font: 500 24px var(--f-sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+          dl { display: grid; grid-template-columns: repeat(4, auto); grid-auto-flow: column; grid-template-rows: auto auto; gap: 0 28px; margin: 0; }
+          dt { opacity: .6; font-size: 12px; } dd { margin: 0; font-variant-numeric: tabular-nums; }
+          .txt { font: 17px/1.6 var(--f-read); }
+          .txt > * { max-width: var(--medida); }              /* la medida va en ch: depende de la fuente */
+          .k { margin: 0 0 10px; font: 13px var(--f-sans); color: #b4532a; }
+          h1 { margin: 0 0 18px; font: 400 clamp(32px, 5vw, 50px)/1.02 var(--f-serif); letter-spacing: -.01em; max-width: 16ch !important; }
+          .entra { font-size: 21px; line-height: 1.45; font-weight: 450; margin: 0 0 18px; }
+          .txt p { margin: 0 0 14px; }
+          .bal h1 { text-wrap: balance; }
+          .pre p { text-wrap: pretty; }
+          .hyp p { hyphens: auto; }                            /* necesita lang="es" para cortar bien */
+          @media (max-width: 600px) {
+            dl { grid-template-columns: repeat(2, auto); grid-auto-flow: row; grid-template-rows: none; gap: 4px 20px; }
+            .entra { font-size: 19px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const ficha = document.querySelector('#ficha');
+          const upd = () => {
+            ficha.style.setProperty('--medida', m.value + 'ch'); mv.textContent = m.value + 'ch';
+            ficha.classList.toggle('bal', bal.checked); ficha.classList.toggle('pre', pre.checked); ficha.classList.toggle('hyp', hyp.checked);
+          };
+          [m, bal, pre, hyp].forEach(i => i.addEventListener('input', upd)); upd();
+        </script>
+        <figcaption>Lleva la medida a 80: el párrafo se vuelve una pared y al ojo le cuesta encontrar la línea siguiente. A 34 los saltos son constantes. Quita <code>balance</code> y mira cómo el titular deja una palabra suelta en la segunda línea. Fíjate también en la fila de datos: precio y superficies van en sans con cifras tabulares, el texto en serif de lectura.</figcaption>
+      </figure>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>text-wrap: balance</code> funciona en Chrome 114, Safari 17.5 y Firefox 121 (Baseline recién disponible, pasa a ampliamente disponible a mediados de noviembre de 2026). <code>text-wrap: pretty</code> está en Chrome 117 y Safari 26, pero <strong>no en Firefox</strong>: es Baseline limitado. Como es una mejora progresiva (si no se aplica, el texto se corta como siempre), puedes usarlo ya.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En un teléfono la medida se resuelve sola: a 17&nbsp;px en 350&nbsp;px de columna salen unos 38–42 caracteres por línea, en el límite bajo pero aceptable. Lo que no debes hacer es bajar la letra a 14&nbsp;px para meter más texto por línea. Activa <code>hyphens: auto</code> con <code>lang="es"</code> en el móvil: en columnas estrechas, palabras como «acristalada» o «Mediterráneo» dejan huecos enormes si no se pueden partir.</p>
+      </div>
+
+      <h2>Fuentes variables y tamaño óptico</h2>
+      <p>Una fuente variable es un solo archivo con ejes continuos en lugar de archivos sueltos por peso. Las del cuaderno lo son: Bricolage tiene peso (<code>wght</code> 200–800), anchura (<code>wdth</code> 75–100) y tamaño óptico (<code>opsz</code> 12–96); Newsreader tiene peso y tamaño óptico (6–72). El <strong>tamaño óptico</strong> es el eje más infravalorado: adapta el diseño de la letra al tamaño al que se usa, como hacían los tipógrafos con el plomo. En pequeño, letras más anchas, abiertas y de trazo robusto; en grande, más finas, apretadas y con más contraste.</p>
+
+      <figure class="lab" data-title="Ejes de una fuente variable" data-hint="Mueve los tres ejes y prueba el tamaño óptico" data-height="520" data-height-mobile="720" style="--hm:720px">
+        <script type="text/x-demo" data-lang="html">
+          <section class="spec">
+            <p class="big" id="big">Bodega Alto Turia</p>
+            <div class="axes">
+              <label>wght <input id="w" type="range" min="200" max="800" value="680"><output></output></label>
+              <label>wdth <input id="d" type="range" min="75" max="100" value="82"><output></output></label>
+              <label>opsz <input id="o" type="range" min="12" max="96" value="96"><output></output></label>
+            </div>
+            <code id="css"></code>
+          </section>
+          <section class="opt">
+            <div class="seg" role="group" aria-label="Tamaño óptico"><button data-o="auto" aria-pressed="true">opsz automático</button><button data-o="6">Fijo a 6</button><button data-o="72">Fijo a 72</button></div>
+            <div class="pair" id="pair">
+              <p class="s">Cata de cuatro vinos de bobal con quesos de la Serranía. Plazas limitadas a doce personas por visita.</p>
+              <p class="l">Cosecha de 1998</p>
+            </div>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #1a1512; color: #f1e9dc; }
+          .spec { padding: 22px clamp(16px, 4vw, 32px) 18px; border-bottom: 1px solid #fff1; }
+          .big { margin: 0 0 14px; font-family: var(--f-grotesk); font-size: clamp(40px, 9vw, 86px); line-height: .95; letter-spacing: -.02em; color: #e8b25c; }
+          .axes { display: flex; flex-wrap: wrap; gap: 4px 22px; font: 500 12px var(--f-mono); }
+          .axes label { display: flex; align-items: center; gap: 8px; } .axes input { width: 120px; height: 40px; accent-color: #e8b25c; } output { width: 26px; }
+          #css { display: block; margin-top: 8px; font: 12px var(--f-mono); color: #bfb3a2; overflow-wrap: anywhere; }
+          .opt { padding: 18px clamp(16px, 4vw, 32px); }
+          .seg { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 14px; }
+          .seg button { min-height: 40px; padding: 0 12px; border: 1px solid #fff3; border-radius: 99px; background: none; color: inherit; font-size: 13px; cursor: pointer; }
+          .seg [aria-pressed="true"] { background: #f1e9dc; color: #1a1512; }
+          .pair { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; align-items: end; font-family: var(--f-read); }
+          .pair p { margin: 0; }
+          .s { font-size: 13px; line-height: 1.5; max-width: 36ch; }
+          .l { font-size: clamp(40px, 7vw, 64px); line-height: 1; font-weight: 300; letter-spacing: -.02em; }
+          /* font-optical-sizing: auto (por defecto) pone opsz = tamaño de letra */
+          .f6 p { font-variation-settings: "opsz" 6; }
+          .f72 p { font-variation-settings: "opsz" 72; }
+          @media (max-width: 560px) { .pair { grid-template-columns: 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const big = document.querySelector('#big');
+          function axes() {
+            [w, d, o].forEach(i => i.nextElementSibling.textContent = i.value);
+            big.style.fontWeight = w.value;
+            big.style.fontVariationSettings = `"wdth" ${d.value}, "opsz" ${o.value}`;
+            css.textContent = `font-weight: ${w.value}; font-variation-settings: "wdth" ${d.value}, "opsz" ${o.value};`;
+          }
+          [w, d, o].forEach(i => i.addEventListener('input', axes)); axes();
+          document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+            pair.className = 'pair' + (b.dataset.o === 'auto' ? '' : ' f' + b.dataset.o);
+            document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+        </script>
+        <figcaption>Arriba, baja <code>opsz</code> a 12 con el titular grande: las letras se ensanchan y pierden finura, como si ampliaras un texto de etiqueta. Abajo, «Fijo a 72» hace el texto pequeño delgado y apretado (cuesta leerlo) y «Fijo a 6» vuelve tosco el número grande. Con «automático», cada tamaño recibe su diseño.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Deja <code>font-optical-sizing: auto</code> (es el valor por defecto) y no fuerces <code>opsz</code> salvo para un efecto concreto. Para la anchura, prefiere <code>font-stretch</code> si la <code>@font-face</code> declara el rango, y <code>font-variation-settings</code> si no: ojo, esta última propiedad no se hereda por partes, y si la declaras en un hijo sustituye todos los ejes del padre.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Las fuentes variables son una ventaja en el móvil: un archivo de unos 60–100&nbsp;KB sustituye a cuatro o cinco estáticos. Y el eje de anchura es oro en pantallas estrechas: una versión algo condensada del titular (<code>wdth</code> 80–85) cabe en 390&nbsp;px sin bajar tanto el tamaño. Carga solo los ejes y caracteres que usas (con subconjuntos) y declara <code>font-display: swap</code>.</p>
+      </div>
+
+      <h2>Números que no bailan</h2>
+      <p>La mayoría de fuentes tienen cifras <strong>proporcionales</strong> por defecto: el «1» es más estrecho que el «8». En un texto corrido queda mejor, pero en un contador que cambia, en una tabla de precios o en un reloj, los números «bailan»: el ancho cambia con cada cifra. La solución es <code>font-variant-numeric: tabular-nums</code>, que activa cifras de ancho fijo... si la fuente las tiene.</p>
+
+      <figure class="lab" data-title="El contador de plantas" data-hint="Pulsa reproducir y mira los bordes" data-height="500" data-height-mobile="820" data-stage="dark" style="--hm:820px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="counters">
+            <figure><span class="num prop" id="a">1</span><figcaption>Proporcionales<small>Inter Tight por defecto</small></figcaption></figure>
+            <figure><span class="num tab" id="b">1</span><figcaption>Tabulares<small>tabular-nums</small></figcaption></figure>
+            <figure><span class="num serif" id="c">1</span><figcaption>Instrument Serif + tabular-nums<small>no tiene tnum: no hace nada</small></figcaption></figure>
+          </div>
+          <button id="play">Reproducir</button>
+          <div class="tabla">
+            <div class="col"><p>Proporcionales</p><ul class="prop"><li>11B<b>711.000 €</b></li><li>24A<b>1.118.500 €</b></li><li>31B<b>1.240.000 €</b></li><li>40C<b>2.090.000 €</b></li></ul></div>
+            <div class="col"><p>Tabulares</p><ul class="tab"><li>11B<b>711.000 €</b></li><li>24A<b>1.118.500 €</b></li><li>31B<b>1.240.000 €</b></li><li>40C<b>2.090.000 €</b></li></ul></div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: oklch(20% .05 288); color: oklch(95% .015 80); padding: 20px clamp(14px, 4vw, 30px); font-family: var(--f-sans); }
+          .counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+          .counters figure { margin: 0; display: grid; justify-items: center; gap: 10px; text-align: center; }
+          .num { padding: 0 14px; font-size: clamp(48px, 9vw, 76px); font-weight: 300; line-height: 1.1; letter-spacing: -.02em;
+            outline: 1px dashed oklch(83% .12 72 / .6); outline-offset: 2px; }     /* el borde delata el cambio de ancho */
+          .prop { font-variant-numeric: proportional-nums; }
+          .tab { font-variant-numeric: tabular-nums; }
+          .serif { font-family: var(--f-serif); font-weight: 400; font-variant-numeric: tabular-nums; }
+          figcaption { font-size: 13px; } figcaption small { display: block; opacity: .6; font-size: 12px; }
+          #play { display: block; margin: 16px auto; min-height: 44px; padding: 0 22px; border: 0; border-radius: 99px; background: oklch(83% .12 72); color: oklch(20% .05 288); font-weight: 600; cursor: pointer; }
+          .tabla { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+          .col p { margin: 0 0 6px; font-size: 12px; opacity: .6; }
+          ul { list-style: none; margin: 0; padding: 0; font-size: 15px; }
+          li { display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid oklch(95% .015 80 / .12); }
+          li b { font-weight: 500; }
+          @media (max-width: 560px) { .counters { grid-template-columns: 1fr 1fr; } .counters figure:last-child { grid-column: 1 / -1; } .tabla { grid-template-columns: 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const nums = [a, b, c];
+          let timer;
+          function play() {
+            clearInterval(timer);
+            let n = 1;
+            timer = setInterval(() => {
+              nums.forEach(el => el.textContent = n);
+              if (++n > 42) clearInterval(timer);      // 42 plantas
+            }, 90);
+          }
+          document.querySelector('#play').addEventListener('click', play);
+          play();
+        </script>
+        <figcaption>El borde discontinuo del contador proporcional cambia de ancho en cada planta: con el texto centrado, el número entero tiembla. El tabular se queda quieto. El tercero lleva <code>tabular-nums</code> y baila igual, porque Instrument Serif no incluye la función OpenType <code>tnum</code>: por eso el contador de la torre de la lección 00 usa Newsreader, cuyas cifras ya son tabulares. En la tabla, las cifras tabulares alinean millares y decimales en columna.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="css" data-label="Dónde activar cifras tabulares">
+        .precio, .contador, table td, .reloj, .stat b {
+          font-variant-numeric: tabular-nums;
+        }
+        /* En texto corrido, deja las proporcionales: "en 2027" queda mejor así */
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p><code>font-variant-numeric</code> no inventa glifos: solo activa los que trae la fuente. Antes de elegir la fuente de los precios o del contador, comprueba en su ficha (o en DevTools, pestaña Fonts) que tiene <code>tnum</code>. Si la serif bonita no las tiene, usa para los números la sans del sistema tipográfico.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil el baile se nota más, porque el número suele ir centrado y a ancho completo. Además, las cifras grandes del hero son un buen sitio para recortar: «1.240.000&nbsp;€» a 64&nbsp;px no cabe en 390; «1,24&nbsp;M€» sí. Y no partas nunca un precio entre líneas: <code>white-space: nowrap</code> o un <code>&amp;nbsp;</code> antes del «€».</p>
+      </div>
+
+      <h2>Tipografía en el móvil</h2>
+      <p>Todo lo anterior se resume en una pantalla de 390&nbsp;px. Estos son los valores de partida que funcionan en la mano, no en un simulador:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Elemento</th><th>Escritorio</th><th>Móvil</th></tr></thead>
+          <tbody>
+            <tr><td>Titular del hero</td><td>72–96 px, tracking -0.05em</td><td>40–52 px, tracking -0.03em</td></tr>
+            <tr><td>Titular de sección</td><td>40–56 px</td><td>30–36 px</td></tr>
+            <tr><td>Texto de lectura</td><td>18–20 px, medida 60–66ch</td><td>16–17 px, la columna entera</td></tr>
+            <tr><td>Interlineado del texto</td><td>1,55–1,65</td><td>1,5–1,6</td></tr>
+            <tr><td>Etiquetas y pies</td><td>13–14 px</td><td>13 px como mínimo</td></tr>
+            <tr><td>Campos de formulario</td><td>15–16 px</td><td>16 px exactos o más</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Lo del formulario no es estético: Safari en iOS hace zoom automático al enfocar un campo con letra menor de 16&nbsp;px, y la página se queda ampliada. Es el fallo más común en tiendas PrestaShop y formularios de WordPress.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Un bloque de partida para el móvil">
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* que el móvil no reescale el texto */
+        body { font-size: clamp(1rem, 0.96rem + 0.2vw, 1.125rem); line-height: 1.55; }
+        input, select, textarea { font-size: max(16px, 1rem); }          /* sin zoom al enfocar en iOS */
+        h1 { overflow-wrap: break-word; hyphens: manual; }                /* una palabra larga no desborda */
+        p  { text-wrap: pretty; hyphens: auto; }
+        h1, h2, h3 { text-wrap: balance; }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>En el móvil la jerarquía sigue siendo dramática, pero con otros recursos: como no puedes tener un titular de 90&nbsp;px, apóyate en el contraste de voz (sans y cursiva, peso 600 frente a 400), en el color (texto secundario al 65&nbsp;%) y en el espacio. Un titular de 44&nbsp;px con 64&nbsp;px de aire debajo manda más que uno de 52 apelotonado.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Revisa siempre los titulares en 360&nbsp;px con las palabras más largas del idioma: en español, «arquitectura», «Mediterráneo», «residenciales». Si una palabra no cabe a tu tamaño mínimo, la escala está mal, no la palabra. Y vigila las huérfanas: un titular de tres líneas con una palabra suelta al final se arregla con <code>balance</code>; si no basta, con un <code>&amp;nbsp;</code> entre las dos últimas palabras.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">En el móvil, un formulario de contacto de una tienda tiene los campos a 14&nbsp;px. En un iPhone, al tocar el campo «Email»...</p>
+        <ol>
+          <li>No pasa nada: 14&nbsp;px se lee bien.</li>
+          <li>Safari amplía la página para que el texto se lea, y al salir del campo la página se queda ampliada.</li>
+          <li>El teclado tapa el campo.</li>
+        </ol>
+        <p class="why">iOS hace zoom en campos con letra menor de 16&nbsp;px. La solución es poner los campos a 16&nbsp;px o más, no bloquear el zoom con <code>maximum-scale</code> en el viewport (eso es un problema de accesibilidad).</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Escala fluida con dos ratios y <code>clamp()</code> (rem + vw): titulares que se encogen mucho, texto de lectura que casi no cambia y nunca baja de 16&nbsp;px.</li>
+          <li>Titulares grandes con tracking negativo proporcional al tamaño, interlineado por debajo de 1 y peso medio; la serif cursiva como acento escaso, no como plantilla.</li>
+          <li>Medida de 45–75 caracteres, <code>text-wrap: balance</code> y <code>pretty</code>, tamaño óptico automático y cifras tabulares (comprobando que la fuente tiene <code>tnum</code>) en precios y contadores.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Genera con el primer laboratorio la escala de un proyecto real de la agencia y pégala en su CSS. Después rehaz su hero con dos versiones del titular: una solo en sans, con tracking y leading afinados en el editor, y otra con una palabra en serif cursiva. Haz capturas a 1440 y a 360&nbsp;px y elige una justificando por qué la cursiva cae (o no) en esa palabra. Si el sitio muestra precios, comprueba que su fuente tiene <code>tnum</code>.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

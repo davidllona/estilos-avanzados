@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Más allá de las cards | Hora azul</title>
+<meta name="description" content="Composición editorial en CSS: retícula de 12 columnas con líneas con nombre, capas, sticky, tiras con scroll-snap, índices, subgrid y container queries. Y cómo se pliega todo en el móvil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="composicion">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Más allá de las cards</h1>
+    <p class="lede">Retículas editoriales, capas que se solapan, recorridos con sticky, índices y tiras horizontales: las estructuras que hacen que una web parezca diseñada y no montada con piezas.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Cuando todo es una card, nada es importante. La caja con sombra, radio de 12 px y padding de 24 px es la respuesta por defecto de Bootstrap, de Tailwind UI y de cualquier plantilla de WordPress. No está mal: es neutra. Y lo neutro es justo lo contrario de lo que transmiten la landing de «mesa» o la web de la torre.</p>
+      <p>Esas webs no tienen más efectos, tienen más <strong>composición</strong>: una retícula clara, elementos que rompen esa retícula a propósito, cambios bruscos de escala y piezas que se apoyan unas sobre otras. En esta lección aprendes esas estructuras en CSS puro y, para cada una, en qué se convierte en el móvil.</p>
+
+      <h2>La retícula editorial de 12 columnas</h2>
+      <p>Las revistas llevan cien años maquetando con una retícula invisible. En CSS Grid la puedes declarar con <strong>líneas con nombre</strong>: márgenes elásticos a los lados, doce columnas en el centro y nombres para poder decir «del contenido al borde de la pantalla» sin contar números. Activa la retícula en la demo.</p>
+
+      <figure class="lab" data-title="Retícula con líneas con nombre" data-hint="Pulsa «Ver retícula»" data-height="520" data-height-mobile="600">
+        <script type="text/x-demo" data-lang="html">
+          <div class="page">
+            <nav class="nav"><b>Albar</b><span>Proyectos</span><span>Estudio</span><span>Contacto</span></nav>
+            <p class="kicker">Proyecto 014 · Benicàssim</p>
+            <h1>Una casa que se <em>mira desde el mar</em></h1>
+            <p class="lede">Tres volúmenes de hormigón blanco escalonados sobre la ladera. Cada habitación tiene su propio horizonte.</p>
+            <figure class="band">
+              <svg viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs><linearGradient id="cielo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b391"/><stop offset=".6" stop-color="#f1dfc7"/><stop offset="1" stop-color="#e9e1d4"/></linearGradient></defs>
+                <rect width="1200" height="420" fill="url(#cielo)"/>
+                <circle cx="900" cy="200" r="54" fill="#f8eedf"/>
+                <rect y="262" width="1200" height="158" fill="#7f9598"/>
+                <rect y="262" width="1200" height="5" fill="#f3e3cc" opacity=".6"/>
+                <path d="M0 300 L260 214 L520 240 L700 300 L700 420 L0 420Z" fill="#4c4a3c"/>
+                <rect x="170" y="168" width="250" height="62" fill="#f6f2ea"/><rect x="190" y="186" width="190" height="16" fill="#2a2925"/>
+                <rect x="280" y="214" width="290" height="58" fill="#efe9de"/><rect x="300" y="232" width="230" height="14" fill="#2a2925"/>
+                <rect x="400" y="256" width="250" height="52" fill="#f6f2ea"/><rect x="420" y="272" width="170" height="12" fill="#2a2925"/>
+              </svg>
+              <figcaption>Fachada sur al atardecer, junio de 2025</figcaption>
+            </figure>
+            <p class="stat"><b>214 m²</b>construidos en una parcela con 30 % de pendiente</p>
+            <div class="body">
+              <p>La casa no se impone a la ladera: la sigue. Cada volumen se retranquea cuatro metros respecto al anterior y su cubierta es la terraza del de arriba.</p>
+              <p>Dentro, la piedra de Ulldecona del suelo continúa hasta el exterior sin juntas visibles.</p>
+            </div>
+            <p class="note">Escalera del patio norte</p>
+            <div class="bleed" aria-hidden="true"></div>
+            <div class="cols" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <button class="toggle" aria-pressed="false">Ver retícula</button>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #ece6dc; color: #1b1916; }
+          .page {
+            --gap: clamp(14px, 2.2vw, 24px);
+            position: relative; display: grid; column-gap: var(--gap); padding-bottom: 80px;
+            /* margen elástico + 12 columnas llamadas «col» + margen elástico */
+            grid-template-columns:
+              [full-start] minmax(0, 1fr)
+              [content-start] repeat(12, [col] minmax(0, 64px))
+              [content-end] minmax(0, 1fr) [full-end];
+          }
+          .page > * { grid-column: content; }            /* por defecto: al contenido */
+          .nav { display: flex; gap: 22px; align-items: baseline; padding: 18px 0; font-size: 13px; border-bottom: 1px solid #1b191626; }
+          .nav b { margin-right: auto; font: 400 24px var(--f-serif); }
+          .kicker { grid-column: col 1 / span 5; margin: 56px 0 14px; font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #a94f2a; }
+          .page h1 { grid-column: col 1 / span 8; margin: 0; font: 400 clamp(40px, 8vw, 78px)/.94 var(--f-serif); letter-spacing: -.02em; }
+          h1 em { color: #a94f2a; }
+          .lede { grid-column: col 9 / span 4; align-self: end; margin: 0; font-size: 15px; line-height: 1.5; }
+          /* La banda ocupa todo el ancho y hereda las líneas con subgrid */
+          .band { grid-column: full; display: grid; grid-template-columns: subgrid; margin: 48px 0; }
+          .band svg { grid-column: full; grid-row: 1; width: 100%; height: clamp(230px, 42vw, 380px); }
+          .band figcaption { grid-column: col 1 / span 5; grid-row: 1; align-self: end; padding: 14px 0; font: 500 12px var(--f-mono); color: #fff; }
+          .stat { grid-column: col 1 / span 3; margin: 0; font-size: 13px; color: #5d574e; }
+          .stat b { display: block; font: 400 44px/1 var(--f-serif); color: #1b1916; margin-bottom: 6px; }
+          .body { grid-column: col 5 / span 7; font: 400 17px/1.6 var(--f-read); }
+          .body p { margin: 0 0 12px; }
+          .note { grid-column: col 1 / span 4; align-self: end; margin: 40px 0 0; font: 500 12px var(--f-mono); color: #5d574e; }
+          /* Rompe la retícula: de la columna 7 al borde derecho de la pantalla */
+          .bleed { grid-column: col 7 / full-end; height: 260px; margin-top: 40px;
+            background: repeating-linear-gradient(170deg, #b9ad9b 0 26px, #d8cdbd 26px 30px), #c9bcaa; }
+          .cols { position: absolute; inset: 0; display: grid; grid-template-columns: inherit; column-gap: inherit; pointer-events: none; opacity: 0; transition: opacity .3s; }
+          .cols i { background: #d9541e1f; border-inline: 1px solid #d9541e40; }
+          .cols i:first-child { grid-column: col 1; }
+          .on .cols { opacity: 1; }
+          .toggle { position: fixed; right: 12px; bottom: 12px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 99px; background: #1b1916; color: #ece6dc; font-weight: 600; cursor: pointer; }
+          /* Móvil: 4 columnas y márgenes fijos de 16 px */
+          @media (max-width: 600px) {
+            .page { --gap: 16px; grid-template-columns: [full-start] 0 [content-start] repeat(4, [col] minmax(0, 1fr)) [content-end] 0 [full-end]; }
+            .kicker, .page h1, .lede, .stat, .body, .note, .band figcaption { grid-column: content; }
+            .lede { margin-top: 18px; } .body { margin-top: 18px; }
+            .bleed { grid-column: col 2 / full-end; height: 200px; }
+            .nav span:not(:last-child), .cols i:nth-child(n+5) { display: none; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const btn = document.querySelector('.toggle');
+          btn.addEventListener('click', () => {
+            const on = document.querySelector('.page').classList.toggle('on');
+            btn.setAttribute('aria-pressed', on);
+            btn.textContent = on ? 'Ocultar retícula' : 'Ver retícula';
+          });
+        </script>
+        <figcaption>Con <code>repeat(12, [col] minmax(0, 64px))</code> cada columna empieza en una línea llamada <code>col</code>, y <code>col 7</code> es la séptima. La banda de la foto usa <code>subgrid</code> para que su pie se alinee con las columnas de la página, y el bloque inferior va de <code>col 7</code> a <code>full-end</code>: rompe la retícula por un solo lado. Abre «Ver en móvil»: cuatro columnas.</figcaption>
+      </figure>
+
+      <p>Tres ideas sostienen esta maqueta:</p>
+      <ul>
+        <li><strong>Todo cae por defecto en <code>content</code></strong>. Escribir <code>grid-column: content</code> funciona porque las líneas <code>content-start</code> y <code>content-end</code> forman un área implícita llamada <code>content</code>. Lo mismo con <code>full</code>.</li>
+        <li><strong>Las columnas tienen máximo, los márgenes no</strong>. <code>minmax(0, 64px)</code> limita el ancho de lectura; los márgenes <code>1fr</code> se comen el espacio sobrante en pantallas grandes.</li>
+        <li><strong>Romper la retícula es una decisión</strong>. Un elemento que llega a <code>full-end</code> solo por la derecha crea tensión; si todo fuera a sangre, no habría nada que romper.</li>
+      </ul>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una maqueta parece cara cuando hay <strong>pocas alineaciones y se respetan</strong>. Elige dos o tres ejes (columna 1, columna 5 y columna 9, por ejemplo) y alinea todo con ellos: titular, texto, pies de foto. El ojo no ve la retícula, pero nota el orden. Lo barato es que cada bloque tenga su propio ancho porque «quedaba bien».</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">En el móvil la retícula pasa a 4 columnas, pero olvidas cambiar <code>.bleed { grid-column: col 7 / full-end }</code>. ¿Qué pasa?</p>
+        <ol>
+          <li>El navegador ignora la regla y lo coloca en <code>content</code>.</li>
+          <li>Empieza en la última columna disponible.</li>
+          <li>Grid crea columnas implícitas para encontrar una séptima línea <code>col</code> y la página se desborda en horizontal.</li>
+        </ol>
+        <p class="why">Si una línea con nombre no existe, Grid inventa líneas implícitas con ese nombre al final de la retícula. El resultado típico es un scroll horizontal fantasma en el móvil. Cada vez que cambies el número de columnas, revisa todos los <code>col N</code>.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Doce columnas en 360 px son columnas de 14 px: inútiles. Baja a <strong>4 columnas con márgenes fijos de 16–20 px</strong> y convierte casi todos los <code>span</code> en <code>content</code>. Conserva una sola ruptura (una imagen que llega al borde por un lado): es lo que hace que el móvil no parezca una columna de Word.</p>
+      </div>
+
+      <h2>Asimetría y capas</h2>
+      <p>El hero de «mesa» no es un texto al lado de una foto. Es una foto, un panel naranja desplazado detrás y una tarjeta flotante encima, las tres en la <strong>misma retícula</strong> y ocupando celdas que se pisan. No hay ni un <code>position: absolute</code>.</p>
+
+      <figure class="lab" data-title="Capas en una sola retícula" data-hint="Pulsa «Ver capas»" data-height="560" data-height-mobile="900">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero">
+            <div class="copy">
+              <p class="tag">Nuevo · Informes automáticos</p>
+              <h1>El compañero de operaciones que <em>nunca duerme.</em></h1>
+              <p class="lede">mesa concilia facturas, contesta proveedores y cuadra el stock mientras tu equipo descansa.</p>
+              <div class="ctas"><a class="pill" href="#">Pruébalo gratis</a><a class="link" href="#">Ver una demo</a></div>
+            </div>
+            <div class="stack">
+              <div class="panel" data-capa="panel · z 0"></div>
+              <svg class="photo" data-capa="foto · z 1" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6d6d6"/><stop offset="1" stop-color="#8d8d8d"/></linearGradient>
+                <pattern id="v" width="14" height="18" patternUnits="userSpaceOnUse"><rect width="7" height="10" fill="#e9e9e9" opacity=".55"/></pattern></defs>
+                <rect width="400" height="400" fill="url(#c)"/>
+                <rect x="20" y="120" width="90" height="280" fill="#4a4a4a"/><rect x="28" y="130" width="76" height="270" fill="url(#v)"/>
+                <rect x="120" y="40" width="110" height="360" fill="#2b2b2b"/><rect x="130" y="52" width="92" height="348" fill="url(#v)"/>
+                <rect x="240" y="160" width="70" height="240" fill="#5c5c5c"/>
+                <rect x="318" y="90" width="82" height="310" fill="#3a3a3a"/><rect x="326" y="100" width="70" height="300" fill="url(#v)"/>
+                <rect y="360" width="400" height="40" fill="#1e1e1e"/>
+              </svg>
+              <div class="float" data-capa="tarjeta · z 2">
+                <p class="ft"><span></span>Mientras dormías</p>
+                <ul><li>48 facturas conciliadas</li><li>12 proveedores respondidos</li><li>Stock cuadrado en 3 almacenes</li></ul>
+                <small>Resumen de las 07:00</small>
+              </div>
+            </div>
+          </section>
+          <p class="logos"><span>Norte</span><span>VÉRTICE</span><span>almadraba</span><span>Kilo&amp;Co</span><span>LADRILLO</span></p>
+          <button class="toggle" aria-pressed="false">Ver capas</button>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --cream: #F3EEE3; --ink: #111; --orange: #D9541E; }
+          body { background: var(--cream); color: var(--ink); padding: clamp(20px, 5vw, 44px); }
+          .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 56px); align-items: center; }
+          .tag { display: inline-block; margin: 0 0 18px; padding: 5px 12px; border: 1px solid #1112; border-radius: 99px; font-size: 12px; font-weight: 500; }
+          h1 { margin: 0 0 18px; font: 650 clamp(34px, 5.6vw, 58px)/.98 var(--f-sans); letter-spacing: -.055em; }
+          /* Segunda línea en serif cursiva con subrayado naranja dibujado con un degradado */
+          h1 em { display: block; width: fit-content; font: italic 400 1.1em/1 var(--f-serif); letter-spacing: -.02em;
+            background: linear-gradient(var(--orange), var(--orange)) 0 96% / 100% .08em no-repeat; padding-bottom: .06em; }
+          .lede { max-width: 34ch; margin: 0 0 24px; font-size: 16px; color: #444; }
+          .ctas { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+          .pill { display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 99px; background: var(--orange); color: #fff; font-weight: 600; text-decoration: none; }
+          .link { color: var(--ink); font-weight: 600; text-underline-offset: 4px; }
+          /* Una retícula de 10×10: cada capa elige sus celdas y se pisan */
+          .stack { display: grid; grid-template: repeat(10, minmax(0, 1fr)) / repeat(10, minmax(0, 1fr)); aspect-ratio: 1 / 1.05; position: relative; }
+          .panel { grid-area: 3 / 3 / 11 / 11; background: var(--orange); }
+          .photo { grid-area: 1 / 1 / 9 / 9; width: 100%; height: 100%; z-index: 1; }
+          .float { grid-area: 6 / 4 / 11 / 11; align-self: end; z-index: 2; background: #fff; border-radius: 14px; padding: 16px 18px; box-shadow: 0 24px 50px -20px #1115, 0 2px 6px #1111; }
+          .ft { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-weight: 650; font-size: 14px; }
+          .ft span { width: 8px; height: 8px; border-radius: 50%; background: #2bb673; box-shadow: 0 0 0 4px #2bb67326; }
+          .float ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 7px; font-size: 13px; }
+          .float li { display: flex; gap: 8px; align-items: center; }
+          .float li::before { content: "✓"; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 10px; }
+          .float small { color: #777; font-size: 11px; }
+          .logos { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 28px; margin: 48px 0 0; padding-top: 22px; border-top: 1px solid #1112; color: #1118; font-size: 18px; }
+          .logos span:nth-child(odd) { font-family: var(--f-serif); font-size: 22px; }
+          .logos span:nth-child(2), .logos span:nth-child(5) { font-weight: 800; letter-spacing: .08em; font-size: 14px; }
+          /* Modo depuración: se ven las celdas y el z-index de cada capa */
+          .debug .stack::after { content: ""; grid-area: 1 / 1 / -1 / -1; z-index: 3; pointer-events: none;
+            background: linear-gradient(90deg, #1114 1px, transparent 1px) 0 0 / 10% 10%, linear-gradient(#1114 1px, transparent 1px) 0 0 / 10% 10%; }
+          .debug [data-capa] { outline: 2px dashed #111; outline-offset: -2px; }
+          .debug .float::after, .debug .panel::after { content: attr(data-capa); font: 600 11px var(--f-mono); background: #111; color: #fff; padding: 2px 6px; position: relative; top: -4px; }
+          .toggle { position: fixed; right: 12px; bottom: 12px; z-index: 5; min-height: 44px; padding: 0 18px; border: 0; border-radius: 99px; background: var(--ink); color: var(--cream); font-weight: 600; cursor: pointer; }
+          @media (max-width: 640px) {
+            .hero { grid-template-columns: 1fr; }
+            .float { grid-area: 7 / 3 / 11 / 11; padding: 14px; }
+            .logos { justify-content: flex-start; font-size: 16px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const t = document.querySelector('.toggle');
+          t.addEventListener('click', () => {
+            const on = document.body.classList.toggle('debug');
+            t.setAttribute('aria-pressed', on); t.textContent = on ? 'Ocultar capas' : 'Ver capas';
+          });
+        </script>
+        <figcaption>Las tres capas viven en la misma retícula de 10×10: la foto ocupa de la celda 1 a la 8, el panel de la 3 a la 10 y la tarjeta se ancla abajo a la derecha. El solape sale de que las áreas se pisan; el orden lo decide <code>z-index</code>, que en Grid funciona sin <code>position</code>.</figcaption>
+      </figure>
+
+      <p>¿Por qué no usar <code>position: absolute</code>? Porque con Grid las capas <strong>siguen ocupando espacio</strong>. El contenedor mide lo que mide su contenido, la tarjeta no tapa el texto de debajo si crece y el conjunto responde a la anchura sin números mágicos. Con <code>absolute</code> tendrías que reservar altura a mano y parchear cada breakpoint.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El desplazamiento tiene que ser <strong>claramente intencionado</strong>: entre un 15 y un 25 % del tamaño de la foto. Un panel desplazado 8 px parece un error de maquetación; uno desplazado medio ancho parece otro elemento. Y una sola capa de color: si además la tarjeta es naranja, el truco se pierde.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>No quites el solape: es lo que da carácter al hero. Apila texto y visual (el texto primero, porque es lo que vende), <strong>reduce el desplazamiento</strong> y deja que la tarjeta flotante tape menos foto. La fila de logos pasa a dos líneas alineadas a la izquierda; si son muchos, conviértela en una tira horizontal con scroll.</p>
+      </div>
+
+      <h2>Recorridos: sticky, tiras y cifras</h2>
+      <p>Las webs de producto caro <strong>cuentan en orden</strong>. El patrón más útil es el split-screen con sticky: una imagen fija a un lado mientras el texto avanza al otro, y la imagen cambia según el paso que estás leyendo.</p>
+
+      <figure class="lab" data-title="Split-screen con sticky" data-hint="Desliza dentro de la demo" data-height="520" data-height-mobile="620" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <header class="top"><p>Torre Lumen · Residencia 41B</p><h1>Un día en la <em>planta 41</em></h1><span class="hint">Desliza dentro de la demo</span></header>
+          <section class="story">
+            <div class="media" aria-hidden="true">
+              <div class="arch">
+                <i class="sky s1"></i><i class="sky s2"></i><i class="sky s3"></i><i class="sky s4"></i>
+                <svg viewBox="0 0 300 120" preserveAspectRatio="none"><path d="M0 120V70h22V48h18v22h16V30h26v40h14V58h20V20h30v50h18V44h22v26h14V52h24v18h20V36h28v34h28v50z"/></svg>
+              </div>
+              <p class="clock">07:40</p>
+            </div>
+            <div class="steps">
+              <article class="step" data-t="07:40"><span>07:40</span><h2>Amanecer sobre el puerto</h2><p>El sol sale por la bocana y entra hasta el fondo del salón. Los cristales no tienen montantes: solo horizonte.</p></article>
+              <article class="step" data-t="13:00"><span>13:00</span><h2>Luz cenital, sombra fresca</h2><p>El voladizo de la terraza corta el sol de mediodía. Dentro, la piedra se mantiene fresca sin aire acondicionado.</p></article>
+              <article class="step" data-t="20:15"><span>20:15</span><h2>La hora azul en la terraza</h2><p>Treinta y dos metros cuadrados orientados a poniente. A esta hora el cielo y el mar son del mismo color.</p></article>
+              <article class="step" data-t="23:30"><span>23:30</span><h2>La ciudad encendida</h2><p>Desde la planta 41 Valencia es un mapa de luz. El dormitorio principal se oscurece por completo con un gesto.</p></article>
+            </div>
+          </section>
+          <footer class="end">Residencia 41B · 186 m² · Disponible</footer>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #141127; color: #efe6d6; }
+          .top { padding: 56px 32px 24px; }
+          .top p, .step span, .clock, .hint { font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #c9a77a; }
+          h1 { margin: 10px 0 14px; font: 400 clamp(38px, 7vw, 64px)/.95 var(--f-serif); } h1 em { color: #f2b66d; }
+          .story { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 0 32px; }
+          /* La imagen se queda pegada mientras su columna dura */
+          .media { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+          .arch { position: relative; flex: none; width: min(100%, 260px); aspect-ratio: 3 / 4.2; border-radius: 999px 999px 6px 6px; overflow: hidden; box-shadow: 0 0 0 1px #efe6d633, 0 40px 80px -30px #000; }
+          .sky { position: absolute; inset: 0; opacity: 0; transition: opacity .9s ease; }
+          .s1 { background: linear-gradient(#7d8fc0, #f0b98c 70%, #f7dcb4); }
+          .s2 { background: linear-gradient(#5d9bd6, #a9d1ef 70%, #e8f1f4); }
+          .s3 { background: linear-gradient(#2b2a63, #8a5a9a 55%, #f09a7c); }
+          .s4 { background: linear-gradient(#07061a, #1d1a45 70%, #3a2c5c); }
+          [data-step="1"] .s1, [data-step="2"] .s2, [data-step="3"] .s3, [data-step="4"] .s4 { opacity: 1; }
+          .arch svg { position: absolute; bottom: 0; width: 100%; height: 34%; fill: #0f0d22; }
+          [data-step="4"] .arch svg { fill: #0b0a1c; filter: drop-shadow(0 -2px 6px #f2b66d66); }
+          .step { min-height: 90svh; display: grid; align-content: center; opacity: .25; transition: opacity .5s; }
+          .step.active { opacity: 1; }
+          .step h2 { margin: 8px 0 12px; font: 400 clamp(28px, 4vw, 38px)/1.05 var(--f-serif); }
+          .step p { margin: 0; max-width: 34ch; font: 400 16px/1.6 var(--f-read); color: #cfc4d8; }
+          .end { padding: 60px 32px; border-top: 1px solid #efe6d622; font-size: 13px; }
+          /* Móvil: una columna, la imagen pegada arriba y el texto pasa por debajo */
+          @media (max-width: 640px) {
+            .top { padding: 40px 20px 16px; }
+            .story { display: block; padding: 0; }
+            .media { height: 44svh; z-index: 1; background: linear-gradient(#141127 85%, #14112700); padding: 12px 0 18px; }
+            .arch { width: auto; height: calc(44svh - 30px); }
+            .clock { display: none; }
+            .step { min-height: 62svh; padding: 0 20px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const media = document.querySelector('.media'), clock = document.querySelector('.clock');
+          const steps = document.querySelectorAll('.step');
+          // Un paso está «activo» cuando cruza la franja central de la pantalla
+          const io = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+              if (!e.isIntersecting) return;
+              steps.forEach((s) => s.classList.toggle('active', s === e.target));
+              media.dataset.step = [...steps].indexOf(e.target) + 1;
+              clock.textContent = e.target.dataset.t;
+            });
+          }, { rootMargin: '-45% 0px -45% 0px' });
+          steps.forEach((s) => io.observe(s));
+          media.dataset.step = 1; steps[0].classList.add('active');
+        </script>
+        <figcaption><code>position: sticky</code> pega la imagen mientras dure su contenedor (<code>.story</code>): cuando la última frase sale, la imagen se va con ella. El cambio de cielo es un fundido entre cuatro capas; un IntersectionObserver solo marca qué paso está en el centro.</figcaption>
+      </figure>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Si sticky «no funciona», casi siempre es por una de estas tres cosas: un antepasado con <code>overflow: hidden</code> o <code>auto</code> (crea otro contenedor de scroll), olvidar <code>top</code>, o que el elemento mida lo mismo que su contenedor y no tenga recorrido. En Grid, además, la columna se estira: por eso aquí la altura la marca el propio <code>.media</code>.</p>
+      </div>
+
+      <p>Entre capítulos, las webs premium meten <strong>secciones de declaración</strong>: una frase enorme, tres cifras gigantes y nada más. Funcionan como un silencio en una canción. Detrás, una <strong>tira horizontal</strong> con <code>scroll-snap</code> para lo que sí es una colección.</p>
+
+      <figure class="lab" data-title="Declaración, cifras y tira horizontal" data-hint="Arrastra la tira o usa las flechas" data-height="560" data-height-mobile="760" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="statement">
+            <p class="eyebrow">Torre Lumen · Valencia</p>
+            <h1>Una sola residencia por planta. <em>Cincuenta y cuatro veces.</em></h1>
+          </section>
+          <dl class="figures">
+            <div><dt>Altura</dt><dd>212<small>m</small></dd></div>
+            <div><dt>Plantas</dt><dd>54</dd></div>
+            <div><dt>Vistas</dt><dd>360<small>°</small></dd></div>
+          </dl>
+          <div class="strip-head"><h2>Disponibles ahora</h2>
+            <div class="arrows"><button data-d="-1" aria-label="Anterior">‹</button><button data-d="1" aria-label="Siguiente">›</button></div></div>
+          <ol class="strip">
+            <li><div class="plan"></div><span>Planta 41</span><h3>Poniente</h3><p>186 m² · 3 dormitorios</p><b>2,4 M€</b></li>
+            <li><div class="plan"></div><span>Planta 44</span><h3>Bocana</h3><p>212 m² · 3 dormitorios</p><b>2,9 M€</b></li>
+            <li><div class="plan"></div><span>Planta 47</span><h3>Albufera</h3><p>240 m² · 4 dormitorios</p><b>3,3 M€</b></li>
+            <li><div class="plan"></div><span>Planta 50</span><h3>Mirador</h3><p>268 m² · 4 dormitorios</p><b>3,8 M€</b></li>
+            <li><div class="plan"></div><span>Planta 54</span><h3>Ático Lumen</h3><p>410 m² · 5 dormitorios</p><b>Consultar</b></li>
+          </ol>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --pad: clamp(20px, 5vw, 48px); --warm: #f2b66d; }
+          body { background: #141127; color: #efe6d6; padding-bottom: 40px; }
+          .statement { padding: 64px var(--pad) 40px; }
+          .eyebrow, dt, .strip span { font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #c9a77a; }
+          .statement h1 { max-width: 16ch; margin: 14px 0 0; font: 400 clamp(36px, 7.6vw, 72px)/.98 var(--f-serif); letter-spacing: -.015em; }
+          .statement em { color: var(--warm); }
+          .figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 0; padding: 0 var(--pad); }
+          .figures div { border-top: 1px solid #efe6d633; padding-top: 12px; }
+          dd { margin: 4px 0 0; font: 300 clamp(64px, 12vw, 120px)/.85 var(--f-serif); letter-spacing: -.03em; }
+          dd small { font-size: .32em; margin-left: 4px; color: #c9a77a; }
+          .strip-head { display: flex; justify-content: space-between; align-items: end; padding: 56px var(--pad) 18px; }
+          .strip-head h2 { margin: 0; font: 400 28px var(--f-serif); }
+          .arrows button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #efe6d644; background: none; color: inherit; font-size: 22px; cursor: pointer; }
+          /* La tira: sale a sangre, pero el primer elemento se alinea con el texto */
+          .strip { display: grid; grid-auto-flow: column; grid-auto-columns: min(74%, 250px); gap: 22px; margin: 0; padding: 0 var(--pad) 12px; list-style: none;
+            overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--pad); overscroll-behavior-x: contain; scrollbar-width: none; }
+          .strip li { scroll-snap-align: start; }
+          .plan { aspect-ratio: 1; margin-bottom: 14px; border: 1px solid #efe6d622; border-radius: 4px; background: #1b1734; }
+          .plan svg { width: 100%; height: 100%; }
+          .strip h3 { margin: 6px 0 2px; font: 400 26px/1.1 var(--f-serif); }
+          .strip p { margin: 0 0 10px; color: #b7aec4; font-size: 14px; }
+          .strip b { font-weight: 500; color: var(--warm); }
+          @media (max-width: 640px) {
+            .figures { grid-template-columns: 1fr; gap: 0; }
+            .figures div { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; }
+            dd { font-size: 64px; }
+            .arrows { display: none; }      /* en táctil se arrastra con el dedo */
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Planos sencillos dibujados con SVG; la estancia cálida cambia en cada uno
+          const rooms = [[10,10,46,50],[56,10,34,30],[56,40,34,50],[10,60,46,30]];
+          document.querySelectorAll('.plan').forEach((el, i) => {
+            el.innerHTML = `<svg viewBox="0 0 100 100" fill="none" stroke="#efe6d6" stroke-opacity=".55" stroke-width=".8">` +
+              rooms.map(([x, y, w, h], j) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${j === i % 4 ? 'fill="#f2b66d" fill-opacity=".28"' : ''}/>`).join('') +
+              `<path d="M10 94h80M90 10v84" stroke-dasharray="2 2"/></svg>`;
+          });
+          const strip = document.querySelector('.strip');
+          document.querySelectorAll('.arrows button').forEach((b) => b.addEventListener('click', () =>
+            strip.scrollBy({ left: b.dataset.d * strip.querySelector('li').offsetWidth, behavior: 'smooth' })));
+        </script>
+        <figcaption>El truco fino está en <code>scroll-padding-inline</code> igual al margen de la página: la tira sale a sangre por la derecha, pero cada elemento se detiene alineado con el texto de arriba. En el móvil las flechas desaparecen y el elemento mide un 74 % para que asome el siguiente.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Las cifras grandes solo funcionan si son <strong>pocas, redondas y significativas</strong>. Tres cifras, nunca seis. Pon la unidad pequeña y en otro color, y usa una serif ligera o una sans muy fina a tamaño enorme: el contraste de escala con el texto normal es lo que se ve caro.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El split-screen se convierte en <strong>imagen pegada arriba (40–45 % de la altura) y texto que pasa por debajo</strong>, con <code>svh</code> y no <code>vh</code> para que la barra del navegador no la haga saltar. Las cifras pasan a filas con la etiqueta a la izquierda. La tira es el patrón más natural del móvil: quita las flechas, deja que asome el siguiente elemento y añade <code>overscroll-behavior-x: contain</code> para que el gesto no active el «atrás» del navegador.</p>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>position: sticky</code>, <code>scroll-snap-type</code> y las unidades <code>svh</code>/<code>dvh</code> funcionan en todos los navegadores actuales. Scroll snap forma parte de Interop 2026 para pulir las diferencias de comportamiento entre motores.</p>
+        <!-- verificar soporte: sticky, scroll-snap y svh no están en research.md con versiones -->
+      </div>
+
+      <h2>Listas como índice</h2>
+      <p>Las webs de arquitectura, moda y hoteles de lujo casi nunca muestran sus proyectos en cards. Usan un <strong>índice</strong>: filas tipográficas, separadas por una línea fina, con una vista previa que aparece al pasar el ratón. Ocupa la mitad de espacio, se lee como un catálogo y deja que la tipografía mande.</p>
+
+      <figure class="lab" data-title="Índice de residencias" data-hint="Pasa el ratón; en móvil, toca una fila" data-height="520" data-height-mobile="620">
+        <script type="text/x-demo" data-lang="html">
+          <header class="ih"><h1>Índice de <em>residencias</em></h1><p>6 a la venta</p></header>
+          <ul class="index"></ul>
+          <div class="preview" aria-hidden="true"><div class="pv"></div><span></span></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f4efe6; color: #1d1a24; padding: clamp(20px, 5vw, 44px); }
+          .ih { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 20px; }
+          .ih h1 { margin: 0; font: 400 clamp(34px, 6vw, 54px)/1 var(--f-serif); } .ih em { color: #6b4fa0; }
+          .ih p { margin: 0; font: 500 12px var(--f-mono); color: #6d6677; white-space: nowrap; }
+          .index { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid #1d1a2433; }
+          .row { all: unset; box-sizing: border-box; width: 100%; min-height: 56px; cursor: pointer; border-top: 1px solid #1d1a2433;
+            display: grid; grid-template-columns: 3.2rem 1fr 6rem 6rem 7rem; gap: 12px; align-items: baseline; padding: 14px 0; transition: opacity .3s, padding .3s; }
+          .no, .m, .st { font: 500 12px var(--f-mono); color: #6d6677; }
+          .name { font: 400 clamp(22px, 3.4vw, 30px)/1.1 var(--f-serif); }
+          .price { font-weight: 600; font-size: 15px; }
+          .st { text-align: right; } .st.res { color: #b0532b; }
+          .row:focus-visible { outline: 2px solid #6b4fa0; outline-offset: 2px; }
+          /* Ficha desplegable: funciona igual con ratón y con dedo */
+          .detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s cubic-bezier(.2, .8, .2, 1); }
+          .detail > div { overflow: hidden; display: grid; grid-template-columns: 140px 1fr; gap: 16px; align-items: center; }
+          [aria-expanded="true"] + .detail { grid-template-rows: 1fr; }
+          .detail .th { aspect-ratio: 4 / 3; margin: 0 0 16px; border-radius: 3px; background: var(--img); }
+          .detail p { margin: 0 0 16px; font-size: 14px; color: #4b4554; }
+          .detail a { color: #6b4fa0; font-weight: 600; }
+          /* Solo con ratón: atenuar el resto y mostrar la vista previa flotante */
+          @media (hover: hover) and (pointer: fine) {
+            .index:hover .row { opacity: .35; }
+            .index .row:hover { opacity: 1; padding-left: 10px; }
+          }
+          .preview { position: fixed; left: 0; top: 0; width: 220px; pointer-events: none; z-index: 5; opacity: 0; scale: .9; transition: opacity .25s, scale .35s cubic-bezier(.2, .8, .2, 1); }
+          .preview.on { opacity: 1; scale: 1; }
+          .pv { aspect-ratio: 4 / 5; border-radius: 3px; background: var(--img); box-shadow: 0 30px 60px -24px #1d1a2477; transition: background .3s; }
+          .preview span { display: block; margin-top: 8px; font: 500 11px var(--f-mono); }
+          @media (max-width: 640px) {
+            .row { grid-template-columns: 2.6rem 1fr auto; row-gap: 2px; }
+            .m { grid-column: 2; grid-row: 2; } .st { display: none; }
+            .price { grid-column: 3; grid-row: 1; }
+            .detail > div { grid-template-columns: 1fr; gap: 0; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const data = [['41B','Poniente','186 m²','2,4 M€',300],['44A','Bocana','212 m²','2,9 M€',270],['46C','Huerta','198 m²','2,6 M€',330],
+            ['47A','Albufera','240 m²','3,3 M€',30,1],['50B','Mirador','268 m²','3,8 M€',260],['54','Ático Lumen','410 m²','Consultar',330]];
+          // «Fotos» hechas con degradados: cielo, edificio y ventanas cálidas
+          const img = (h) => `radial-gradient(circle at 74% 26%, #fff9 0 5%, transparent 5.5%),
+            repeating-linear-gradient(0deg, transparent 0 9px, #f2b66dcc 9px 11px) 28% 100% / 34% 52% no-repeat, linear-gradient(#120f24, #120f24) 28% 100% / 40% 56% no-repeat,
+            linear-gradient(#1d1934, #1d1934) 88% 100% / 30% 30% no-repeat, linear-gradient(oklch(42% .12 ${h}), oklch(80% .1 ${h + 50}))`;
+          const ul = document.querySelector('.index');
+          ul.innerHTML = data.map(([no, n, m, p, h, res]) => `<li style="--img:${img(h)}">
+            <button class="row" aria-expanded="false" data-n="Residencia ${n} · ${no}"><span class="no">${no}</span><span class="name">${n}</span><span class="m">${m}</span><span class="price">${p}</span><span class="st ${res ? 'res' : ''}">${res ? 'Reservada' : 'Disponible'}</span></button>
+            <div class="detail"><div><div class="th"></div><div><p>Terraza a poniente, cocina abierta en roble y dormitorio principal con baño de piedra.</p><a href="#">Ver planos y precio</a></div></div></div></li>`).join('');
+          ul.addEventListener('click', (e) => {
+            const row = e.target.closest('.row'); if (!row) return;
+            const open = row.getAttribute('aria-expanded') !== 'true';
+            ul.querySelectorAll('.row').forEach((r) => r.setAttribute('aria-expanded', r === row && open));
+          });
+          // Vista previa que sigue al cursor con inercia, solo si hay ratón
+          if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            const pv = document.querySelector('.preview'); let x = 0, y = 0, tx = 0, ty = 0;
+            ul.addEventListener('pointerover', (e) => { const li = e.target.closest('li'); if (!li) return;
+              pv.style.setProperty('--img', li.style.getPropertyValue('--img')); pv.querySelector('span').textContent = li.querySelector('.row').dataset.n; pv.classList.add('on'); });
+            ul.addEventListener('pointerleave', () => pv.classList.remove('on'));
+            addEventListener('pointermove', (e) => { tx = e.clientX + 24; ty = e.clientY - 140; });
+            (function loop() { x += (tx - x) * .14; y += (ty - y) * .14; pv.style.translate = `${Math.min(x, innerWidth - 240)}px ${Math.max(8, y)}px`; requestAnimationFrame(loop); })();
+          }
+        </script>
+        <figcaption>Dos interacciones para el mismo contenido. Con ratón, la fila bajo el cursor se queda a plena opacidad, el resto se atenúa y una vista previa sigue al puntero con inercia. Con el dedo no hay hover: cada fila es un <code>button</code> que despliega su ficha con la imagen dentro. El clic también funciona en escritorio, así que nada depende del hover.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un índice funciona cuando las filas tienen <strong>pocas columnas y una sola protagonista</strong> (aquí, el nombre en serif grande). Las demás van en mono pequeña y gris. Si todas las columnas pesan igual, has hecho una tabla de Excel. Y la vista previa debe ser una imagen limpia, sin texto: el texto ya está en la fila.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El hover no existe y el «mouseover» que emulan los móviles al tocar es poco fiable. Mete la vista previa dentro de <code>@media (hover: hover) and (pointer: fine)</code> y ofrece la versión táctil: <strong>la fila se despliega al tocar</strong> con la imagen dentro, filas de 56 px o más y, como máximo, tres datos por fila (número, nombre, precio). El resto va en la ficha desplegada.</p>
+      </div>
+
+      <h2>El mismo contenido, seis composiciones</h2>
+      <p>Esta es la demo más importante de la lección. Cuatro servicios de la torre, exactamente el mismo HTML, y seis maneras de componerlos. Cambia entre ellas, mira qué transmite cada una y lee debajo de los botones en qué se convierte en el móvil.</p>
+
+      <figure class="lab" data-title="Seis composiciones, un solo HTML" data-hint="Cambia de composición" data-height="560" data-height-mobile="680" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar" role="group" aria-label="Composición">
+            <button data-l="cards" aria-pressed="true">Cards</button><button data-l="lista">Lista editorial</button><button data-l="split">Split sticky</button>
+            <button data-l="offset">Retícula desplazada</button><button data-l="tira">Tira horizontal</button><button data-l="frase">Declaración</button>
+          </div>
+          <p class="note"></p>
+          <section class="amen" data-layout="cards">
+            <header class="intro"><p class="k">Servicios de la torre</p><h1>Lo que hay <em>por encima</em> de tu casa</h1></header>
+            <div class="items">
+              <article style="--h:240"><span class="n">01</span><div class="img"></div><h2>Piscina infinita</h2><p>Planta 54, climatizada todo el año, con el puerto a tus pies.</p></article>
+              <article style="--h:40"><span class="n">02</span><div class="img"></div><h2>Spa y hammam</h2><p>Piedra caliza, vapor y una sala de descanso que mira a poniente.</p></article>
+              <article style="--h:80"><span class="n">03</span><div class="img"></div><h2>Biblioteca</h2><p>Doble altura, chimenea y un librero que viene los jueves.</p></article>
+              <article style="--h:330"><span class="n">04</span><div class="img"></div><h2>Bodega privada</h2><p>Una taquilla climatizada por residencia y una cata cada mes.</p></article>
+            </div>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #141127; color: #efe6d6; } h1, h2, p { margin: 0; }
+          .bar { position: sticky; top: 0; z-index: 3; display: flex; gap: 6px; padding: 10px 16px; overflow-x: auto; scrollbar-width: none; background: #141127ee; border-bottom: 1px solid #efe6d61a; }
+          .bar button { flex: none; min-height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid #efe6d633; background: none; color: inherit; font-size: 13px; cursor: pointer; }
+          .bar [aria-pressed="true"] { background: #f2b66d; color: #141127; border-color: #f2b66d; font-weight: 600; }
+          .note { padding: 12px 20px 0; font-size: 13px; line-height: 1.5; color: #b7aec4; } .note b { color: #f2b66d; font-weight: 600; }
+          .amen { padding: 28px 20px 60px; }
+          .k, .n { font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #c9a77a; }
+          .intro h1 { margin: 8px 0 28px; font: 400 clamp(32px, 5.6vw, 52px)/1 var(--f-serif); } .intro em { color: #f2b66d; }
+          .img { aspect-ratio: 4 / 3; border-radius: 3px; background: linear-gradient(160deg, oklch(62% .11 var(--h)), oklch(26% .07 calc(var(--h) + 40))); }
+          h2 { font: 400 24px/1.1 var(--f-serif); }
+          article p { font-size: 14px; color: #b7aec4; margin-top: 6px; }
+          /* 1 · Cards: todo pesa lo mismo */
+          [data-layout="cards"] .items { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+          [data-layout="cards"] article { padding: 10px 10px 16px; border-radius: 12px; background: #efe6d60d; border: 1px solid #efe6d61a; }
+          [data-layout="cards"] .img { margin-bottom: 12px; border-radius: 8px; } [data-layout="cards"] .n { display: none; }
+          /* 2 · Lista editorial: tipografía y líneas, sin cajas */
+          [data-layout="lista"] .img { display: none; }
+          [data-layout="lista"] article { display: grid; grid-template-columns: 3rem 1fr 1fr; gap: 6px 16px; align-items: baseline; padding: 20px 0; border-top: 1px solid #efe6d633; }
+          [data-layout="lista"] h2 { font-size: clamp(28px, 4.4vw, 40px); }
+          /* 3 · Split sticky: la intro se queda, los servicios pasan */
+          [data-layout="split"] { display: grid; grid-template-columns: 1fr 1.25fr; gap: 32px; align-items: start; }
+          [data-layout="split"] .intro { position: sticky; top: 84px; }
+          [data-layout="split"] .items { display: grid; gap: 44px; } [data-layout="split"] .img { aspect-ratio: 16 / 10; margin: 8px 0 12px; }
+          /* 4 · Retícula desplazada: tamaños y alturas distintas */
+          [data-layout="offset"] .items { display: grid; grid-template-columns: repeat(12, 1fr); gap: 28px 16px; }
+          [data-layout="offset"] article:nth-child(1) { grid-column: 1 / 8; } [data-layout="offset"] article:nth-child(2) { grid-column: 9 / 13; margin-top: 90px; }
+          [data-layout="offset"] article:nth-child(3) { grid-column: 2 / 6; } [data-layout="offset"] article:nth-child(4) { grid-column: 7 / 13; margin-top: -40px; }
+          [data-layout="offset"] article:nth-child(even) .img { aspect-ratio: 4 / 5; } [data-layout="offset"] .img { margin: 6px 0 10px; }
+          /* 5 · Tira horizontal con scroll-snap */
+          [data-layout="tira"] .items { display: grid; grid-auto-flow: column; grid-auto-columns: min(60%, 270px); gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -20px; padding-inline: 20px; scroll-padding-inline: 20px; }
+          [data-layout="tira"] article { scroll-snap-align: start; } [data-layout="tira"] .img { aspect-ratio: 3 / 4; margin: 6px 0 12px; }
+          /* 6 · Declaración: los nombres se convierten en una frase enorme */
+          [data-layout="frase"] .intro h1 { font-size: 20px; margin-bottom: 10px; font-family: var(--f-sans); font-weight: 500; }
+          [data-layout="frase"] .items { font: 400 clamp(36px, 7vw, 68px)/1.08 var(--f-serif); letter-spacing: -.01em; }
+          [data-layout="frase"] article { display: inline; } [data-layout="frase"] .img, [data-layout="frase"] p { display: none; }
+          [data-layout="frase"] h2 { display: inline; font: inherit; }
+          [data-layout="frase"] .n { vertical-align: super; font-size: 11px; margin-right: 4px; }
+          [data-layout="frase"] article:not(:last-child)::after { content: " / "; color: #f2b66d; }
+          @media (max-width: 640px) {
+            [data-layout="lista"] article { grid-template-columns: 2.4rem 1fr; } [data-layout="lista"] p { grid-column: 2; }
+            [data-layout="split"] { grid-template-columns: 1fr; } [data-layout="split"] .intro { position: static; }
+            [data-layout="offset"] .items { grid-template-columns: 1fr; }
+            [data-layout="offset"] article:nth-child(n) { grid-column: 1; margin: 0; }
+            [data-layout="offset"] article:nth-child(odd) { margin-right: 18%; } [data-layout="offset"] article:nth-child(even) { margin-left: 18%; }
+            [data-layout="tira"] .items { grid-auto-columns: 78%; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const notes = {
+            cards:  'Todo pesa lo mismo y nada es protagonista. <b>En el móvil:</b> cuatro cajas iguales en columna, un scroll largo y monótono.',
+            lista:  'Jerarquía tipográfica y aire, cero cajas. <b>En el móvil:</b> número y título en una línea, descripción debajo. Funciona tal cual.',
+            split:  'La idea queda fija mientras pasan los detalles. <b>En el móvil:</b> se apila y la intro deja de ser sticky; si la quieres pegada, que sea solo una línea.',
+            offset: 'Ritmo de revista: tamaños distintos y alturas desplazadas. <b>En el móvil:</b> una columna con sangrías alternas a izquierda y derecha.',
+            tira:   'Colección para explorar con el gesto. <b>En el móvil:</b> el patrón más natural; que asome el siguiente elemento (78 % de ancho).',
+            frase:  'Una entrada de sección, no una ficha: se pierde el detalle. <b>En el móvil:</b> serif a unos 36 px, sigue leyéndose como una frase.',
+          };
+          const amen = document.querySelector('.amen'), note = document.querySelector('.note');
+          const set = (l) => {
+            amen.dataset.layout = l; note.innerHTML = notes[l];
+            document.querySelectorAll('.bar button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.l === l));
+          };
+          document.querySelector('.bar').addEventListener('click', (e) => { if (e.target.dataset.l) { set(e.target.dataset.l); scrollTo(0, 0); } });
+          set('cards');
+        </script>
+        <figcaption>El HTML no cambia nunca: solo el atributo <code>data-layout</code>. Fíjate en lo que comunica cada opción. Las cards dicen «aquí tienes cuatro cosas»; la lista, «esto es un catálogo cuidado»; el split, «te cuento una idea»; la retícula desplazada, «esto es una revista»; la tira, «explora»; la declaración, «esto es lo que somos».</figcaption>
+      </figure>
+
+      <h3>Cuándo las cards sí son la respuesta</h3>
+      <p>No se trata de prohibirlas. Las cards son la estructura correcta cuando se cumplen tres condiciones a la vez:</p>
+      <ul>
+        <li><strong>Colección homogénea y comparable</strong>: productos de un catálogo de PrestaShop, entradas de un blog, propiedades en un buscador. El usuario compara iguales.</li>
+        <li><strong>Cada pieza es una unidad independiente</strong> con su propio enlace, imagen y acciones (añadir al carrito, guardar).</li>
+        <li><strong>Hay muchas y se filtran</strong>: si el contenido cambia de orden y de número, una retícula de cajas aguanta cualquier combinación.</li>
+      </ul>
+      <p>Si el contenido es una historia, una propuesta de valor o una lista corta que quieres que se lea en orden, las cards le quitan intención. En una landing, casi nunca son la mejor opción; en un listado, casi siempre lo son.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una prueba rápida: si puedes cambiar el orden de las cards sin que se pierda nada, son una colección y las cards valen. Si el orden importa (primero la piscina porque es lo más espectacular), es una narración, y entonces lista, split o declaración.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Diseñas la home de una bodega: tres vinos de la casa, cada uno con su historia, y quieres que el visitante los lea en orden. ¿Qué estructura eliges?</p>
+        <ol>
+          <li>Tres cards iguales en fila, con foto, nombre y botón.</li>
+          <li>Split sticky o lista editorial: el orden y la historia mandan.</li>
+          <li>Una tira horizontal con scroll-snap.</li>
+        </ol>
+        <p class="why">Son pocos elementos, el orden importa y cada uno tiene historia: es narración, no colección. La tira oculta los vinos dos y tres en el móvil, y las cards los igualan. En la tienda, donde se comparan veinte vinos, sí irían cards.</p>
+      </div>
+
+      <h2>Piezas que se adaptan solas</h2>
+      <p>Tres herramientas modernas hacen que estas composiciones sean robustas: <strong><code>subgrid</code></strong> para alinear entre elementos hermanos, <strong>container queries</strong> para que un componente cambie según el sitio que ocupa y no según la pantalla, y <strong><code>aspect-ratio</code> con <code>object-fit</code></strong> para que las imágenes nunca se deformen. Estrecha el contenedor y apaga el subgrid.</p>
+
+      <figure class="lab" data-title="Subgrid, container queries y aspect-ratio" data-hint="Mueve el ancho y apaga el subgrid" data-height="540" data-height-mobile="640">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <label>Ancho <input type="range" min="260" max="760" value="760"><output>760 px</output></label>
+            <button aria-pressed="true">subgrid: sí</button>
+          </div>
+          <section class="wrap">
+            <p class="k">Diario de obra · Torre Lumen</p>
+            <ol class="journal">
+              <li><img alt="" data-h="250"><span>Semana 12</span><h3>Hormigonado de la planta 30</h3><p>Seis horas de vertido continuo y 480 m³ de hormigón.</p><time>14 mar 2026</time></li>
+              <li><img alt="" data-h="30"><span>Semana 19</span><h3>Llega desde Bilbao el primer módulo de fachada de vidrio curvo</h3><p>Pesa cuatro toneladas y se iza de noche.</p><time>2 may 2026</time></li>
+              <li><img alt="" data-h="300"><span>Semana 27</span><h3>Grúa a 212 metros</h3><p>Coronamos la estructura con la grúa más alta de la Comunitat.</p><time>27 jun 2026</time></li>
+            </ol>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f4efe6; color: #1d1a24; padding: 18px; }
+          .ctrl { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 18px; font-size: 13px; }
+          .ctrl label { display: flex; gap: 10px; align-items: center; white-space: nowrap; } .ctrl input { width: 150px; }
+          .ctrl button { min-height: 44px; padding: 0 16px; border-radius: 99px; border: 1px solid #1d1a2444; background: #1d1a24; color: #f4efe6; cursor: pointer; }
+          .ctrl [aria-pressed="false"] { background: none; color: inherit; }
+          /* El componente mide su contenedor, no la pantalla */
+          .wrap { container-type: inline-size; width: min(var(--w, 760px), 100%); margin-inline: auto; padding: 14px; outline: 1px dashed #6b4fa066; }
+          .k, .journal span, time { font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #6d6677; }
+          .journal { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; }
+          /* Cada entrada ocupa 5 filas de la lista y las comparte con sus hermanas */
+          .journal li { display: grid; grid-row: span 5; grid-template-rows: subgrid; row-gap: 8px; align-content: start; }
+          .off .journal li { grid-template-rows: none; }
+          img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 30%; border-radius: 3px; }
+          h3 { margin: 0; font: 400 22px/1.1 var(--f-serif); }
+          p { margin: 0; font-size: 13px; color: #4b4554; }
+          time { align-self: end; padding-top: 8px; border-top: 1px solid #1d1a2422; }
+          /* Contenedor estrecho: cada entrada pasa a fila con miniatura cuadrada */
+          @container (width < 540px) {
+            .journal { grid-template-columns: 1fr; }
+            .journal li { grid-row: auto; grid-template-rows: none; grid-template-columns: 84px 1fr; column-gap: 14px; row-gap: 3px; padding: 14px 0; border-top: 1px solid #1d1a2422; }
+            .journal li > :not(img) { grid-column: 2; }
+            img { grid-row: 1 / span 4; aspect-ratio: 1; }
+            time { border: 0; padding: 0; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Imágenes panorámicas (2:1) generadas en SVG: object-fit decide cómo encajan en 4:3 o 1:1
+          const photo = (h) => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200">
+            <defs><linearGradient id="g" x2="0" y2="1"><stop offset="0" stop-color="hsl(${h} 40% 58%)"/><stop offset="1" stop-color="hsl(${h + 30} 55% 85%)"/></linearGradient>
+            <pattern id="p" width="10" height="9" patternUnits="userSpaceOnUse"><rect width="10" height="1.4" fill="#f4efe6" opacity=".35"/></pattern></defs>
+            <rect width="400" height="200" fill="url(#g)"/><circle cx="300" cy="70" r="22" fill="#fff" opacity=".55"/>
+            <rect x="170" y="56" width="60" height="144" fill="#2a2433"/><rect x="170" y="56" width="60" height="144" fill="url(#p)"/>
+            <path d="M200 18v38M150 22h120M255 22v46" stroke="#2a2433" stroke-width="3"/><rect y="184" width="400" height="16" fill="#1d1a24"/></svg>`);
+          document.querySelectorAll('img').forEach((i) => (i.src = photo(+i.dataset.h)));
+          const range = document.querySelector('input'), out = document.querySelector('output'), wrap = document.querySelector('.wrap');
+          const fit = () => { range.max = Math.min(760, document.body.clientWidth - 36); out.textContent = range.value + ' px'; };
+          range.addEventListener('input', () => { wrap.style.setProperty('--w', range.value + 'px'); out.textContent = range.value + ' px'; });
+          const b = document.querySelector('.ctrl button');
+          b.addEventListener('click', () => { const off = document.body.classList.toggle('off'); b.setAttribute('aria-pressed', !off); b.textContent = off ? 'subgrid: no' : 'subgrid: sí'; });
+          fit(); addEventListener('resize', fit);
+        </script>
+        <figcaption>Con subgrid, los títulos, textos y fechas de las tres entradas comparten filas: aunque el segundo título ocupe cuatro líneas, las fechas siguen alineadas. Apágalo y verás cómo cada columna va a su aire. Por debajo de 540 px de <em>contenedor</em> (no de pantalla), el componente pasa a filas. Las imágenes son apaisadas, pero <code>object-fit: cover</code> las recorta a 4:3 o 1:1 sin deformarlas.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="css" data-label="Las tres piezas, en limpio">
+        /* 1. El padre define las filas; cada hijo las hereda */
+        .lista { display: grid; grid-template-columns: repeat(3, 1fr); }
+        .lista > li { grid-row: span 4; display: grid; grid-template-rows: subgrid; }
+
+        /* 2. El componente responde al sitio que ocupa */
+        .zona { container-type: inline-size; }
+        @container (width < 540px) { .ficha { grid-template-columns: 84px 1fr; } }
+
+        /* 3. Proporción fija y recorte sin deformar */
+        .ficha img { aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 30%; }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Alinear líneas base entre columnas (títulos con títulos, fechas con fechas) es uno de esos detalles que nadie nota conscientemente y todo el mundo percibe. Y fija siempre la proporción de las imágenes de un mismo grupo: tres fotos con proporciones distintas una al lado de otra es lo primero que delata una web hecha deprisa.</p>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>subgrid</code> es Baseline ampliamente disponible desde marzo de 2026 (Chrome 117, Safari 16, Firefox 71) y las container queries de tamaño desde agosto de 2025 (Chrome 105, Safari 16, Firefox 110). <code>aspect-ratio</code> y <code>object-fit</code> funcionan en todos los navegadores actuales.</p>
+        <!-- verificar soporte: aspect-ratio y object-fit no están en research.md -->
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Las container queries son tu mejor herramienta móvil: el mismo componente se ve en fila en la barra lateral del escritorio y en el móvil, sin duplicar media queries. Usa proporciones más verticales en el móvil (4:5 en lugar de 16:9): la pantalla es alta y una foto apaisada a 360 px de ancho mide solo 200 px de alto.</p>
+      </div>
+
+      <h2>Cómo se pliega cada estructura en el móvil</h2>
+      <p>Diseñar en móvil no es «poner todo en una columna». Cada estructura tiene su versión plegada y hay que decidirla, no dejar que la decida el navegador.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Estructura</th><th>En el móvil</th><th>Trampa típica</th></tr></thead>
+          <tbody>
+            <tr><td>Retícula de 12</td><td>4 columnas, márgenes fijos, una sola ruptura a sangre</td><td><code>col 7</code> inexistente que crea scroll horizontal</td></tr>
+            <tr><td>Asimetría y capas</td><td>Se apila; el solape se mantiene pero más corto</td><td>Quitar el solape y quedarse con una foto plana</td></tr>
+            <tr><td>Split sticky</td><td>Imagen pegada arriba al 40–45 % y texto debajo</td><td>Usar <code>100vh</code>: salta con la barra del navegador</td></tr>
+            <tr><td>Cifras grandes</td><td>Filas con etiqueta a la izquierda y cifra a la derecha</td><td>Cifras de 120 px que se parten en dos líneas</td></tr>
+            <tr><td>Grupos de 3–6 elementos</td><td>Tira horizontal con el siguiente asomando</td><td>Una tira sin pista visual de que hay más</td></tr>
+            <tr><td>Índice con hover</td><td>Filas que se despliegan al tocar</td><td>Información solo accesible con hover</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Orden de apilado: el HTML manda</h3>
+      <p>En el móvil se lee en el orden del HTML. Escribe el HTML en el orden en que quieres que se lea en el móvil y recoloca en escritorio con <code>grid-template-areas</code>. No uses <code>order</code> para mover contenido importante: el lector de pantalla y el tabulador siguen el HTML, no lo que ves.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Mobile first: apilar y recolocar en escritorio">
+        .hero { display: grid; gap: 24px; grid-template-areas: "texto" "visual" "logos"; }
+
+        @media (min-width: 900px) {
+          .hero {
+            grid-template-columns: 7fr 5fr;
+            grid-template-areas: "texto visual" "logos logos";
+          }
+        }
+
+        /* Sticky en móvil: corto, en svh y con fondo para que el texto pase por debajo */
+        @media (max-width: 640px) {
+          .media { position: sticky; top: 0; height: 44svh; background: var(--fondo); z-index: 1; }
+        }
+      </script>
+
+      <h3>Zonas seguras</h3>
+      <p>En un iPhone con muesca o isla, el contenido a sangre y las barras fijas pueden quedar debajo del sistema. Añade <code>viewport-fit=cover</code> al meta viewport y usa <code>env()</code> para respetar las zonas seguras solo donde importan: bordes de tiras horizontales y barras fijas inferiores.</p>
+
+      <script type="text/x-code" data-lang="html" data-label="En el head">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+      </script>
+      <script type="text/x-code" data-lang="css" data-label="Respetar la muesca y la barra de inicio">
+        .barra-reserva {
+          position: fixed; inset: auto 0 0 0;
+          padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+        }
+        .tira {
+          padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right));
+          scroll-padding-inline: max(16px, env(safe-area-inset-left));
+        }
+      </script>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Revisa cada sección con una sola pregunta: <strong>¿qué se ve sin hacer scroll?</strong> En 390 × 844 con la barra del navegador te quedan unos 700 px. Si el hero apilado empuja el botón principal por debajo, reduce la foto, no el texto. Y en una tira horizontal, todo lo que no sea el primer elemento existe solo para quien desliza.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Tu hero en escritorio es «visual a la izquierda, texto a la derecha». En el HTML pusiste el visual primero. ¿Qué haces para que en el móvil salga primero el texto?</p>
+        <ol>
+          <li>Reordenar el HTML (texto primero) y colocar el visual a la izquierda en escritorio con <code>grid-template-areas</code>.</li>
+          <li>Poner <code>order: -1</code> al texto en el móvil.</li>
+          <li>Duplicar el texto y ocultar uno de los dos según el ancho.</li>
+        </ol>
+        <p class="why">El orden del HTML es el orden de lectura para el lector de pantalla y el teclado. Con <code>grid-template-areas</code> el escritorio puede colocar el visual a la izquierda sin tocar ese orden. <code>order</code> rompe la coherencia entre lo que se ve y lo que se lee, y duplicar contenido es peor todavía.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Una retícula con líneas con nombre (<code>full</code>, <code>content</code>, <code>col N</code>) te da orden; romperla por un solo lado te da tensión.</li>
+          <li>Las capas se hacen pisando celdas de la misma retícula con <code>z-index</code>; los recorridos, con sticky, tiras con <code>scroll-snap</code> y secciones de declaración.</li>
+          <li>Las cards son para colecciones comparables. Si el orden importa, es una narración: lista, split o declaración. Y cada estructura tiene su versión móvil decidida, no heredada.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge una página de servicios de un cliente de la agencia que hoy sea una fila de cards. Rehazla en dos versiones: una <strong>lista editorial</strong> y un <strong>split sticky</strong>, sobre una retícula de 12 columnas con <code>[full-start]</code> y <code>[content-start]</code>. Para cada una, escribe en un comentario del CSS qué pasa a 390 px y compruébalo en el móvil de verdad. Quédate con la que mejor cuente el orden de los servicios.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

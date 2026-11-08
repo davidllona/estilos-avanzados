@@ -1,0 +1,12 @@
+{
+  "name": "vesper-landing",
+  "private": true,
+  "description": "Landing final del cuaderno Hora azul. Solo hace falta para reconstruir js/residencia.min.js.",
+  "scripts": {
+    "build": "esbuild src/residencia.js --bundle --format=esm --minify --alias:three/addons=three/examples/jsm --outfile=js/residencia.min.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "0.187.0"
+  }
+}

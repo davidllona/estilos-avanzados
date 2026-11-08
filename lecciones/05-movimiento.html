@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Movimiento con intención | Hora azul</title>
+<meta name="description" content="Fundamentos de animación en CSS antes del scroll: transform y opacity, duraciones, easing con cubic-bezier y linear(), escalonado, @starting-style, height:auto, @property y hovers con su versión táctil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="movimiento">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Movimiento con intención</h1>
+    <p class="lede">Antes de animar con el scroll hay que saber animar: qué propiedades, cuánto tiempo, con qué curva y, sobre todo, cuándo no mover nada.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Lo que hace que la web de la torre parezca cara no es la cantidad de cosas que se mueven, sino <em>cómo</em> se mueven: arrancan rápido, frenan con suavidad, llegan en orden y nunca a tirones. Ese «cómo» son cuatro decisiones: qué propiedad animas, cuánto dura, qué curva usa y cuándo empieza respecto a lo demás.</p>
+      <p>Esta lección va de esas decisiones. Todo lo que aprendas aquí lo vas a reutilizar tal cual cuando el que mande sea el scroll, en las lecciones 6 y 8.</p>
+
+      <h2>Qué animar y cuánto debe durar</h2>
+      <p>El navegador pinta cada fotograma en tres fases: <strong>layout</strong> (calcular tamaños y posiciones), <strong>paint</strong> (rellenar píxeles) y <strong>composite</strong> (montar las capas). Si animas <code>width</code>, <code>top</code> o <code>margin</code>, cada fotograma repite las tres. Si animas <code>transform</code> u <code>opacity</code>, solo la última, y la tarjeta gráfica la hace sin tocar el hilo principal. Por eso esas dos propiedades van fluidas incluso en un Android modesto.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Lo mismo, de dos maneras">
+        /* Mal: recalcula el layout en cada fotograma */
+        .panel { left: -360px; transition: left .4s; }
+        .panel.open { left: 0; }
+
+        /* Bien: solo se compone la capa */
+        .panel { translate: -100% 0; transition: translate .4s cubic-bezier(.16, 1, .3, 1); }
+        .panel.open { translate: 0 0; }
+      </script>
+
+      <p><code>translate</code>, <code>scale</code> y <code>rotate</code> son las propiedades individuales de transformación: hacen lo mismo que <code>transform</code>, pero puedes animarlas por separado sin pisarte. La otra decisión es la <strong>duración</strong>, y depende de cuánto recorre el elemento. Prueba los tres controles de la barra con cada modo.</p>
+
+      <figure class="lab" data-title="Duración según la distancia" data-hint="Abre el «?», el idioma y Reservar" data-height="460" data-height-mobile="560">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav">
+            <b class="logo">Mirlo</b>
+            <span class="wrap"><button class="ic" data-open="tip" aria-label="Horario">?</button><span class="tip" role="tooltip">Check-in desde las 15:00</span></span>
+            <span class="wrap"><button class="lang" data-open="menu">ES</button><ul class="menu"><li>Español</li><li>Valencià</li><li>English</li><li>Français</li></ul></span>
+            <button class="cta" data-open="sheet">Reservar</button>
+          </header>
+          <section class="hero">
+            <svg class="castle" viewBox="0 0 400 200" preserveAspectRatio="xMaxYMax meet" aria-hidden="true"><path d="M0 200 Q140 120 230 112 Q320 106 400 150 V200Z" fill="#00000030"/>
+              <path d="M150 128V96h10v8h8v-8h10v8h8v-8h10v24h30V70h8v8h8v-8h8v8h8v-8h8v50h40v-14h8v6h8v-6h8v34" fill="none" stroke="#f6d7a7" stroke-opacity=".55" stroke-width="2"/></svg>
+            <p class="k">Hotel · Morella</p><h1>Once habitaciones dentro de la <em>muralla</em></h1></section>
+          <aside class="sheet">
+            <button class="x" data-open="sheet" aria-label="Cerrar">×</button>
+            <h2>Tu estancia</h2>
+            <dl><dt>Entrada</dt><dd>vie 14 nov</dd><dt>Salida</dt><dd>dom 16 nov</dd><dt>Habitación</dt><dd>Torre, con vistas</dd></dl>
+            <button class="pay">Confirmar · 284 €</button>
+          </aside>
+          <div class="modes"><button data-m="prop" aria-pressed="true">Proporcional</button><button data-m="flat" aria-pressed="false">Todo a 400 ms</button><span class="read"></span></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          /* La duración crece con la distancia que recorre cada pieza */
+          :root { --d-tip: 120ms; --d-menu: 200ms; --d-sheet: 420ms; --out: cubic-bezier(.16, 1, .3, 1); }
+          .flat { --d-tip: 400ms; --d-menu: 400ms; --d-sheet: 400ms; }
+          body { background: #f1ebe2; color: #22201c; min-height: 100vh; }
+          .nav { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 14px 18px; }
+          .logo { margin-right: auto; font: italic 400 28px var(--f-serif); }
+          .wrap { position: relative; }
+          .ic, .lang { min-width: 44px; height: 44px; border-radius: 99px; border: 1px solid #22201c33; background: none; cursor: pointer; font-weight: 600; }
+          .cta { height: 44px; padding: 0 20px; border: 0; border-radius: 99px; background: #22201c; color: #f1ebe2; font-weight: 600; cursor: pointer; }
+          .tip { position: absolute; top: 52px; left: 50%; width: max-content; padding: 6px 10px; border-radius: 6px; background: #22201c; color: #fff; font-size: 12px;
+            opacity: 0; translate: -50% 4px; pointer-events: none; transition: opacity var(--d-tip), translate var(--d-tip) var(--out); }
+          .open-tip .tip { opacity: 1; translate: -50% 0; }
+          .menu { position: absolute; top: 52px; right: 0; margin: 0; padding: 6px; list-style: none; background: #fff; border-radius: 10px; box-shadow: 0 20px 40px -16px #0004;
+            opacity: 0; scale: .96; translate: 0 -6px; transform-origin: top right; pointer-events: none; transition: opacity var(--d-menu), scale var(--d-menu) var(--out), translate var(--d-menu) var(--out); }
+          .menu li { padding: 10px 18px; border-radius: 6px; font-size: 14px; } .menu li:hover { background: #f1ebe2; }
+          .open-menu .menu { opacity: 1; scale: 1; translate: 0 0; pointer-events: auto; }
+          .hero { margin: 0 18px; min-height: 300px; padding: 28px; display: grid; align-content: end; border-radius: 6px; color: #fff; position: relative; overflow: hidden;
+            background: radial-gradient(60% 80% at 50% 120%, transparent 60%, #00000033), linear-gradient(170deg, #b7a58d, #6e5c48 70%, #3f3327); }
+          .castle { position: absolute; right: 0; bottom: 0; width: 70%; height: 80%; }
+          .k { margin: 0; font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; opacity: .8; position: relative; }
+          h1 { position: relative; max-width: 13ch; margin: 8px 0 0; font: 400 clamp(36px, 7vw, 60px)/.95 var(--f-serif); } h1 em { color: #f6d7a7; }
+          .sheet { position: fixed; z-index: 4; top: 0; right: 0; bottom: 0; width: min(340px, 92%); padding: 28px; background: #fff; box-shadow: -30px 0 60px -30px #0006;
+            translate: 100% 0; transition: translate var(--d-sheet) var(--out); }
+          .open-sheet .sheet { translate: 0 0; }
+          .sheet h2 { margin: 0 0 18px; font: 400 32px var(--f-serif); }
+          dl { display: grid; grid-template-columns: auto 1fr; gap: 12px; margin: 0 0 24px; font-size: 14px; } dt { color: #777; } dd { margin: 0; text-align: right; }
+          .pay { width: 100%; height: 50px; border: 0; border-radius: 99px; background: #b4532a; color: #fff; font-weight: 600; }
+          .x { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; border: 0; background: none; font-size: 26px; cursor: pointer; }
+          .modes { position: fixed; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
+          .modes button { min-height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid #22201c44; background: #fff; cursor: pointer; }
+          .modes [aria-pressed="true"] { background: #22201c; color: #fff; }
+          .read { font: 500 11px var(--f-mono); color: #5c5650; padding-left: 4px; }
+          /* Móvil: el panel sube desde abajo, recorre menos y dura menos */
+          @media (max-width: 600px) {
+            :root { --d-sheet: 320ms; }
+            .sheet { top: auto; left: 0; width: auto; border-radius: 20px 20px 0 0; translate: 0 100%; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+            .hero { min-height: 260px; padding: 20px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const b = document.body, read = document.querySelector('.read');
+          document.addEventListener('click', (e) => {
+            const t = e.target.closest('[data-open]');
+            if (t) { const k = t.dataset.open; ['tip', 'menu'].forEach((x) => x !== k && b.classList.remove('open-' + x)); return b.classList.toggle('open-' + k); }
+            const m = e.target.closest('[data-m]');
+            if (m) {
+              b.classList.toggle('flat', m.dataset.m === 'flat');
+              document.querySelectorAll('[data-m]').forEach((x) => x.setAttribute('aria-pressed', x === m));
+              show();
+            }
+          });
+          function show() {
+            const cs = getComputedStyle(b), v = (n) => cs.getPropertyValue(n).trim();
+            read.textContent = `${v('--d-tip')} · ${v('--d-menu')} · ${v('--d-sheet')}`;
+          }
+          show();
+        </script>
+        <figcaption>En modo proporcional, el tooltip (recorre 4 px) tarda 120 ms; el menú, 200 ms; el panel lateral (recorre 340 px), 420 ms. Con todo a 400 ms el tooltip parece perezoso y el panel, brusco. En el móvil el panel sube desde abajo y dura 320 ms, porque recorre menos y la pantalla es más pequeña.</figcaption>
+      </figure>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Qué se mueve</th><th>Escritorio</th><th>Móvil</th></tr></thead>
+          <tbody>
+            <tr><td>Hover, tooltip, cambio de color</td><td>100–150 ms</td><td>Sin hover: feedback de <code>:active</code> en 80–120 ms</td></tr>
+            <tr><td>Menú, popover, acordeón</td><td>180–250 ms</td><td>150–220 ms</td></tr>
+            <tr><td>Panel lateral, modal</td><td>300–450 ms</td><td>250–350 ms (hoja inferior)</td></tr>
+            <tr><td>Entrada de hero, revelado de imagen</td><td>600–1200 ms</td><td>400–800 ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La interfaz que responde a un gesto (abrir, cerrar, pulsar) tiene que ser <strong>rápida</strong>: por encima de 300 ms ya se nota la espera. La lentitud elegante se reserva para lo que no bloquea a nadie, como la entrada del hero o una imagen que se revela. Las salidas, un 20–30 % más cortas que las entradas: cuando el usuario cierra algo, ya ha decidido irse.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Recorta las duraciones un 20–30 %: las distancias son menores y en el móvil se tiene menos paciencia. Los paneles laterales se convierten en <strong>hojas que suben desde abajo</strong>, al alcance del pulgar, con <code>env(safe-area-inset-bottom)</code> para no chocar con la barra de inicio del iPhone. Y nada de animar <code>height</code> o <code>top</code> en listas largas: en un móvil de gama media es donde se ven los tirones.</p>
+      </div>
+
+      <h2>Easing: la personalidad del movimiento</h2>
+      <p>La curva de easing dice cómo se reparte el recorrido en el tiempo. Con la misma duración, una curva puede parecer torpe y otra, cara. Antes de pulsar, predice.</p>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">Cuatro bolas recorren la misma distancia en el mismo tiempo, cada una con una curva. ¿Cuál <em>parece</em> más rápida y de mejor calidad?</p>
+        <ol>
+          <li><code>ease</code>, la curva por defecto.</li>
+          <li><code>ease-out</code>.</li>
+          <li>Una expo-out: <code>cubic-bezier(.16, 1, .3, 1)</code>.</li>
+        </ol>
+        <p class="why">La expo-out recorre casi el 80 % del camino en el primer tercio y dedica el resto a frenar. El ojo percibe la respuesta inmediata y la llegada suave: rápida y cuidada a la vez. Es la curva por defecto de casi todas las webs premium.</p>
+      </div>
+
+      <figure class="lab" data-title="Visualizador de easing" data-hint="Pulsa Reproducir y cambia la duración" data-height="460" data-height-mobile="620" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="vis">
+            <div class="lane l1"><svg viewBox="0 0 100 100"></svg><p><b>ease</b><code>ease</code></p><div class="track"><i></i></div></div>
+            <div class="lane l2"><svg viewBox="0 0 100 100"></svg><p><b>ease-out</b><code>ease-out</code></p><div class="track"><i></i></div></div>
+            <div class="lane l3"><svg viewBox="0 0 100 100"></svg><p><b>Expo-out</b><code>cubic-bezier(.16, 1, .3, 1)</code></p><div class="track"><i></i></div></div>
+            <div class="lane l4"><svg viewBox="0 0 100 100"></svg><p><b>Muelle</b><code>linear(0, 0.042, …, 1)</code></p><div class="track"><i></i></div></div>
+          </div>
+          <div class="ctrl"><button class="play">Reproducir</button><label>Duración <input type="range" min="300" max="1600" step="50" value="900"><output>900 ms</output></label></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root {
+            --expo: cubic-bezier(.16, 1, .3, 1);
+            /* Muelle: 36 muestras de un oscilador amortiguado. Rebasa un 12 % y vuelve */
+            --spring: linear(0, 0.042, 0.147, 0.289, 0.446, 0.603, 0.745, 0.868, 0.965, 1.038, 1.087, 1.115, 1.126, 1.124, 1.113, 1.096, 1.076, 1.056,
+              1.038, 1.021, 1.008, 0.998, 0.991, 0.986, 0.984, 0.984, 0.985, 0.987, 0.99, 0.992, 0.995, 0.997, 0.999, 1, 1.001, 1.002, 1);
+            --dur: 900ms;
+          }
+          .l1 { --e: ease; --c: #9a93b4; } .l2 { --e: ease-out; --c: #7cc4e8; }
+          .l3 { --e: var(--expo); --c: #f2b66d; } .l4 { --e: var(--spring); --c: #ff7aa8; }
+          body { background: #100e20; color: #efe6d6; padding: 18px; }
+          .vis { display: grid; gap: 10px; }
+          .lane { display: grid; grid-template-columns: 64px 170px 1fr; gap: 16px; align-items: center; padding: 10px 14px; border-radius: 12px; background: #ffffff08; border: 1px solid #ffffff10; }
+          svg { width: 64px; height: 64px; overflow: visible; }
+          svg path.c { fill: none; stroke: var(--c); stroke-width: 2.5; stroke-linecap: round; }
+          svg line { stroke: #ffffff22; stroke-dasharray: 2 3; }
+          p { margin: 0; display: grid; gap: 2px; } b { font-weight: 600; color: var(--c); }
+          code { font: 400 11px var(--f-mono); color: #a59fb8; }
+          /* La pista mide su propio ancho: 100cqi es «todo el ancho de la pista» */
+          .track { container-type: inline-size; height: 34px; border-radius: 99px; background: #ffffff0a; position: relative; }
+          .track i { position: absolute; left: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%; background: var(--c); box-shadow: 0 0 24px -4px var(--c);
+            transition: translate var(--dur) var(--e); }
+          .go .track i { translate: calc(100cqi - 34px) 0; }
+          .ctrl { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin-top: 16px; font-size: 13px; }
+          .play { min-height: 44px; padding: 0 22px; border: 0; border-radius: 99px; background: #efe6d6; color: #100e20; font-weight: 600; cursor: pointer; }
+          .ctrl label { display: flex; gap: 10px; align-items: center; } output { font: 500 12px var(--f-mono); min-width: 60px; }
+          @media (max-width: 600px) {
+            .lane { grid-template-columns: 52px 1fr; gap: 6px 14px; padding: 10px 12px; }
+            svg { width: 52px; height: 52px; grid-row: span 2; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Dibuja cada curva leyendo el propio motor de animación del navegador
+          const probe = document.body.appendChild(document.createElement('div'));
+          probe.style.cssText = 'position:absolute;visibility:hidden';
+          function sample(easing) {
+            const a = probe.animate([{ translate: '0px' }, { translate: '1000px' }], { duration: 1000, easing, fill: 'both' });
+            a.pause(); const pts = [];
+            for (let t = 0; t <= 1000; t += 20) { a.currentTime = t; pts.push(parseFloat(getComputedStyle(probe).translate) / 1000 || 0); }
+            a.cancel(); return pts;
+          }
+          document.querySelectorAll('.lane').forEach((lane) => {
+            const pts = sample(getComputedStyle(lane).getPropertyValue('--e').trim());
+            const d = pts.map((v, i) => `${i ? 'L' : 'M'}${i * 2} ${90 - v * 70}`).join(' ');
+            lane.querySelector('svg').innerHTML = `<line x1="0" x2="100" y1="90" y2="90"/><line x1="0" x2="100" y1="20" y2="20"/><path class="c" d="${d}"/>`;
+          });
+          const range = document.querySelector('input'), out = document.querySelector('output'), vis = document.querySelector('.vis');
+          range.addEventListener('input', () => { document.documentElement.style.setProperty('--dur', range.value + 'ms'); out.textContent = range.value + ' ms'; });
+          document.querySelector('.play').addEventListener('click', () => vis.classList.toggle('go'));
+        </script>
+        <figcaption>Las curvas no están dibujadas a mano: el script le pide al navegador la posición en 50 momentos con la propia API de animaciones. La línea discontinua de arriba es el destino. <code>ease</code> arranca despacio (parece que duda), <code>ease-out</code> es correcta, la expo-out se siente inmediata y el muelle rebasa el destino y vuelve, como un objeto físico.</figcaption>
+      </figure>
+
+      <p><code>cubic-bezier(x1, y1, x2, y2)</code> define una curva con dos puntos de control. Si una <code>y</code> pasa de 1, la curva rebasa el destino (un pequeño «rebote»). <code>linear()</code> va más allá: recibe una lista de puntos y el navegador los une con rectas, así que puedes describir cualquier curva, incluidos los muelles con varias oscilaciones que <code>cubic-bezier</code> no puede hacer. Las listas de puntos no se escriben a mano: se generan con herramientas como el generador de Jake Archibald o con un pequeño script que muestrea la fórmula de un muelle amortiguado (así salieron los 37 valores de la demo).</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Tus curvas, en variables">
+        :root {
+          --ease-out-expo: cubic-bezier(.16, 1, .3, 1);   /* entradas, paneles, casi todo */
+          --ease-in-out:   cubic-bezier(.65, 0, .35, 1);  /* cosas que ya están en pantalla y cambian de sitio */
+          --ease-in:       cubic-bezier(.7, 0, .84, 0);   /* solo salidas: acelera y se va */
+          --spring: linear(0, 0.042, 0.147, 0.289, 0.446, 0.603, 0.745, 0.868, 0.965, 1.038, /* … */ 1);
+        }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Elige <strong>dos o tres curvas para todo el proyecto</strong> y guárdalas en variables, igual que la paleta. Expo-out para entradas, una in-out para cambios de posición y, como mucho, un muelle para un elemento juguetón (una burbuja de «¡Pagado!» como la de la app «tab»). El muelle en todo hace que una web de lujo parezca una app infantil.</p>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>linear()</code> es Baseline ampliamente disponible desde junio de 2026 (Chrome 113, Safari 17.2, Firefox 112). Si un navegador no la entiende, ignora la declaración y usa la anterior: pon antes una <code>cubic-bezier</code> como red de seguridad.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los gestos táctiles tienen inercia propia (el scroll del iPhone es un muelle), así que en el móvil las curvas con un rebote ligero se sienten naturales en hojas inferiores y botones. Pero el rebote se nota más en una pantalla pequeña: baja la amplitud (rebase de un 4–6 %, no de un 12 %) y la duración.</p>
+      </div>
+
+      <h2>Transiciones, keyframes y escalonado</h2>
+      <p>Dos herramientas con trabajos distintos. Una <strong>transición</strong> anima entre dos estados cuando algo cambia (una clase, un hover). Unos <strong>keyframes</strong> describen una animación con varios pasos que se reproduce sola, en bucle o una vez. Con transiciones y un retardo calculado por elemento se monta casi cualquier entrada orquestada.</p>
+
+      <figure class="lab" data-title="Un momento orquestado" data-hint="Reproduce y compara los dos modos" data-height="500" data-height-mobile="680">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero">
+            <div class="copy">
+              <p class="k">Bodega Alta Ribera · desde 1962</p>
+              <h1><span class="ln"><span style="--i:0">Vinos de altura,</span></span><span class="ln"><span style="--i:1"><em>hechos despacio.</em></span></span></h1>
+              <p class="lede">Viñas a 900 metros en el interior de Castellón. Vendimia a mano, de noche.</p>
+              <a class="btn" href="#">Reservar una visita</a>
+            </div>
+            <div class="img" aria-hidden="true">
+              <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+                <defs><linearGradient id="sk" x2="0" y2="1"><stop offset="0" stop-color="#e2a47a"/><stop offset=".6" stop-color="#f4dcc0"/></linearGradient></defs>
+                <rect width="400" height="500" fill="url(#sk)"/><circle class="sun" cx="270" cy="190" r="34" fill="#fbeee0"/>
+                <path d="M0 250 Q120 205 230 238 T400 226 V500 H0Z" fill="#b59a86"/><path d="M0 290 Q160 250 400 284 V500 H0Z" fill="#7c7a52"/>
+                <path d="M0 330 Q200 296 400 330 V500 H0Z" fill="#4f5a33"/>
+                <g stroke="#2f3a1e" stroke-width="3" fill="none" opacity=".7"><path d="M200 330 L-60 500M200 330 L40 500M200 330 L140 500M200 330 L240 500M200 330 L340 500M200 330 L440 500"/></g>
+              </svg>
+            </div>
+            <span class="scroll" aria-hidden="true"></span>
+          </section>
+          <div class="ctrl"><button class="play">Reproducir</button><button class="mode" aria-pressed="false">Todo a la vez</button></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --out: cubic-bezier(.16, 1, .3, 1); --step: 90ms; }
+          body { background: #f3ece0; color: #2a1f1a; padding: clamp(18px, 4vw, 36px); }
+          .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; position: relative; }
+          .k { margin: 0; font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #8a3b2c; }
+          h1 { margin: 14px 0 16px; font: 400 clamp(38px, 6.4vw, 62px)/1 var(--f-serif); } h1 em { color: #8a3b2c; }
+          .ln { display: block; overflow: clip; padding-bottom: .08em; }   /* máscara de cada línea */
+          .ln > span { display: block; }
+          .lede { max-width: 32ch; margin: 0 0 22px; font-size: 15px; color: #5b4c43; }
+          .btn { display: inline-flex; align-items: center; min-height: 48px; padding: 0 24px; border-radius: 99px; background: #2a1f1a; color: #f3ece0; text-decoration: none; font-weight: 600; }
+          .img { aspect-ratio: 4 / 5; border-radius: 3px; overflow: hidden; } .img svg { width: 100%; height: 100%; }
+          .sun { transform-box: fill-box; transform-origin: center; }
+          .scroll { position: absolute; left: 0; bottom: -46px; width: 1px; height: 30px; background: #2a1f1a55; overflow: hidden; }
+          .scroll::after { content: ""; position: absolute; inset: 0; background: #2a1f1a; animation: drop 1.8s var(--out) infinite; }
+          @keyframes drop { from { translate: 0 -100%; } to { translate: 0 100%; } }   /* keyframes: bucle */
+          /* Estado inicial: todo escondido */
+          .img { clip-path: inset(100% 0 0 0); } .img .sun { scale: .6; translate: 0 20px; }
+          .k, .lede, .btn { opacity: 0; translate: 0 14px; } .ln > span { translate: 0 105%; }
+          /* Estado final con retardos encadenados: imagen, titular, texto, botón */
+          .play-on .img { clip-path: inset(0); transition: clip-path 1.1s var(--out); }
+          .play-on .img .sun { scale: 1; translate: 0; transition: all 1.6s .3s var(--out); }
+          .play-on .k { opacity: 1; translate: 0; transition: .6s .15s var(--out); }
+          .play-on .ln > span { translate: 0; transition: translate .9s var(--out) calc(.25s + var(--i) * var(--step)); }
+          .play-on .lede { opacity: 1; translate: 0; transition: .7s .55s var(--out); }
+          .play-on .btn { opacity: 1; translate: 0; transition: .7s .68s var(--out); }
+          /* Modo «todo a la vez»: mismos efectos, sin orquestar */
+          .flat .hero * { transition-delay: 0s !important; transition-duration: .6s !important; }
+          .ctrl { display: flex; gap: 8px; margin-top: 70px; }
+          .ctrl button { min-height: 44px; padding: 0 18px; border-radius: 99px; border: 1px solid #2a1f1a44; background: none; cursor: pointer; font-weight: 600; }
+          .ctrl .play, .ctrl [aria-pressed="true"] { background: #2a1f1a; color: #f3ece0; }
+          @media (max-width: 600px) {
+            .hero { grid-template-columns: 1fr; gap: 20px; }
+            .img { order: -1; aspect-ratio: 16 / 10; }    /* decorativa: puede ir arriba */
+            :root { --step: 70ms; } .scroll { display: none; } .ctrl { margin-top: 28px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const b = document.body;
+          function play() { b.classList.remove('play-on'); void b.offsetWidth; b.classList.add('play-on'); }   // forzar reflow para reiniciar
+          document.querySelector('.play').addEventListener('click', play);
+          const mode = document.querySelector('.mode');
+          mode.addEventListener('click', () => { const f = b.classList.toggle('flat'); mode.setAttribute('aria-pressed', f); play(); });
+          setTimeout(play, 300);
+        </script>
+        <figcaption>Una sola secuencia: la imagen se revela de abajo arriba, el sol sube despacio, las líneas del titular emergen una tras otra desde su máscara (<code>calc(.25s + var(--i) * var(--step))</code>), después el texto y por último el botón. La línea de «scroll» es la única animación en bucle, y por eso usa <code>@keyframes</code>. Pulsa «Todo a la vez»: los mismos efectos, sin orden, y se pierde todo.</figcaption>
+      </figure>
+
+      <p>El patrón del escalonado es siempre el mismo: cada elemento lleva un índice en una variable (<code>--i</code>) y el retardo se calcula con <code>calc()</code>. Puedes escribir el índice en el HTML o, en navegadores actuales, pedírselo a CSS con <code>sibling-index()</code>.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Escalonado con --i o con sibling-index()">
+        .menu li {
+          transition: opacity .4s, translate .5s var(--ease-out-expo);
+          transition-delay: calc(var(--i) * 50ms);            /* <li style="--i: 2"> */
+        }
+        @supports (transition-delay: calc(sibling-index() * 1ms)) {
+          .menu li { transition-delay: calc((sibling-index() - 1) * 50ms); }
+        }
+      </script>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Transición</th><th>Keyframes</th></tr></thead>
+          <tbody>
+            <tr><td>Se dispara</td><td>Al cambiar un valor (clase, hover, atributo)</td><td>Al aplicarse la regla <code>animation</code></td></tr>
+            <tr><td>Pasos</td><td>Dos: de dónde está a dónde va</td><td>Los que quieras (<code>0%</code>, <code>40%</code>, <code>100%</code>)</td></tr>
+            <tr><td>Interrumpir</td><td>Se invierte con suavidad desde donde esté</td><td>Salta al quitarla</td></tr>
+            <tr><td>Úsala para</td><td>Estados de interfaz: abrir, hover, activo</td><td>Bucles, indicadores, secuencias autónomas</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p><strong>Un momento orquestado vale más que veinte efectos sueltos.</strong> Elige el instante más importante de la página (casi siempre la entrada del hero) y dedícale una secuencia cuidada, con un orden que guíe la mirada: imagen, titular, apoyo, acción. El resto, quieto o casi. Los escalones van de 50 a 120 ms: por debajo no se perciben; por encima, la secuencia se hace lenta.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Acorta el escalón (70 ms en lugar de 90) y el total: en el móvil la secuencia entera no debería pasar de un segundo. La imagen apilada arriba puede revelarse con <code>clip-path</code> igual que en escritorio, pero el titular tiene que estar legible en menos de 600 ms, porque el usuario ya está con el pulgar listo para hacer scroll.</p>
+      </div>
+
+      <h2>Entrar y salir desde display: none</h2>
+      <p>Durante años, animar algo que aparece desde <code>display: none</code> (un modal, un menú) obligaba a usar JavaScript o trucos con <code>visibility</code>. Ahora CSS tiene dos piezas: <strong><code>@starting-style</code></strong> define desde dónde arranca la entrada, y <strong><code>transition-behavior: allow-discrete</code></strong> permite que <code>display</code> espere a que termine la salida.</p>
+
+      <figure class="lab" data-title="Diálogo y popover con @starting-style" data-hint="Abre el menú y «Reservar visita»" data-height="460" data-height-mobile="600" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav"><b>Torre Lumen</b><button popovertarget="menu" class="mbtn">Menú</button></header>
+          <div id="menu" popover>
+            <ul><li style="--i:0"><a href="#">Residencias</a></li><li style="--i:1"><a href="#">La torre</a></li><li style="--i:2"><a href="#">Ubicación</a></li><li style="--i:3"><a href="#">Contacto</a></li></ul>
+          </div>
+          <section class="hero"><h1>Visita la residencia <em>piloto</em></h1><button class="open">Reservar visita</button></section>
+          <dialog>
+            <form method="dialog">
+              <h2>Reservar visita</h2>
+              <p>Te enseñamos la residencia 41B amueblada. Unos 45 minutos.</p>
+              <div class="slots"><button value="1">Jue 20 · 11:00</button><button value="2">Vie 21 · 17:30</button><button value="3">Sáb 22 · 10:00</button></div>
+              <button class="close" value="0">Cerrar</button>
+            </form>
+          </dialog>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --out: cubic-bezier(.16, 1, .3, 1); }
+          body { background: linear-gradient(#1c1838, #3d2a52 70%, #7a4a5e); color: #efe6d6; min-height: 100vh; }
+          .nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; }
+          .nav b { font: 400 24px var(--f-serif); }
+          .mbtn, .open { min-height: 44px; padding: 0 20px; border-radius: 99px; border: 1px solid #efe6d655; background: none; color: inherit; font-weight: 600; cursor: pointer; }
+          .open { background: #f2b66d; color: #1c1838; border: 0; }
+          .hero { padding: 60px 18px; } h1 { max-width: 12ch; margin: 0 0 22px; font: 400 clamp(38px, 7vw, 60px)/.98 var(--f-serif); } h1 em { color: #f2b66d; }
+          /* POPOVER: estado abierto, estado cerrado y punto de partida */
+          #menu { inset: 64px 18px auto auto; margin: 0; padding: 8px; border: 0; border-radius: 14px; background: #f6efe4; color: #1c1838; min-width: 200px;
+            opacity: 0; translate: 0 -8px; scale: .97; transform-origin: top right;
+            transition: opacity .2s, translate .3s var(--out), scale .3s var(--out), display .3s allow-discrete, overlay .3s allow-discrete; }
+          #menu:popover-open { opacity: 1; translate: 0; scale: 1; }
+          @starting-style { #menu:popover-open { opacity: 0; translate: 0 -8px; scale: .97; } }
+          #menu ul { list-style: none; margin: 0; padding: 0; }
+          #menu li { opacity: 0; translate: 8px 0; transition: .35s var(--out) calc(var(--i) * 40ms); }
+          #menu:popover-open li { opacity: 1; translate: 0; }
+          @starting-style { #menu:popover-open li { opacity: 0; translate: 8px 0; } }
+          #menu a { display: block; padding: 12px 14px; border-radius: 8px; color: inherit; text-decoration: none; font: 400 22px var(--f-serif); }
+          #menu a:hover { background: #1c18380d; }
+          /* DIÁLOGO: igual, más el fondo ::backdrop */
+          dialog { width: min(420px, 92vw); padding: 28px; border: 0; border-radius: 18px; background: #f6efe4; color: #1c1838;
+            opacity: 0; translate: 0 24px; scale: .98;
+            transition: opacity .3s, translate .5s var(--out), scale .5s var(--out), display .5s allow-discrete, overlay .5s allow-discrete; }
+          dialog[open] { opacity: 1; translate: 0; scale: 1; }
+          @starting-style { dialog[open] { opacity: 0; translate: 0 24px; scale: .98; } }
+          dialog::backdrop { background: #0b0a1a00; transition: background .4s, display .4s allow-discrete, overlay .4s allow-discrete; }
+          dialog[open]::backdrop { background: #0b0a1aaa; }
+          @starting-style { dialog[open]::backdrop { background: #0b0a1a00; } }
+          dialog h2 { margin: 0 0 8px; font: 400 32px var(--f-serif); } dialog p { margin: 0 0 18px; font-size: 14px; color: #5a5470; }
+          .slots { display: grid; gap: 8px; margin-bottom: 14px; }
+          .slots button { min-height: 48px; border-radius: 10px; border: 1px solid #1c183822; background: #fff; font-weight: 600; cursor: pointer; }
+          .slots button:active { scale: .98; }
+          .close { width: 100%; min-height: 44px; border: 0; background: none; color: #5a5470; cursor: pointer; }
+          /* Móvil: el diálogo es una hoja inferior */
+          @media (max-width: 600px) {
+            dialog { width: 100%; max-width: none; margin: auto 0 0; border-radius: 22px 22px 0 0; translate: 0 100%; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+            @starting-style { dialog[open] { translate: 0 100%; } }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // El popover no necesita JS. El diálogo modal sí: showModal() y lo cierra el form
+          const dlg = document.querySelector('dialog');
+          document.querySelector('.open').addEventListener('click', () => dlg.showModal());
+        </script>
+        <figcaption>Tres estados por componente: cerrado (la regla base), abierto (<code>[open]</code> o <code>:popover-open</code>) y punto de partida (<code>@starting-style</code>). La entrada va del tercero al segundo; la salida, del segundo al primero, y <code>display … allow-discrete</code> mantiene el elemento visible hasta que acaba. Los enlaces del menú entran escalonados con la misma técnica. En el móvil el diálogo sube como hoja inferior.</figcaption>
+      </figure>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Tu diálogo entra con una animación preciosa, pero al cerrarlo desaparece de golpe. ¿Qué falta?</p>
+        <ol>
+          <li>Un <code>@starting-style</code> para el estado cerrado.</li>
+          <li>Añadir <code>display</code> (y <code>overlay</code>) a la transición con <code>allow-discrete</code>.</li>
+          <li>Subir la duración de la transición de <code>opacity</code>.</li>
+        </ol>
+        <p class="why"><code>@starting-style</code> solo sirve para entrar. Al cerrar, el navegador pone <code>display: none</code> al instante y no hay nada que animar, salvo que <code>display</code> esté en la transición con <code>allow-discrete</code>: entonces espera a que acabe para cambiar. <code>overlay</code> hace lo mismo con la capa superior en la que viven los diálogos y popovers.</p>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>@starting-style</code> (Chrome 117, Safari 17.5, Firefox 129) y <code>transition-behavior: allow-discrete</code> (Chrome 117, Safari 17.4, Firefox 129) son Baseline recién disponible desde agosto de 2024. La API Popover, desde enero de 2025. Donde no funcionen, el diálogo aparece y desaparece sin animación, pero funciona igual: mejora progresiva pura. La propiedad <code>overlay</code> solo la entienden algunos navegadores; el resto la ignora sin romper nada.</p>
+        <!-- verificar soporte: propiedad overlay (no está en research.md) -->
+      </div>
+
+      <h3>Animar hasta height: auto</h3>
+      <p>El otro clásico imposible: un acordeón que se abre hasta su altura natural. <code>height: auto</code> no se podía interpolar. La solución moderna es <code>interpolate-size: allow-keywords</code>; la que funciona en todas partes es animar una fila de Grid de <code>0fr</code> a <code>1fr</code>.</p>
+
+      <figure class="lab" data-title="height: auto, dos técnicas" data-hint="Abre las preguntas de cada columna" data-height="440" data-height-mobile="640">
+        <script type="text/x-demo" data-lang="html">
+          <p class="badge"></p>
+          <div class="cols">
+            <section class="faq a"><h2>interpolate-size</h2>
+              <div class="q"><button aria-expanded="false">¿Cuándo se entregan las llaves?</button><div class="p"><div><p>En primavera de 2028. Las visitas a la residencia piloto empiezan en enero.</p></div></div></div>
+              <div class="q"><button aria-expanded="false">¿Puedo personalizar los acabados?</button><div class="p"><div><p>Sí, hasta seis meses antes de la entrega: suelos, cocina y carpintería interior, con nuestro equipo de interiorismo.</p></div></div></div>
+            </section>
+            <section class="faq b"><h2>Grid 0fr → 1fr</h2>
+              <div class="q"><button aria-expanded="false">¿Cuándo se entregan las llaves?</button><div class="p"><div><p>En primavera de 2028. Las visitas a la residencia piloto empiezan en enero.</p></div></div></div>
+              <div class="q"><button aria-expanded="false">¿Puedo personalizar los acabados?</button><div class="p"><div><p>Sí, hasta seis meses antes de la entrega: suelos, cocina y carpintería interior, con nuestro equipo de interiorismo.</p></div></div></div>
+            </section>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --out: cubic-bezier(.16, 1, .3, 1); }
+          body { background: #f4efe6; color: #1d1a24; padding: 20px; }
+          .badge { margin: 0 0 16px; font: 500 12px var(--f-mono); color: #6b4fa0; }
+          .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+          h2 { margin: 0 0 8px; font: 500 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #6d6677; }
+          .q { border-top: 1px solid #1d1a2433; }
+          .q button { all: unset; box-sizing: border-box; width: 100%; min-height: 56px; padding: 14px 32px 14px 0; position: relative; cursor: pointer; font: 400 21px/1.2 var(--f-serif); }
+          .q button::after { content: "+"; position: absolute; right: 4px; top: 14px; font: 300 24px var(--f-sans); transition: rotate .35s var(--out); }
+          .q.open button::after { rotate: 45deg; }
+          .q button:focus-visible { outline: 2px solid #6b4fa0; }
+          .q p { margin: 0; padding: 0 0 18px; font-size: 14px; line-height: 1.55; color: #4b4554; }
+          /* A · interpolate-size: height 0 → auto de verdad (Chromium) */
+          .a { interpolate-size: allow-keywords; }
+          .a .p { height: 0; overflow: clip; transition: height .5s var(--out); }
+          .a .open .p { height: auto; }
+          /* B · Grid: la fila pasa de 0fr a 1fr (todos los navegadores) */
+          .b .p { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s var(--out); }
+          .b .p > div { overflow: hidden; }
+          .b .open .p { grid-template-rows: 1fr; }
+          @media (max-width: 600px) { .cols { grid-template-columns: 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          document.querySelector('.badge').textContent = CSS.supports('interpolate-size', 'allow-keywords')
+            ? 'Tu navegador soporta interpolate-size: las dos columnas se animan.'
+            : 'Tu navegador no soporta interpolate-size: la columna A salta, la B se anima.';
+          document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.q button'); if (!btn) return;
+            const open = btn.parentElement.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open);
+          });
+        </script>
+        <figcaption>La columna A es la sintaxis del futuro: escribes <code>height: auto</code> y el navegador interpola. La B es el truco que funciona hoy en todas partes: el panel es una retícula de una fila que pasa de <code>0fr</code> a <code>1fr</code>, y su hijo con <code>overflow: hidden</code> hace de máscara.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="css" data-label="Mejora progresiva para height: auto">
+        /* Activa la interpolación de palabras clave en todo el documento */
+        :root { interpolate-size: allow-keywords; }
+
+        /* O solo en una propiedad concreta con calc-size() */
+        .panel.open { height: calc-size(auto, size); }
+
+        /* Donde no hay soporte, el panel se abre sin animación: no se rompe nada */
+      </script>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>interpolate-size</code> y <code>calc-size()</code> solo funcionan en Chromium (desde Chrome 129); Safari y Firefox aún no. Úsalos como mejora progresiva: el acordeón se abre igual, solo que sin animación. Si la animación es imprescindible, usa la técnica de Grid.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil los modales deben ser <strong>hojas inferiores</strong>: suben desde donde está el pulgar y se pueden cerrar sin estirar la mano. Los acordeones son el mejor amigo del móvil (FAQ, fichas técnicas, filtros de PrestaShop), pero con filas de 56 px o más y sin animar más de 300 ms: el usuario quiere leer, no ver cómo se abre.</p>
+      </div>
+
+      <h2>Animar variables con @property</h2>
+      <p>Una variable CSS normal es solo texto: el navegador no sabe si <code>--p: 72</code> es un número, así que no puede interpolarla y salta de golpe. Con <code>@property</code> la registras con un tipo y pasa a ser animable. Eso abre la puerta a animar lo que antes no se podía: el ángulo de un degradado, el relleno de un anillo cónico o incluso un número.</p>
+
+      <figure class="lab" data-title="Anillo de progreso y borde que gira" data-hint="Pulsa «Actualizar ventas»" data-height="420" data-height-mobile="640" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="panel">
+            <p class="k">Torre Lumen · Comercialización</p>
+            <div class="rings">
+              <figure><div class="ring reg"><span></span></div><figcaption>Con <code>@property</code></figcaption></figure>
+              <figure><div class="ring raw"><span></span></div><figcaption>Sin registrar</figcaption></figure>
+            </div>
+            <div class="actions"><button class="upd">Actualizar ventas</button><a class="cta" href="#">Reservar visita privada</a></div>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          /* Registradas: el navegador sabe su tipo y puede interpolarlas */
+          @property --p { syntax: '<integer>'; inherits: true; initial-value: 0; }
+          @property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+          :root { --out: cubic-bezier(.16, 1, .3, 1); }
+          body { background: #100e20; color: #efe6d6; padding: 22px; }
+          .k { margin: 0 0 18px; font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #c9a77a; }
+          .rings { display: flex; flex-wrap: wrap; gap: 28px; }
+          figure { margin: 0; display: grid; gap: 10px; justify-items: center; font-size: 12px; color: #a59fb8; }
+          .ring { width: 170px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; position: relative; }
+          .ring::before { content: ""; position: absolute; inset: 0; border-radius: inherit;
+            background: conic-gradient(#f2b66d calc(var(--v) * 1%), #ffffff14 0);
+            mask: radial-gradient(farthest-side, #0000 calc(100% - 12px), #000 calc(100% - 11px)); }
+          .reg { --v: var(--p); transition: --p 1.6s var(--out); }
+          .raw { --v: var(--q); transition: --q 1.6s var(--out); }     /* --q no está registrada: salta */
+          /* El número también es la variable: un contador CSS la escribe */
+          .ring span::after { font: 300 46px/1 var(--f-serif); }
+          .reg span::after { counter-reset: n var(--p); content: counter(n) "%"; }
+          .raw span::after { counter-reset: n var(--q); content: counter(n) "%"; }
+          .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 26px; }
+          .upd { min-height: 46px; padding: 0 20px; border-radius: 99px; border: 1px solid #efe6d644; background: none; color: inherit; font-weight: 600; cursor: pointer; }
+          /* Borde de degradado cónico que gira animando un ángulo */
+          .cta { display: inline-flex; align-items: center; min-height: 46px; padding: 0 22px; border-radius: 99px; color: #efe6d6; text-decoration: none; font-weight: 600;
+            border: 1.5px solid transparent;
+            background: linear-gradient(#100e20, #100e20) padding-box, conic-gradient(from var(--a), #f2b66d, #ff7aa8, #7c6cff, #f2b66d) border-box;
+            animation: spin 4s linear infinite; }
+          @keyframes spin { to { --a: 360deg; } }
+          @media (max-width: 600px) { .rings { justify-content: center; } .ring { width: 140px; } .ring span::after { font-size: 38px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const vals = [72, 38, 91, 54]; let i = 0;
+          const set = (v) => document.querySelectorAll('.ring').forEach((r) => { r.style.setProperty('--p', v); r.style.setProperty('--q', v); });
+          document.querySelector('.upd').addEventListener('click', () => set(vals[++i % vals.length]));
+          requestAnimationFrame(() => setTimeout(() => set(vals[0]), 200));
+        </script>
+        <figcaption>Los dos anillos usan el mismo CSS, salvo que <code>--p</code> está registrada como <code>&lt;integer&gt;</code> y <code>--q</code> no. El de la izquierda se llena y su número cuenta; el de la derecha salta. El botón tiene un borde cónico cuyo ángulo <code>--a</code> gira con <code>@keyframes</code>: sin <code>@property</code> sería imposible animar el «from» de un degradado.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El borde que gira es un recurso muy reconocible: úsalo <strong>una vez por página</strong> y en el elemento que más importa (el CTA de reserva, una tarjeta de precio destacada), con colores de tu paleta y a velocidad lenta (4–6 s por vuelta). Rápido y multicolor, parece una tarjeta gaming. El contador animado funciona para cifras que el usuario debe notar que han cambiado, no para decorar.</p>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>@property</code> es Baseline recién disponible desde julio de 2024 (Chrome 85, Safari 16.4, Firefox 128). Donde no exista, el anillo salta al valor final y el borde se ve quieto: escribe el CSS para que el estado final tenga sentido por sí solo.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Animar variables registradas usadas en degradados obliga a repintar en cada fotograma (no es solo composición). Un anillo o un botón van bien; diez tarjetas con bordes girando a la vez en un móvil de gama media, no. En pantallas pequeñas, para el giro cuando el elemento sale de la vista o déjalo solo para el hover en escritorio.</p>
+      </div>
+
+      <h2>Hovers que se sienten caros, y su versión táctil</h2>
+      <p>Tres detalles que aparecen en casi todas las webs de estudio y que nadie identifica conscientemente: el botón magnético que se deja atraer por el cursor, el subrayado que entra por un lado y sale por el otro, y la imagen que se revela recortando su marco. Y para cada uno, qué hacer cuando no hay cursor.</p>
+
+      <figure class="lab" data-title="Tres hovers y sus equivalentes táctiles" data-hint="Pasa el ratón; abre también «Ver en móvil»" data-height="540" data-height-mobile="760">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav"><b>Albar</b><nav><a href="#">Proyectos</a><a href="#">Estudio</a><a href="#">Prensa</a></nav></header>
+          <p class="mode"></p>
+          <div class="grid">
+            <a class="proj" href="#"><div class="img"><i style="--h:40"></i></div><span><b>Casa Benicàssim</b><small>Vivienda · 2025</small></span></a>
+            <a class="proj" href="#"><div class="img"><i style="--h:250"></i></div><span><b>Mercado de Vila-real</b><small>Rehabilitación · 2024</small></span></a>
+          </div>
+          <div class="zone"><a class="mag" href="#">Hablemos de tu casa</a></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --out: cubic-bezier(.16, 1, .3, 1); }
+          body { background: #ece6dc; color: #1b1916; padding: 0 clamp(18px, 4vw, 36px) 40px; }
+          .nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; }
+          .nav b { font: 400 26px var(--f-serif); } .nav nav { display: flex; gap: 22px; }
+          .nav a { position: relative; color: inherit; text-decoration: none; font-size: 14px; padding: 12px 0; }
+          /* 1 · Subrayado: entra por la izquierda y sale por la derecha */
+          .nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 8px; height: 1px; background: currentColor;
+            scale: 0 1; transform-origin: right; transition: scale .5s var(--out); }
+          .nav a:focus-visible::after { scale: 1 1; }
+          .mode { margin: 4px 0 18px; font: 500 11px var(--f-mono); color: #8a5a3c; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+          .proj { color: inherit; text-decoration: none; }
+          /* 2 · Revelado: el marco se recorta hacia fuera y la imagen se asienta */
+          .img { aspect-ratio: 4 / 3; overflow: hidden; clip-path: inset(7% 7% round 4px); transition: clip-path .8s var(--out); }
+          .img i { display: block; height: 100%; scale: 1.15; transition: scale 1s var(--out);
+            background: linear-gradient(#2a2520, #2a2520) 0 100% / 100% 22% no-repeat, linear-gradient(#1f1b17, #1f1b17) 30% 64% / 34% 6% no-repeat,
+              linear-gradient(#d4ccbf, #d4ccbf) 78% 74% / 28% 24% no-repeat, linear-gradient(#f6f2ea, #f6f2ea) 26% 76% / 46% 32% no-repeat,
+              linear-gradient(#f6f2ea, #f6f2ea) 22% 53% / 58% 4% no-repeat, linear-gradient(oklch(70% .07 var(--h)), oklch(89% .035 calc(var(--h) + 30))); }
+          .proj span { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px solid #1b191622; }
+          .proj b { font: 400 22px var(--f-serif); } .proj small { font: 500 11px var(--f-mono); color: #6f675d; }
+          /* 3 · Botón magnético: JS mueve --x/--y; el CSS suaviza */
+          .zone { display: grid; place-items: center; padding: 36px 0 0; }
+          .mag { display: inline-flex; align-items: center; min-height: 56px; padding: 0 30px; border-radius: 99px; background: #1b1916; color: #ece6dc; text-decoration: none; font-weight: 600;
+            translate: var(--x, 0) var(--y, 0); transition: translate .6s var(--out), scale .15s ease-out; }
+          /* Solo si hay ratón de verdad */
+          @media (hover: hover) and (pointer: fine) {
+            .nav a:hover::after { scale: 1 1; transform-origin: left; }
+            .proj:hover .img { clip-path: inset(0 round 0); } .proj:hover .img i { scale: 1; }
+          }
+          /* En táctil: feedback al pulsar y revelado al entrar en pantalla */
+          .mag:active, .proj:active .img { scale: .97; }
+          @media (hover: none) {
+            .proj.in .img { clip-path: inset(0 round 0); } .proj.in .img i { scale: 1; }
+            .nav a[aria-current]::after { scale: 1 1; }
+          }
+          @media (max-width: 600px) { .grid { grid-template-columns: 1fr; gap: 26px; } .nav nav { gap: 16px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+          document.querySelector('.mode').textContent = fine ? 'Puntero: ratón. Hovers activos.' : 'Puntero: táctil. Revelado al hacer scroll y feedback al pulsar.';
+          if (fine) {
+            // Botón magnético: se desplaza un 35 % de la distancia al cursor
+            const zone = document.querySelector('.zone'), mag = document.querySelector('.mag');
+            zone.addEventListener('pointermove', (e) => {
+              const r = mag.getBoundingClientRect();
+              mag.style.setProperty('--x', (e.clientX - r.left - r.width / 2) * .35 + 'px');
+              mag.style.setProperty('--y', (e.clientY - r.top - r.height / 2) * .35 + 'px');
+            });
+            zone.addEventListener('pointerleave', () => { mag.style.setProperty('--x', '0px'); mag.style.setProperty('--y', '0px'); });
+          } else {
+            document.querySelector('.nav a').setAttribute('aria-current', 'page');
+            const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.classList.add('in')), { threshold: .6 });
+            document.querySelectorAll('.proj').forEach((p) => io.observe(p));
+          }
+        </script>
+        <figcaption>Con ratón: subrayado que entra por la izquierda y sale por la derecha (cambia <code>transform-origin</code> entre estados), imagen que se revela recortando el marco con <code>clip-path</code> mientras se asienta su escala, y un botón que se deja atraer. Sin ratón, los hovers no existen: la sección activa lleva el subrayado fijo, las imágenes se revelan al entrar en pantalla y todo lo pulsable responde con <code>:active</code>.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un hover caro es <strong>pequeño y lento al salir</strong>: desplazamientos de pocos píxeles, escalas de 1.02–1.05 y no de 1.2, y la misma curva expo-out en todo. Lo barato es el hover que cambia tres cosas a la vez (color, sombra y tamaño) en 150 ms con <code>ease</code>. Y el botón magnético, solo en el CTA principal: si todo atrae al cursor, el cursor no sabe a dónde ir.</p>
+      </div>
+
+      <script type="text/x-code" data-lang="css" data-label="El patrón táctil en limpio">
+        /* El hover solo existe donde hay un puntero que puede flotar */
+        @media (hover: hover) and (pointer: fine) {
+          .tarjeta:hover img { scale: 1.04; }
+        }
+        /* En cualquier dispositivo: respuesta inmediata al pulsar */
+        .boton:active { scale: .97; transition-duration: 80ms; }
+
+        /* Dedo: objetivos grandes */
+        @media (pointer: coarse) {
+          .boton { min-height: 48px; }
+        }
+      </script>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Un <code>:hover</code> sin proteger se queda «pegado» en el móvil tras el primer toque, porque el navegador lo emula. Envuelve los hovers en <code>@media (hover: hover) and (pointer: fine)</code>. Lo que en escritorio revela un hover, en el móvil lo revela el scroll (un IntersectionObserver o, en la lección 6, <code>animation-timeline: view()</code>). Y todo lo que se pulsa necesita un <code>:active</code> visible en menos de 100 ms: es la única confirmación que tiene el dedo.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">En un iPhone, tocas una card de producto con <code>.card:hover { translate: 0 -6px; }</code>. ¿Qué pasa?</p>
+        <ol>
+          <li>La card se queda levantada hasta que tocas en otro sitio, como si el hover se hubiera atascado.</li>
+          <li>No pasa nada: Safari ignora <code>:hover</code> en pantallas táctiles.</li>
+          <li>La card se levanta solo mientras mantienes el dedo encima.</li>
+        </ol>
+        <p class="why">Los navegadores móviles emulan el hover al tocar y lo mantienen hasta el siguiente toque fuera. Por eso el estado se queda «pegado». La solución es meterlo en <code>@media (hover: hover)</code> y usar <code>:active</code> para el feedback táctil.</p>
+      </div>
+
+      <h2>Un momento orquestado y movimiento reducido</h2>
+      <p>Si repasas las webs de los vídeos, verás que se mueven <strong>pocas cosas</strong>. En la landing de «mesa» entra el hero, la tarjeta flotante y nada más. En la torre, todo el presupuesto de movimiento va al vuelo de cámara; los textos aparecen con un simple fundido. Antes de añadir una animación, pregúntate qué cuenta. Si la respuesta es «queda bonito», sobra.</p>
+      <p>La otra mitad del criterio es el usuario que ha activado <strong>reducir movimiento</strong> en su sistema (por mareos, migrañas o, simplemente, porque le molesta). Respetarlo no significa quitar todo: significa cambiar desplazamientos y escalas por fundidos cortos.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Lo básico de prefers-reduced-motion">
+        .revela { opacity: 0; translate: 0 24px; transition: opacity .6s, translate .8s var(--ease-out-expo); }
+        .revela.in { opacity: 1; translate: 0; }
+
+        @media (prefers-reduced-motion: reduce) {
+          /* sin desplazamiento: solo un fundido corto */
+          .revela { translate: none; transition: opacity .3s; }
+          .cta-borde { animation: none; }
+        }
+      </script>
+
+      <script type="text/x-code" data-lang="js" data-label="Y en JavaScript">
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduce) iniciarBotonMagnetico();
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Haz una lista de todas las animaciones de la página y quédate con tres: <strong>un momento protagonista</strong> (la entrada del hero o una escena de scroll), <strong>un patrón de entrada</strong> que repites en todas las secciones (siempre el mismo fundido con desplazamiento) y <strong>el feedback de interfaz</strong> (hovers, botones, menús). Todo lo demás es ruido. La coherencia de movimiento se nota tanto como la de la tipografía.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil cada animación compite con la batería, con el scroll y con la paciencia. Revisa la página en un Android de gama media real, no solo en el emulador del escritorio. Si algo da tirones, primero comprueba que solo animas <code>transform</code> y <code>opacity</code>; después, quítalo. En la lección 12 verás el modo reducido completo y cómo medir con DevTools.</p>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>prefers-reduced-motion</code> es Baseline ampliamente disponible desde 2022 (Chrome 74, Safari 10.1, Firefox 63). Las media queries <code>hover</code> y <code>pointer</code> funcionan en todos los navegadores actuales.</p>
+        <!-- verificar soporte: media queries hover/pointer no están en research.md -->
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Anima <code>transform</code> (o <code>translate</code>, <code>scale</code>, <code>rotate</code>) y <code>opacity</code>; la duración crece con la distancia y baja en el móvil; las salidas, más cortas que las entradas.</li>
+          <li>Dos o tres curvas para todo el proyecto: expo-out por defecto, in-out para cambios de sitio y, como mucho, un muelle con <code>linear()</code>. Una entrada orquestada con <code>--i</code> vale más que veinte efectos sueltos.</li>
+          <li><code>@starting-style</code> + <code>allow-discrete</code> para entrar y salir desde <code>display: none</code>, <code>@property</code> para animar variables, y los hovers siempre dentro de <code>@media (hover: hover)</code> con un equivalente táctil.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Recrea la entrada del hero de «mesa»: el titular en dos líneas que emergen de su máscara, el subrayado naranja que se dibuja con <code>scale</code>, la foto que se revela con <code>clip-path</code>, el panel naranja que se desliza detrás y la tarjeta «Mientras dormías» que entra la última con un muelle suave. Todo en menos de 1,4 s en escritorio y 1 s en el móvil, con tus curvas en variables y una versión con <code>prefers-reduced-motion</code> que solo funde.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

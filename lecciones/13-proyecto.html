@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proyecto final: la torre | Hora azul</title>
+<meta name="description" content="Desmontaje de la landing final del cuaderno: qué técnica hay en cada sección, el código clave y qué cambia en el móvil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+<style>
+  /* Vista previa de la landing en escritorio y en teléfono */
+  .preview { display: grid; grid-template-columns: 1fr 250px; gap: 1.2rem; align-items: end; margin: 2.4rem 0; }
+  .preview .desk, .preview .phone { position: relative; border-radius: 14px; overflow: hidden; background: var(--deep); box-shadow: 0 0 0 1px var(--line-2), 0 30px 60px -30px oklch(5% 0.03 285 / .9); }
+  .preview .desk { aspect-ratio: 16 / 10; }
+  .preview .phone { aspect-ratio: 9 / 19.5; border-radius: 28px; box-shadow: 0 0 0 7px var(--night-3), 0 30px 60px -30px oklch(5% 0.03 285 / .9); }
+  .preview iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; }
+  .preview .desk iframe { width: 1440px; height: 900px; }
+  .preview .phone iframe { width: 390px; height: 845px; }
+  .preview figcaption { grid-column: 1 / -1; font-family: var(--f-display); font-size: var(--step--1); color: var(--muted); display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; }
+  @media (max-width: 760px) { .preview { grid-template-columns: 1fr; } .preview .desk { display: none; } .preview .phone { width: min(300px, 100%); justify-self: center; } }
+</style>
+</head>
+<body data-lesson="proyecto">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Proyecto final: la torre</h1>
+    <p class="lede">Vésper es la landing que junta todo el cuaderno. Aquí la desmontas sección a sección: qué técnica hay, dónde está el código y qué decisiones cambian en el móvil.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <figure class="preview">
+        <div class="desk"><iframe src="../landing/index.html" title="Landing Vésper en escritorio" loading="lazy" tabindex="-1"></iframe></div>
+        <div class="phone"><iframe src="../landing/index.html" title="Landing Vésper en móvil" loading="lazy" tabindex="-1"></iframe></div>
+        <figcaption><a class="btn primary" href="../landing/index.html">Abrir la landing a pantalla completa</a> Las dos vistas previas son la misma página a 1440 y a 390 px de ancho. Puedes hacer scroll dentro.</figcaption>
+      </figure>
+
+      <p>Vésper es una torre ficticia de treinta plantas frente al mar. La web tiene seis secciones y cada una usa técnicas de una o varias lecciones. Ninguna es complicada por separado: lo difícil, y lo que la hace parecer cara, es que todas comparten paleta, tipografía y ritmo.</p>
+
+      <h2>Mapa de la web</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Sección</th><th>Qué hace</th><th>Técnicas</th><th>Lecciones</th></tr></thead>
+          <tbody>
+            <tr><td>Llegada</td><td>La cámara vuela del agua a la planta 18 al hacer scroll</td><td>Secuencia de 120 fotogramas en canvas, <code>sticky</code>, timeline de GSAP con <code>scrub</code>, SplitText, Lenis</td><td><a href="09-secuencias.html">09</a>, <a href="08-gsap.html">08</a>, <a href="03-tipografia.html">03</a></td></tr>
+            <tr><td>Elige tu planta</td><td>Pasas por la torre y se ilumina cada planta con su contador</td><td>SVG <code>viewBox="0 0 1 1"</code> sobre <code>&lt;picture&gt;</code>, números tabulares, teclado</td><td><a href="10-interaccion.html">10</a>, <a href="03-tipografia.html">03</a></td></tr>
+            <tr><td>La residencia</td><td>Maqueta 3D: tocas una estancia y la cámara se acerca</td><td>Three.js cargado bajo demanda, View Transition al llegar desde una planta</td><td><a href="10-interaccion.html">10</a>, <a href="07-view-transitions.html">07</a></td></tr>
+            <tr><td>Vida en Vésper</td><td>La imagen fija cambia según el texto que lees</td><td>Split con <code>sticky</code>, IntersectionObserver, fundidos</td><td><a href="04-composicion.html">04</a>, <a href="05-movimiento.html">05</a></td></tr>
+            <tr><td>Manifiesto</td><td>La frase se «enciende» en ámbar al bajar</td><td><code>animation-timeline: view()</code> con <code>background-clip: text</code></td><td><a href="06-scroll-css.html">06</a></td></tr>
+            <tr><td>Visita privada</td><td>Formulario de una columna</td><td>Campos de 16 px, mensajes de error útiles</td><td><a href="12-rendimiento.html">12</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <script type="text/x-code" data-lang="txt" data-label="Archivos de la landing">
+        landing/
+          index.html                 estructura y textos
+          css/landing.css            paleta, tipografía, secciones y móvil
+          js/landing.js              secuencia, timeline, plantas, menú y formulario
+          js/residencia.min.js       la maqueta 3D (generada, no se edita a mano)
+          src/residencia.js          código fuente de la maqueta en Three.js
+          frames/desk/0001-0120.webp secuencia 16:9 (1280 × 720, 3,3 MB)
+          frames/mob/0001-0120.webp  secuencia 9:16 (720 × 1280, 3,7 MB)
+          media/                     imágenes fijas y coordenadas de plantas (JSON)
+          package.json               solo para reconstruir residencia.min.js
+      </script>
+
+      <h2>Paleta y tipografía: tres decisiones</h2>
+      <p>Toda la paleta sale de tres colores en OKLCH: la noche violeta, el crema y la luz de ventana. El resto (superficies, líneas, el ámbar del hover) se deriva con sintaxis relativa, como en la lección 01. Si mañana el cliente quiere la torre en verde mar, cambias el tono de <code>--noche</code> y la web entera se adapta.</p>
+
+      <div class="swatches">
+        <div class="swatch" style="--s: oklch(17% 0.05 292)"><i></i><span><b>Noche</b><small>oklch(17% .05 292)</small></span></div>
+        <div class="swatch" style="--s: oklch(95% 0.016 78)"><i></i><span><b>Crema</b><small>oklch(95% .016 78)</small></span></div>
+        <div class="swatch" style="--s: oklch(80% 0.13 68)"><i></i><span><b>Ventana</b><small>oklch(80% .13 68)</small></span></div>
+        <div class="swatch" style="--s: oklch(72% 0.11 350)"><i></i><span><b>Rosa</b><small>solo en el cielo</small></span></div>
+      </div>
+
+      <script type="text/x-code" data-lang="css" data-label="landing/css/landing.css (inicio)">
+        :root {
+          /* Tres decisiones y el resto se deriva */
+          --noche: oklch(17% 0.05 292);
+          --crema: oklch(95% 0.016 78);
+          --ventana: oklch(80% 0.13 68);
+
+          --noche-2: oklch(from var(--noche) calc(l + 0.05) c h);
+          --crema-2: oklch(from var(--crema) calc(l - 0.18) calc(c * 1.6) h);
+          --crema-line: oklch(from var(--crema) l c h / 0.16);
+
+          --t-display: clamp(3rem, 1.4rem + 7vw, 8.4rem);
+          --t-h2: clamp(2.4rem, 1.5rem + 4vw, 5.2rem);
+        }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una serif (Instrument Serif) para todo lo que se lee como titular y una sans neutra (Inter Tight) para la interfaz. La única excepción es funcional: el contador de planta va en Newsreader, porque Instrument Serif no tiene cifras tabulares y el número «bailaría» al cambiar (lo viste en la lección 03). Nada de cursivas de adorno. El ámbar solo aparece en lo que se puede tocar o en lo que acabas de elegir: el número de planta, el botón principal, la planta activa. Si todo brilla, nada brilla.</p>
+      </div>
+
+      <h2>La llegada</h2>
+      <p>Es la técnica de la lección 09 en versión de producción. Tres detalles que no estaban en las demos:</p>
+      <ol>
+        <li><strong>Carga por pasadas con contador.</strong> El número de la pantalla de carga mide solo la primera pasada (16 fotogramas). En cuanto llegan, la web arranca y el resto se rellena mientras lees el titular.</li>
+        <li><strong>Una timeline de duración 1</strong> mueve el fotograma y los tres textos. Las posiciones se leen como porcentajes del recorrido.</li>
+        <li><strong>Lenis solo con ratón.</strong> En táctil el scroll nativo ya es suave y Lenis empeora la sensación.</li>
+      </ol>
+
+      <script type="text/x-code" data-lang="js" data-label="landing/js/landing.js (extracto)">
+        const tl = gsap.timeline({
+          defaults: { ease: 'none' },
+          scrollTrigger: { trigger: '.arrival', start: 'top top', end: 'bottom bottom', scrub: 0.6 },
+        });
+        tl.to(seq, { f: FRAMES - 1, duration: 1, onUpdate: () => draw(seq.f) }, 0)
+          .to('.phase-1', { autoAlpha: 0, y: -40, duration: 0.1 }, 0.16)
+          .fromTo('.phase-2', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.1 }, 0.34)
+          .to('.phase-2', { autoAlpha: 0, y: -40, duration: 0.08 }, 0.58)
+          .fromTo('.phase-3', { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.1 }, 0.78);
+
+        // Scroll suave solo con ratón
+        if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reduce) {
+          lenis = new Lenis({ lerp: 0.1 });
+          lenis.on('scroll', ScrollTrigger.update);
+          gsap.ticker.add((t) => lenis.raf(t * 1000));
+          gsap.ticker.lagSmoothing(0);
+        }
+      </script>
+
+      <details class="more">
+        <summary>Entender más: cómo se hicieron los fotogramas</summary>
+        <p>La torre es una escena procedimental de Three.js: losas extruidas con la planta redondeada, un shader para el vidrio que decide qué ventanas están encendidas, un cielo con degradado en el shader, agua con reflejo y un poco de bloom. Se renderizó con un navegador sin pantalla (Playwright) a 2560 × 1440, fotograma a fotograma siguiendo una curva de cámara, y se redujo a 1280 × 720 en WebP con ffmpeg. La versión vertical es otro render con su propia cámara, no un recorte. Con imágenes y vídeos de IA el resultado sería más realista y el proceso de la web, idéntico: la lección 11 explica esa ruta.</p>
+      </details>
+
+      <h2>Las plantas</h2>
+      <p>La imagen de la torre es un <code>&lt;picture&gt;</code> con dos renders (horizontal y vertical) y, encima, un SVG con 28 polígonos. Las coordenadas salen de proyectar el contorno de cada planta con la cámara del render, así que encajan al píxel. Cada encuadre tiene su JSON y se elige con la misma media query que el <code>&lt;picture&gt;</code>.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="Polígono de cada planta proyectado desde Three.js">
+        // Para cada planta: puntos del contorno a la altura del suelo y del techo,
+        // proyectados a pantalla y reducidos a su envolvente convexa
+        const pts = balconyShape.getSpacedPoints(48);
+        for (let f = 0; f < 30; f++) {
+          const proj = [];
+          for (const y of [f * FH, (f + 1) * FH]) for (const p of pts) {
+            const v = new THREE.Vector3(p.x, y, -p.y).project(camera);
+            proj.push([(v.x + 1) / 2, (1 - v.y) / 2]);   // de -1…1 a 0…1
+          }
+          polygons.push(convexHull(proj));
+        }
+      </script>
+
+      <h2>La residencia en 3D</h2>
+      <p>Es la única parte en tiempo real. Three.js pesa, así que el módulo se descarga solo cuando la sección está a 800 px de aparecer, o en cuanto pulsas «Ver la residencia». Antes de eso la página no ha gastado ni un byte en 3D.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="Carga bajo demanda y View Transition">
+        new IntersectionObserver((e, o) => {
+          if (e[0].isIntersecting) { ensureResidence(); o.disconnect(); }
+        }, { rootMargin: '800px 0px' }).observe(document.querySelector('#residencia'));
+
+        function ensureResidence() {
+          return (loading ??= import('./residencia.min.js').then(({ createResidencia }) => {
+            residence = createResidencia(canvas, { onFocus: showRoom });
+          }));
+        }
+
+        // De la planta elegida a la residencia, con un fundido de toda la página
+        openButton.addEventListener('click', () => {
+          const go = () => { floorLabel.textContent = `Planta ${activeFloor}`; scrollToEl(residencia); };
+          document.startViewTransition && !reduce ? document.startViewTransition(go) : go();
+        });
+      </script>
+
+      <p>Dentro del módulo, tres decisiones de rendimiento: la escena solo se vuelve a pintar cuando algo cambia (la cámara se mueve o pasas por una estancia), deja de pintar cuando la sección sale de pantalla y el campo de visión se calcula según la proporción del canvas para que la maqueta siempre quepa a lo ancho, también en vertical.</p>
+
+      <script type="text/x-code" data-lang="txt" data-label="Reconstruir residencia.min.js después de tocar src/residencia.js">
+        cd landing
+        npm install
+        npm run build
+      </script>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">¿Por qué la llegada a la torre es una secuencia de imágenes y la residencia es 3D en tiempo real?</p>
+        <ol>
+          <li>Porque Three.js no puede hacer reflejos en el agua.</li>
+          <li>Porque las secuencias de imágenes no funcionan con ScrollTrigger.</li>
+          <li>Porque la llegada solo se mira (pre-renderizar da calidad máxima con poco coste) y la residencia se toca (elegir estancias y mover la cámara pide tiempo real).</li>
+        </ol>
+        <p class="why">La regla que resume las lecciones 09 y 10: pre-renderiza lo que solo se mira y deja en tiempo real lo que se toca.</p>
+      </div>
+
+      <h2>Qué cambia en el móvil</h2>
+      <p>Esta tabla es la parte más importante del proyecto. Una web de scroll cinematográfico que simplemente «se encoge» en el móvil se siente rota; una que toma decisiones distintas se siente hecha para el teléfono.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Sección</th><th>Escritorio</th><th>Móvil</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Menú</td><td>Enlaces en línea</td><td>Botón con menú a pantalla completa en serif grande</td><td>Cuatro enlaces no caben y el pulgar necesita objetivos grandes</td></tr>
+            <tr><td>Llegada</td><td>420vh, secuencia 16:9, texto a la izquierda, Lenis</td><td>300vh, secuencia 9:16 propia, texto abajo sobre degradado, scroll nativo</td><td>Menos recorrido para el pulgar, la torre llena la pantalla vertical</td></tr>
+            <tr><td>Escenario</td><td><code>100vh</code></td><td><code>100svh</code></td><td>La barra del navegador no hace saltar la imagen</td></tr>
+            <tr><td>Plantas</td><td>Hover con etiqueta flotante</td><td>Toque, sin etiqueta, render vertical más grande encima del contador</td><td>No hay hover; la planta activa tiene que verse sin tapar nada</td></tr>
+            <tr><td>Residencia</td><td>Maqueta a la izquierda, ficha a la derecha</td><td>Maqueta fija arriba (62svh) y la ficha pasa por debajo; la lista de estancias manda</td><td>Acertar una estancia de 2 cm con el dedo es frustrante; la lista no falla</td></tr>
+            <tr><td>Vida en Vésper</td><td>Imagen fija a la izquierda, textos a pantalla completa</td><td>Imagen fija arriba y textos que pasan por encima con degradado</td><td>Mantiene la idea de «la imagen acompaña al texto» en una columna</td></tr>
+            <tr><td>Formulario</td><td>Dos columnas</td><td>Una columna, botón a todo el ancho, campos de 16 px</td><td>Con menos de 16 px iOS hace zoom al tocar el campo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Prueba la landing en tu teléfono de verdad, no solo en el simulador de DevTools. Fíjate en tres cosas: si la imagen salta al aparecer o desaparecer la barra del navegador, si el pulgar llega cómodo a los botones principales (mitad inferior de la pantalla) y si el scroll de la llegada se hace largo. Si se hace largo, baja la altura de la sección antes de quitar fotogramas.</p>
+      </div>
+
+      <h2>Tu versión, paso a paso</h2>
+      <ol>
+        <li><strong>Brief visual</strong> de una página: paleta de tres colores en OKLCH, dos tipografías y la escena de llegada en una frase (lección 00 y 02).</li>
+        <li><strong>Recursos:</strong> la imagen de establecimiento, la transición de llegada (en vídeo o fotogramas, horizontal y vertical) y dos o tres imágenes fijas (lección 11).</li>
+        <li><strong>Estructura sin animar:</strong> todas las secciones en HTML y CSS, responsive, con las imágenes fijas. Si no funciona estática, no funcionará animada (lecciones 03 y 04).</li>
+        <li><strong>La llegada:</strong> secuencia en canvas con su timeline. Pruébala en el móvil antes de seguir (lecciones 08 y 09).</li>
+        <li><strong>Capas interactivas</strong> encima de la imagen principal (lección 10).</li>
+        <li><strong>Un único momento</strong> por sección: no animes todo (lecciones 05 y 06).</li>
+        <li><strong>Revisión final</strong> con la lista de la lección 12: peso, memoria, movimiento reducido, teclado.</li>
+      </ol>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>La web junta pocas técnicas bien elegidas: secuencia de fotogramas, capas SVG, 3D solo donde se toca y CSS de scroll para los detalles.</li>
+          <li>Paleta y tipografía mínimas y compartidas son lo que hace que todo parezca un único producto.</li>
+          <li>El móvil no es la versión pequeña: tiene su propia secuencia, menos recorrido y decisiones de interacción distintas.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto final</h3>
+        <p>Rehaz Vésper para un proyecto real de la agencia o para uno inventado (un hotel en la sierra, una bodega, un estudio). Sigue los siete pasos, publícalo en GitHub Pages y envíate el enlace al móvil. Cuando lo tengas, compáralo con esta landing usando la tabla de qué cambia en el móvil.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Escala las vistas previas para que la página de 1440 o 390 px quepa en su marco
+  function fit() {
+    document.querySelectorAll('.preview .desk, .preview .phone').forEach((box) => {
+      const f = box.querySelector('iframe');
+      const s = box.clientWidth / parseFloat(getComputedStyle(f).width);
+      f.style.transform = `scale(${s})`;
+    });
+  }
+  addEventListener('resize', fit); addEventListener('load', fit); fit();
+</script>
+</body>
+</html>

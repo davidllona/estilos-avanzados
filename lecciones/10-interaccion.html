@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capas interactivas sobre imagen | Hora azul</title>
+<meta name="description" content="Plantas que se iluminan al pasar por la torre, hotspots en una planta isométrica, contadores tabulares y zoom a una estancia: interacción encima de una imagen.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="interaccion">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Capas interactivas sobre imagen</h1>
+    <p class="lede">La imagen no sabe nada: es una foto. La interacción vive en una capa de SVG o de botones colocada exactamente encima. Así se hacen las plantas que se iluminan y las estancias que se pueden tocar.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En la web de la torre pasas el ratón por el edificio y se resalta una planta con su número. Parece que el edificio «sabe» dónde está cada planta, pero lo que hay es una imagen y, encima, un dibujo invisible con la forma de cada planta. Cuando el ratón entra en una de esas formas, la pintas.</p>
+      <p>En esta lección construyes las tres capas típicas: <strong>polígonos</strong> (plantas), <strong>puntos</strong> (estancias) y <strong>contadores</strong> (el número de planta), y ves cómo adaptarlas al dedo.</p>
+
+      <h2>Polígonos encima de una foto</h2>
+      <p>El truco está en un SVG con <code>viewBox="0 0 1 1"</code> y <code>preserveAspectRatio="none"</code>. Eso convierte el SVG en un sistema de coordenadas de 0 a 1 que se estira con la imagen: el punto <code>0.5,0.5</code> es siempre el centro de la foto, mida lo que mida. Las coordenadas de cada planta se guardan en un JSON como fracciones.</p>
+
+      <figure class="lab" data-title="Elige tu planta" data-hint="Pasa el ratón o toca una planta" data-height="520" data-height-mobile="600" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="layout">
+            <div class="readout">
+              <p class="label">Planta</p>
+              <p class="num" id="num">18</p>
+              <p class="info" id="info">2 de 3 disponibles</p>
+            </div>
+            <figure class="pic">
+              <picture>
+                <source media="(max-aspect-ratio: 1/1)" srcset="../landing/media/torre-plantas-mob.webp">
+                <img src="../landing/media/torre-plantas.webp" alt="Torre al atardecer">
+              </picture>
+              <svg viewBox="0 0 1 1" preserveAspectRatio="none" id="svg"></svg>
+              <p class="tip" id="tip" hidden></p>
+            </figure>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #15112b; color: #f3eee3; padding: 16px; }
+          .layout { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center; }
+          .label { margin: 0; font-size: 12px; color: #c9bfd9; }
+          .num { margin: 0; font: 300 96px/.85 var(--f-read); color: #ffb547; font-variant-numeric: tabular-nums; }  /* Newsreader: tiene cifras tabulares */
+          .info { margin: 10px 0 0; font-size: 14px; }
+          .pic { position: relative; margin: 0; }
+          img { width: 100%; border-radius: 6px; }
+          svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+          polygon { fill: transparent; cursor: pointer; transition: fill .2s; }
+          polygon:hover, polygon:focus-visible { fill: rgb(255 181 71 / .25); outline: none; }
+          polygon.on { fill: rgb(255 181 71 / .45); stroke: #ffb547; stroke-width: 1px; vector-effect: non-scaling-stroke; }
+          .tip { position: absolute; margin: 0; transform: translate(-50%, calc(-100% - 10px)); background: #f3eee3; color: #15112b; font-size: 13px; padding: 6px 10px; border-radius: 6px; white-space: nowrap; pointer-events: none; }
+          @media (max-width: 560px) { body { padding: 10px; } .layout { grid-template-columns: 1fr; gap: 10px; } .readout { display: flex; align-items: baseline; gap: 12px; } .num { font-size: 56px; } .label { display: none; } .pic { max-width: 300px; margin: 0 auto; } }
+          @media (hover: none) { .tip { display: none !important; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const avail = (f) => Math.floor(Math.abs(Math.sin(f * 127.1) * 43758.5) % 1 * 4);
+          // Misma media query que el <picture>: cada encuadre tiene sus propias coordenadas
+          const vertical = matchMedia('(max-aspect-ratio: 1/1)').matches;
+          fetch(`../landing/media/plantas-${vertical ? 'mob' : 'desk'}.json`).then((r) => r.json()).then((floors) => {
+            floors.forEach((pts, f) => {
+              if (f < 2) return;                       // planta baja y club: no se venden
+              const p = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+              p.setAttribute('points', pts.map((q) => q.join(',')).join(' '));
+              p.setAttribute('tabindex', '0');         // accesible con teclado
+              p.setAttribute('role', 'button');
+              p.setAttribute('aria-label', 'Planta ' + f);
+              p.dataset.f = f;
+              p.dataset.x = (Math.min(...pts.map((q) => q[0])) + Math.max(...pts.map((q) => q[0]))) / 2;
+              p.dataset.y = Math.min(...pts.map((q) => q[1]));
+              svg.append(p);
+            });
+            select(18);
+          });
+          function select(f) {
+            svg.querySelectorAll('polygon').forEach((p) => p.classList.toggle('on', +p.dataset.f === f));
+            num.textContent = String(f).padStart(2, '0');
+            info.textContent = avail(f) ? `${avail(f)} de 3 disponibles` : 'Vendida';
+          }
+          svg.addEventListener('click', (e) => e.target.dataset.f && select(+e.target.dataset.f));
+          svg.addEventListener('keydown', (e) => e.key === 'Enter' && e.target.dataset.f && select(+e.target.dataset.f));
+          // Etiqueta flotante: solo tiene sentido con ratón
+          svg.addEventListener('pointerover', (e) => {
+            const p = e.target; if (!p.dataset.f || e.pointerType !== 'mouse') return;
+            tip.textContent = 'Planta ' + p.dataset.f;
+            tip.style.left = p.dataset.x * 100 + '%'; tip.style.top = p.dataset.y * 100 + '%';
+            tip.hidden = false;
+          });
+          svg.addEventListener('pointerleave', () => (tip.hidden = true));
+        </script>
+        <figcaption>Pulsa <kbd>Tab</kbd> dentro de la demo: los polígonos también se recorren con el teclado. Es la diferencia entre un efecto bonito y una interfaz que se puede usar.</figcaption>
+      </figure>
+
+      <h3>¿De dónde salen las coordenadas?</h3>
+      <ul>
+        <li><strong>Si la imagen sale de un 3D</strong> (como aquí), se proyectan los vértices de cada planta a la pantalla con la misma cámara del render. En Three.js es <code>vector.project(camera)</code> y pasar de -1…1 a 0…1. Así lo he hecho para este cuaderno.</li>
+        <li><strong>Si la imagen es de IA o una foto</strong>, dibujas las formas encima en Figma o Illustrator con la imagen de fondo, exportas el SVG y divides las coordenadas entre el ancho y el alto de la imagen. Diez minutos por imagen.</li>
+      </ul>
+
+      <script type="text/x-code" data-lang="js" data-label="Pasar un SVG exportado de Figma (en píxeles) a fracciones">
+        // points="412,880 640,872 652,910 420,918" en una imagen de 1600 × 1000
+        const toUnit = (points, w, h) =>
+          points.trim().split(/\s+/).map((pair) => {
+            const [x, y] = pair.split(',').map(Number);
+            return [+(x / w).toFixed(4), +(y / h).toFixed(4)];
+          });
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El resaltado tiene que parecer <strong>luz</strong>, no una selección de Photoshop. Relleno cálido semitransparente (el color de las ventanas), un trazo fino de 1 px con <code>vector-effect: non-scaling-stroke</code> para que no engorde al escalar, y una transición de 200 ms. Nada de azul de sistema ni bordes gruesos.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El hover no existe, así que el estado que importa es el <strong>seleccionado</strong>, y tiene que verse muy claro. Las plantas miden unos 10 px de alto en una torre vertical: muy por debajo de los 44 px recomendados para un dedo. Soluciones: usa una imagen vertical más grande (la torre ocupa toda la altura), deja que el toque elija la planta más cercana aunque no aciertes de lleno, y añade botones de subir y bajar planta junto al contador. Oculta la etiqueta flotante con <code>@media (hover: none)</code>.</p>
+      </div>
+
+      <h2>Hotspots en la planta isométrica</h2>
+      <p>Para las estancias no hacen falta polígonos: basta un punto por estancia. Son <strong>botones de verdad</strong> posicionados con porcentajes encima de la imagen. Al tocar uno se abre una ficha. Aquí la ficha es un <code>popover</code> nativo, colocado junto a su botón con <strong>anchor positioning</strong>.</p>
+
+      <figure class="lab" data-title="Estancias con popover y anclaje" data-hint="Toca los puntos" data-height="500" data-height-mobile="520" data-open="css">
+        <script type="text/x-demo" data-lang="html">
+          <div class="plan">
+            <img src="../landing/media/residencia.webp" alt="Planta isométrica de la residencia">
+            <button class="dot" style="--x:35.5%; --y:41.5%; anchor-name: --salon" popovertarget="salon" aria-label="Salón"></button>
+            <button class="dot" style="--x:52.2%; --y:54.7%; anchor-name: --cocina" popovertarget="cocina" aria-label="Cocina"></button>
+            <button class="dot" style="--x:74.4%; --y:56.7%; anchor-name: --suite" popovertarget="suite" aria-label="Dormitorio principal"></button>
+
+            <div popover id="salon" class="card" style="position-anchor: --salon"><b>Salón</b><span>42 m², chimenea y vistas al oeste</span></div>
+            <div popover id="cocina" class="card" style="position-anchor: --cocina"><b>Cocina y comedor</b><span>28 m², isla de piedra de 4 m</span></div>
+            <div popover id="suite" class="card" style="position-anchor: --suite"><b>Dormitorio principal</b><span>24 m², vestidor y vistas al puerto</span></div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: radial-gradient(120% 90% at 50% 30%, #2d2252, #15112b); color: #f3eee3; min-height: 100vh; display: grid; place-items: center; padding: 10px; }
+          .plan { position: relative; width: min(100%, 760px); }
+          .plan img { width: 100%; }
+          .dot {
+            position: absolute; left: var(--x); top: var(--y); translate: -50% -50%;
+            width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;   /* 44 px: tamaño de dedo */
+            background: radial-gradient(circle, #ffb547 0 7px, rgb(255 181 71 / .25) 8px 100%);
+          }
+          .dot::after {   /* pulso suave para que se vea que se puede tocar */
+            content: ""; position: absolute; inset: 0; border-radius: 50%; border: 1px solid #ffb547;
+            animation: pulse 2.4s cubic-bezier(.22,1,.36,1) infinite;
+          }
+          @keyframes pulse { from { scale: .4; opacity: 1; } to { scale: 1.4; opacity: 0; } }
+
+          .card {
+            margin: 0; border: 0; padding: 10px 14px; border-radius: 10px;
+            background: #f3eee3; color: #15112b; font-size: 13px; line-height: 1.35;
+            display: grid; gap: 2px; width: max-content; max-width: 220px;
+            box-shadow: 0 16px 30px -12px rgb(0 0 0 / .6);
+            /* Anclaje: la ficha se coloca encima de su punto y, si no cabe, debajo */
+            position-area: top;
+            margin-bottom: 8px;
+            position-try-fallbacks: flip-block;
+          }
+          .card b { font: 400 18px/1.1 var(--f-serif); }
+
+          /* Entrada y salida animadas desde display: none */
+          .card { opacity: 0; translate: 0 6px; transition: opacity .25s, translate .25s, display .25s allow-discrete, overlay .25s allow-discrete; }
+          .card:popover-open { opacity: 1; translate: 0 0; }
+          @starting-style { .card:popover-open { opacity: 0; translate: 0 6px; } }
+
+          /* Sin anchor positioning: ficha centrada abajo, igual de usable */
+          @supports not (position-area: top) {
+            .card { position: fixed; inset: auto 12px 12px 12px; margin: 0 auto; }
+          }
+        </script>
+        <figcaption>Sin una línea de JavaScript: <code>popovertarget</code> abre y cierra la ficha (también con <kbd>Esc</kbd> o tocando fuera), <code>anchor-name</code> y <code>position-anchor</code> la pegan a su punto y <code>@starting-style</code> anima la entrada.</figcaption>
+      </figure>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p>El atributo <code>popover</code> es Baseline desde enero de 2025. El anclaje CSS funciona en los tres motores desde enero de 2026 (Chrome 125, Safari 26, Firefox 147), aunque Baseline oficial todavía lo marca como limitado por detalles nuevos. Por eso la demo lleva un <code>@supports not</code> con una ficha fija abajo: quien no tenga anclaje ve lo mismo, colocado de otra forma.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En un teléfono la ficha flotante junto al punto se queda pequeña y tapa la propia imagen. Lo profesional es que en pantallas estrechas la ficha sea una <strong>hoja inferior</strong> (anclada abajo, a todo el ancho) y que debajo de la imagen haya una <strong>lista de estancias</strong> con los mismos datos: es lo que hace la landing. Los puntos siguen ahí para quien quiera tocarlos, pero nadie depende de acertar un punto de 44 px sobre una foto.</p>
+      </div>
+
+      <script type="text/x-code" data-lang="css" data-label="La misma ficha como hoja inferior en móvil">
+        @media (max-width: 640px) {
+          .card {
+            position: fixed; inset: auto 0 0 0;    /* pegada abajo */
+            position-area: none; margin: 0;
+            width: auto; max-width: none;
+            border-radius: 16px 16px 0 0;
+            padding: 18px 20px calc(18px + env(safe-area-inset-bottom));
+          }
+        }
+      </script>
+
+      <h2>El contador de planta</h2>
+      <p>El número grande que cambia es un detalle pequeño que da muchísima sensación de calidad. Dos claves: <code>font-variant-numeric: tabular-nums</code> para que todas las cifras midan lo mismo (si no, el número «baila» al cambiar de 11 a 18) y animar el <em>valor</em>, no la caja.</p>
+
+      <figure class="lab" data-title="Contador tipo marcador" data-hint="Usa los botones" data-height="300" data-height-mobile="320" data-open="css">
+        <script type="text/x-demo" data-lang="html">
+          <div class="wrap">
+            <button id="down" aria-label="Bajar planta">−</button>
+            <p class="counter" aria-live="polite"><span class="label">Planta</span>
+              <span class="digits" id="digits"></span>
+            </p>
+            <button id="up" aria-label="Subir planta">+</button>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #15112b; color: #f3eee3; }
+          .wrap { display: flex; align-items: center; gap: 28px; }
+          button { width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgb(243 238 227 / .3); background: none; color: inherit; font-size: 24px; cursor: pointer; }
+          .counter { margin: 0; display: grid; justify-items: center; }
+          .label { font-size: 13px; color: #c9bfd9; margin-bottom: 6px; }
+          .digits { display: flex; font: 300 120px/1 var(--f-read); color: #ffb547; font-variant-numeric: tabular-nums; height: 1em; overflow: hidden; }
+          /* Cada cifra es una columna 0-9 que se desplaza en vertical */
+          .col { display: flex; flex-direction: column; transition: translate .7s cubic-bezier(.22,1,.36,1); }
+          .col span { height: 1em; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          let floor = 18;
+          digits.innerHTML = [0, 1].map(() => `<span class="col">${[...'0123456789'].map((d) => `<span>${d}</span>`).join('')}</span>`).join('');
+          const cols = [...digits.children];
+          function render() {
+            String(floor).padStart(2, '0').split('').forEach((d, i) => (cols[i].style.translate = `0 ${-d}em`));
+            digits.setAttribute('aria-label', floor);
+          }
+          up.onclick = () => { floor = Math.min(29, floor + 1); render(); };
+          down.onclick = () => { floor = Math.max(2, floor - 1); render(); };
+          render();
+        </script>
+        <figcaption>Cada cifra es una tira de 0 a 9 dentro de una ventana de 1em de alto. Cambiar de planta es solo mover la tira con <code>translate</code>. Los botones de subir y bajar son, además, la solución táctil del apartado anterior.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El contador grande y los botones de subir y bajar van en la mitad inferior de la pantalla, donde llega el pulgar. Y si el número cambia mientras el usuario hace scroll, no lo animes cada vez: en el móvil los cambios rápidos de cifras se perciben como parpadeo. Anima solo cuando el cambio lo provoca un toque.</p>
+      </div>
+
+      <h2>Acercarse a una estancia</h2>
+      <p>En la web del vídeo, al tocar una estancia la imagen «entra» en ella. Con una imagen fija lo simulas escalando la imagen con el <code>transform-origin</code> en el punto tocado, y luego fundiendo a la foto o vídeo del interior. Es un zoom de cámara falso, pero con buen easing convence.</p>
+
+      <figure class="lab" data-title="Zoom hacia el punto tocado" data-hint="Toca una estancia y luego Volver" data-height="460" data-height-mobile="420" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <div class="view" id="view">
+            <img id="img" src="../landing/media/residencia.webp" alt="Planta de la residencia">
+            <button class="dot" data-x="35.5" data-y="41.5" data-name="Salón" aria-label="Salón"></button>
+            <button class="dot" data-x="52.2" data-y="54.7" data-name="Cocina" aria-label="Cocina"></button>
+            <button class="dot" data-x="74.4" data-y="56.7" data-name="Dormitorio" aria-label="Dormitorio"></button>
+            <div class="room" id="room"><p id="roomName"></p><button id="back">Volver a la planta</button></div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { margin: 0; background: #15112b; color: #f3eee3; }
+          .view { position: relative; height: 100vh; overflow: hidden; display: grid; place-items: center; background: radial-gradient(100% 80% at 50% 30%, #2d2252, #15112b); }
+          img { width: min(100%, 760px); transition: transform 1.2s cubic-bezier(.65,0,.35,1), filter 1.2s; }
+          .dot { position: absolute; width: 44px; height: 44px; translate: -50% -50%; border: 0; border-radius: 50%; cursor: pointer; background: radial-gradient(circle, #ffb547 0 7px, rgb(255 181 71 / .25) 8px); transition: opacity .3s; }
+          .zoomed .dot { opacity: 0; pointer-events: none; }
+          .room { position: absolute; inset: auto 0 0 0; padding: 24px; display: flex; align-items: end; justify-content: space-between; gap: 16px; background: linear-gradient(transparent, rgb(21 17 43 / .9)); opacity: 0; translate: 0 20px; transition: opacity .5s .7s, translate .5s .7s; pointer-events: none; }
+          .zoomed .room { opacity: 1; translate: 0 0; pointer-events: auto; }
+          .room p { margin: 0; font: 400 clamp(32px, 7vw, 56px)/1 var(--f-serif); }
+          #back { background: #f3eee3; color: #15112b; border: 0; border-radius: 99px; padding: 12px 18px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const dots = [...document.querySelectorAll('.dot')];
+          // Coloca los puntos según el tamaño real de la imagen
+          function place() {
+            const r = img.getBoundingClientRect(), v = view.getBoundingClientRect();
+            dots.forEach((d) => {
+              d.style.left = r.left - v.left + (d.dataset.x / 100) * r.width + 'px';
+              d.style.top = r.top - v.top + (d.dataset.y / 100) * r.height + 'px';
+            });
+          }
+          dots.forEach((d) => d.addEventListener('click', () => {
+            img.style.transformOrigin = `${d.dataset.x}% ${d.dataset.y}%`;   // el zoom nace en el punto
+            img.style.transform = 'scale(3.2)';
+            img.style.filter = 'brightness(.8)';
+            roomName.textContent = d.dataset.name;
+            view.classList.add('zoomed');
+            back.focus({ preventScroll: true });
+          }));
+          back.onclick = () => { img.style.transform = ''; img.style.filter = ''; view.classList.remove('zoomed'); };
+          img.complete ? place() : (img.onload = place);
+          addEventListener('resize', place);
+        </script>
+        <figcaption>El easing es <code>cubic-bezier(.65,0,.35,1)</code>, simétrico: arranca y frena despacio, como una cámara de verdad. Con un ease-out normal el zoom parece un salto.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Un zoom de 3,2× sobre una imagen de 1600 px se ve borroso en un teléfono con pantalla de 3×. Para el estado ampliado carga una versión recortada y de más resolución de esa estancia (o directamente su foto de interior) y funde a ella cuando termina el zoom: el zoom solo tiene que convencer durante un segundo.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: imagen con capas o 3D en tiempo real</summary>
+        <p>La landing final usa las dos cosas a propósito. La llegada a la torre y la elección de planta son <strong>imágenes con capas</strong>: pesan poco, se ven perfectas en cualquier móvil y no necesitan GPU. La residencia es <strong>3D en tiempo real con Three.js</strong>: ahí el usuario quiere elegir estancias y que la cámara se mueva hacia ellas, y un vídeo por estancia pesaría más que el propio 3D. La regla: pre-renderiza lo que solo se mira y deja en tiempo real lo que se toca. En 3D el «polígono» se convierte en un rayo: <code>raycaster.intersectObjects(zonas)</code> hace el mismo trabajo que el <code>pointerover</code> del SVG.</p>
+      </details>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Tus polígonos encajan perfectos en escritorio, pero en el móvil aparecen desplazados respecto a la torre. ¿Qué es lo más probable?</p>
+        <ol>
+          <li>Que el SVG necesita <code>preserveAspectRatio="xMidYMid meet"</code>.</li>
+          <li>Que en el móvil se carga otra imagen (otro encuadre, con <code>&lt;picture&gt;</code>) y sigues usando las coordenadas de la de escritorio.</li>
+          <li>Que hay que multiplicar las coordenadas por <code>devicePixelRatio</code>.</li>
+        </ol>
+        <p class="why">Las fracciones son relativas a <em>esa</em> imagen. Si en vertical sirves otro render (como en la landing), necesitas su propio JSON de polígonos y elegir uno u otro con la misma media query que el <code>&lt;picture&gt;</code>.</p>
+      </div>
+
+      <h2>Accesibilidad de las capas</h2>
+      <ul>
+        <li>Cada zona interactiva es un <code>button</code> o lleva <code>role="button"</code>, <code>tabindex="0"</code> y un <code>aria-label</code> con información útil («Planta 18, 2 de 3 disponibles»).</li>
+        <li>Lo que cambia (el contador, la ficha) se anuncia con <code>aria-live="polite"</code>.</li>
+        <li>Siempre hay una alternativa en lista: el lector de pantalla no puede «ver» dónde está la planta 18 en una foto.</li>
+        <li>El foco es visible y tiene el mismo aspecto que el hover.</li>
+      </ul>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Imagen fija + SVG con <code>viewBox="0 0 1 1"</code> y coordenadas en fracciones: los polígonos escalan con la foto.</li>
+          <li>Puntos como botones reales, fichas con <code>popover</code> y anclaje CSS, con alternativa fija para quien no lo tenga.</li>
+          <li>En móvil: estado seleccionado claro, botones de subir y bajar, hojas inferiores y lista de estancias.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge una foto de la fachada de tu edificio o de uno de tu ciudad, dibuja en Figma un polígono por planta, exporta el SVG, conviértelo a fracciones con la función de arriba y monta la demo de «Elige tu planta» con ella. Pruébala en el móvil y añade los botones de subir y bajar.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

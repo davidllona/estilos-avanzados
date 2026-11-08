@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rendimiento y accesibilidad del movimiento | Hora azul</title>
+<meta name="description" content="Cómo hacer que una web de scroll cinematográfico vaya fluida en un móvil de gama media y respete a quien no puede con el movimiento: pipeline de render, memoria, imágenes, medición, reduced motion, foco y contraste.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Bloques de texto plano: se parten en líneas en vez de desbordar */
+  .prose .code pre:not(:has(.token)) { white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="rendimiento">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Rendimiento y accesibilidad del movimiento</h1>
+    <p class="lede">Una web espectacular que va a tirones en un Android de 250 euros, o que marea a quien tiene activado «reducir movimiento», no es espectacular: está rota. Aquí aprendes a medirlo y a arreglarlo.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En tu portátil todo va a 60 fps. El problema es que la mayoría de la gente verá la web de la torre en un móvil con un procesador cuatro o seis veces más lento, por datos móviles y con una mano. Y una parte de esa gente tiene trastornos vestibulares: un zoom de cámara enorme les provoca mareo de verdad.</p>
+      <p>Las dos cosas se resuelven con el mismo hábito: saber qué le cuesta cada efecto al navegador y al usuario, y tener siempre una versión más ligera.</p>
+
+      <h2>El camino de un fotograma</h2>
+      <p>Para pintar cada fotograma, el navegador recorre una cadena: <strong>estilo</strong> (qué reglas aplican), <strong>layout</strong> (dónde va cada caja y cuánto mide), <strong>paint</strong> (rellenar píxeles) y <strong>composite</strong> (la GPU junta las capas ya pintadas). A 60 Hz tienes 16,7 ms para todo; en pantallas de 120 Hz, la mitad.</p>
+      <p>La clave: si animas <code>top</code>, <code>left</code> o <code>width</code>, cada fotograma repite layout y paint en el hilo principal. Si animas <code>transform</code> u <code>opacity</code> de un elemento en su propia capa, el navegador solo recompone, y eso lo puede hacer el compositor aunque el hilo principal esté ocupado.</p>
+
+      <figure class="lab" data-title="Mismo movimiento, distinto coste" data-hint="Activa la página pesada" data-height="440" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="hud">
+            <p class="meter"><small>Hilo principal</small><b id="fps">60</b><span>fps</span></p>
+            <canvas id="graph" aria-hidden="true"></canvas>
+            <label class="sw"><input type="checkbox" id="heavy"> Simular página pesada</label>
+          </div>
+          <p class="lbl">Anima <code>left</code> y <code>width</code>: layout y paint en cada fotograma</p>
+          <div class="lane"><div class="card a"><b>Planta 32</b><small>2.450.000 €</small></div></div>
+          <p class="lbl">Anima <code>transform</code>: solo composite</p>
+          <div class="lane"><div class="card b"><b>Planta 32</b><small>2.450.000 €</small></div></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 18px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          .hud { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+          .meter { margin: 0; } .meter small { display: block; font-size: 11px; color: #b9aed6; }
+          .meter b { font: 400 40px/1 var(--f-serif); } .meter span { font-size: 12px; color: #b9aed6; margin-left: 4px; }
+          canvas { flex: 1; min-width: 140px; height: 44px; background: rgb(242 235 221 / .05); border-radius: 6px; }
+          .sw { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 14px; }
+          .lbl { margin: 12px 0 6px; font-size: 12px; color: #b9aed6; } .lbl code { font: 500 11px var(--f-mono); color: #f5c27a; }
+          .lane { container-type: inline-size; padding: 8px; border-radius: 12px; background: rgb(242 235 221 / .05); }
+          .card { position: relative; left: 0; width: 150px; height: 64px; padding: 10px 14px; border-radius: 10px;
+            display: grid; align-content: center; background: linear-gradient(135deg, #2c2056, #4a3277); box-shadow: 0 10px 24px -12px #000; }
+          .card b { font: 400 22px/1 var(--f-serif); white-space: nowrap; } .card small { color: #f5c27a; font-size: 12px; }
+          .a { animation: mA 2.4s ease-in-out infinite alternate; }
+          .b { transform-origin: left center; animation: mB 2.4s ease-in-out infinite alternate; }
+          @keyframes mA { to { left: calc(100% - 190px); width: 190px; } }
+          @keyframes mB { to { transform: translateX(calc(100cqw - 170px)) scale(1.12); } }
+          @media (max-width: 560px) { body { padding: 14px; } .meter b { font-size: 32px; } .card { width: 132px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const cv = document.getElementById('graph'), ctx = cv.getContext('2d');
+          const heavy = document.getElementById('heavy'), fpsEl = document.getElementById('fps');
+          const times = []; let last = performance.now(), acc = 0, count = 0;
+          function size() {
+            const d = Math.min(devicePixelRatio, 2);
+            cv.width = cv.clientWidth * d; cv.height = cv.clientHeight * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+          }
+          function loop(now) {
+            const dt = now - last; last = now;
+            // «Página pesada»: bloqueamos el hilo principal 45 ms en cada fotograma
+            if (heavy.checked) { const end = performance.now() + 45; while (performance.now() < end) {} }
+            times.push(dt); if (times.length > 60) times.shift();
+            acc += dt; count++;
+            if (acc > 500) { fpsEl.textContent = Math.round(1000 * count / acc); acc = count = 0; }
+            draw(); requestAnimationFrame(loop);
+          }
+          function draw() {
+            const w = cv.clientWidth, h = cv.clientHeight, bw = w / 60;
+            ctx.clearRect(0, 0, w, h);
+            times.forEach((t, i) => {
+              const bh = Math.min(h, t / 100 * h);
+              ctx.fillStyle = t < 20 ? '#9fd8b5' : t < 40 ? '#f5c27a' : '#e7a3a8';
+              ctx.fillRect(i * bw, h - bh, bw - 1, bh);
+            });
+            ctx.fillStyle = 'rgba(242,235,221,.5)';           // línea de 16,7 ms
+            ctx.fillRect(0, h - 16.7 / 100 * h, w, 1);
+          }
+          size(); addEventListener('resize', size); requestAnimationFrame(loop);
+        </script>
+        <figcaption>Con la página pesada, el contador cae a menos de 20 fps porque mide el hilo principal. La tarjeta de <code>left</code> y <code>width</code> va a saltos; la de <code>transform</code> sigue fluida porque la mueve el compositor. Así se comporta tu web en un móvil lento mientras carga JS o decodifica imágenes.</figcaption>
+      </figure>
+
+      <p>Si necesitas que algo crezca, no animes <code>width</code>: anima <code>scale</code> y compensa. Si necesitas moverlo, <code>translate</code>. Para las secuencias en canvas, el coste es otro (dibujar el fotograma), y lo vemos en la sección 4.</p>
+
+      <h3>will-change: una promesa, no un acelerador</h3>
+      <p><code>will-change: transform</code> le avisa al navegador de que ese elemento se va a mover, para que lo suba a su propia capa antes de empezar. Cada capa es una textura en la memoria de la GPU de ancho × alto × 4 bytes. Una capa de pantalla completa en un móvil de 1080 × 2400 son unos 10 MB. Veinte capas así y el navegador empieza a descartar y repintar.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Bien y mal">
+        /* Mal: todo a su propia capa «por si acaso» */
+        * { will-change: transform; }
+
+        /* Bien: solo lo que se mueve, y solo mientras se mueve */
+        .torre.is-flying { will-change: transform; }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una web cara se nota fluida, no «llena de efectos». Antes de añadir un parallax más, pregúntate qué propiedad anima. Si la respuesta no es <code>transform</code>, <code>opacity</code> o <code>filter</code> sobre algo pequeño, rediseña el efecto. GSAP y ScrollTrigger ya animan transforms por defecto si usas <code>x</code>, <code>y</code> y <code>scale</code> en lugar de <code>left</code> y <code>top</code>.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los móviles tienen menos memoria de GPU y pantallas con mucha densidad: una capa de pantalla completa pesa más que en el portátil. Evita <code>backdrop-filter: blur()</code> grandes encima de un canvas que cambia en cada fotograma: obliga a recalcular el desenfoque continuamente. En <code>@media (pointer: coarse)</code>, sustitúyelo por un fondo semiopaco.</p>
+      </div>
+
+      <h2>Menos trabajo: contain y content-visibility</h2>
+      <p><code>contain</code> le promete al navegador que lo que pasa dentro de un elemento no afecta al resto: si cambia, solo hace falta recalcular esa caja. <code>content-visibility: auto</code> va más allá: las secciones fuera de pantalla no se maquetan ni se pintan hasta que te acercas a ellas.</p>
+
+      <figure class="lab" data-title="Una lista de 600 viviendas" data-hint="Pinta con y sin content-visibility" data-height="460" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar">
+            <label class="sw"><input type="checkbox" id="cv" checked> <code>content-visibility: auto</code></label>
+            <button id="go">Volver a pintar</button>
+          </div>
+          <div class="tiles"><p><small>Sin</small><b id="t-off">…</b></p><p><small>Con</small><b id="t-on">…</b></p></div>
+          <ul class="list" id="list"></ul>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f2ebdd; color: #17122b; height: 100vh; display: flex; flex-direction: column; padding: 16px 18px 0; gap: 10px; }
+          .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+          .sw { display: flex; gap: 8px; align-items: center; min-height: 44px; } code { font: 500 13px var(--f-mono); }
+          button { min-height: 44px; padding: 0 18px; border-radius: 99px; border: 0; background: #17122b; color: #f2ebdd; cursor: pointer; }
+          .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+          .tiles p { margin: 0; padding: 8px 12px; border-radius: 10px; background: #e6dcc8; display: flex; justify-content: space-between; align-items: baseline; }
+          .tiles small { font-size: 12px; color: #6b5f80; } .tiles b { font: 400 26px/1 var(--f-serif); }
+          .list { flex: 1; overflow: auto; list-style: none; margin: 0; padding: 0 0 16px; }
+          .row { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 8px 4px; border-bottom: 1px solid #d9cdb5; }
+          .row i { height: 44px; border-radius: 8px; box-shadow: 0 6px 14px -8px rgb(23 18 43 / .6);
+            background: linear-gradient(160deg, oklch(45% .1 var(--h)), oklch(80% .09 calc(var(--h) + 60))), conic-gradient(from 45deg, #0002, #fff3, #0002); }
+          .row b { display: block; font-weight: 600; font-size: 14px; } .row small { color: #6b5f80; font-size: 12px; }
+          .row span { font: 400 18px var(--f-serif); }
+          /* La clave: las filas lejos de la pantalla no se maquetan ni se pintan */
+          .cv .row { content-visibility: auto; contain-intrinsic-size: auto 62px; }
+          @media (max-width: 560px) { body { padding: 12px 12px 0; } .row { grid-template-columns: 40px 1fr; } .row span { grid-column: 2; font-size: 15px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const list = document.getElementById('list'), cv = document.getElementById('cv');
+          const tipos = ['Estudio', '1 dormitorio', '2 dormitorios', '3 dormitorios', 'Ático'];
+          const ori = ['norte', 'sur', 'este', 'oeste'];
+          const row = i => {
+            const m2 = 48 + (i * 7) % 110;
+            return `<li class="row"><i style="--h:${(i * 37) % 80 + 250}"></i><div><b>Planta ${2 + i % 38} · ${tipos[i % 5]}</b>
+              <small>${m2} m² · orientación ${ori[i % 4]}</small></div><span>${(m2 * 9800).toLocaleString('es-ES')} €</span></li>`;
+          };
+          const frame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r)));
+          async function render(on) {
+            list.classList.toggle('cv', on);
+            list.innerHTML = ''; await frame();
+            const t0 = performance.now();
+            list.innerHTML = Array.from({ length: 600 }, (_, i) => row(i)).join('');
+            await frame();                                   // espera a que se maquete y pinte
+            const ms = performance.now() - t0;
+            document.getElementById(on ? 't-on' : 't-off').textContent = ms.toFixed(0) + ' ms';
+          }
+          document.getElementById('go').onclick = () => render(cv.checked);
+          cv.onchange = () => render(cv.checked);
+          (async () => { await render(false); await render(true); })();
+        </script>
+        <figcaption>Los milisegundos dependen de tu equipo; la proporción es lo que cuenta. Sin <code>content-visibility</code> el navegador maqueta y pinta las 600 filas aunque solo veas seis. Con él, solo las cercanas. <code>contain-intrinsic-size: auto 62px</code> reserva un alto estimado para que la barra de scroll no salte.</figcaption>
+      </figure>
+
+      <p>Dónde usarlo en la web de la torre: la lista de viviendas disponibles, la galería de interiores, el bloque de ubicación y el pie. Dónde no: dentro de la sección fijada con ScrollTrigger. ScrollTrigger mide posiciones al cargar, y si una sección todavía no se ha maquetado, mide su alto estimado. Si lo usas por encima de un pin, llama a <code>ScrollTrigger.refresh()</code> cuando cambien los tamaños.</p>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>contain</code> está ampliamente disponible. <code>content-visibility</code> es Baseline recién disponible desde septiembre de 2025, cuando llegó a Safari 26. En navegadores anteriores simplemente se ignora: la página se pinta entera, como siempre.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Es donde más se nota: el móvil gasta más tiempo maquetando una página larga. Pon <code>content-visibility: auto</code> en cada <code>section</code> por debajo del pin, con un <code>contain-intrinsic-size</code> realista para la versión móvil (las secciones son más altas en una columna): <code>contain-intrinsic-size: auto 900px</code> en móvil, <code>auto 600px</code> en escritorio.</p>
+      </div>
+
+      <h2>Imágenes que no frenan el LCP</h2>
+      <p>El <strong>LCP</strong> (Largest Contentful Paint) mide cuándo aparece el elemento más grande de la primera pantalla. En la torre suele ser el póster del exterior. Para que llegue pronto: el tamaño justo, el formato moderno y la prioridad correcta.</p>
+
+      <figure class="lab" data-title="¿Qué archivo elige el navegador?" data-hint="Cambia ancho de pantalla y densidad" data-height="470" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <label>Ancho de pantalla <b id="vv"></b><input id="vw" type="range" min="320" max="1600" step="10" value="390"></label>
+            <div class="seg" role="group" aria-label="Densidad de píxeles"><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="3" aria-pressed="true">3x</button></div>
+          </div>
+          <div class="stage"><div class="screen" id="screen"><div class="slot" id="slot"><span id="sl"></span></div></div></div>
+          <p class="info" id="info"></p>
+          <ul class="cands" id="cands"></ul>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 16px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          .ctrl { display: flex; gap: 14px; align-items: end; flex-wrap: wrap; }
+          label { flex: 1; min-width: 200px; display: grid; grid-template-columns: 1fr auto; gap: 4px; font-size: 13px; color: #b9aed6; }
+          label b { color: #f2ebdd; font-weight: 500; } label input { grid-column: 1 / -1; width: 100%; color: #f5c27a; }
+          .seg { display: inline-flex; border: 1px solid rgb(242 235 221 / .25); border-radius: 99px; padding: 3px; }
+          .seg button { min-height: 40px; min-width: 48px; border: 0; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .seg [aria-pressed="true"] { background: #f2ebdd; color: #120f24; }
+          .stage { height: 96px; margin: 14px 0 8px; display: flex; align-items: center; }
+          .screen { height: 100%; border: 2px solid #b9aed6; border-radius: 6px; padding: 6px; display: flex; justify-content: center; transition: width .2s; }
+          .slot { height: 100%; border-radius: 3px; background: linear-gradient(#3b2a66, #b26a95 65%, #e7a3a8 80%, #1a1530 80%); position: relative; transition: width .2s; }
+          .slot span { position: absolute; left: 6px; bottom: 4px; font: 500 10px var(--f-mono); white-space: nowrap; }
+          .info { margin: 4px 0 10px; font-size: 14px; } .info b { color: #f5c27a; font-weight: 600; }
+          .cands { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font: 500 12px var(--f-mono); }
+          .cands li { display: grid; grid-template-columns: 130px 1fr 60px; gap: 10px; align-items: center; padding: 5px 8px; border-radius: 6px; color: #b9aed6; }
+          .cands i { height: 8px; border-radius: 4px; background: rgb(242 235 221 / .25); }
+          .cands .on { background: rgb(245 194 122 / .14); color: #f2ebdd; } .cands .on i { background: #f5c27a; }
+          @media (max-width: 560px) { body { padding: 12px; } .cands li { grid-template-columns: 112px 1fr 52px; font-size: 11px; } .info { font-size: 13px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // srcset de ejemplo: ancho real del archivo y peso aproximado en AVIF
+          const C = [[480, 38], [800, 78], [1200, 150], [1600, 240], [2400, 480]];
+          let dpr = 3;
+          const $ = id => document.getElementById(id);
+          function upd() {
+            const vw = +$('vw').value;
+            // sizes="(max-width: 700px) 100vw, 60vw"
+            const slot = vw <= 700 ? vw : Math.round(vw * .6), need = slot * dpr;
+            const pick = C.find(c => c[0] >= need) || C[C.length - 1];
+            $('vv').textContent = vw + ' px';
+            $('screen').style.width = Math.max(18, vw / 1600 * 100) + '%';
+            $('slot').style.width = vw <= 700 ? '100%' : '60%';
+            $('sl').textContent = slot + ' px';
+            $('info').innerHTML = `Hueco de ${slot} px × ${dpr} = necesita ${need} px: elige <b>torre-${pick[0]}.avif</b>`;
+            $('cands').innerHTML = C.map(c => `<li class="${c === pick ? 'on' : ''}"><span>torre-${c[0]}.avif</span><i style="width:${c[1] / 480 * 100}%"></i><span>${c[1]} KB</span></li>`).join('');
+          }
+          document.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => {
+            document.querySelectorAll('[data-d]').forEach(x => x.setAttribute('aria-pressed', x === b));
+            dpr = +b.dataset.d; upd();
+          }));
+          $('vw').addEventListener('input', upd); upd();
+        </script>
+        <figcaption>Un iPhone de 390 px con densidad 3x pide una imagen de 1170 px: más que un portátil de 1400 px con densidad 1x. Por eso el <code>sizes</code> correcto importa tanto. El navegador puede elegir algo distinto según la red o la caché; esta es la regla base.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="html" data-label="Póster del exterior: el candidato a LCP">
+        <picture>
+          <source type="image/avif" srcset="torre-480.avif 480w, torre-800.avif 800w, torre-1200.avif 1200w, torre-1600.avif 1600w, torre-2400.avif 2400w"
+                  sizes="(max-width: 700px) 100vw, 60vw" media="(orientation: landscape)">
+          <source type="image/avif" srcset="torre-v-720.avif 720w, torre-v-1080.avif 1080w" sizes="100vw">
+          <img src="torre-1200.webp" alt="Torre Alameda al anochecer, con las ventanas encendidas sobre el mar"
+               width="1600" height="900" fetchpriority="high" decoding="async">
+        </picture>
+
+        <!-- Todo lo que está más abajo: perezoso -->
+        <img src="salon-800.webp" alt="Salón de la planta 32" width="800" height="533" loading="lazy" decoding="async">
+      </script>
+
+      <ul>
+        <li><code>fetchpriority="high"</code> en la imagen del LCP: el navegador la pide antes que otras. Es Baseline recién disponible desde octubre de 2024.</li>
+        <li><code>loading="lazy"</code> en todo lo de debajo de la primera pantalla, y <strong>nunca</strong> en la imagen del LCP: la retrasarías.</li>
+        <li><code>decoding="async"</code> deja que la decodificación no bloquee el resto del pintado.</li>
+        <li><code>width</code> y <code>height</code> siempre: reservan el hueco y evitan saltos de maquetación (CLS).</li>
+      </ul>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>AVIF primero, WebP como respaldo, y no sirvas PNG de fotografías nunca. AVIF está ampliamente disponible desde julio de 2026. Para fondos fotográficos con degradados de cielo, prueba siempre el resultado: a calidad baja, AVIF puede crear bandas en el degradado violeta. Sube la calidad un poco antes que aceptar bandas.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En vertical, el póster debe ser la imagen 9:16 propia, no el horizontal recortado: así el LCP descarga los píxeles que se ven. Con <code>&lt;source media="(orientation: landscape)"&gt;</code> el móvil en vertical salta directamente a la versión vertical.</p>
+      </div>
+
+      <h2>Secuencias en canvas: la memoria manda</h2>
+      <p>Una secuencia de 120 WebP pesa pocos megas en la red, pero cada imagen decodificada ocupa <strong>ancho × alto × 4 bytes</strong> (rojo, verde, azul y alfa). 120 fotogramas de 1920 × 1080 son casi 1 GB de memoria. En un portátil, quizá. En un Android de gama media, la pestaña se recarga sola o se queda en blanco.</p>
+
+      <figure class="lab" data-title="Memoria de una secuencia" data-hint="Prueba el Android de gama media" data-height="480" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="seg" role="group" aria-label="Dispositivo"><button data-p="desk">Portátil</button><button data-p="ios">iPhone</button><button data-p="and" aria-pressed="true">Android gama media</button></div>
+          <div class="ctrl">
+            <label>Fotogramas <b id="vn"></b><input id="n" type="range" min="30" max="300" step="10" value="120"></label>
+            <select id="res" aria-label="Resolución"><option>1920x1080</option><option>1600x900</option><option>1280x720</option><option>1080x1920</option><option selected>720x1280</option></select>
+          </div>
+          <label class="sw"><input type="checkbox" id="win"> Decodificar solo una ventana de 24 fotogramas</label>
+          <div class="out"><p><small>En disco</small><b id="disk"></b></p><p><small>Decodificado</small><b id="mem"></b></p><p><small>Por fotograma</small><b id="per"></b></p></div>
+          <div class="gauge"><i id="fill"></i><span id="limit"></span></div>
+          <p class="verdict" id="verdict"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 16px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: start; gap: 10px; }
+          body > * { width: 100%; }
+          .seg { width: auto; display: inline-flex; flex-wrap: wrap; border: 1px solid rgb(242 235 221 / .25); border-radius: 22px; padding: 3px; }
+          .seg button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .seg [aria-pressed="true"] { background: #f2ebdd; color: #120f24; }
+          .ctrl { display: flex; gap: 12px; align-items: end; }
+          label { display: grid; grid-template-columns: 1fr auto; gap: 4px; font-size: 13px; color: #b9aed6; } .ctrl label { flex: 1; }
+          label b { color: #f2ebdd; font-weight: 500; } label input { grid-column: 1 / -1; color: #f5c27a; }
+          select { min-height: 44px; border-radius: 99px; padding: 0 12px; background: #1b1633; color: inherit; border: 1px solid rgb(242 235 221 / .25); }
+          .sw { display: flex; gap: 8px; align-items: center; min-height: 40px; color: #f2ebdd; font-size: 14px; }
+          .out { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .out p { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgb(242 235 221 / .06); }
+          .out small { display: block; font-size: 12px; color: #b9aed6; } .out b { font: 400 28px/1.1 var(--f-serif); }
+          .gauge { position: relative; height: 14px; border-radius: 7px; background: rgb(242 235 221 / .08); margin-top: 6px; }
+          .gauge i { position: absolute; inset: 0 auto 0 0; border-radius: 7px; background: var(--c); transition: width .3s; }
+          .gauge span { position: absolute; top: -6px; bottom: -6px; width: 2px; background: #f2ebdd; }
+          .verdict { margin: 0; font-size: 14px; padding-left: 12px; border-left: 3px solid var(--c); }
+          @media (max-width: 560px) { body { padding: 12px; } .out b { font-size: 20px; } .out small { font-size: 11px; } .seg button { padding: 0 11px; font-size: 13px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Presupuesto orientativo de memoria para imágenes decodificadas (no es un límite oficial)
+          const PROF = { desk: 800, ios: 300, and: 150 };
+          let prof = 'and';
+          const $ = id => document.getElementById(id);
+          const mb = v => v < 10 ? v.toFixed(1).replace('.', ',') + ' MB' : Math.round(v) + ' MB';
+          function calc() {
+            const [w, h] = $('res').value.split('x').map(Number), n = +$('n').value;
+            const live = $('win').checked ? Math.min(n, 24) : n;
+            const per = w * h * 4 / 1048576;                 // bytes RGBA a MB
+            const mem = per * live, disk = n * w * h * 0.045 / 1048576, budget = PROF[prof];
+            $('vn').textContent = n; $('disk').textContent = mb(disk); $('mem').textContent = mb(mem); $('per').textContent = mb(per);
+            const max = Math.max(mem, budget) * 1.15;
+            const c = mem > budget ? '#e7a3a8' : mem > budget * .6 ? '#f5c27a' : '#9fd8b5';
+            document.body.style.setProperty('--c', c);
+            $('fill').style.width = mem / max * 100 + '%'; $('limit').style.left = budget / max * 100 + '%';
+            $('verdict').textContent = mem > budget ? `Te pasas del presupuesto (${budget} MB): riesgo de que la pestaña se recargue.`
+              : mem > budget * .6 ? 'Cabe, pero sin margen para el resto de la página.' : 'Holgado: queda memoria para el resto de la web.';
+          }
+          document.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => {
+            document.querySelectorAll('[data-p]').forEach(x => x.setAttribute('aria-pressed', x === b));
+            prof = b.dataset.p; calc();
+          }));
+          ['n', 'res', 'win'].forEach(id => $(id).addEventListener('input', calc));
+          calc();
+        </script>
+        <figcaption>Fíjate en la diferencia entre «en disco» y «decodificado»: 5 MB de descarga pueden ser 400 MB en memoria. Los presupuestos son orientativos (ningún navegador publica un límite fijo por pestaña); los uso como margen de seguridad. La ventana de decodificación lo cambia todo: memoria constante, da igual cuántos fotogramas tenga la secuencia.</figcaption>
+      </figure>
+
+      <p>Tres estrategias, de más simple a más fina:</p>
+      <ol>
+        <li><strong>Resolución adecuada</strong>: el canvas no necesita más píxeles que su tamaño en pantalla por la densidad, con la densidad limitada a 2. Un canvas de 390 × 844 CSS a 2x son 780 × 1688: la secuencia de 720 × 1280 escalada se ve bien.</li>
+        <li><strong>Ventana de decodificación</strong>: guarda los archivos descargados, pero mantén decodificados solo los fotogramas cercanos al actual con <code>createImageBitmap()</code>, y libera los lejanos con <code>bitmap.close()</code>.</li>
+        <li><strong>Vídeo en vez de imágenes</strong> en el móvil: un solo <code>&lt;video&gt;</code> con keyframes frecuentes decodifica de uno en uno.</li>
+      </ol>
+
+      <script type="text/x-code" data-lang="js" data-label="Dibujar solo cuando cambia, con listeners pasivos">
+        let target = 0, current = -1, ticking = false;
+
+        // passive: true le promete al navegador que no llamarás a preventDefault(),
+        // así no espera a tu JS para hacer scroll (crítico en táctil)
+        addEventListener('scroll', () => {
+          target = Math.round(progress() * (N - 1));
+          if (!ticking) { ticking = true; requestAnimationFrame(draw); }
+        }, { passive: true });
+
+        function draw() {
+          ticking = false;
+          if (target === current) return;          // nada nuevo que pintar
+          const img = nearest(target);
+          if (!img) return;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          current = target;
+        }
+
+        // canvas a su tamaño real, con la densidad limitada a 2
+        const dpr = Math.min(devicePixelRatio, 2);
+        canvas.width = canvas.clientWidth * dpr;
+        canvas.height = canvas.clientHeight * dpr;
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>No dibujes en el evento <code>scroll</code> directamente: puede dispararse varias veces por fotograma. Guarda el objetivo, pide un <code>requestAnimationFrame</code> y pinta una sola vez. ScrollTrigger con <code>onUpdate</code> ya hace esto por ti.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En la secuencia vertical, 720 × 1280 con una ventana de 24 a 30 fotogramas es un punto de partida seguro: unos 85–105 MB decodificados. Y comprueba siempre en un Android real de gama media, no en el emulador del portátil: el emulador usa la memoria de tu ordenador.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">La secuencia de escritorio son 150 WebP de 1920 × 1080 que pesan 9 MB en total. ¿Cuánta memoria ocupan decodificados todos a la vez?</p>
+        <ol>
+          <li>Unos 9 MB: lo mismo que en disco.</li>
+          <li>Unos 90 MB: diez veces más.</li>
+          <li>Unos 1200 MB: 1920 × 1080 × 4 bytes × 150.</li>
+        </ol>
+        <p class="why">Cada fotograma decodificado son 8,3 MB (1920 × 1080 × 4). Por 150, unos 1240 MB. La compresión WebP solo existe en el archivo; para pintarlo, el navegador necesita cada píxel.</p>
+      </div>
+
+      <h2>Medir en un móvil de verdad</h2>
+      <p>Lo que no mides, lo adivinas. El flujo básico con Chrome DevTools:</p>
+      <ol>
+        <li>Abre la web en una ventana de incógnito (sin extensiones que ensucien la medición).</li>
+        <li>Panel <strong>Performance</strong>. En la rueda de ajustes, <strong>CPU: 4x o 6x slowdown</strong>. Las versiones recientes de DevTools también permiten calibrar presets de móvil de gama baja y media en Ajustes, Throttling.</li>
+        <li>Pulsa grabar, haz scroll por el vuelo y la planta, toca un hotspot y para.</li>
+        <li>Busca fotogramas rojos en la fila <em>Frames</em>, tareas largas (con esquina roja) y bloques morados de <em>Layout</em> o verdes de <em>Paint</em> durante el scroll.</li>
+        <li>En la pestaña <strong>Rendering</strong> activa <em>Paint flashing</em> (resalta lo que se repinta) y <em>Layer borders</em> (muestra las capas).</li>
+      </ol>
+      <p>El throttling es una aproximación. Para la verdad, conecta el teléfono:</p>
+      <ul>
+        <li><strong>Android</strong>: activa las opciones de desarrollador y la depuración USB, conecta el móvil al ordenador y abre <code>chrome://inspect#devices</code> en Chrome de escritorio. Verás las pestañas del móvil e inspeccionas con DevTools completas, incluido Performance.</li>
+        <li><strong>iPhone</strong>: en el teléfono, Ajustes, Safari (en iOS 18 o posterior, Ajustes, Apps, Safari), Avanzado, activa <em>Inspector web</em>. En el Mac, Safari, Ajustes, Avanzado, «Mostrar funciones para desarrolladores web». Conecta el iPhone y, en el menú Desarrollo, elige el teléfono y la pestaña.</li>
+      </ul>
+
+      <h3>Core Web Vitals en una web animada</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Métrica</th><th>Bien</th><th>Cómo la rompe una web de scroll</th><th>Arreglo</th></tr></thead>
+        <tbody>
+          <tr><td><strong>LCP</strong>, carga</td><td style="white-space:nowrap">≤ 2,5 s</td><td>El póster espera a que cargue el JS de la secuencia; o lleva <code>loading="lazy"</code></td><td>Póster en HTML con <code>fetchpriority="high"</code>; secuencia después</td></tr>
+          <tr><td><strong>INP</strong>, respuesta</td><td style="white-space:nowrap">≤ 200 ms</td><td>Al tocar un hotspot se decodifica un vídeo o se recalcula todo ScrollTrigger</td><td>Abre el diálogo primero, carga el vídeo después; trabajo pesado fuera del clic</td></tr>
+          <tr><td><strong>CLS</strong>, estabilidad</td><td style="white-space:nowrap">≤ 0,1</td><td>Fuentes que cambian el alto del titular; pin que añade espacio tarde; <code>100vh</code> en móvil</td><td><code>width</code>/<code>height</code> en medios, <code>font-display</code> con fuentes ajustadas, <code>100svh</code></td></tr>
+        </tbody>
+      </table></div>
+      <p>Los valores se miden en el percentil 75 de usuarios reales. PageSpeed Insights te enseña los de campo (de usuarios de Chrome) y los de laboratorio. Las entradas de rendimiento de LCP y de Event Timing (la base del INP) llegaron también a Safari 26.2, así que ya puedes medirlas en iPhone con la API <code>PerformanceObserver</code>.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Pide al cliente que te deje probar en el móvil más barato de la oficina, no en el del director. Si el vuelo va fluido en ese, va fluido en todos. Si no, recorta: menos fotogramas, menos resolución o vídeo en vez de secuencia.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Graba siempre con CPU 6x para simular un Android de gama media y repite la grabación en un teléfono real por <code>chrome://inspect</code>. En el iPhone, el Inspector web de Safari tiene su propia línea de tiempo (pestaña Timelines): compara que el scroll del pin no dispare Layout en cada fotograma.</p>
+      </div>
+
+      <h2>Movimiento que respeta al usuario</h2>
+      <p>Hay personas a las que el movimiento de pantalla grande (zooms, parallax, giros de cámara) les provoca mareo, náuseas o migraña: son los trastornos vestibulares. Para ellas existe el ajuste del sistema «reducir movimiento», que la web lee con <code>prefers-reduced-motion</code>. Respetarlo bien no es quitar la experiencia: es <strong>cambiar el movimiento espacial por fundidos</strong>.</p>
+
+      <figure class="lab" data-title="Vuelo o fundido" data-hint="Pulsa el botón con y sin reduced motion" data-height="500" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="site" id="site">
+            <div class="sky"></div>
+            <div class="room" aria-hidden="true"></div>
+            <div class="scene"><div class="tower"></div><div class="water"></div></div>
+            <header class="hero" id="hero">
+              <p class="eyebrow">Residencias Alameda · Valencia</p>
+              <h1>Vivir sobre <em>la hora azul</em></h1>
+              <button id="go" class="cta">Ver la planta 32</button>
+            </header>
+            <section class="panel" id="panel">
+              <p class="eyebrow">Planta 32</p><h2>The Residence</h2>
+              <dl><dt>Superficie</dt><dd>186 m²</dd><dt>Dormitorios</dt><dd>3 y terraza</dd><dt>Precio</dt><dd>2.450.000 €</dd></dl>
+              <button id="back" class="ghost">Volver a la torre</button>
+            </section>
+            <button class="pause" id="pause" aria-pressed="false">Pausar fondo</button>
+          </div>
+          <label class="sim"><input type="checkbox" id="rm"> Simular <code>prefers-reduced-motion: reduce</code></label>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 12px; height: 100vh; display: flex; flex-direction: column; gap: 8px; }
+          .site { position: relative; flex: 1; overflow: hidden; border-radius: 12px; }
+          .sky, .scene { position: absolute; inset: 0; }
+          .sky { background: linear-gradient(#2c2056, #8a5a9e 52%, #e7a3a8 72%, #f2c7a5 78%); }
+          .sky::after { content: ""; position: absolute; inset: 0; opacity: .5; animation: drift 14s linear infinite;
+            background: radial-gradient(40% 8% at 20% 30%, #fff6 , transparent), radial-gradient(30% 6% at 70% 45%, #fff5, transparent); background-size: 200% 100%; }
+          @keyframes drift { to { background-position: -200% 0; } }
+          .paused .sky::after { animation-play-state: paused; }
+          .scene { transform-origin: 62% 40%; transition: transform 1.4s cubic-bezier(.7, 0, .2, 1), filter 1.4s, opacity .8s .6s; }
+          .tower { position: absolute; left: 62%; bottom: 22%; width: 64px; height: 64%; translate: -50%; background:
+            repeating-linear-gradient(90deg, transparent 0 7px, #1d1735 7px 11px), repeating-linear-gradient(#f7c57c 0 4px, #241c40 4px 10px); }
+          .water { position: absolute; inset: 78% 0 0; background: #151029; }
+          /* Destino del vuelo: el salón de la planta 32, con la misma hora azul tras el ventanal */
+          .room { position: absolute; inset: 0; opacity: 0; transition: opacity .8s .7s;
+            background: radial-gradient(30% 40% at 18% 70%, rgb(247 197 124 / .45), transparent), linear-gradient(#0000 0 64%, #6e4b36 64%),
+              linear-gradient(90deg, #241a33 0 8%, #0000 8% 92%, #241a33 92%), linear-gradient(#2c2056, #8a5a9e 45%, #e7a3a8 64%); }
+          .open .room { opacity: 1; } .rm .room { transition: opacity .5s; }
+          .hero { position: absolute; left: 24px; top: 24px; max-width: 46%; transition: opacity .5s, transform .5s; }
+          .eyebrow { margin: 0 0 6px; font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; }
+          h1 { margin: 0 0 16px; font: 400 clamp(30px, 6vw, 46px)/1 var(--f-serif); } h1 em { color: #f7c57c; }
+          .cta, .ghost, .pause { min-height: 44px; padding: 0 18px; border-radius: 99px; cursor: pointer; font-size: 14px; }
+          .cta { border: 0; background: #f2ebdd; color: #17122b; } .ghost { border: 1px solid #17122b44; background: none; }
+          .pause { position: absolute; right: 12px; top: 12px; border: 0; background: rgb(18 15 36 / .55); color: inherit; }
+          .panel { position: absolute; right: 16px; bottom: 16px; width: min(300px, calc(100% - 32px)); padding: 18px; border-radius: 14px;
+            background: #f2ebdd; color: #17122b; opacity: 0; transform: translateY(40px); transition: opacity .6s .9s, transform .8s .9s; }
+          .panel h2 { margin: 0 0 10px; font: 400 32px/1 var(--f-serif); }
+          dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0 0 14px; font-size: 14px; } dt { color: #6b5f80; } dd { margin: 0; }
+          .open .scene { transform: scale(4.5); filter: blur(3px); opacity: 0; }
+          .open .hero { opacity: 0; transform: translateY(-20px); } .open .panel { opacity: 1; transform: none; }
+          /* Movimiento reducido: mismo resultado, sin viaje espacial. En una web real va en @media (prefers-reduced-motion: reduce) */
+          .rm .scene, .rm .hero { transition: opacity .5s; } .rm.open .scene { transform: none; filter: none; }
+          .rm .panel, .rm.open .hero { transform: none; } .rm .panel { transition: opacity .5s .3s; }
+          .sim { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 14px; } .sim code { font: 500 12px var(--f-mono); }
+          @media (max-width: 560px) { .hero { max-width: 68%; left: 16px; top: 60px; } .tower { left: 84%; width: 44px; } .scene { transform-origin: 84% 40%; } .panel { padding: 14px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const $ = id => document.getElementById(id);
+          const site = $('site'), rm = $('rm'), panel = $('panel'), hero = $('hero');
+          // En una web real: el ajuste del sistema manda. Aquí lo leemos y dejamos simularlo.
+          rm.checked = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          function setPaused(p) {
+            site.classList.toggle('paused', p);
+            $('pause').setAttribute('aria-pressed', p);
+            $('pause').textContent = p ? 'Reanudar fondo' : 'Pausar fondo';
+          }
+          function applyRM() { site.classList.toggle('rm', rm.checked); setPaused(rm.checked); }
+          $('go').onclick = () => {
+            site.classList.add('open'); hero.inert = true; panel.inert = false;
+            $('back').focus({ preventScroll: true });            // el foco viaja con el contenido
+          };
+          $('back').onclick = () => {
+            site.classList.remove('open'); panel.inert = true; hero.inert = false;
+            $('go').focus({ preventScroll: true });
+          };
+          $('pause').onclick = () => setPaused(!site.classList.contains('paused'));
+          rm.onchange = applyRM;
+          panel.inert = true; applyRM();
+        </script>
+        <figcaption>Sin reduced motion, la cámara «vuela» hacia la planta con un zoom de 4,5x. Con él, la torre se funde y el panel aparece en su sitio: misma información, mismo orden, cero viaje espacial. El fondo animado arranca en pausa y tiene su botón: eso es WCAG 2.2.2.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="css" data-label="CSS: el movimiento espacial solo si el usuario no pide lo contrario">
+        .escena { transition: opacity .5s; }                     /* base: fundido */
+
+        @media (prefers-reduced-motion: no-preference) {
+          .escena { transition: transform 1.4s var(--ease), opacity .8s .6s; }
+          .is-open .escena { transform: scale(4.5); }           /* el vuelo, solo para quien lo quiere */
+        }
+      </script>
+      <script type="text/x-code" data-lang="js" data-label="GSAP: dos versiones de la misma escena">
+        const mm = gsap.matchMedia();
+
+        mm.add({
+          full: '(prefers-reduced-motion: no-preference)',
+          reduce: '(prefers-reduced-motion: reduce)',
+          mobile: '(max-width: 700px)',
+        }, ({ conditions: c }) => {
+          if (c.reduce) {
+            // sin scrub de cámara: fundidos que se disparan al llegar a cada sección
+            gsap.utils.toArray('.plano').forEach((el) =>
+              gsap.from(el, { autoAlpha: 0, duration: 0.6, scrollTrigger: { trigger: el, start: 'top 70%' } }));
+            return;
+          }
+          // versión completa; en móvil, pin más corto
+          gsap.to('.torre', { scale: 4.5, scrollTrigger: { trigger: '.vuelo', pin: true, scrub: true, end: c.mobile ? '+=150%' : '+=300%' } });
+        });
+      </script>
+
+      <p>Qué cuenta como disparador vestibular, y qué hacer con cada uno en modo reducido:</p>
+      <ul>
+        <li><strong>Zoom y vuelo de cámara</strong> a pantalla completa: fundido entre el primer y el último fotograma.</li>
+        <li><strong>Parallax</strong> con capas a velocidades distintas: todas las capas a la misma velocidad (scroll normal).</li>
+        <li><strong>Scroll secuestrado</strong>, donde la pantalla se mueve distinto de lo que mueve el dedo: scroll nativo.</li>
+        <li><strong>Giros y movimientos grandes en bucle</strong>: estático, o en pausa con botón.</li>
+        <li><strong>Destellos</strong>: nunca más de tres por segundo (WCAG 2.3.1), con o sin ajuste.</li>
+      </ul>
+      <p>Y el vídeo de fondo: si algo se mueve solo, dura más de cinco segundos y está junto a otro contenido, WCAG 2.2.2 (nivel A) exige un mecanismo para pausarlo, pararlo u ocultarlo. Un botón visible de pausa, operable con teclado, cumple.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La versión reducida también se diseña. Si quien la ve recibe una web rota o sosa, has cumplido la norma a medias. Un buen fundido de 500 ms entre planos bien elegidos sigue pareciendo una web de lujo: piensa en una presentación de revista, no en un PDF.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Mucha gente activa «reducir movimiento» en el móvil para ahorrar batería o porque las animaciones del sistema le marean: en iPhone está en Ajustes, Accesibilidad, Movimiento; en Android, en Ajustes, Accesibilidad, «Quitar animaciones» (la ruta cambia según el fabricante). Pruébalo en tu propio teléfono y recorre la web entera así antes de entregarla.</p>
+      </div>
+
+      <h2>Teclado, foco y contraste</h2>
+      <p>Las capas interactivas sobre la imagen (los puntos de cada estancia en la planta) tienen que poder usarse sin ratón y sin ver bien. Tres reglas: <strong>botones de verdad</strong>, <strong>foco gestionado</strong> y <strong>contraste medido</strong>.</p>
+
+      <figure class="lab" data-title="Hotspots accesibles" data-hint="Recórrelos con el tabulador" data-height="470" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="app">
+            <div class="plan">
+              <svg viewBox="0 0 400 260" aria-hidden="true">
+                <rect x="10" y="10" width="380" height="200" fill="#f2ebdd" stroke="#17122b" stroke-width="6"/>
+                <path d="M200 10v120M200 130h-80M280 10v200M280 110h110M120 130v80" stroke="#17122b" stroke-width="4" fill="none"/>
+                <rect x="10" y="214" width="380" height="36" fill="#d9cdb5"/>
+                <path d="M10 232h380" stroke="#17122b" stroke-dasharray="4 6" stroke-width="2"/>
+                <g font-family="JetBrains Mono, monospace" font-size="10" fill="#6b5f80" letter-spacing="1">
+                  <text x="24" y="196">SALÓN</text><text x="212" y="118">COCINA</text><text x="292" y="196">DORMITORIO</text><text x="292" y="30">BAÑO</text><text x="24" y="246">TERRAZA</text>
+                </g>
+              </svg>
+              <button class="hs" style="left:25%;top:30%" data-i="0" aria-label="Salón, 42 metros cuadrados">1</button>
+              <button class="hs" style="left:60%;top:24%" data-i="1" aria-label="Cocina, 18 metros cuadrados">2</button>
+              <button class="hs" style="left:84%;top:58%" data-i="2" aria-label="Dormitorio principal, 24 metros cuadrados">3</button>
+              <button class="hs" style="left:52%;top:89%" data-i="3" aria-label="Terraza, 31 metros cuadrados">4</button>
+            </div>
+            <aside><p class="eyebrow">Planta 32 · The Residence</p><h2>Elige una <em>estancia</em></h2><p>Toca un punto, o usa Tab y Enter. Esc cierra.</p></aside>
+          </div>
+          <dialog id="dlg" aria-labelledby="dt">
+            <div class="img" id="img"><h3 id="dt"></h3></div>
+            <div class="body">
+              <p id="dd"></p>
+              <label><input type="checkbox" id="scrim" checked> Velo bajo el título <b id="ratio"></b></label>
+              <button id="close" autofocus>Cerrar</button>
+            </div>
+          </dialog>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 18px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          .app { display: grid; grid-template-columns: 1.5fr 1fr; gap: 22px; align-items: center; }
+          .plan { position: relative; } .plan svg { width: 100%; height: auto; }
+          .hs { position: absolute; translate: -50% -50%; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #f2ebdd;
+            background: #17122b; color: #f7c57c; font: 600 15px var(--f-sans); cursor: pointer; }
+          .hs:focus-visible { outline: 3px solid #f7c57c; outline-offset: 3px; }
+          @media (prefers-reduced-motion: no-preference) { .hs { animation: pulse 2.4s infinite; } }
+          @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgb(247 197 124 / .25); } }
+          .eyebrow { margin: 0 0 6px; font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #b9aed6; }
+          aside h2 { margin: 0 0 8px; font: 400 34px/1 var(--f-serif); } aside em { color: #f7c57c; } aside p { margin: 0; font-size: 14px; color: #d8cfee; }
+          dialog { width: min(420px, calc(100% - 28px)); padding: 0; border: 0; border-radius: 14px; overflow: hidden; background: #f2ebdd; color: #17122b; }
+          dialog::backdrop { background: rgb(10 8 20 / .65); backdrop-filter: blur(3px); }
+          .img { height: 150px; position: relative; display: flex; align-items: end; padding: 14px 18px; background: var(--bg); }
+          .img.veil { background: linear-gradient(transparent 25%, rgb(23 18 43 / .78)), var(--bg); }
+          .img h3 { margin: 0; color: #fff; font: 400 32px/1 var(--f-serif); }
+          .body { padding: 14px 18px 18px; display: grid; gap: 10px; } .body p { margin: 0; font-size: 14px; }
+          label { display: flex; gap: 8px; align-items: center; min-height: 40px; font-size: 14px; } label b { margin-left: auto; font: 500 12px var(--f-mono); }
+          #close { min-height: 44px; border: 0; border-radius: 99px; background: #17122b; color: #f2ebdd; cursor: pointer; }
+          @media (max-width: 560px) { body { padding: 12px; } .app { grid-template-columns: 1fr; gap: 12px; } aside h2 { font-size: 26px; } .img { height: 120px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const R = [
+            ['Salón · 42 m²', 'Ventanal de suelo a techo hacia el mar, orientación oeste: la hora azul entra cada tarde.', '#f4dcc0'],
+            ['Cocina · 18 m²', 'Isla de piedra crema y despensa oculta. Abierta al salón con puerta corredera.', '#efe2c9'],
+            ['Dormitorio · 24 m²', 'Vestidor y baño en suite. Ventana al este: luz de mañana, oscuro por la tarde.', '#e9d4c4'],
+            ['Terraza · 31 m²', 'Barandilla de vidrio y pérgola. Cabe una mesa para ocho.', '#f6e3c4'],
+          ];
+          const dlg = document.getElementById('dlg'), img = document.getElementById('img'), scrim = document.getElementById('scrim');
+          let last = null, cur = 0;
+          // Contraste WCAG entre el texto blanco y el color que tiene detrás
+          const lum = h => h.match(/\w\w/g).map(x => parseInt(x, 16) / 255).map(c => c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4).reduce((s, c, i) => s + c * [.2126, .7152, .0722][i], 0);
+          const mix = (a, b, t) => a.match(/\w\w/g).map((x, i) => Math.round(parseInt(x, 16) * (1 - t) + parseInt(b.match(/\w\w/g)[i], 16) * t).toString(16).padStart(2, '0')).join('');
+          function paint() {
+            const bg = R[cur][2], behind = scrim.checked ? mix(bg.slice(1), '17122b', .7) : bg.slice(1);
+            const ratio = 1.05 / (lum(behind) + .05);
+            img.style.setProperty('--bg', `linear-gradient(#bcd3ec 0 45%, ${bg} 45%)`);
+            img.classList.toggle('veil', scrim.checked);
+            document.getElementById('ratio').textContent = ratio.toFixed(1).replace('.', ',') + ':1 ' + (ratio >= 4.5 ? 'AA' : 'insuficiente');
+          }
+          document.querySelectorAll('.hs').forEach(b => b.addEventListener('click', () => {
+            last = b; cur = +b.dataset.i;                       // recordamos quién abrió el diálogo
+            document.getElementById('dt').textContent = R[cur][0];
+            document.getElementById('dd').textContent = R[cur][1];
+            paint(); dlg.showModal();                           // modal: foco dentro, Esc cierra, el resto inerte
+          }));
+          document.getElementById('close').onclick = () => dlg.close();
+          dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+          dlg.addEventListener('close', () => last && last.focus({ preventScroll: true }));
+          scrim.onchange = paint;
+        </script>
+        <figcaption>Los puntos son <code>&lt;button&gt;</code> con <code>aria-label</code>: se alcanzan con Tab, se activan con Enter y el lector de pantalla dice qué son. <code>showModal()</code> mete el foco en el diálogo, deja el resto inerte y cierra con Esc; al cerrar, el foco vuelve al punto que lo abrió. Desactiva el velo y mira cómo cae el contraste del título.</figcaption>
+      </figure>
+
+      <ul>
+        <li><strong>Botones, no <code>div</code> con <code>onclick</code></strong>. El botón ya trae foco, Enter, Espacio y rol.</li>
+        <li><strong>Lo que aparece con hover también con foco</strong>: si el contador de planta se ve al pasar el ratón por la torre, también debe verse con <code>:focus-visible</code> y con un toque.</li>
+        <li><strong>Contraste</strong>: 4,5:1 para texto normal y 3:1 para texto grande (24 px, o 18,66 px en negrita) y para los iconos y bordes de los controles. Sobre una foto, mide contra la zona más clara que queda detrás del texto, no contra la media.</li>
+        <li><strong>Velo (scrim)</strong>: un degradado oscuro solo donde va el texto. Más elegante que oscurecer toda la imagen.</li>
+      </ul>
+
+      <h3>Scroll suave: con cuidado</h3>
+      <p>Lenis y similares hacen que el scroll se sienta «de seda» en escritorio, pero cambian algo que el usuario controla. Antes de usarlos:</p>
+      <ul>
+        <li>Comprueba que funcionan el teclado (flechas, espacio, Re Pág), los enlaces a anclas con <code>scroll-padding-top</code> y la búsqueda en la página.</li>
+        <li>Con reduced motion, desactívalo o pon la interpolación casi a cero: el «deslizamiento» posterior al gesto es exactamente el movimiento que esa persona quiere evitar.</li>
+        <li>Las zonas con scroll propio (un modal, un mapa) necesitan <code>data-lenis-prevent</code> para no pelearse.</li>
+        <li>En táctil, Lenis deja por defecto el scroll nativo del sistema (<code>syncTouch: false</code>). Déjalo así: el scroll nativo del móvil ya es suave, y sincronizarlo suele sentirse pesado.</li>
+      </ul>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La accesibilidad bien hecha no se ve: un anillo de foco a juego con la marca (el dorado de las ventanas), un velo que parece parte de la fotografía y un botón de pausa con el mismo diseño que los demás. Si parece un parche, está mal diseñada, no mal programada.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El hover no existe: los hotspots se tocan y deben mostrar un estado activo visible. Mide 44 × 44 px como mínimo, separa los puntos para que el pulgar no toque el vecino y coloca el botón de cerrar del diálogo abajo, al alcance del pulgar. Prueba con VoiceOver en iPhone o TalkBack en Android: cada punto debe anunciarse con su nombre, no como «botón».</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Cierras el diálogo de una estancia con Esc. ¿Dónde debería quedar el foco?</p>
+        <ol>
+          <li>Al principio de la página, para empezar de nuevo.</li>
+          <li>En el hotspot que abrió el diálogo.</li>
+          <li>En ningún sitio: el usuario ya ha terminado.</li>
+        </ol>
+        <p class="why">Quien navega con teclado o lector de pantalla tiene que seguir donde estaba. Si el foco salta al principio, tiene que volver a recorrer toda la planta para abrir la siguiente estancia.</p>
+      </div>
+
+      <h3>Checklist antes de publicar</h3>
+      <p>La columna del móvil va primero a propósito: es donde fallan casi todas las webs de scroll. En el teléfono, desliza la tabla para ver la tercera columna.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Comprobación</th><th>En el móvil</th><th>Cómo (escritorio)</th></tr></thead>
+        <tbody>
+          <tr><td>Solo <code>transform</code>/<code>opacity</code> en lo que se mueve</td><td>Grabar con CPU 6x y en un Android real por <code>chrome://inspect</code></td><td>Performance: sin Layout ni Paint durante el scroll del pin</td></tr>
+          <tr><td>LCP ≤ 2,5 s</td><td>Póster 9:16 propio; probar con red 4G lenta</td><td>PageSpeed Insights; póster con <code>fetchpriority="high"</code>, sin <code>lazy</code></td></tr>
+          <tr><td>INP ≤ 200 ms</td><td>Toques reales; el diálogo aparece antes que el vídeo</td><td>Tocar hotspots con CPU 4x; nada pesado dentro del clic</td></tr>
+          <tr><td>CLS ≤ 0,1</td><td><code>100svh</code> en el pin; la barra del navegador no mueve nada</td><td><code>width</code>/<code>height</code> o <code>aspect-ratio</code> en todos los medios</td></tr>
+          <tr><td>Memoria de la secuencia</td><td>720 × 1280 con ventana de decodificación</td><td>fotogramas × ancho × alto × 4 dentro del presupuesto</td></tr>
+          <tr><td>Peso de la primera carga</td><td>Por debajo del presupuesto móvil; respetar el ahorro de datos</td><td>Pestaña Network: lo necesario para el primer scroll</td></tr>
+          <tr><td>Reduced motion</td><td>iPhone: Accesibilidad, Movimiento; Android: Quitar animaciones</td><td>Activar el ajuste y recorrer la web entera</td></tr>
+          <tr><td>Pausa del movimiento automático</td><td>Botón de 44 px al alcance del pulgar</td><td>Botón visible y operable con teclado (WCAG 2.2.2)</td></tr>
+          <tr><td>Teclado y foco</td><td>VoiceOver y TalkBack anuncian cada estancia</td><td>Tab por todos los hotspots, Esc cierra, el foco vuelve</td></tr>
+          <tr><td>Contraste sobre imagen</td><td>Revisarlo también en el encuadre vertical y con poco brillo</td><td>4,5:1 contra la zona más clara bajo el texto</td></tr>
+          <tr><td>Scroll suave</td><td>Scroll táctil nativo, sin sincronizar</td><td>Anclas, teclado y búsqueda en la página funcionan</td></tr>
+        </tbody>
+      </table></div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Anima <code>transform</code> y <code>opacity</code>, usa <code>will-change</code> con mesura, <code>content-visibility</code> por debajo del pin e imágenes con <code>srcset</code>, AVIF y <code>fetchpriority</code> para el LCP.</li>
+          <li>En las secuencias manda la memoria: fotogramas × ancho × alto × 4. Resolución justa, ventana de decodificación y medir en un móvil real con CPU 6x y depuración remota.</li>
+          <li>Con reduced motion, cambia el movimiento espacial por fundidos; añade pausa a lo que se mueve solo, botones de verdad, foco que vuelve a su sitio y velos que garantizan 4,5:1.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge la demo de secuencia que hiciste en la lección 9. Grábala en Performance con CPU 6x y anota los fotogramas rojos. Después, en este orden: limita la densidad del canvas a 2, cambia a la secuencia de 720 px en vertical, añade la ventana de 24 fotogramas y una versión con fundido para <code>prefers-reduced-motion</code>. Vuelve a grabar y compara. Si tienes un Android a mano, repite la grabación conectado por <code>chrome://inspect</code>.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

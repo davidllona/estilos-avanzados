@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qué hace que una web parezca cara | Hora azul</title>
+<meta name="description" content="El mapa de criterio del cuaderno: contención, jerarquía, ritmo, una sola nota de color, detalle, coherencia y cómo se adapta una página premium al móvil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Altura propia de cada demo en pantallas estrechas (data-height-mobile + --hm) */
+  @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="criterio">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Qué hace que una web parezca cara</h1>
+    <p class="lede">Antes de tocar una sola propiedad nueva: el criterio. Seis principios que separan una landing de plantilla de una que parece hecha por un estudio, y cómo se sostienen en una pantalla de 390 píxeles.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Las tres webs que te gustaron (la de <em>mesa</em>, la de <em>tab</em> y la de la torre) no son caras por usar técnicas raras. Lo son porque cada decisión está tomada: qué se ve primero, qué se calla, cuánto aire hay, qué color manda. La técnica viene después y sirve a eso.</p>
+      <p>Esta lección es el mapa del cuaderno. Aquí no aprendes una propiedad: aprendes a mirar. Todo lo que viene después (OKLCH, tipografía fluida, scroll animado, la torre) cuelga de uno de estos principios.</p>
+
+      <h2>Dos segundos para decidir</h2>
+      <p>Un visitante decide si una web «es buena» antes de leer nada. Lo que juzga es el conjunto: si hay una jerarquía clara, si el color está controlado, si respira. Mira el mismo contenido con dos tratamientos. Mismo texto, misma estructura HTML, misma foto. Solo cambia el CSS.</p>
+
+      <figure class="lab" data-title="Barata o cara: la misma landing" data-hint="Cambia de versión abajo" data-height="560" data-height-mobile="820" style="--hm:820px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="page cara" id="page">
+            <nav>
+              <b class="logo">Torre Alba</b>
+              <span class="links"><a href="#">Residencias</a><a href="#">Ubicación</a><a href="#">Estudio</a></span>
+              <a class="cta-s" href="#">Agendar visita</a>
+            </nav>
+            <section class="hero">
+              <div class="copy">
+                <p class="eyebrow">Valencia, frente al mar</p>
+                <h1>Vivir por encima <em>de la ciudad.</em></h1>
+                <p class="sub">42 plantas, 96 residencias y la luz del Mediterráneo entrando en cada estancia.</p>
+                <div class="ctas"><a class="btn" href="#">Ver residencias</a><a class="btn2" href="#">Descargar dossier</a></div>
+              </div>
+              <div class="foto"><i class="torre"></i></div>
+            </section>
+            <ul class="stats"><li><b>42</b>plantas</li><li><b>96</b>residencias</li><li><b>2027</b>entrega de llaves</li></ul>
+          </div>
+          <div class="switch" role="group" aria-label="Versión">
+            <button data-v="barata" aria-pressed="false">Barata</button>
+            <button data-v="cara" aria-pressed="true">Cara</button>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          /* Común: solo estructura */
+          .page { min-height: 100vh; padding-bottom: 84px; }
+          nav, .ctas, .stats { display: flex; align-items: center; }
+          .stats { list-style: none; margin: 0; padding: 0; }
+          a { color: inherit; text-decoration: none; }
+          .foto { position: relative; overflow: hidden; background: linear-gradient(oklch(30% .08 290), oklch(56% .14 335) 50%, oklch(80% .11 55) 66%, oklch(26% .06 280) 66.4%, oklch(17% .04 280)); }
+          .torre { position: absolute; left: 44%; bottom: 33.6%; width: 16%; height: 58%; clip-path: polygon(14% 0, 86% 2%, 100% 100%, 0 100%);
+            background: repeating-linear-gradient(90deg, #1b1830 0 2px, transparent 2px 20%), repeating-linear-gradient(#1b1830 0 2px, transparent 2px 7px),
+              linear-gradient(transparent 18%, #f3c47a 18% 22%, transparent 22% 40%, #f3c47a 40% 46%, transparent 46% 63%, #f3c47a 63% 66%, transparent 66%),
+              linear-gradient(100deg, oklch(46% .11 320), oklch(26% .06 285) 60%); }
+
+          /* ---------- Versión barata ---------- */
+          .barata { background: linear-gradient(135deg, #7b5cff, #38c6f4); color: #fff; font-family: Arial, sans-serif; text-align: center; }
+          .barata nav { justify-content: space-between; padding: 12px 16px; background: #fff; color: #333; box-shadow: 0 4px 12px rgb(0 0 0 / .4); }
+          .barata .links { display: flex; gap: 16px; }
+          .barata .cta-s, .barata .btn { background: linear-gradient(#ff8a3d, #ff5722); padding: 10px 16px; border-radius: 8px; color: #fff; font-weight: bold; box-shadow: 0 6px 14px rgb(0 0 0 / .35); }
+          .barata .hero { display: grid; gap: 16px; padding: 16px; }
+          .barata .eyebrow { margin: 0; text-transform: uppercase; letter-spacing: .2em; color: #ffe14d; font-weight: bold; }
+          .barata h1 { font-size: 34px; margin: 8px 0; text-shadow: 0 3px 6px rgb(0 0 0 / .4); }
+          .barata h1 em { font-style: normal; color: #ffe14d; }
+          .barata .ctas { justify-content: center; gap: 16px; flex-wrap: wrap; }
+          .barata .btn2 { background: #2ecc71; padding: 10px 16px; border-radius: 8px; }
+          .barata .foto { height: 170px; border: 4px solid #fff; border-radius: 20px; box-shadow: 0 10px 30px rgb(0 0 0 / .5); }
+          .barata .stats { justify-content: center; gap: 16px; padding: 16px; flex-wrap: wrap; }
+          .barata .stats li { background: #fff; color: #333; padding: 16px; border-radius: 12px; min-width: 90px; box-shadow: 0 4px 10px rgb(0 0 0 / .3); }
+          .barata .stats b { display: block; font-size: 24px; color: #7b5cff; }
+          @media (max-width: 600px) { .barata .links { display: none; } }
+
+          /* ---------- Versión cara ---------- */
+          .cara { --noche: oklch(21% .045 288); --crema: oklch(95% .015 80); --luz: oklch(82% .12 72);
+            --pad: clamp(18px, 5vw, 44px); background: var(--noche); color: var(--crema); font-family: var(--f-sans); }
+          .cara nav { gap: 28px; padding: 20px var(--pad); font-size: 14px; }
+          .cara .logo { font: 400 23px var(--f-serif); margin-right: auto; }
+          .cara .links { display: flex; gap: 26px; opacity: .65; }
+          .cara .cta-s { border: 1px solid oklch(95% .015 80 / .3); padding: 10px 16px; border-radius: 99px; }
+          .cara .hero { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 4vw, 48px); padding-left: var(--pad); align-items: end; }
+          .cara .copy { padding: 36px 0 6px; }
+          .cara .eyebrow { margin: 0; font-size: 13px; color: var(--luz); }
+          .cara h1 { font: 400 clamp(46px, 8.4vw, 80px)/.94 var(--f-serif); letter-spacing: -.02em; margin: 16px 0 20px; text-wrap: balance; }
+          .cara .sub { max-width: 32ch; margin: 0 0 28px; opacity: .72; line-height: 1.55; }
+          .cara .ctas { gap: 22px; font-size: 15px; }
+          .cara .btn { background: var(--luz); color: var(--noche); padding: 14px 22px; border-radius: 99px; font-weight: 600; }
+          .cara .btn2 { border-bottom: 1px solid currentColor; padding-bottom: 2px; }
+          .cara .foto { height: 320px; }
+          .cara .stats { gap: clamp(24px, 6vw, 64px); margin: 0 var(--pad); padding: 22px 0; border-top: 1px solid oklch(95% .015 80 / .14); font-size: 13px; }
+          .cara .stats b { display: block; font: 400 34px/1 var(--f-serif); margin-bottom: 6px; }
+          @media (max-width: 600px) {
+            .cara .links { display: none; }
+            .cara .hero { grid-template-columns: 1fr; padding-right: var(--pad); }
+            .cara .foto { height: 230px; margin: 0 calc(var(--pad) * -1); }   /* foto a sangre */
+            .cara .stats { justify-content: space-between; }
+          }
+
+          .switch { position: fixed; bottom: 14px; left: 50%; translate: -50% 0; z-index: 9; display: flex; gap: 4px; padding: 4px; border-radius: 99px; background: rgb(18 18 22 / .86); backdrop-filter: blur(8px); box-shadow: 0 8px 24px rgb(0 0 0 / .3); font: 600 14px var(--f-sans); }
+          .switch button { border: 0; background: none; color: #fff; padding: 0 20px; min-height: 44px; border-radius: 99px; cursor: pointer; }
+          .switch [aria-pressed="true"] { background: #fff; color: #111; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const page = document.querySelector('#page');
+          const btns = document.querySelectorAll('.switch button');
+          btns.forEach(b => b.addEventListener('click', () => {
+            page.className = 'page ' + b.dataset.v;
+            btns.forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+        </script>
+        <figcaption>Cuenta las diferencias de la versión barata: cinco colores compitiendo, sombras negras en todo, todo centrado, el titular del mismo peso que los botones, la foto encerrada en un marco. La cara usa tres colores, una tipografía con carácter, mucho aire y la foto saliendo por el borde.</figcaption>
+      </figure>
+
+      <p>Ninguna diferencia es una técnica avanzada. Son seis decisiones que se repiten en cualquier web premium y que vas a ver una y otra vez en el cuaderno:</p>
+      <ol>
+        <li><strong>Contención</strong>: una sola cosa memorable y alrededor, calma.</li>
+        <li><strong>Jerarquía</strong>: una escala tipográfica dramática, sin tamaños intermedios que dudan.</li>
+        <li><strong>Ritmo y espacio</strong>: el aire agrupa y separa; no es hueco sobrante.</li>
+        <li><strong>Una sola nota de color</strong>: neutros con intención y un acento que se gana su sitio.</li>
+        <li><strong>Detalle</strong>: bordes finos, sombras que parecen luz, estados que responden.</li>
+        <li><strong>Coherencia</strong>: los mismos radios, pesos y distancias en toda la página.</li>
+      </ol>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Pulsa «Ver en móvil» en la demo. La versión barata se apelotona; la cara pierde los enlaces del menú, pone la foto a sangre de borde a borde y deja el titular como protagonista. En el móvil el criterio no cambia: se vuelve más estricto, porque solo cabe una idea por pantalla.</p>
+      </div>
+
+      <h2>Contención y jerarquía</h2>
+      <p>La contención es la decisión más difícil porque consiste en <strong>quitar</strong>. Cada elemento que añades compite por la atención: una insignia de oferta, un segundo botón, iconos, otro color. Por separado parecen útiles; juntos anulan el titular. Prueba a quitar ruido hasta que la página diga una sola cosa.</p>
+
+      <figure class="lab" data-title="Quita hasta que duela" data-hint="Desmarca el ruido" data-height="470" data-height-mobile="640" style="--hm:640px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ruido" role="group" aria-label="Elementos de ruido">
+            <label><input type="checkbox" id="r-badge" checked> Insignia</label>
+            <label><input type="checkbox" id="r-cta" checked> Segundo botón</label>
+            <label><input type="checkbox" id="r-grad" checked> Degradado</label>
+            <label><input type="checkbox" id="r-icons" checked> Iconos</label>
+            <label><input type="checkbox" id="r-color" checked> Tres colores</label>
+            <label><input type="checkbox" id="r-shadow" checked> Sombras</label>
+          </div>
+          <section class="hero">
+            <div class="txt">
+              <span class="badge">Oferta -20 %</span>
+              <h1>Piedra, olivos y <em>silencio.</em></h1>
+              <p class="sub">Ocho habitaciones en una masía del siglo XVIII, a cuarenta minutos de Castellón.</p>
+              <div class="ctas"><a class="b1" href="#">Reservar estancia</a><a class="b2" href="#">Ver ofertas</a></div>
+              <ul class="icons"><li><i></i>Wifi</li><li><i></i>Piscina</li><li><i></i>Desayuno</li></ul>
+            </div>
+            <div class="foto" aria-hidden="true"></div>
+          </section>
+          <p class="count">Compiten por tu atención: <b id="n">7</b> elementos</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { --tierra: oklch(96% .012 80); --tinta: oklch(24% .02 60); --ocre: oklch(60% .13 50);
+            --em: var(--ocre); --btn: var(--tinta); --badge: var(--ocre);
+            background: var(--tierra); color: var(--tinta); }
+          .ruido { display: flex; gap: 6px; padding: 10px 14px; background: #16130f; overflow-x: auto; }
+          .ruido label { flex: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 99px; border: 1px solid #ffffff2e; color: #f3eee3; font-size: 13px; cursor: pointer; }
+          .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 32px; align-items: center; padding: 32px clamp(18px, 5vw, 44px); }
+          h1 { font: 400 clamp(44px, 8vw, 76px)/.95 var(--f-serif); letter-spacing: -.02em; margin: 0 0 18px; }
+          h1 em { color: var(--em); }
+          .sub { max-width: 34ch; margin: 0 0 26px; opacity: .75; }
+          .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+          .b1, .b2 { display: inline-flex; align-items: center; min-height: 46px; padding: 0 22px; border-radius: 99px; color: #fff; text-decoration: none; font-weight: 600; font-size: 15px; background: var(--btn); }
+          .foto { aspect-ratio: 4 / 5; border-radius: 2px; background:
+            radial-gradient(circle at 70% 26%, oklch(95% .05 85) 0 6%, transparent 6.5%),
+            radial-gradient(circle at 28% 71%, oklch(36% .05 120) 0 5%, transparent 5.5%), radial-gradient(circle at 40% 74%, oklch(33% .05 120) 0 4%, transparent 4.5%),
+            radial-gradient(ellipse 70% 20% at 18% 64%, oklch(56% .05 105) 0 98%, transparent), radial-gradient(ellipse 80% 24% at 88% 66%, oklch(48% .05 110) 0 98%, transparent),
+            linear-gradient(transparent 63%, oklch(44% .05 75) 63%), linear-gradient(oklch(87% .06 78), oklch(75% .1 48)); }
+          .count { margin: 0; padding: 0 clamp(18px, 5vw, 44px) 18px; font-size: 13px; opacity: .7; }
+
+          /* Cada casilla activa una capa de ruido con :has() */
+          .badge, .b2, .icons { display: none; }
+          body:has(#r-badge:checked) .badge { display: inline-block; margin-bottom: 14px; padding: 6px 12px; border-radius: 6px; background: var(--badge); color: #fff; font-weight: 700; font-size: 13px; }
+          body:has(#r-cta:checked) .b2 { display: inline-flex; background: #1fa37a; }
+          body:has(#r-icons:checked) .icons { display: flex; gap: 18px; list-style: none; padding: 0; margin: 22px 0 0; font-size: 14px; }
+          .icons i { display: inline-block; width: 22px; height: 22px; margin-right: 6px; vertical-align: -6px; border-radius: 50%; background: linear-gradient(135deg, #ffb347, #ff5e62); }
+          body:has(#r-grad:checked) .hero { background: linear-gradient(120deg, #ffe0c2, #f9c6e0 50%, #c9d8ff); }
+          body:has(#r-color:checked) { --em: #2f6bff; --btn: #ff6a2b; --badge: #e0338b; }
+          body:has(#r-shadow:checked) :is(.b1, .b2, .badge, .foto) { box-shadow: 0 8px 18px rgb(0 0 0 / .35); }
+          body:has(#r-shadow:checked) h1 { text-shadow: 0 4px 10px rgb(0 0 0 / .25); }
+
+          @media (max-width: 560px) {
+            .hero { grid-template-columns: 1fr; gap: 22px; padding-top: 24px; }
+            .foto { aspect-ratio: 16 / 9; order: -1; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Solo cuenta: el titular siempre es 1, más cada capa de ruido activa
+          const boxes = document.querySelectorAll('.ruido input');
+          const n = document.querySelector('#n');
+          const count = () => n.textContent = 1 + [...boxes].filter(b => b.checked).length;
+          boxes.forEach(b => b.addEventListener('change', count)); count();
+        </script>
+        <figcaption>Con todo desmarcado queda un titular serif grande, una foto y un botón oscuro. El ocre aparece en una sola palabra. Esa es la «cosa memorable»: todo lo demás está para no estorbarla. Fíjate en que el CSS usa <code>:has()</code> para leer las casillas sin JavaScript.</figcaption>
+      </figure>
+
+      <h3>Jerarquía: tamaños que no dudan</h3>
+      <p>Las webs baratas usan tamaños tímidos: el titular a 34&nbsp;px, el subtítulo a 22, el texto a 16. Todo parece igual de importante. Las caras usan saltos grandes: un titular de 80&nbsp;px junto a un texto de 15. El ojo sabe qué leer primero sin pensar. La regla práctica: entre el titular del hero y el texto que lo acompaña, una relación de <strong>4 a 6 veces</strong>. Con menos de 3 la página parece un documento.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Pregúntate qué recordará alguien de tu página al cerrarla. Si la respuesta es «un poco de todo», no recordará nada. En la torre es la foto al atardecer; en <em>mesa</em>, la frase en cursiva; en <em>tab</em>, el móvil con la burbuja rosa. Elige una y deja que el resto trabaje para ella.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Contener es aún más importante: la primera pantalla de un iPhone (unos 390 × 660 px útiles) admite titular, una línea de apoyo y un botón. La insignia, el segundo botón y los iconos bajan o desaparecen. La relación titular/texto se reduce (de 80/15 a 44/16, más o menos), pero el titular sigue mandando.</p>
+      </div>
+
+      <h2>Ritmo, espacio y una sola nota de color</h2>
+      <p>El espacio en blanco no es hueco: es lo que dice qué va con qué. Si todo está separado por los mismos 16&nbsp;px, nada se agrupa y la página se lee como una lista. Las webs caras usan pocos valores de una escala y los aplican con intención: poco espacio <em>dentro</em> de un grupo, mucho <em>entre</em> grupos.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Una escala de espacio corta y con saltos">
+        :root {
+          --s-1: 4px;   --s-2: 8px;   --s-3: 16px;
+          --s-4: 24px;  --s-5: 40px;  --s-6: 64px;  --s-7: 112px;
+        }
+        .eyebrow + h1 { margin-top: var(--s-3); }  /* van juntos */
+        h1 + .sub     { margin-top: var(--s-4); }
+        .hero + .seccion { margin-top: var(--s-7); } /* cambio de tema: aire de verdad */
+      </script>
+
+      <p>Con el color pasa lo mismo. Una web cara suele tener una base (el fondo), una tinta (el texto) y <strong>un</strong> acento. El acento solo aparece donde quieres que vaya el ojo: el botón principal, una palabra del titular, un subrayado. Si aparece en todas partes, deja de ser acento.</p>
+      <div class="swatches">
+        <div class="swatch" style="--s:#F3EEE3"><i></i><span><b>Base</b><small>#F3EEE3</small></span></div>
+        <div class="swatch" style="--s:#111111"><i></i><span><b>Tinta</b><small>#111111</small></span></div>
+        <div class="swatch" style="--s:#D9541E"><i></i><span><b>Acento</b><small>#D9541E</small></span></div>
+      </div>
+      <p>Esa es la paleta de <em>mesa</em>. En la lección 02 verás por qué funciona y cómo construir las tuyas.</p>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">En un hero tienes eyebrow, titular, subtítulo y botones. ¿Qué reparto de márgenes da mejor ritmo?</p>
+        <ol>
+          <li>24 px entre todos, para que sea regular.</li>
+          <li>Cuanto más abajo, más margen: 8, 16, 32.</li>
+          <li>Eyebrow pegado al titular (8–16 px) y más aire antes de los botones (32–40 px).</li>
+        </ol>
+        <p class="why">El eyebrow describe al titular: van juntos. Los botones son otro grupo (la acción) y necesitan separarse. El ritmo sale de la relación entre elementos, no de la regularidad.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>No escales todo el espacio por igual. Los márgenes laterales bajan a 18–20&nbsp;px, pero el espacio entre secciones no debería bajar de unos 64&nbsp;px: si lo aplastas, todas las secciones se funden en un scroll infinito sin pausas. Y un acento pequeño en escritorio, como un subrayado fino, puede perderse en el móvil: dale algo más de grosor.</p>
+      </div>
+
+      <h2>Detalle y coherencia</h2>
+      <p>El detalle es lo que nadie señala pero todo el mundo nota. Una sombra negra de 30&nbsp;% delata una web hecha deprisa; una sombra en capas, teñida con el color del fondo, parece luz real. Compara dos versiones del mismo módulo de reserva. Pasa el ratón, pulsa el botón y navega con el tabulador.</p>
+
+      <figure class="lab" data-title="El mismo módulo, otro nivel de detalle" data-hint="Pasa el ratón, pulsa y usa Tab" data-height="400" data-height-mobile="820" style="--hm:820px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pair">
+            <section class="card def">
+              <p class="tag">Por defecto</p>
+              <div class="fields"><label>Llegada<b>12 jun</b></label><label>Salida<b>15 jun</b></label><label class="full">Huéspedes<b>2 adultos</b></label></div>
+              <p class="total"><span>3 noches</span><b>642 €</b></p>
+              <button>Reservar</button>
+            </section>
+            <section class="card pro">
+              <p class="tag">Cuidado</p>
+              <div class="fields"><label tabindex="0">Llegada<b>12 jun</b></label><label tabindex="0">Salida<b>15 jun</b></label><label class="full" tabindex="0">Huéspedes<b>2 adultos</b></label></div>
+              <p class="total"><span>3 noches</span><b>642 €</b></p>
+              <button>Reservar</button>
+            </section>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { --base: oklch(95% .014 80); --tinta: oklch(22% .02 60); --acento: oklch(58% .15 42);
+            background: var(--base); color: var(--tinta); padding: 28px clamp(14px, 4vw, 36px); min-height: 100vh; display: grid; align-items: center; }
+          .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; max-width: 720px; margin: auto; }
+          .card { background: #fff; padding: 8px; }
+          .tag { margin: 6px 8px 12px; font-size: 13px; opacity: .6; }
+          .fields { display: grid; grid-template-columns: 1fr 1fr; }
+          label { display: grid; gap: 2px; padding: 12px 14px; font-size: 12px; cursor: pointer; }
+          label b { font-size: 16px; font-weight: 500; }
+          .full { grid-column: 1 / -1; }
+          .total { display: flex; justify-content: space-between; margin: 0; padding: 16px 14px; font-size: 15px; }
+          button { width: 100%; min-height: 50px; border: 0; color: #fff; background: var(--acento); font: 600 16px var(--f-sans); cursor: pointer; }
+
+          /* ---- Por defecto: sombra negra, bordes grises, radios iguales, sin estados ---- */
+          .def { border: 1px solid #999; border-radius: 8px; box-shadow: 0 4px 8px rgb(0 0 0 / .3); }
+          .def .fields { gap: 6px; }
+          .def label { border: 1px solid #bbb; border-radius: 8px; }
+          .def button { border-radius: 8px; margin-top: 4px; }
+
+          /* ---- Cuidado ---- */
+          .pro { border-radius: 22px;                         /* radio exterior = interior + padding */
+            border: 1px solid oklch(22% .02 60 / .08);          /* borde fino con alfa: se adapta al fondo */
+            box-shadow: 0 1px 1px oklch(30% .04 60 / .05), 0 8px 16px -6px oklch(30% .04 60 / .1), 0 28px 48px -20px oklch(30% .04 60 / .22); }
+          .pro .fields { border: 1px solid oklch(22% .02 60 / .1); border-radius: 14px; overflow: hidden; }
+          .pro label { transition: background-color .2s; }
+          .pro label + label { border-left: 1px solid oklch(22% .02 60 / .1); }
+          .pro .full { border-left: 0; border-top: 1px solid oklch(22% .02 60 / .1); }
+          .pro label:hover { background: oklch(96% .012 80); }
+          .pro label b { letter-spacing: -.01em; }
+          .pro .total b { font-variant-numeric: tabular-nums; font-weight: 600; }
+          .pro .total span { text-decoration: underline; text-decoration-color: oklch(22% .02 60 / .3); text-underline-offset: 3px; }
+          .pro button { border-radius: 14px; transition: background-color .2s, scale .12s; box-shadow: inset 0 1px 0 rgb(255 255 255 / .22); }
+          .pro button:hover { background: oklch(from var(--acento) calc(l - .06) c h); }
+          .pro button:active { scale: .98; }
+          .pro :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+          .pro label:focus-visible { outline-offset: -2px; }
+
+          @media (max-width: 600px) { .pair { grid-template-columns: 1fr; } }
+        </script>
+        <figcaption>Ningún cambio por sí solo es espectacular: radios concéntricos (22 fuera, 14 dentro, 8 de padding), bordes finos con transparencia, tres sombras suaves teñidas del marrón del fondo, un hover sutil, un foco visible con el color de marca y cifras tabulares. Juntos son la diferencia entre plantilla y producto.</figcaption>
+      </figure>
+
+      <p>La <strong>coherencia</strong> es el detalle repetido. Si los botones tienen radio de 14&nbsp;px, las tarjetas no pueden tener 6 y las imágenes 24. Si el peso de los titulares es 400 en serif, no aparece de repente un titular en sans 800. Decide un sistema pequeño (dos fuentes, tres pesos, tres radios, una escala de espacio, una curva de animación) y no lo rompas sin motivo.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Regla del radio concéntrico: si un elemento redondeado tiene otro dentro, el radio interior es el exterior menos el padding. Con 22&nbsp;px de radio y 8 de padding, el interior va a 14. Si pones el mismo radio dentro y fuera, las esquinas parecen torcidas aunque no sepas decir por qué.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El hover no existe en una pantalla táctil: lo que comunicabas con él tiene que estar ya en reposo (subrayados visibles, bordes claros) o pasar a <code>:active</code>. Las sombras grandes y difusas también cuestan más de pintar al hacer scroll; en el móvil reduce el desenfoque o usa una sola capa. Envuelve los efectos de ratón en <code>@media (hover: hover)</code> para que no se queden «pegados» tras un toque.</p>
+      </div>
+
+      <script type="text/x-code" data-lang="css" data-label="Hover solo donde hay ratón; feedback táctil en todas partes">
+        .boton:active { scale: .98; }                 /* funciona con dedo y ratón */
+        @media (hover: hover) {
+          .boton:hover { background: var(--acento-oscuro); }
+          .tarjeta:hover img { scale: 1.03; }
+        }
+      </script>
+
+      <h2>Tres referencias, diseccionadas</h2>
+      <p>Ahora, las tres webs que viste, reconstruidas solo con CSS (las «fotos» son degradados). Cada una tiene un botón «Anotar» que numera las decisiones clave. Todas están preparadas para el móvil: pulsa «Ver en móvil» y fíjate en qué desaparece, qué se reordena y qué se mantiene.</p>
+
+      <h3>mesa: tipografía y una sola nota naranja</h3>
+      <figure class="lab" data-title="mesa, reconstruida" data-hint="Pulsa «Anotar»" data-height="560" data-height-mobile="900" style="--hm:900px">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav"><b class="logo">mesa</b><nav><a href="#">Producto</a><a href="#">Clientes</a><a href="#">Precios</a></nav><a class="pill" href="#">Pide una demo</a></header>
+          <section class="hero">
+            <div class="copy">
+              <h1 data-n="1">El compañero de operaciones <em>que nunca duerme.</em></h1>
+              <p class="sub">mesa cierra incidencias, concilia pagos y deja el informe listo mientras tu equipo descansa.</p>
+              <div class="ctas"><a class="pill big" href="#" data-n="2">Empieza gratis</a><a class="link" href="#">Ver cómo funciona</a></div>
+            </div>
+            <div class="media" data-n="3">
+              <div class="panel"></div><div class="photo"></div>
+              <div class="card" data-n="4"><p>Mientras dormías</p><ul><li>14 incidencias cerradas</li><li>Pagos de Stripe conciliados</li><li>Informe listo a las 7:00</li></ul></div>
+            </div>
+          </section>
+          <footer class="logos" data-n="5"><span>Confían en mesa</span><b>Nórdika</b><b class="s">Ferrán &amp; Co</b><b class="m">VOLTA</b><b class="s">Almadraba</b><b>kilo</b></footer>
+          <button class="note">Anotar</button>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { --crema: #F3EEE3; --tinta: #111; --naranja: #D9541E; --pad: clamp(18px, 5vw, 48px); background: var(--crema); color: var(--tinta); }
+          a { color: inherit; text-decoration: none; }
+          .nav { display: flex; align-items: center; gap: 28px; padding: 18px var(--pad); font-size: 14px; }
+          .logo { font: 700 22px var(--f-sans); letter-spacing: -.05em; margin-right: auto; }
+          .nav nav { display: flex; gap: 24px; opacity: .7; }
+          .pill { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 99px; background: var(--naranja); color: #fff; font-weight: 600; }
+          .hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(24px, 4vw, 56px); align-items: center; padding: 28px var(--pad) 36px; }
+          h1 { position: relative; font: 600 clamp(40px, 6.6vw, 68px)/.95 var(--f-sans); letter-spacing: -.055em; margin: 0 0 22px; }
+          h1 em { font: italic 400 1.08em/1 var(--f-serif); letter-spacing: -.02em;
+            background: linear-gradient(var(--naranja), var(--naranja)) 0 94% / 100% .07em no-repeat; }   /* subrayado */
+          .sub { max-width: 38ch; margin: 0 0 28px; font-size: 16px; opacity: .72; }
+          .ctas { display: flex; align-items: center; gap: 22px; }
+          .big { position: relative; min-height: 52px; padding: 0 24px; }
+          .link { border-bottom: 1px solid; font-size: 15px; }
+          .media { position: relative; aspect-ratio: 4 / 4.4; }
+          .panel { position: absolute; inset: 14% -4% -5% 12%; background: var(--naranja); }      /* panel desplazado */
+          .photo { position: absolute; inset: 0 8% 8% 0; filter: grayscale(1) contrast(1.1);
+            background: linear-gradient(#2b2b2b, #2b2b2b) 10% 100% / 20% 72% no-repeat, linear-gradient(#5a5a5a, #5a5a5a) 34% 100% / 16% 50% no-repeat,
+              linear-gradient(#1d1d1d, #1d1d1d) 58% 100% / 22% 86% no-repeat, linear-gradient(#474747, #474747) 88% 100% / 18% 60% no-repeat,
+              repeating-linear-gradient(rgb(255 255 255 / .07) 0 2px, transparent 2px 10px), linear-gradient(#e2e2e2, #8f8f8f); }
+          .card { position: absolute; left: -8%; bottom: 2%; width: min(250px, 78%); padding: 16px 18px; background: #fff; border-radius: 14px; font-size: 13px; box-shadow: 0 1px 2px rgb(17 17 17 / .06), 0 20px 40px -18px rgb(17 17 17 / .35); }
+          .card p { margin: 0 0 8px; font-weight: 600; }
+          .card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+          .card li::before { content: ""; display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -2px; border-radius: 50%; background: var(--naranja) radial-gradient(circle, #fff 0 22%, transparent 25%); }
+          .logos { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 36px; margin: 0 var(--pad); padding: 20px 0 28px; border-top: 1px solid rgb(17 17 17 / .12); color: rgb(17 17 17 / .5); font: 700 20px var(--f-sans); letter-spacing: -.03em; }
+          .logos span { font: 400 13px var(--f-sans); letter-spacing: 0; margin-right: 8px; }
+          .logos .s { font: italic 400 22px var(--f-serif); } .logos .m { letter-spacing: .14em; font-size: 15px; }
+
+          /* Anotaciones */
+          .note { position: fixed; right: 12px; bottom: 12px; z-index: 5; min-height: 44px; padding: 0 18px; border: 0; border-radius: 99px; background: var(--tinta); color: #fff; font-weight: 600; cursor: pointer; }
+          .anotar [data-n] { outline: 1.5px dashed var(--naranja); outline-offset: 5px; }
+          .anotar [data-n]::after { content: attr(data-n); position: absolute; top: -14px; left: -14px; z-index: 3; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--tinta); color: #fff; font: 600 12px/1 var(--f-sans); letter-spacing: 0; }
+
+          @media (max-width: 640px) {
+            .nav nav { display: none; }
+            .hero { grid-template-columns: 1fr; padding-top: 12px; }
+            .media { aspect-ratio: 1; margin: 8px 0 0 10%; }      /* la tarjeta sobresale a la izquierda */
+            .card { left: -12%; }
+            .logos { gap: 8px 24px; font-size: 17px; }
+            .logos span { flex-basis: 100%; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          document.querySelector('.note').addEventListener('click', e => {
+            const on = document.body.classList.toggle('anotar');
+            e.target.textContent = on ? 'Quitar notas' : 'Anotar';
+          });
+        </script>
+        <figcaption><b>1</b> Sans muy apretada (<code>letter-spacing: -0.055em</code>) que cambia a serif cursiva en la segunda línea: el contraste de voz es el gancho. <b>2</b> El naranja solo está en el CTA, el subrayado y el panel. <b>3</b> La foto en blanco y negro deja que el naranja sea el único color. <b>4</b> La tarjeta flotante cuenta el producto con datos concretos. <b>5</b> Los logos en gris al 50&nbsp;% dan confianza sin hacer ruido. En el móvil: fuera el menú, la foto baja y se reduce, y la tarjeta sobresale para mantener la profundidad.</figcaption>
+      </figure>
+
+      <h3>tab: marino, rosa y un móvil en el centro</h3>
+      <figure class="lab" data-title="tab, reconstruida" data-hint="Pulsa «Anotar»" data-height="560" data-height-mobile="760" data-stage="dark" style="--hm:760px">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero">
+            <header><b class="logo">tab</b><a class="ghost" href="#">Descargar</a></header>
+            <h1 data-n="1">Divide la cuenta, <em>no la amistad.</em></h1>
+            <p class="sub">Escanea el ticket, cada uno marca lo suyo y tab cobra al momento.</p>
+            <div class="stage">
+              <div class="ph p1" data-n="2"></div>
+              <div class="phone" data-n="3">
+                <p class="t">Cena en Ruzafa</p><p class="sum">86,40 €</p>
+                <ul><li><i></i>Lucía<b>24,10</b></li><li><i></i>Marc<b>21,80</b></li><li><i></i>Tú<b>40,50</b></li></ul>
+                <span class="pay">Pagar mi parte</span>
+              </div>
+              <div class="ph p2"></div>
+              <span class="bubble" data-n="4">¡Todo pagado!</span>
+            </div>
+          </section>
+          <button class="note">Anotar</button>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { --marino: #0F1B3D; --rosa: #FF3D8B; background: var(--marino); color: #fff; overflow-x: hidden; }
+          .hero { text-align: center; padding: 0 20px; }
+          header { display: flex; justify-content: space-between; align-items: center; padding: 18px clamp(0px, 3vw, 28px); }
+          .logo { font: 700 24px var(--f-sans); letter-spacing: -.06em; }
+          .ghost { color: #fff; text-decoration: none; font-size: 14px; padding: 10px 16px; border: 1px solid rgb(255 255 255 / .25); border-radius: 99px; }
+          h1 { position: relative; font: 600 clamp(36px, 6.4vw, 60px)/.98 var(--f-sans); letter-spacing: -.05em; margin: 12px auto 14px; max-width: 15ch; }
+          h1 em { font: italic 400 1.1em/.9 var(--f-serif); letter-spacing: -.02em; color: var(--rosa); }
+          .sub { margin: 0 auto 26px; max-width: 36ch; opacity: .7; }
+          .stage { position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 18px; height: 300px; }
+          .ph { position: relative; width: 170px; height: 210px; border-radius: 16px; background-blend-mode: color, normal;   /* la capa de arriba tiñe a las de debajo */
+            background: linear-gradient(oklch(62% .1 355), oklch(45% .08 265)),
+              radial-gradient(circle at 50% 38%, #d6d6d6 0 14%, transparent 14.5%), radial-gradient(ellipse 40% 34% at 50% 100%, #b4b4b4 0 98%, transparent),
+              linear-gradient(#5a5a5a, #1c1c1c); }
+          .p2 { height: 180px; }
+          .phone { position: relative; z-index: 2; width: 196px; height: 300px; padding: 22px 16px; border-radius: 34px 34px 0 0; background: #fff; color: var(--marino); text-align: left; box-shadow: 0 0 0 7px #1d2a52, 0 30px 60px -20px #000; font-size: 13px; }
+          .t { margin: 0; opacity: .6; } .sum { margin: 2px 0 14px; font: 600 30px var(--f-sans); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+          .phone ul { list-style: none; margin: 0; padding: 0; }
+          .phone li { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-top: 1px solid #0f1b3d14; }
+          .phone li i { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #cfd5e6, #8c97b8); }
+          .phone li b { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+          .pay { display: block; margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--marino); color: #fff; text-align: center; font-weight: 600; }
+          .bubble { position: absolute; z-index: 3; left: calc(50% + 70px); top: 40px; padding: 12px 18px; border-radius: 20px 20px 20px 4px; background: var(--rosa); font-weight: 600; box-shadow: 0 14px 30px -10px oklch(65% .24 355 / .7); }
+
+          .note { position: fixed; right: 12px; bottom: 12px; z-index: 5; min-height: 44px; padding: 0 18px; border: 0; border-radius: 99px; background: #fff; color: var(--marino); font-weight: 600; cursor: pointer; }
+          .anotar [data-n] { outline: 1.5px dashed var(--rosa); outline-offset: 5px; }
+          .anotar [data-n]::after { content: attr(data-n); position: absolute; top: -14px; left: -14px; z-index: 4; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #fff; color: var(--marino); font: 600 12px/1 var(--f-sans); letter-spacing: 0; }
+
+          @media (max-width: 640px) {
+            .stage { height: 290px; gap: 0; margin-top: 30px; }
+            .ph { position: absolute; width: 120px; height: 160px; bottom: 30px; }
+            .p1 { left: -18px; rotate: -6deg; } .p2 { right: -18px; rotate: 6deg; }   /* las fotos se esconden detrás */
+            .phone { width: 180px; height: 290px; }
+            .bubble { left: auto; right: 0; top: -26px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          document.querySelector('.note').addEventListener('click', e => {
+            const on = document.body.classList.toggle('anotar');
+            e.target.textContent = on ? 'Quitar notas' : 'Anotar';
+          });
+        </script>
+        <figcaption><b>1</b> Titular centrado con la misma mezcla sans + serif cursiva, pero aquí la cursiva lleva el color. <b>2</b> Las fotos son grises y una capa de degradado rosa-marino las tiñe con <code>background-blend-mode: color</code> (con una <code>&lt;img&gt;</code> real usarías <code>filter: grayscale(1)</code> y un pseudoelemento con <code>mix-blend-mode: color</code>): así no meten colores ajenos. <b>3</b> El móvil es el protagonista, cortado por abajo para que parezca que sale de la página. <b>4</b> La burbuja rosa es el único elemento saturado grande. En el móvil, las fotos pasan detrás del teléfono, inclinadas, en lugar de desaparecer: se conserva la composición en menos espacio.</figcaption>
+      </figure>
+
+      <h3>La torre: una foto, una serif y una capa interactiva</h3>
+      <figure class="lab" data-title="La torre, reconstruida" data-hint="Pasa el ratón o toca la torre" data-height="560" data-height-mobile="640" data-stage="dark" style="--hm:640px">
+        <script type="text/x-demo" data-lang="html">
+          <section class="scene">
+            <header><b class="logo">Torre Alba</b><span>Residencias</span><span>Contacto</span></header>
+            <div class="torre" id="torre" aria-label="Plantas de la torre"></div>
+            <div class="agua"></div>
+            <div class="copy">
+              <p class="kicker">Valencia, entrega 2027</p>
+              <h1>Cuarenta y dos plantas sobre el Mediterráneo</h1>
+            </div>
+            <p class="contador" id="contador"><small>Planta</small><b id="num">31</b><span id="estado">Disponible</span></p>
+            <div class="paso"><button id="menos" aria-label="Planta inferior">–</button><button id="mas" aria-label="Planta superior">+</button></div>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { --noche: oklch(20% .05 288); --crema: oklch(95% .015 80); --luz: oklch(83% .12 72); color: var(--crema); }
+          .scene { position: relative; height: 100vh; min-height: 480px; overflow: hidden;
+            background: linear-gradient(oklch(24% .07 285), oklch(42% .12 310) 38%, oklch(66% .13 350) 58%, oklch(82% .1 55) 70%, oklch(30% .06 280) 70.3%); }
+          header { position: relative; z-index: 2; display: flex; gap: 22px; align-items: baseline; padding: 20px clamp(18px, 4vw, 40px); font-size: 13px; }
+          header span { opacity: .75; } .logo { font: 400 22px var(--f-serif); margin-right: auto; }
+          .torre { position: absolute; left: 62%; bottom: 29.7%; width: clamp(64px, 11vw, 96px); height: 56%; display: flex; flex-direction: column-reverse; cursor: pointer;
+            clip-path: polygon(10% 0, 90% 1.5%, 100% 100%, 0 100%); background: linear-gradient(100deg, oklch(44% .1 320), oklch(24% .05 285) 62%); }
+          .planta { flex: 1; border-top: 1px solid oklch(18% .04 285);
+            background: repeating-linear-gradient(90deg, oklch(18% .04 285) 0 2px, transparent 2px 16.6%); }
+          .planta.on { background-color: oklch(78% .11 70 / .45); }
+          .planta.activa { background-color: oklch(92% .09 85); box-shadow: 0 0 0 1px oklch(92% .09 85), 0 0 22px 4px var(--luz); }
+          .agua { position: absolute; inset: 70.3% 0 0; background: repeating-linear-gradient(oklch(80% .1 55 / .08) 0 1px, transparent 1px 7px), linear-gradient(oklch(34% .07 300), oklch(16% .04 280)); }
+          .copy { position: absolute; left: clamp(18px, 4vw, 40px); bottom: 34px; max-width: 520px; }
+          .kicker { margin: 0 0 10px; font-size: 13px; color: var(--luz); }
+          h1 { margin: 0; font: 400 clamp(36px, 6.4vw, 64px)/1 var(--f-serif); letter-spacing: -.015em; text-wrap: balance; }
+          .contador { position: absolute; top: 26%; left: calc(62% + clamp(64px, 11vw, 96px) + 18px); margin: 0; display: grid; font-size: 12px; }
+          .contador b { font: 300 54px/1 var(--f-read); font-variant-numeric: tabular-nums; }   /* Newsreader sí tiene cifras tabulares */
+          .contador small { opacity: .7; } .contador span { color: var(--luz); }
+          .paso { display: none; }
+
+          /* Táctil o estrecho: sin hover, con botones de 44 px para cambiar de planta */
+          @media (hover: none), (max-width: 560px) {
+            .torre { left: 54%; height: 50%; }
+            .contador { left: auto; right: 18px; top: 84px; text-align: right; }
+            .copy { bottom: 92px; right: 18px; }
+            .paso { position: absolute; right: 18px; bottom: 24px; display: flex; gap: 8px; }
+            .paso button { width: 48px; height: 48px; border-radius: 50%; border: 1px solid oklch(95% .015 80 / .35); background: oklch(20% .05 288 / .6); color: inherit; font-size: 22px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const torre = document.querySelector('#torre'), N = 42;
+          const vendidas = [3, 8, 12, 17, 22, 26, 33, 38];
+          for (let i = 1; i <= N; i++) {
+            const p = document.createElement('div');
+            p.className = 'planta' + (Math.sin(i * 12.9) > .55 ? ' on' : '');   // ventanas encendidas «al azar», pero estables
+            torre.append(p);
+          }
+          const plantas = [...torre.children];
+          let actual = 31;
+          function marcar(n) {
+            actual = Math.max(1, Math.min(N, n));
+            plantas.forEach((p, i) => p.classList.toggle('activa', i + 1 === actual));
+            num.textContent = actual;
+            estado.textContent = vendidas.includes(actual) ? 'Vendida' : 'Disponible';
+          }
+          // La planta sale de la posición vertical: funciona igual con ratón y con dedo
+          const desdeY = e => { const r = torre.getBoundingClientRect(); return Math.ceil((r.bottom - e.clientY) / r.height * N); };
+          torre.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') marcar(desdeY(e)); });
+          torre.addEventListener('click', e => marcar(desdeY(e)));
+          menos.onclick = () => marcar(actual - 1); mas.onclick = () => marcar(actual + 1);
+          marcar(actual);
+        </script>
+        <figcaption>Una sola imagen a pantalla completa, una serif fina para el titular y un único color de interacción: la luz cálida de las ventanas. El contador usa Newsreader, que tiene cifras tabulares, para que no baile al cambiar de planta (Instrument Serif no las tiene: lo verás en la lección 03). En el móvil no hay hover y una planta de 7&nbsp;px no se puede tocar: el toque elige la planta aproximada y los botones de 48&nbsp;px la afinan.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Las tres comparten esqueleto: dos o tres colores, un titular enorme con contraste de voz, una imagen protagonista y un único elemento «vivo» (la tarjeta, la burbuja, el contador). Ninguna tiene iconos decorativos, ni degradados de fondo, ni tres botones. Esa contención es copiable; la foto bonita, no siempre.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Las tres colapsan siguiendo el mismo orden de prioridades: el titular se queda, la imagen protagonista se reduce pero no desaparece, los elementos secundarios se esconden detrás o debajo, y la interacción de ratón se convierte en toques con objetivos de al menos 44&nbsp;px. Lo que nunca debe pasar es que el hero de escritorio se encoja sin más hasta que todo sea diminuto.</p>
+      </div>
+
+      <h2>Cara también en el móvil</h2>
+      <p>La mayoría de las visitas a una web inmobiliaria o de producto llegan desde un móvil. Una versión móvil cara no es la de escritorio apilada: es una edición. Decides qué se conserva y qué se recorta.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Se conserva</th><th>Se recorta o se transforma</th></tr></thead>
+          <tbody>
+            <tr><td>El titular como protagonista, con su contraste de voz</td><td>Los enlaces del menú (pasan a un botón)</td></tr>
+            <tr><td>La imagen principal, a sangre de borde a borde</td><td>Imágenes secundarias, logos decorativos y mockups laterales</td></tr>
+            <tr><td>Un CTA principal, grande y al alcance del pulgar</td><td>El segundo botón, que pasa a enlace de texto</td></tr>
+            <tr><td>La paleta y el acento exactamente iguales</td><td>Sombras grandes y desenfoques caros</td></tr>
+            <tr><td>Una animación protagonista, más corta</td><td>Efectos de hover, parallax múltiple y pins largos</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Técnicamente, la mayoría de estas decisiones son media queries de capacidad, no solo de anchura. No preguntes únicamente «¿mide menos de 600&nbsp;px?»; pregunta también «¿hay ratón?» y «¿el dedo es el puntero?».</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Preguntar por la capacidad, no solo por el ancho">
+        .hero { min-height: 100svh; }              /* svh: no salta con la barra del navegador */
+
+        @media (max-width: 640px) {
+          .nav-links { display: none; }
+          .hero h1 { font-size: clamp(2.6rem, 11vw, 3.4rem); }
+          .cta-secundario { all: unset; text-decoration: underline; }
+        }
+        @media (pointer: coarse) {
+          .boton, .chip { min-height: 44px; }      /* objetivos táctiles */
+        }
+        @media (hover: none) {
+          .hotspot .etiqueta { opacity: 1; }       /* lo que salía al pasar el ratón, visible */
+        }
+      </script>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Tu hero de escritorio tiene foto, titular, subtítulo, dos botones y una fila de seis logos. En el móvil, ¿qué haces con los logos?</p>
+        <ol>
+          <li>Los dejas en una fila y los encoges hasta que quepan los seis.</li>
+          <li>Los sacas del hero y los pones debajo, en dos filas o en una franja que se desliza.</li>
+          <li>Los quitas de la web móvil.</li>
+        </ol>
+        <p class="why">Los logos aportan confianza, así que no sobran, pero no son lo primero. Encogerlos a 40&nbsp;px los vuelve ilegibles; quitarlos pierde información. Bajarlos a su propia franja conserva la jerarquía.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Prueba siempre con el dedo, no con el ratón y DevTools. Lo que en un simulador parece bien (un enlace de 14&nbsp;px, un pin de scroll de tres pantallas, un vídeo de fondo) en la mano se vuelve torpe, lento o cansado. La lección 12 tiene una lista de comprobación completa.</p>
+      </div>
+
+      <h2>Señales de plantilla y cómo evitarlas</h2>
+      <p>Hay un tipo de web que se reconoce al instante como plantilla, o como generada por IA sin dirección: no es fea, pero es de nadie. Activa cada arreglo y mira cómo la misma sección pasa de «cualquier startup» a una marca con voz.</p>
+
+      <figure class="lab" data-title="Detector de plantilla" data-hint="Activa los arreglos uno a uno" data-height="560" data-height-mobile="900" style="--hm:900px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="fix" role="group" aria-label="Arreglos">
+            <label><input type="checkbox" id="f-eye"> Sin antetítulos</label>
+            <label><input type="checkbox" id="f-grad"> Sin degradados</label>
+            <label><input type="checkbox" id="f-cards"> Sin cards clónicas</label>
+            <label><input type="checkbox" id="f-copy"> Copy concreto</label>
+            <label><input type="checkbox" id="f-align"> Alinear a la izquierda</label>
+          </div>
+          <section class="sec">
+            <p class="eyebrow">NUESTROS SERVICIOS</p>
+            <h2><span class="gen">Desbloquea todo el potencial de tu café</span><span class="real">Tostamos el martes. Lo tienes en casa el jueves.</span></h2>
+            <p class="lead"><span class="gen">Soluciones innovadoras y de calidad para cada necesidad.</span><span class="real">Café de especialidad de Huila, Sidama y Cajamarca, tostado en pequeños lotes en Castelló.</span></p>
+            <ul class="grid">
+              <li><i></i><p class="eyebrow">PASO 1</p><h3><span class="gen">Suscripción flexible</span><span class="real">Suscripción</span></h3><p><span class="gen">Disfruta de la máxima comodidad.</span><span class="real">250 g cada dos semanas. Pausas cuando quieras.</span></p></li>
+              <li><i></i><p class="eyebrow">PASO 2</p><h3><span class="gen">Calidad premium</span><span class="real">Cafeterías</span></h3><p><span class="gen">Solo lo mejor para ti.</span><span class="real">Formación de baristas y molinos en préstamo.</span></p></li>
+              <li><i></i><p class="eyebrow">PASO 3</p><h3><span class="gen">Experiencia única</span><span class="real">Catas</span></h3><p><span class="gen">Vive algo inolvidable.</span><span class="real">Los sábados a las 11. Doce plazas.</span></p></li>
+            </ul>
+          </section>
+          <p class="score">Señales de plantilla: <b id="s">5</b> de 5</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { --base: oklch(97% .008 80); --tinta: oklch(20% .02 50); --acento: oklch(52% .12 40); background: var(--base); color: var(--tinta); }
+          .fix { display: flex; gap: 6px; padding: 10px 14px; background: #16130f; overflow-x: auto; }
+          .fix label { flex: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 99px; border: 1px solid #ffffff2e; color: #f3eee3; font-size: 13px; cursor: pointer; }
+          .sec { padding: 36px clamp(18px, 5vw, 48px) 20px; text-align: center; }
+          .eyebrow { margin: 0 0 10px; font: 700 12px var(--f-sans); letter-spacing: .18em; color: #6d5dfc; }
+          h2 { margin: 0 auto 14px; max-width: 18ch; font: 800 clamp(30px, 5vw, 44px)/1.1 var(--f-sans); text-wrap: balance;
+            background: linear-gradient(90deg, #6d5dfc, #e04fd0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+          .lead { margin: 0 auto 30px; max-width: 46ch; opacity: .7; }
+          .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+          .grid li { padding: 26px 20px; border-radius: 20px; background: #fff; box-shadow: 0 10px 30px rgb(109 93 252 / .15); }
+          .grid i { display: block; width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 50%; background: linear-gradient(135deg, #6d5dfc, #e04fd0); }
+          .grid h3 { margin: 0 0 6px; font-size: 18px; } .grid li p:last-child { margin: 0; font-size: 14px; opacity: .7; }
+          .score { margin: 0; padding: 8px clamp(18px, 5vw, 48px) 20px; font-size: 13px; opacity: .7; }
+          .real { display: none; }
+          body:not(:has(#f-grad:checked)) { background: linear-gradient(160deg, #f4f1ff, #fdf0fa); }
+
+          /* ---- Arreglos ---- */
+          body:has(#f-eye:checked) .eyebrow { display: none; }
+          body:has(#f-grad:checked) h2 { background: none; color: var(--tinta); }
+          body:has(#f-copy:checked) .gen { display: none; }
+          body:has(#f-copy:checked) .real { display: inline; }
+          body:has(#f-align:checked) :is(.sec, h2, .lead) { text-align: left; margin-left: 0; }
+          body:has(#f-cards:checked) .grid { grid-template-columns: 1fr; gap: 0; counter-reset: n; border-top: 1px solid oklch(20% .02 50 / .15); text-align: left; }
+          body:has(#f-cards:checked) .grid li { display: grid; grid-template-columns: 40px 140px 1fr; align-items: baseline; padding: 16px 0; border-radius: 0; background: none; box-shadow: none; border-bottom: 1px solid oklch(20% .02 50 / .15); }
+          body:has(#f-cards:checked) .grid li::before { counter-increment: n; content: "0" counter(n); font: 500 13px var(--f-mono); color: var(--acento); }
+          body:has(#f-cards:checked) .grid i { display: none; }
+          body:has(#f-cards:checked) .grid h3 { font: 400 26px var(--f-serif); }
+          body:has(#f-grad:checked) .grid i { background: var(--acento); }
+
+          @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            body:has(#f-cards:checked) .grid li { grid-template-columns: 36px 1fr; }
+            body:has(#f-cards:checked) .grid li > p:last-child { grid-column: 2; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const fixes = document.querySelectorAll('.fix input');
+          const s = document.querySelector('#s');
+          const upd = () => s.textContent = [...fixes].filter(f => !f.checked).length;
+          fixes.forEach(f => f.addEventListener('change', upd)); upd();
+        </script>
+        <figcaption>Con los cinco arreglos activos queda una tostadora con voz propia: frases concretas (días, gramos, plazas), una lista editorial numerada en lugar de tres cajas iguales y un único color. El arreglo que más cambia la sensación es el copy: «Experiencia única» no lo puede decir nadie con credibilidad; «Los sábados a las 11, doce plazas» solo lo puedes decir tú.</figcaption>
+      </figure>
+
+      <h3>La lista de señales</h3>
+      <p>Repásala antes de enseñar una web a un cliente. Cada punto, por separado, se puede justificar. Tres o más juntos gritan «plantilla».</p>
+      <ul>
+        <li><strong>Cards iguales en todas partes.</strong> Tres cajas blancas redondeadas con icono, título y dos líneas. Alterna formatos: una lista con filetes, un bloque grande y dos pequeños, una tabla, una cita.</li>
+        <li><strong>Degradados de lavado.</strong> Fondos violeta-rosa o azul-cian sin motivo, y texto con degradado. Si usas un degradado, que represente algo (un cielo, una luz), como en la torre.</li>
+        <li><strong>Antetítulos en mayúsculas sobre cada titular.</strong> Uno en el hero puede tener sentido; en cada sección es un tic.</li>
+        <li><strong>Iconos en círculo de color.</strong> Casi nunca aportan información. Usa números, fotos o nada.</li>
+        <li><strong>Copy abstracto.</strong> «Potencia», «desbloquea», «soluciones innovadoras», «experiencia única». Sustitúyelo por datos: cuándo, cuánto, dónde, quién.</li>
+        <li><strong>Todo centrado.</strong> El centrado funciona en un hero corto; en secciones largas, alinea a la izquierda y usa la asimetría.</li>
+        <li><strong>Mismo radio grande en todo</strong> (16–24&nbsp;px) y sombras violetas difusas.</li>
+        <li><strong>Inter a 700 para todo</strong>, sin contraste de voz ni de escala.</li>
+        <li><strong>Secciones del mismo alto y la misma estructura</strong>: título centrado, subtítulo, rejilla. El ritmo se vuelve monótono.</li>
+        <li><strong>Animación de aparición en cada elemento</strong>, todos con el mismo fundido hacia arriba.</li>
+      </ul>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El antídoto contra la plantilla es la especificidad. Una web de una bodega debería poder ser solo de esa bodega: sus palabras, su color, sus fotos, su forma de ordenar la información. Si puedes cambiar el logo por el de la competencia y la web sigue funcionando, todavía no has diseñado nada.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil las señales de plantilla se multiplican: tres cards iguales apiladas son tres pantallas idénticas de scroll. Una lista editorial con filetes ocupa un tercio y se lee de un vistazo. Si tienes que apilar, varía: la primera grande con imagen, las otras compactas.</p>
+      </div>
+
+      <h3>Cómo encaja el resto del cuaderno</h3>
+      <p>Cada lección trabaja uno o varios de estos principios. Vuelve aquí cuando dudes de para qué sirve una técnica.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Principio</th><th>Dónde lo trabajas</th></tr></thead>
+          <tbody>
+            <tr><td>Una sola nota de color</td><td>01 Color que se comporta, 02 Paletas con criterio</td></tr>
+            <tr><td>Jerarquía y contraste de voz</td><td>03 Tipografía que manda</td></tr>
+            <tr><td>Ritmo, espacio y contención</td><td>04 Más allá de las cards</td></tr>
+            <tr><td>Detalle y microinteracciones</td><td>05 Movimiento con intención, 07 View Transitions</td></tr>
+            <tr><td>Una cosa memorable</td><td>06 Scroll animado solo con CSS, 08 GSAP, 09 Secuencias, 10 Capas interactivas</td></tr>
+            <tr><td>Coherencia y calidad real</td><td>11 Recursos visuales con IA, 12 Rendimiento y accesibilidad</td></tr>
+            <tr><td>Todo junto</td><td>13 Proyecto final: la torre</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Un cliente pide «que la web parezca más premium». ¿Cuál es el primer cambio que más rinde?</p>
+        <ol>
+          <li>Quitar elementos y colores hasta dejar un protagonista claro, y subir la escala del titular.</li>
+          <li>Añadir animaciones de aparición a todas las secciones.</li>
+          <li>Poner un degradado de fondo y sombras más grandes.</li>
+        </ol>
+        <p class="why">El movimiento y los efectos amplifican lo que ya hay. Si la base es ruidosa, amplifican el ruido. Contener y jerarquizar es gratis y cambia la percepción al instante.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Una web parece cara cuando cada decisión está tomada: una cosa memorable, una jerarquía dramática, aire con intención y un solo acento.</li>
+          <li>El detalle (radios concéntricos, sombras en capas teñidas, estados y foco) y la coherencia del sistema separan producto de plantilla.</li>
+          <li>En el móvil no se encoge: se edita. Se conserva el protagonista y el acento; se recortan lo secundario, el hover y los efectos caros.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Elige una web de un cliente de la agencia (una tienda PrestaShop o un WordPress). Haz dos capturas del hero, escritorio y móvil, y anota sobre ellas cuántas señales de plantilla encuentras de la lista. Después escribe en tres líneas qué quitarías, qué color dejarías como único acento y cuál sería su «cosa memorable». Guárdalo: lo rediseñarás al terminar el bloque de Forma.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

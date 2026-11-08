@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color que se comporta | Hora azul</title>
+<meta name="description" content="OKLCH, escalas de color con sintaxis relativa y color-mix(): color en CSS que se comporta como lo ve el ojo.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="oklch">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Color que se comporta</h1>
+    <p class="lede">Por qué <code>hsl()</code> te engaña, cómo pensar en OKLCH y cómo sacar una escala entera de un solo color sin abrir Figma.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Las webs de los vídeos que te gustan tienen algo en común: sus colores <em>encajan</em>. El naranja del botón tiene el mismo peso que el subrayado del titular, el hover no se ve sucio y el modo oscuro no parece otra marca. No es suerte, es trabajar en un espacio de color que se parece a cómo vemos.</p>
+      <p>En esta lección cambias de herramienta mental: de HEX y HSL a <strong>OKLCH</strong>. Es la base de todo lo que viene en paletas.</p>
+
+      <h2>El problema de HSL</h2>
+      <p>En <code>hsl()</code> la «L» se llama luminosidad, pero no es la luminosidad que percibes. Un amarillo y un azul con <code>50%</code> parecen de mundos distintos: el amarillo casi brilla y el azul se hunde. Mira las dos filas: todas las muestras de cada fila tienen el mismo valor de L.</p>
+
+      <figure class="lab" data-title="Misma «L», distinto brillo" data-hint="Mueve el tono" data-height="330">
+        <script type="text/x-demo" data-lang="html">
+          <div class="rows">
+            <p>hsl(h 90% 50%)</p>
+            <div class="row" id="hsl"></div>
+            <p>oklch(70% 0.15 h)</p>
+            <div class="row" id="ok"></div>
+          </div>
+          <label>Desplazar tono <input id="shift" type="range" min="0" max="60" value="0"></label>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 20px; background: #f4f4f6; color: #222; }
+          .rows p { margin: 10px 0 6px; font: 500 13px var(--f-mono); color: #555; }
+          .row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+          .row div {
+            height: 64px; border-radius: 8px;
+            display: grid; place-items: center;
+            font: 600 14px var(--f-sans); color: #000;
+          }
+          label { display: flex; gap: 10px; align-items: center; margin-top: 18px; font-size: 14px; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const hues = [0, 60, 120, 180, 240, 300];
+          const shift = document.querySelector('#shift');
+          function paint() {
+            const s = +shift.value;
+            hsl.innerHTML = hues.map(h => `<div style="background:hsl(${h + s} 90% 50%)">Aa</div>`).join('');
+            ok.innerHTML  = hues.map(h => `<div style="background:oklch(70% 0.15 ${h + s})">Aa</div>`).join('');
+          }
+          shift.addEventListener('input', paint); paint();
+        </script>
+        <figcaption>En la fila HSL el texto negro se lee perfecto sobre el amarillo y casi nada sobre el azul. En la fila OKLCH el contraste es parecido en todas las muestras: puedes cambiar el tono sin romper la legibilidad.</figcaption>
+      </figure>
+
+      <p>Esa es la clave: en OKLCH, si dejas fija la L y cambias el tono, el <strong>peso visual se mantiene</strong>. Por eso puedes crear un acento naranja y otro rosa que conviven sin pelearse, o cambiar la marca entera de tono y que el contraste del texto siga funcionando.</p>
+
+      <h2>Anatomía de oklch()</h2>
+      <p>Tres números y, si quieres, una transparencia:</p>
+      <ul>
+        <li><strong>L, luminosidad</strong> de <code>0%</code> (negro) a <code>100%</code> (blanco). Es la percibida, la de verdad.</li>
+        <li><strong>C, croma</strong>: cuánto color hay. <code>0</code> es gris; los colores muy vivos rondan <code>0.25</code>–<code>0.35</code>. No tiene un máximo fijo: depende del tono y de la pantalla.</li>
+        <li><strong>H, tono</strong>: el ángulo en la rueda, de <code>0</code> a <code>360</code>. Más o menos: 30 rojo, 70 naranja, 100 amarillo, 150 verde, 250 azul, 300 violeta, 350 rosa.</li>
+      </ul>
+
+      <figure class="lab" data-title="Mezclador OKLCH" data-hint="Toca los tres controles" data-height="400">
+        <script type="text/x-demo" data-lang="html">
+          <div class="mixer">
+            <div class="swatch" id="sw">
+              <span class="big">Aa</span>
+              <code id="out"></code>
+            </div>
+            <div class="ctrls">
+              <label>L <input id="l" type="range" min="0" max="100" value="68"><b id="lv"></b></label>
+              <label>C <input id="c" type="range" min="0" max="0.37" step="0.005" value="0.16"><b id="cv"></b></label>
+              <label>H <input id="h" type="range" min="0" max="360" value="45"><b id="hv"></b></label>
+              <p id="gamut"></p>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 18px; background: #101015; color: #eee; }
+          .mixer { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; height: calc(100vh - 36px); }
+          .swatch { border-radius: 14px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; }
+          .big { font: 400 72px/1 var(--f-serif); }
+          code { font: 500 13px var(--f-mono); background: rgb(0 0 0 / .25); padding: 6px 8px; border-radius: 6px; align-self: start; }
+          .ctrls { display: grid; align-content: center; gap: 14px; }
+          label { display: grid; grid-template-columns: 18px 1fr 48px; gap: 10px; align-items: center; font: 600 14px var(--f-mono); }
+          b { font-weight: 400; color: #aaa; text-align: right; }
+          #gamut { font-size: 13px; color: #f6a; min-height: 2.6em; margin: 0; }
+          @media (max-width: 520px) { .mixer { grid-template-columns: 1fr; } .big { font-size: 48px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const $ = s => document.querySelector(s);
+          function paint() {
+            const L = +l.value, C = +c.value, H = +h.value;
+            const color = `oklch(${L}% ${C} ${H})`;
+            sw.style.background = color;
+            // Texto blanco o negro según la luminosidad: en OKLCH basta con mirar L
+            sw.style.color = L > 62 ? '#111' : '#fff';
+            out.textContent = color;
+            lv.textContent = L + '%'; cv.textContent = C.toFixed(3); hv.textContent = H;
+            // ¿Cabe en sRGB? Si no, el navegador lo recorta al más parecido
+            $('#gamut').textContent = CSS.supports('color', color) && !inSRGB(L, C, H)
+              ? 'Fuera de sRGB: en una pantalla normal se recorta. En pantallas P3 (iPhone, Mac) se ve más vivo.' : '';
+          }
+          // Conversión OKLCH → sRGB lineal para saber si el color cabe
+          function inSRGB(L, C, H) {
+            const a = C * Math.cos(H * Math.PI / 180), b = C * Math.sin(H * Math.PI / 180), l0 = L / 100;
+            const l_ = (l0 + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+            const m_ = (l0 - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+            const s_ = (l0 - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+            const r = 4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_;
+            const g = -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_;
+            const bl = -0.0041960863 * l_ - 0.7034186147 * m_ + 1.7076147010 * s_;
+            return [r, g, bl].every(v => v >= -0.001 && v <= 1.001);
+          }
+          [l, c, h].forEach(i => i.addEventListener('input', paint)); paint();
+        </script>
+        <figcaption>Fíjate en que el texto cambia de blanco a negro mirando solo <code>L</code>. Con HEX o HSL tendrías que calcular la luminancia relativa; en OKLCH la L ya te lo dice.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Las paletas que parecen «caras» casi nunca usan croma alto en superficies grandes. Fondos y neutros con <code>C</code> entre <code>0.005</code> y <code>0.03</code> (grises con un toque de tono), y el croma fuerte reservado para un único acento. El crema del vídeo, <code>#F3EEE3</code>, es aproximadamente <code>oklch(94.8% 0.014 85)</code>: casi gris, pero cálido.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los iPhone y la mayoría de Android de gama media y alta tienen pantalla <strong>P3</strong>: un croma que en tu monitor de la agencia se recorta, en el móvil se ve más vivo. Revisa el acento en un teléfono real antes de darlo por bueno. Y al sol, en la calle, los contrastes suaves desaparecen: el texto pequeño necesita más diferencia de L de la que parece en el escritorio (apunta a 40 puntos de L o más entre texto y fondo).</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Tienes <code>oklch(70% 0.15 45)</code>, un naranja. Cambias solo el tono a <code>250</code>. ¿Qué pasa con un texto negro encima?</p>
+        <ol>
+          <li>Deja de leerse, porque el azul es mucho más oscuro.</li>
+          <li>Se sigue leyendo casi igual, porque la luminosidad percibida no cambia.</li>
+          <li>Se lee mejor, porque el azul tiene más contraste.</li>
+        </ol>
+        <p class="why">La L de OKLCH es perceptual: <code>70%</code> es igual de claro en cualquier tono. Con <code>hsl()</code> la respuesta habría sido la primera.</p>
+      </div>
+
+      <h2>Una escala entera desde un solo color</h2>
+      <p>La <strong>sintaxis de color relativa</strong> te deja coger un color y modificar sus canales: <code>oklch(from var(--marca) L C H)</code>. Dentro, <code>l</code>, <code>c</code> y <code>h</code> son los valores del color original y puedes operar con <code>calc()</code>.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Escala de 50 a 900 a partir de --marca">
+        :root {
+          --marca: oklch(66% 0.17 45);
+
+          /* misma tinta, distinta luz: cuanto más claro, menos croma */
+          --marca-50:  oklch(from var(--marca) 97% calc(c * 0.12) h);
+          --marca-100: oklch(from var(--marca) 93% calc(c * 0.25) h);
+          --marca-300: oklch(from var(--marca) 82% calc(c * 0.6) h);
+          --marca-500: var(--marca);
+          --marca-700: oklch(from var(--marca) 45% calc(c * 0.85) h);
+          --marca-900: oklch(from var(--marca) 25% calc(c * 0.5) h);
+        }
+      </script>
+
+      <figure class="lab" data-title="Escala con sintaxis relativa" data-hint="Cambia la marca y mira la escala" data-height="360">
+        <script type="text/x-demo" data-lang="html">
+          <div class="scale">
+            <div style="background:var(--marca-50)">50</div>
+            <div style="background:var(--marca-100)">100</div>
+            <div style="background:var(--marca-300)">300</div>
+            <div style="background:var(--marca-500)" class="inv">500</div>
+            <div style="background:var(--marca-700)" class="inv">700</div>
+            <div style="background:var(--marca-900)" class="inv">900</div>
+          </div>
+          <div class="ui">
+            <span class="tag">Etiqueta</span>
+            <button>Reservar visita</button>
+            <a href="#">Ver planos</a>
+          </div>
+          <label>Tono de marca <input id="h" type="range" min="0" max="360" value="45"></label>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root {
+            --marca: oklch(66% 0.17 45);
+            --marca-50:  oklch(from var(--marca) 97% calc(c * 0.12) h);
+            --marca-100: oklch(from var(--marca) 93% calc(c * 0.25) h);
+            --marca-300: oklch(from var(--marca) 82% calc(c * 0.6) h);
+            --marca-500: var(--marca);
+            --marca-700: oklch(from var(--marca) 45% calc(c * 0.85) h);
+            --marca-900: oklch(from var(--marca) 25% calc(c * 0.5) h);
+          }
+          body { padding: 20px; background: var(--marca-50); color: var(--marca-900); transition: background .3s; }
+          .scale { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+          .scale div { height: 70px; border-radius: 8px; padding: 8px; font: 600 12px var(--f-mono); color: var(--marca-900); }
+          .scale .inv { color: var(--marca-50); }
+          .ui { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 26px 0; }
+          .tag { background: var(--marca-100); color: var(--marca-700); padding: 4px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+          button { background: var(--marca-500); color: white; border: 0; padding: 12px 18px; border-radius: 99px; font-weight: 600; cursor: pointer; }
+          button:hover { background: var(--marca-700); }
+          a { color: var(--marca-700); font-weight: 600; }
+          label { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Solo cambiamos UNA variable: toda la escala se recalcula sola
+          h.addEventListener('input', () =>
+            document.documentElement.style.setProperty('--marca', `oklch(66% 0.17 ${h.value})`));
+        </script>
+        <figcaption>Una sola variable controla diez estados de la interfaz. Así trabajan los sistemas de diseño modernos: la marca es un dato y el resto se deriva.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Una escala derivada de una sola variable es oro para el modo oscuro del teléfono: con <code>@media (prefers-color-scheme: dark)</code> solo cambias qué paso de la escala usa el fondo y cuál el texto. Y pon <code>&lt;meta name="theme-color"&gt;</code> con el tono de tu fondo: la barra del navegador del móvil se tiñe y la web parece una app.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: por qué bajar el croma en los extremos</summary>
+        <p>Cerca del blanco y del negro no cabe mucho color: un naranja al 97% de luminosidad con croma 0.17 no existe en ninguna pantalla y el navegador lo recortaría. Además, los tonos muy claros con mucho croma se ven chillones. Multiplicar <code>c</code> por un factor pequeño en los extremos imita lo que hacen las paletas profesionales (Tailwind, Radix): pasteles suaves arriba, tonos profundos abajo.</p>
+      </details>
+
+      <h2>Mezclar sin ensuciar: color-mix()</h2>
+      <p><code>color-mix(in espacio, color1, color2 porcentaje)</code> mezcla dos colores. El espacio en el que mezclas importa muchísimo. Mezclar azul y amarillo en sRGB da un gris sucio en el centro; en OKLCH pasa por colores vivos.</p>
+
+      <figure class="lab" data-title="El mismo degradado en tres espacios" data-height="300">
+        <script type="text/x-demo" data-lang="html">
+          <p>srgb</p><div class="bar" style="--sp: srgb"></div>
+          <p>oklab</p><div class="bar" style="--sp: oklab"></div>
+          <p>oklch</p><div class="bar" style="--sp: oklch"></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 16px 20px; background: #fff; }
+          p { margin: 10px 0 5px; font: 500 13px var(--f-mono); color: #555; }
+          .bar { height: 54px; border-radius: 8px; }
+          /* Los degradados también aceptan espacio de color */
+          .bar[style*="srgb"]  { background: linear-gradient(in srgb  to right, oklch(45% 0.25 264), oklch(92% 0.19 100)); }
+          .bar[style*="oklab"] { background: linear-gradient(in oklab to right, oklch(45% 0.25 264), oklch(92% 0.19 100)); }
+          .bar[style*="oklch"] { background: linear-gradient(in oklch to right, oklch(45% 0.25 264), oklch(92% 0.19 100)); }
+        </script>
+        <figcaption><strong>srgb</strong> se ensucia en el centro. <strong>oklab</strong> es el punto medio más limpio y natural, ideal para hovers y tintes. <strong>oklch</strong> rodea la rueda de color y pasa por verdes vivos: espectacular para degradados de cielo, peligroso si no lo buscas.</figcaption>
+      </figure>
+
+      <p>Para estados de interfaz, <code>color-mix()</code> sustituye a los veinte tonos que antes pegabas a mano:</p>
+      <script type="text/x-code" data-lang="css" data-label="Estados con color-mix">
+        .boton {
+          --c: var(--marca);
+          background: var(--c);
+        }
+        .boton:hover  { background: color-mix(in oklab, var(--c), black 12%); }
+        .boton:active { background: color-mix(in oklab, var(--c), black 22%); }
+
+        /* fondo tintado al 8% sobre cualquier superficie */
+        .aviso { background: color-mix(in oklab, var(--marca) 8%, transparent); }
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Si mezclas con <code>transparent</code>, el resultado es transparente de verdad: depende de lo que haya debajo. Perfecto para tintes sobre fondos variables; mala idea si necesitas un color exacto para el contraste del texto.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los degradados grandes en oklch pueden mostrar <strong>bandas</strong> en pantallas OLED con brillo bajo. Si un cielo a pantalla completa se ve escalonado en el móvil, interpola en <code>oklab</code> (es más suave entre tonos cercanos) o añade un grano muy sutil encima con un SVG de ruido al 3–4 % de opacidad.</p>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>oklch()</code> y <code>color-mix()</code> son Baseline ampliamente disponible desde noviembre de 2025: úsalos sin miedo. La sintaxis relativa (<code>from</code>) es Baseline desde septiembre de 2024 (Chrome 125, Safari 18, Firefox 128). Si necesitas soportar navegadores de hace años, declara antes un color HEX normal y después el moderno: el navegador viejo se queda con el primero.</p>
+      </div>
+
+      <h2>Del HEX que te dan a OKLCH</h2>
+      <p>Normalmente el cliente te da HEX. No hace falta convertir a mano: el navegador lo hace con la sintaxis relativa y puedes leer el resultado en DevTools.</p>
+      <script type="text/x-code" data-lang="css">
+        :root {
+          --cliente: #D9541E;                              /* el «Burnt Orange» del vídeo */
+          --marca: oklch(from var(--cliente) l c h);       /* ya es OKLCH */
+          --marca-suave: oklch(from #D9541E 92% calc(c * .25) h);
+        }
+      </script>
+      <p>En Chrome DevTools, haz clic con mayúsculas sobre el cuadradito de color de cualquier propiedad para ir rotando formatos (HEX, RGB, HSL, OKLCH). Así ves los valores y los copias.</p>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Quieres el hover de un botón un poco más oscuro sin que cambie de tono ni se ensucie. ¿Qué escribes?</p>
+        <ol>
+          <li><code>filter: brightness(.9)</code></li>
+          <li><code>opacity: .85</code></li>
+          <li><code>background: oklch(from var(--c) calc(l - 0.08) c h)</code></li>
+          <li><code>background: color-mix(in srgb, var(--c), gray)</code></li>
+        </ol>
+        <p class="why">Bajar la L en OKLCH oscurece sin tocar tono ni croma. <code>filter</code> afecta también al texto del botón, <code>opacity</code> deja ver el fondo y mezclar con gris en sRGB ensucia.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>En OKLCH la L es luminosidad percibida: cambiar el tono no cambia el peso visual.</li>
+          <li>Con <code>oklch(from var(--x) …)</code> derivas escalas y estados completos de un solo color.</li>
+          <li>Mezcla en <code>oklab</code> para estados de interfaz y usa <code>oklch</code> solo cuando quieras recorrer la rueda.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge el color principal de un cliente real de la agencia, conviértelo con <code>oklch(from #HEX l c h)</code> y genera su escala de 50 a 900. Usa el mezclador de arriba para comprobar qué tonos se salen de sRGB. Guarda la escala: la usarás en la lección de paletas.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scroll animado solo con CSS | Hora azul</title>
+<meta name="description" content="Animaciones vinculadas al scroll con animation-timeline, scroll(), view() y animation-range: barras de progreso, reveals, parallax, escenas fijadas y el vuelo hacia la torre, sin una línea de JavaScript.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="scroll-css">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Scroll animado solo con CSS</h1>
+    <p class="lede">Cambia el reloj de una animación por la barra de scroll. Barras de progreso, reveals, parallax y una escena fijada que vuela hacia la torre, sin JavaScript.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Una animación CSS normal avanza con el tiempo: dura <code>1s</code> y termina. Una animación <strong>vinculada al scroll</strong> avanza con la posición de scroll: si bajas, avanza; si subes, retrocede; si te paras, se para. El <code>@keyframes</code> es el mismo de siempre. Lo único que cambia es el reloj, que se declara con <code>animation-timeline</code>.</p>
+      <p>Hasta hace poco esto pedía GSAP o un <code>addEventListener<wbr>('scroll')</code>. Desde el 27 de octubre de 2026 funciona en los tres motores. Para la mitad de los efectos que viste en los vídeos ya no hace falta ninguna librería.</p>
+      <p>Todas las demos de esta lección tienen su propio scroll. <strong>Desliza dentro del recuadro de la demo</strong> (rueda, trackpad o dedo), no en la página.</p>
+
+      <h2>scroll(): el scroll como reloj</h2>
+      <p><code>scroll()</code> crea una línea de tiempo anónima a partir de un contenedor con scroll. El 0&nbsp;% es arriba del todo y el 100&nbsp;%, abajo del todo. Dos usos clásicos: la barra de progreso de lectura y la cabecera que se compacta al bajar.</p>
+
+      <figure class="lab" data-title="Diario de obra" data-hint="Desliza dentro de la demo" data-height="460">
+        <script type="text/x-demo" data-lang="html">
+          <div class="progreso" aria-hidden="true"></div>
+          <header class="cabecera">
+            <a class="logo" href="#">Alba <i>estudio</i></a>
+            <nav><a href="#">Proyectos</a><a href="#" class="cta">Contacto</a></nav>
+          </header>
+          <article>
+            <p class="cat">Diario de obra · Semana 14</p>
+            <h1>Casa en el <em>Grau de Castelló</em></h1>
+            <p class="entradilla">Esta semana cerramos la estructura. Por primera vez se lee la casa entera desde la playa: dos volúmenes blancos y un patio que mira al sur.</p>
+            <div class="foto"><span>Fachada sur, 18:40</span></div>
+            <p>El hormigón de la losa superior se vertió el martes a primera hora, antes de que el levante subiera la temperatura. Lo curamos con arpillera húmeda durante cinco días.</p>
+            <p>En el patio dejamos la huella del encofrado de tablilla de pino. Al atardecer la luz rasante marca cada veta y el muro deja de ser un muro para parecer una tela.</p>
+            <p>La carpintería llega en la semana 17. Mientras tanto, los huecos tapados con lona naranja nos dejan imaginar cómo caerá la luz en el salón a las seis de la tarde.</p>
+            <div class="foto b"><span>Patio, encofrado de pino</span></div>
+            <p>La próxima entrega del diario será desde la cubierta, con las placas solares ya montadas y la primera prueba de la piscina.</p>
+            <p class="firma">Marta Ribes, arquitecta</p>
+          </article>
+          <p class="aviso">Desliza dentro de la demo</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F4F0E8; color: #1A1714; }
+          a { color: inherit; text-decoration: none; }
+
+          /* 1. Barra de progreso: escala de 0 a 1 con el scroll de la página */
+          .progreso { position: fixed; inset: 0 0 auto; height: 3px; z-index: 3;
+            background: #C2410C; transform-origin: 0 50%;
+            animation: progreso linear both;
+            animation-timeline: scroll(root); }   /* siempre DESPUÉS del shorthand */
+          @keyframes progreso { from { scale: 0 1; } to { scale: 1 1; } }
+
+          /* 2. Cabecera: se compacta en los primeros 160 px */
+          .cabecera { position: fixed; inset: 0 0 auto; z-index: 2;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 26px clamp(18px, 5vw, 48px);
+            animation: compacta linear both;
+            animation-timeline: scroll(root); animation-range: 0 160px; }
+          .cabecera::before { content: ""; position: absolute; inset: 0; z-index: -1;
+            background: rgb(244 240 232 / .85); backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgb(26 23 20 / .1); opacity: 0;
+            animation: aparece linear both;
+            animation-timeline: scroll(root); animation-range: 0 160px; }
+          .logo { font: 400 36px/1 var(--f-serif); transform-origin: 0 50%;
+            animation: logo linear both;
+            animation-timeline: scroll(root); animation-range: 0 160px; }
+          @keyframes compacta { to { padding-block: 12px; } }
+          @keyframes aparece { to { opacity: 1; } }
+          @keyframes logo { to { scale: .72; } }
+
+          nav { display: flex; gap: 22px; align-items: center; font: 500 14px var(--f-sans); }
+          .cta { background: #1A1714; color: #F4F0E8; padding: 10px 16px; border-radius: 99px; }
+          article { max-width: 620px; margin: 0 auto; padding: 150px 22px 120px; font: 400 18px/1.65 var(--f-read); }
+          .cat { font: 600 12px var(--f-sans); letter-spacing: .12em; text-transform: uppercase; color: #C2410C; }
+          h1 { font: 400 clamp(42px, 9vw, 76px)/.95 var(--f-serif); margin: 10px 0 22px; letter-spacing: -.02em; }
+          h1 em { color: #6B5E52; }
+          .entradilla { font-size: 21px; color: #4A4038; }
+          .foto { aspect-ratio: 16/10; margin: 34px -22px; position: relative;
+            background: linear-gradient(transparent 80%, #2F4A55 80%),
+              linear-gradient(90deg, transparent 14%, #EFE8DC 14% 52%, #D8CDBC 52% 61%, transparent 61%) 0 100% / 100% 44% no-repeat,
+              linear-gradient(#E6A985, #F3D3B8 55%, #F6E6D3); }
+          .foto.b { background: linear-gradient(100deg, rgb(255 226 190 / .45), transparent 55%),
+              repeating-linear-gradient(90deg, #B49A7E 0 9px, #9C8268 9px 10px); }
+          .foto span { position: absolute; left: 22px; bottom: 12px; font: 500 12px var(--f-sans); color: #fff; }
+          .firma { font-style: italic; color: #6B5E52; }
+          .aviso { position: fixed; left: 50%; bottom: 18px; translate: -50% 0; margin: 0; z-index: 4;
+            padding: 10px 18px; border-radius: 99px; background: #1A1714; color: #F4F0E8; white-space: nowrap;
+            font: 600 13px var(--f-sans); animation: fuera linear both;
+            animation-timeline: scroll(root); animation-range: 0 120px; }
+          @keyframes fuera { to { opacity: 0; translate: -50% 14px; } }
+          @media (max-width: 520px) { nav a:not(.cta) { display: none; } .logo { font-size: 30px; } }
+        </script>
+        <figcaption>Ninguna línea de JavaScript. La barra usa todo el recorrido de scroll. La cabecera, el fondo y el logo usan solo los primeros 160&nbsp;px gracias a <code>animation-range: 0 160px</code>. Sube despacio y verás que todo retrocede: la animación no se «dispara», está atada a la posición.</figcaption>
+      </figure>
+
+      <p>Lo que debes recordar del código:</p>
+      <ul>
+        <li><strong><code>scroll(root)</code></strong> usa el scroll del documento. Sin argumento, <code>scroll()</code> usa el ancestro con scroll más cercano, que en una página normal también es el documento. También acepta un eje: <code>scroll(root inline)</code>.</li>
+        <li><strong>El orden importa.</strong> El shorthand <code>animation</code> resetea <code>animation-timeline</code> a <code>auto</code>. Si lo escribes después, pierdes la línea de tiempo y la animación dura 0&nbsp;s.</li>
+        <li><strong>Sin duración.</strong> En una línea de tiempo de scroll la duración la pone el recorrido. Usa <code>linear</code> y <code>both</code> para que el estado inicial y el final se mantengan fuera del tramo.</li>
+      </ul>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La cabecera que se compacta funciona porque cambia poco: un fondo que aparece, un logo un 28&nbsp;% más pequeño. Si además cambias el color, la tipografía y la altura de golpe, parece un error. Una barra de progreso de lectura tiene sentido en artículos largos (un diario de obra, un caso de estudio). En una landing de cinco pantallas sobra.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>La barra de progreso es de lo poco que se agradece más en el móvil que en el escritorio, porque los artículos son el triple de largos. Pégala arriba del todo (<code>inset: 0 0 auto</code>) y no la escondas bajo una cabecera fija. En la cabecera, reduce el recorrido: 160&nbsp;px en el móvil son media pantalla de pulgar. Con <code>animation-range: 0 100px</code> dentro de <code>@media (max-width: 600px)</code> se compacta antes y deja más espacio al contenido.</p>
+      </div>
+
+      <h2>view(): animar cuando el elemento entra</h2>
+      <p><code>view()</code> no mira el scroll de toda la página. Mira <strong>el recorrido del propio elemento a través de la ventana</strong>: 0&nbsp;% cuando asoma por abajo y 100&nbsp;% cuando desaparece por arriba. Es el sustituto CSS del típico «aparecer al hacer scroll» con IntersectionObserver.</p>
+
+      <figure class="lab" data-title="Bodega: los vinos aparecen" data-hint="Desliza dentro de la demo" data-height="480" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="intro">
+            <p class="eyebrow">Celler Les Moreres · Desde 1962</p>
+            <h1>Vinos de <em>secano</em>, hechos despacio</h1>
+            <p class="aviso">Desliza dentro de la demo</p>
+          </section>
+          <ol class="vinos">
+            <li class="vino" style="--vidrio:#3B1D24; --etq:#E9DCC6">
+              <i class="botella"></i>
+              <div><h2>Terra Roja</h2><p>Garnacha y monastrell · Crianza 14 meses</p></div>
+              <b>24 €</b>
+            </li>
+            <li class="vino" style="--vidrio:#5B6B3A; --etq:#F1E7D2">
+              <i class="botella"></i>
+              <div><h2>Blanc de Pedra</h2><p>Macabeo sobre lías · Sin madera</p></div>
+              <b>18 €</b>
+            </li>
+            <li class="vino" style="--vidrio:#C98E8A; --etq:#FBF1E6">
+              <i class="botella"></i>
+              <div><h2>Rosat d'Estiu</h2><p>Garnacha · Prensado directo</p></div>
+              <b>16 €</b>
+            </li>
+            <li class="vino" style="--vidrio:#22140F; --etq:#C9A46A">
+              <i class="botella"></i>
+              <div><h2>Les Moreres Gran Reserva</h2><p>Monastrell de viñas viejas · 2019</p></div>
+              <b>48 €</b>
+            </li>
+          </ol>
+          <p class="pie">Visitas a la bodega de jueves a domingo</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #1E0F13; color: #F1E6D6; }
+          .intro { min-height: 92svh; display: grid; align-content: center; padding: 0 clamp(20px, 7vw, 72px); }
+          .eyebrow { font: 600 12px var(--f-sans); letter-spacing: .16em; text-transform: uppercase; color: #C9A46A; }
+          h1 { font: 400 clamp(44px, 10vw, 92px)/.92 var(--f-serif); margin: 12px 0 0; max-width: 12ch; }
+          h1 em { color: #C9A46A; }
+          .vinos { list-style: none; margin: 0; padding: 0 clamp(16px, 6vw, 64px); }
+          .vino { display: grid; grid-template-columns: 90px 1fr auto; gap: 24px; align-items: center;
+            padding: 30px 0; border-top: 1px solid rgb(241 230 214 / .14); }
+          .botella { height: 150px; width: 42px; margin: 0 auto; position: relative; border-radius: 14px 14px 6px 6px;
+            background: linear-gradient(90deg, rgb(255 255 255 / .18), transparent 40%), var(--vidrio);
+            box-shadow: inset 0 -46px 0 -18px var(--etq); }
+          .botella::before { content: ""; position: absolute; left: 50%; bottom: 100%; width: 14px; height: 44px;
+            translate: -50% 0; background: inherit; border-radius: 4px 4px 0 0; }
+          h2 { font: 400 clamp(26px, 5vw, 38px)/1 var(--f-serif); margin: 0 0 6px; }
+          .vino p { margin: 0; font: 400 14px var(--f-sans); color: #BFAF9C; }
+          .vino b { font: 500 16px var(--f-sans); color: #C9A46A; }
+          .pie { text-align: center; padding: 60px 20px 90px; font: 400 italic 22px var(--f-serif); color: #BFAF9C; }
+
+          /* Solo animamos si el navegador lo entiende: si no, todo se ve quieto y visible */
+          @supports (animation-timeline: view()) {
+            .vino { animation: aparece linear both; animation-timeline: view();
+              animation-range: entry 0% cover 40%; }
+            .botella { animation: sube linear both; animation-timeline: view();
+              animation-range: entry 10% cover 45%; }
+          }
+          @keyframes aparece { from { opacity: 0; translate: 0 60px; } }
+          @keyframes sube { from { translate: 0 40px; rotate: -6deg; } }
+
+          .aviso { justify-self: start; margin-top: 40px; padding: 10px 18px; border: 1px solid rgb(201 164 106 / .5);
+            border-radius: 99px; font: 600 13px var(--f-sans); color: #C9A46A; }
+          @media (max-width: 520px) {
+            .vino { grid-template-columns: 56px 1fr; gap: 16px; }
+            .vino b { grid-column: 2; }
+            .botella { height: 110px; width: 32px; }
+          }
+        </script>
+        <figcaption>Cada fila es su propia línea de tiempo: <code>view()</code> sin argumentos usa el elemento animado como sujeto. La botella tiene su propio <code>view()</code> con un rango algo más tardío, y por eso parece que llega un instante después. Escalonar sin <code>delay</code> es eso: dar rangos distintos.</figcaption>
+      </figure>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>No pongas <code>opacity: 0</code> en la regla normal del elemento esperando que la animación lo descubra. Si el navegador no soporta <code>view()</code>, el contenido no aparece nunca. Escribe el estado oculto <strong>solo</strong> en el <code>from</code> del <code>@keyframes</code> y mete las animaciones dentro de <code>@supports</code>. Si falla, la web se ve quieta, pero completa.</p>
+      </div>
+
+      <h3>Revelar imágenes con clip-path</h3>
+      <p>El reveal más «de estudio de arquitectura» no hace fundidos. Recorta la imagen con <code>clip-path: inset()</code> y la abre mientras la foto de dentro se aleja un poco. Son dos capas: el marco recorta y el interior escala.</p>
+
+      <figure class="lab" data-title="Proyectos que se abren" data-hint="Desliza dentro de la demo" data-height="500">
+        <script type="text/x-demo" data-lang="html">
+          <header class="top">
+            <p>Marjal Arquitectura</p>
+            <h1>Obra <em>reciente</em></h1>
+            <p class="aviso">Desliza dentro de la demo</p>
+          </header>
+          <article class="proyecto">
+            <div class="foto"><i class="a"></i></div>
+            <p><b>01</b> Casa Marjal <span>Almassora, 2025</span></p>
+          </article>
+          <article class="proyecto">
+            <div class="foto"><i class="b"></i></div>
+            <p><b>02</b> Pabellón de la huerta <span>Vila-real, 2024</span></p>
+          </article>
+          <article class="proyecto">
+            <div class="foto"><i class="c"></i></div>
+            <p><b>03</b> Patio de barro <span>Onda, 2023</span></p>
+          </article>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F6F4EF; color: #191817; padding: 0 clamp(16px, 6vw, 64px) 120px; }
+          .top { min-height: 70svh; display: grid; align-content: end; padding-bottom: 40px; font: 500 13px var(--f-sans); }
+          h1 { font: 400 clamp(48px, 11vw, 104px)/.9 var(--f-serif); margin: 8px 0 0; letter-spacing: -.02em; }
+          h1 em { color: #8B7A66; }
+          .aviso { margin-top: 26px; color: #8B7A66; }
+          .proyecto { margin: 70px 0; }
+          .proyecto:nth-of-type(2) { width: 72%; margin-left: auto; }
+          .proyecto p { display: flex; gap: 14px; align-items: baseline; font: 500 15px var(--f-sans); margin: 14px 0 0; }
+          .proyecto span { margin-left: auto; color: #8B7A66; }
+          .foto { aspect-ratio: 3/2; overflow: hidden; border-radius: 6px; }
+          .foto i { display: block; height: 100%; }
+          /* Tres «fotos» hechas con degradados */
+          .a { background: linear-gradient(transparent 80%, #2C3A44 80%),
+                 linear-gradient(90deg, transparent 18%, #ECE7DF 18% 58%, #F3C783 58% 66%, #ECE7DF 66% 80%, transparent 80%) 0 100% / 100% 46% no-repeat,
+                 linear-gradient(#232A4D, #6F5C8E 55%, #D99C8C); }
+          .b { background: linear-gradient(90deg, transparent 38%, #1B1410 38% 54%, transparent 54%) 0 100% / 100% 70% no-repeat,
+                 repeating-linear-gradient(90deg, #A27E5A 0 10px, #7C5D41 10px 14px); }
+          .c { background: radial-gradient(circle at 70% 30%, #F8E2B8 0 9%, transparent 10%),
+                 linear-gradient(transparent 58%, #B5643F 58%), linear-gradient(#E9A36F, #F4CFA4); }
+
+          @supports (animation-timeline: view()) {
+            /* El marco se abre... */
+            .foto { animation: abre linear both; animation-timeline: view();
+              animation-range: entry 0% cover 45%; }
+            /* ...y la foto se aleja durante todo su paso por la pantalla */
+            .foto i { animation: aleja linear both; animation-timeline: view(); }
+          }
+          @keyframes abre { from { clip-path: inset(22% 18% 22% 18% round 6px); }
+                            to   { clip-path: inset(0 round 6px); } }
+          @keyframes aleja { from { scale: 1.3; } to { scale: 1; } }
+          @media (max-width: 520px) { .proyecto:nth-of-type(2) { width: 100%; } }
+        </script>
+        <figcaption>El marco usa el tramo <code>entry 0% cover 45%</code>: se abre del todo antes de llegar al centro, que es donde la vas a mirar. La foto interior usa todo el recorrido por defecto, <code>cover</code>, y escala de 1,3 a 1. Esa diferencia de ritmo entre marco y foto es lo que da la sensación de profundidad.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un reveal caro es <strong>corto y seco</strong>: termina antes de que el elemento llegue al centro de la pantalla. Si el texto sigue moviéndose mientras lo lees, cansa. Anima solo lo que merece una entrada (imágenes, titulares de sección) y deja quietos los párrafos. Si todo aparece, nada destaca.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil el elemento cruza la pantalla con muy poco recorrido de dedo, así que un rango largo como <code>cover</code> entero se nota menos y uno corto se ve brusco. Para los textos, acorta el desplazamiento (de <code>60px</code> a <code>24px</code>) y no animes <code>clip-path</code> en listas largas: repinta en cada fotograma y en móviles modestos se nota durante el scroll con inercia. Resérvalo para dos o tres imágenes grandes.</p>
+      </div>
+
+      <h2>animation-range: elegir el tramo</h2>
+      <p>Un <code>view()</code> recorre varias fases, y <code>animation-range</code> te deja elegir en cuál ocurre la animación. Las cuatro que vas a usar:</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rango</th><th>0&nbsp;%</th><th>100&nbsp;%</th><th>Uso típico</th></tr></thead>
+          <tbody>
+            <tr><td><code>entry</code></td><td>El borde superior asoma por abajo</td><td>El elemento ha entrado entero</td><td>Reveals de entrada</td></tr>
+            <tr><td><code>contain</code></td><td>Entero dentro (o, si es más alto que la pantalla, su borde superior llega arriba)</td><td>Empieza a salir (o su borde inferior llega abajo)</td><td>Escenas fijadas con sticky</td></tr>
+            <tr><td><code>exit</code></td><td>Empieza a salir por arriba</td><td>Se ha ido del todo</td><td>Fundidos de salida, parallax del hero</td></tr>
+            <tr><td><code>cover</code></td><td>Asoma por abajo</td><td>Se ha ido por arriba</td><td>Parallax, escalas suaves</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Puedes mezclar fases y porcentajes: <code>entry 25% cover 50%</code> empieza cuando ha entrado un cuarto y acaba cuando está en la mitad del recorrido total. También acepta longitudes: <code>contain 0% contain 200px</code>.</p>
+
+      <figure class="lab" data-title="Visualizador de rangos" data-hint="Desliza y cambia el rango" data-height="540" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="hud" aria-hidden="true">
+            <div class="fila entry"><b>entry</b><span class="barra"><i></i></span><output></output></div>
+            <div class="fila contain"><b>contain</b><span class="barra"><i></i></span><output></output></div>
+            <div class="fila exit"><b>exit</b><span class="barra"><i></i></span><output></output></div>
+            <div class="fila cover"><b>cover</b><span class="barra"><i></i></span><output></output></div>
+          </div>
+          <p class="hueco">Desliza dentro de la demo</p>
+          <article class="piso">
+            <div class="luz"></div>
+            <p>Planta 24 · Orientación sur</p>
+            <h2>Residencia Norte</h2>
+            <p>186 m² · 3 dormitorios · terraza de 40 m²</p>
+          </article>
+          <p class="hueco">Sigue hasta que la tarjeta salga por arriba</p>
+          <div class="botones" role="group" aria-label="Rango de la tarjeta">
+            <button data-r="entry">entry</button><button data-r="contain">contain</button>
+            <button data-r="exit">exit</button><button data-r="cover" aria-pressed="true">cover</button>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          /* Un número animable: lo usamos para la barra y para el texto */
+          @property --p { syntax: "<integer>"; inherits: true; initial-value: 0; }
+          body { background: #120E24; color: #EDE6F7; timeline-scope: --piso; }   /* el HUD no es hijo de la tarjeta */
+          .piso { view-timeline-name: --piso; }
+
+          .fila { animation: progreso linear both; animation-timeline: --piso; }
+          .fila.entry   { animation-range: entry; }
+          .fila.contain { animation-range: contain; }
+          .fila.exit    { animation-range: exit; }
+          .fila.cover   { animation-range: cover; }
+          @keyframes progreso { from { --p: 0; } to { --p: 100; } }
+          .barra i { scale: calc(var(--p) / 100) 1; }
+          output::after { counter-reset: p var(--p); content: counter(p) "%"; }
+
+          /* La luz de la tarjeta usa el rango que elijas con los botones */
+          .luz { position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: 0;
+            background: linear-gradient(135deg, #C2562F, #8E3B6E 55%, #3A2A6B);
+            animation: enciende linear both; animation-timeline: --piso; animation-range: var(--r, cover); }
+          @keyframes enciende { to { opacity: 1; } }
+
+          .hud { position: fixed; inset: 0 0 auto; z-index: 2; padding: 12px 16px; display: grid; gap: 6px;
+            background: rgb(18 14 36 / .88); backdrop-filter: blur(10px); border-bottom: 1px solid #ffffff1f; }
+          .fila { display: grid; grid-template-columns: 64px 1fr 44px; gap: 10px; align-items: center; font: 500 12px var(--f-mono); }
+          .barra { height: 6px; border-radius: 9px; background: #ffffff1a; overflow: hidden; }
+          .barra i { display: block; height: 100%; background: #F6C98A; transform-origin: 0 50%; }
+          output { text-align: right; color: #B7ACCB; }
+          .hueco { height: 85svh; margin: 0; display: grid; place-items: center; padding: 0 30px; text-align: center;
+            font: 400 italic 22px var(--f-serif); color: #8D82A6; }
+          .piso { position: relative; isolation: isolate; margin: 0 auto; width: min(86%, 460px); height: 34svh;
+            padding: 22px; border-radius: 14px; border: 1px solid #ffffff2e; background: #1D1838;
+            display: grid; align-content: end; font: 500 13px var(--f-sans); }
+          .piso h2 { font: 400 34px/1 var(--f-serif); margin: 4px 0; }
+          .piso p { margin: 0; }
+          .botones { position: fixed; inset: auto 0 0; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 6px; padding: 8px; background: rgb(18 14 36 / .92); }
+          button { min-height: 44px; border: 1px solid #ffffff2e; border-radius: 10px; background: transparent;
+            color: inherit; font: 500 13px var(--f-mono); cursor: pointer; }
+          button[aria-pressed="true"] { background: #F6C98A; color: #120E24; border-color: transparent; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Solo cambia una variable CSS: el rango lo sigue resolviendo CSS
+          const botones = document.querySelectorAll('.botones button');
+          botones.forEach((b) => b.addEventListener('click', () => {
+            document.documentElement.style.setProperty('--r', b.dataset.r);
+            botones.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          }));
+        </script>
+        <figcaption>Las cuatro barras siguen a la <em>misma</em> tarjeta. <code>entry</code> llega al 100&nbsp;% justo cuando <code>contain</code> empieza, y <code>contain</code> acaba cuando arranca <code>exit</code>. <code>cover</code> abarca las tres. Ojo: los bordes que cuentan son los del recuadro de la demo, no los paneles de arriba y abajo, que tapan parte de la vista. Elige un rango abajo y mira cuándo se enciende la tarjeta.</figcaption>
+      </figure>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Una sección mide tres pantallas de alto y dentro tiene un escenario con <code>position: sticky</code>. ¿Qué rango cubre exactamente el tiempo que el escenario está fijado?</p>
+        <ol>
+          <li><code>cover</code></li>
+          <li><code>contain</code></li>
+          <li><code>entry</code></li>
+        </ol>
+        <p class="why">Si el sujeto es más alto que la pantalla, <code>contain</code> va desde que su borde superior toca arriba hasta que su borde inferior toca abajo, que es justo el tramo en que el sticky está pegado. <code>cover</code> añadiría una pantalla de entrada y otra de salida.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los porcentajes de <code>animation-range</code> son relativos a la altura de la pantalla, así que en un móvil vertical <code>entry</code> dura más píxeles que en un portátil apaisado. No suele hacer falta tocarlos. Lo que sí cambia es la proporción: una tarjeta de <code>34svh</code> en el móvil es casi un tercio de la pantalla, y si mide más que la pantalla, <code>contain</code> cambia de significado. Pon un tope de altura a los sujetos (<code>max-height: 80svh</code>) para que los rangos se comporten igual en los dos formatos.</p>
+      </div>
+
+      <h2>Líneas de tiempo con nombre</h2>
+      <p><code>view()</code> y <code>scroll()</code> son anónimas: cada elemento se mira a sí mismo o a su contenedor. Cuando quieres que <strong>un elemento se anime con el recorrido de otro</strong>, le pones nombre a la línea de tiempo:</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Nombrar y usar una línea de tiempo">
+        /* La sección crea la línea de tiempo... */
+        .galeria { view-timeline-name: --galeria; }     /* o view-timeline: --galeria block; */
+        .carrusel { scroll-timeline-name: --carrusel; scroll-timeline-axis: inline; }
+
+        /* ...y cualquier descendiente la usa por su nombre */
+        .galeria .pista { animation: desliza linear both; animation-timeline: --galeria; }
+
+        /* Para un elemento que NO es descendiente (un HUD fijo, un menú hermano),
+           sube el alcance del nombre a un ancestro común */
+        body { timeline-scope: --galeria; }
+      </script>
+
+      <p>Los nombres empiezan por <code>--</code>, como las variables. Sin <code>timeline-scope</code>, el nombre solo existe dentro del subárbol del elemento que lo declara. Con él, lo «sube» hasta el ancestro que digas. Es lo que usaba el visualizador de antes: el HUD fijo no está dentro de la tarjeta.</p>
+      <p>El caso estrella del nombre es el <strong>scroll horizontal dirigido por el vertical</strong>: una sección alta, un escenario fijado y una pista que se desplaza de lado mientras tú bajas.</p>
+
+      <figure class="lab" data-title="Obra seleccionada en horizontal" data-hint="Desliza dentro de la demo" data-height="500" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <header class="intro">
+            <p>Lumbre · Estudio de interiorismo</p>
+            <h1>Seis casas, <em>una luz</em></h1>
+            <p class="aviso">Desliza dentro de la demo</p>
+          </header>
+          <section class="horizontal">
+            <div class="pin">
+              <div class="pista">
+                <figure class="p1"><figcaption><b>Casa Benlloch</b> Salón a doble altura</figcaption></figure>
+                <figure class="p2"><figcaption><b>Ático Ruzafa</b> Terraza y cocina abierta</figcaption></figure>
+                <figure class="p3"><figcaption><b>Masía del Pinar</b> Dormitorio principal</figcaption></figure>
+                <figure class="p4"><figcaption><b>Casa del Port</b> Baño en microcemento</figcaption></figure>
+                <figure class="p5"><figcaption><b>Piso Gran Vía</b> Biblioteca en nogal</figcaption></figure>
+                <figure class="p6"><figcaption><b>Villa Orpesa</b> Porche al mar</figcaption></figure>
+              </div>
+              <span class="avance"></span>
+            </div>
+          </section>
+          <footer class="fin">¿Hablamos de tu casa?</footer>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #16120F; color: #F2E9DD; }
+          .intro { min-height: 80svh; display: grid; align-content: center; padding: 0 clamp(20px, 6vw, 64px); font: 500 13px var(--f-sans); }
+          h1 { font: 400 clamp(46px, 10vw, 96px)/.92 var(--f-serif); margin: 10px 0 0; }
+          h1 em { color: #E3A86B; }
+          .aviso { color: #E3A86B; margin-top: 28px; }
+
+          /* La sección alta crea la línea de tiempo; su altura es la «duración» */
+          .horizontal { height: 320svh; view-timeline-name: --galeria; }
+          .pin { position: sticky; top: 0; height: 100svh; overflow: hidden;
+            display: flex; align-items: center; container-type: inline-size; }
+          .pista { display: flex; gap: 3cqw; padding: 0 6cqw; width: max-content;
+            animation: desliza linear both;
+            animation-timeline: --galeria; animation-range: contain; }
+          /* -100% del ancho de la pista + el ancho visible = llegar justo al final */
+          @keyframes desliza { to { translate: calc(-100% + 100cqw) 0; } }
+
+          .avance { position: absolute; left: 6cqw; right: 6cqw; bottom: 5%; height: 2px; background: #E3A86B;
+            transform-origin: 0 50%; animation: crece linear both;
+            animation-timeline: --galeria; animation-range: contain; }
+          @keyframes crece { from { scale: 0 1; } }
+
+          figure { margin: 0 0 40px; height: min(60svh, 110cqw); aspect-ratio: 4/5; border-radius: 4px; position: relative; flex: none; }
+          figcaption { position: absolute; inset: 100% 0 auto; padding-top: 12px; font: 400 13px var(--f-sans); color: #B5A897; }
+          figcaption b { display: block; font: 400 24px var(--f-serif); color: #F2E9DD; }
+          .p1 { background: linear-gradient(transparent 70%, #5A4030 70%), linear-gradient(90deg, #D9C2A3 0 60%, #F3D9A8 60% 85%, #D9C2A3 85%); }
+          .p2 { background: radial-gradient(circle at 30% 30%, #F7D7A0 0 12%, transparent 13%), linear-gradient(#89A0A8, #DCCDB8 60%, #A57C5B 60%); }
+          .p3 { background: linear-gradient(transparent 58%, #EDE3D3 58% 74%, #8E6E55 74%), linear-gradient(90deg, #B9A48B, #D8C7AF); }
+          .p4 { background: radial-gradient(circle at 50% 34%, #F4EEE6 0 17%, #9E9487 17.5% 19%, transparent 19.5%), linear-gradient(#D4CCC1, #A9A094); }
+          .p5 { background: repeating-linear-gradient(90deg, #4A2F20 0 30px, #6B4630 30px 33px); }
+          .p6 { background: linear-gradient(transparent 55%, #3E6E86 55% 70%, #E7D5B5 70%), linear-gradient(#F0B892, #F7E1C8); }
+          .fin { padding: 30svh 20px; text-align: center; font: 400 italic clamp(30px, 7vw, 52px) var(--f-serif); }
+          @media (max-width: 520px) { .horizontal { height: 260svh; } .pista { gap: 6cqw; } }
+        </script>
+        <figcaption>La sección mide <code>320svh</code>: unas 2,2 pantallas de recorrido vertical, que se convierten en el recorrido horizontal de la pista. <code>container-type: inline-size</code> en el escenario permite usar <code>100cqw</code> (su ancho exacto, sin la barra de scroll) en el <code>@keyframes</code>. En el móvil la sección baja a <code>260svh</code>.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El horizontal fijado cuenta una secuencia: proyectos en orden, una línea de tiempo de la empresa, las fases de una obra. Para un catálogo que el usuario quiere recorrer a su ritmo, es peor que un carrusel con <code>scroll-snap</code>, porque le obligas a bajar para avanzar de lado. Pon un indicador de avance (la línea dorada) para que sepa cuánto falta.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil el usuario espera deslizar <em>de lado</em> con el dedo para ver una galería, y aquí no puede. Acorta la sección (<code>260svh</code>, o menos si hay pocas piezas) y haz que las piezas ocupen casi todo el ancho (aquí la altura es <code>min(60svh, 110cqw)</code>) para que cada pantalla de dedo muestre una pieza nueva. Si son más de seis, en el móvil cambia a un carrusel nativo con <code>overflow-x: auto</code> y <code>scroll-snap-type: x mandatory</code>. Un <code>@media (max-width: 600px)</code> que quite la animación y el <code>height</code> basta.</p>
+      </div>
+
+      <h2>Parallax y escenas fijadas</h2>
+      <p>El parallax es mover capas a distinta velocidad. Si el hero sale de la pantalla y una capa baja la mitad de lo que tú subes, parece que va a la mitad de velocidad, es decir, que está más lejos. Con <code>view()</code> y el rango <code>exit</code> del hero, cada capa solo necesita un número.</p>
+
+      <figure class="lab" data-title="Hotel en la sierra: parallax por capas" data-hint="Desliza dentro de la demo" data-height="500">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero">
+            <div class="capa cielo" style="--v: .7"></div>
+            <div class="capa sol" style="--v: .6"></div>
+            <div class="capa lejos" style="--v: .45"></div>
+            <div class="capa medio" style="--v: .25"></div>
+            <div class="capa titulo" style="--v: .55">
+              <p>Hotel Mirador · Sierra de Espadán</p>
+              <h1>Dormir <em>entre alcornoques</em></h1>
+            </div>
+            <div class="capa cerca" style="--v: 0"></div>
+            <p class="aviso">Desliza dentro de la demo</p>
+          </section>
+          <section class="texto">
+            <p class="eyebrow">Catorce habitaciones</p>
+            <h2>Una masía del siglo XVIII, a 40 minutos de Castelló</h2>
+            <p>Cada habitación mira a un valle distinto. Por la mañana, desayuno con aceite de la Serra y pan de leña; por la tarde, rutas hasta la fuente de los Cloticos.</p>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #1C1730; color: #F6EBDD; }
+          .hero { position: relative; height: 100svh; overflow: hidden; background: #2B2550;
+            view-timeline-name: --hero; }
+          .capa { position: absolute; inset: 0; }
+          /* Una animación para todas: cada capa baja una fracción (--v) de la altura del hero */
+          @supports (animation-timeline: view()) {
+            .capa { animation: parallax linear both; animation-timeline: --hero; animation-range: exit; }
+            .titulo { animation-name: parallax, apaga; }   /* el titular, además, se funde */
+          }
+          @keyframes parallax { to { translate: 0 calc(var(--v) * 100%); } }
+          @keyframes apaga { to { opacity: 0; } }
+
+          .cielo { inset: -10% 0 0; background: linear-gradient(#2B2550, #6E4A7E 42%, #E58E73 74%, #F6C99A); }
+          .sol { background: radial-gradient(circle at 62% 60%, #FFE6BA 0 5%, rgb(255 214 160 / .35) 6% 12%, transparent 22%); }
+          .lejos { background: #9C7BA6; clip-path: polygon(0 66%, 14% 54%, 26% 60%, 40% 46%, 55% 58%, 68% 48%, 82% 57%, 100% 44%, 100% 100%, 0 100%); }
+          .medio { background: #5E4878; clip-path: polygon(0 74%, 18% 62%, 32% 70%, 48% 60%, 62% 71%, 78% 63%, 100% 72%, 100% 100%, 0 100%); }
+          .cerca { background: #221A38; clip-path: polygon(0 86%, 10% 80%, 22% 84%, 36% 76%, 52% 85%, 70% 79%, 86% 86%, 100% 80%, 100% 100%, 0 100%); }
+          .titulo { display: grid; align-content: start; padding: 16svh clamp(20px, 7vw, 72px) 0; font: 600 12px var(--f-sans); letter-spacing: .14em; text-transform: uppercase; }
+          h1 { font: 400 clamp(46px, 10vw, 100px)/.9 var(--f-serif); letter-spacing: -.01em; text-transform: none; margin: 12px 0 0; max-width: 9ch; }
+          h1 em { color: #FFD9A8; }
+          .aviso { position: absolute; left: 50%; bottom: 22px; translate: -50% 0; margin: 0; padding: 10px 18px; border-radius: 99px;
+            background: rgb(246 235 221 / .14); backdrop-filter: blur(8px); font: 600 13px var(--f-sans); white-space: nowrap; }
+          .texto { max-width: 640px; padding: 70px clamp(20px, 7vw, 72px) 160px; font: 400 18px/1.6 var(--f-read); color: #D9CBE0; }
+          .eyebrow { font: 600 12px var(--f-sans); letter-spacing: .14em; text-transform: uppercase; color: #FFD9A8; }
+          h2 { font: 400 clamp(32px, 6vw, 48px)/1 var(--f-serif); color: #F6EBDD; margin: 0 0 18px; }
+        </script>
+        <figcaption>El cielo baja al 70&nbsp;% de tu scroll y casi parece quieto. Las montañas cercanas no se mueven (<code>--v: 0</code>) y suben contigo. El rango <code>exit</code> del hero empieza en el scroll 0, porque el hero ya está arriba del todo, y acaba cuando ha salido entero. La variable se lee dentro del <code>@keyframes</code>: una sola animación sirve para todas las capas.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El parallax creíble usa diferencias pequeñas y ordenadas por profundidad: lo lejano se mueve menos que lo cercano respecto a la pantalla. El barato mueve textos y fotos a velocidades aleatorias y la página parece desmontarse. Tres o cuatro capas bastan, y el titular debería irse antes que el paisaje, porque es lo primero que ya has leído.</p>
+      </div>
+
+      <h3>La escena fijada: volar hacia la torre</h3>
+      <p>Ahora junta todo: una sección alta con una <strong>línea de tiempo con nombre</strong>, un escenario <code>sticky</code> dentro y varias piezas que usan tramos distintos del rango <code>contain</code>. Es la versión solo CSS del vuelo de la web de la torre. El vídeo real usa fotogramas reales en un canvas (lo verás en la lección 09). La estructura de tiempos es esta misma.</p>
+
+      <figure class="lab" data-title="Vuela hacia la torre" data-hint="Desliza despacio dentro de la demo" data-height="540" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="vuelo">
+            <div class="escena">
+              <div class="cielo"></div><div class="noche"></div>
+              <div class="suelo"></div>
+              <div class="torre"><span class="planta"></span></div>
+              <div class="velo"></div>
+              <header class="titular"><p>Valencia · Entrega 2028</p><h1>Torre <em>Alba</em></h1></header>
+              <p class="contador"></p>
+              <aside class="ficha">
+                <p>Planta 32 · Orientación sur</p>
+                <h2>La Residencia</h2>
+                <p class="datos">248 m² · 4 dormitorios · terraza de 60 m²</p>
+                <p class="precio">Desde 3,2 M€</p>
+              </aside>
+              <p class="aviso">Desliza dentro de la demo</p>
+            </div>
+          </section>
+          <section class="despues">Siguiente capítulo: <em>las estancias</em></section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          @property --planta { syntax: "<integer>"; inherits: false; initial-value: 1; }
+          body { background: #0D0A1E; color: #F5EBDC; }
+          .vuelo { height: 420svh; view-timeline-name: --vuelo; }
+          .escena { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+          .escena > * { position: absolute; margin: 0; animation-timeline: --vuelo;
+            animation-fill-mode: both; animation-timing-function: linear; }
+          .cielo { inset: 0; background: linear-gradient(#3A2A6B, #8B5A9E 38%, #E9939A 64%, #F7C59F 80%); }
+          .noche { inset: 0; opacity: 0; background: radial-gradient(1px 1px at 20% 14%, #fff 50%, transparent),
+            radial-gradient(1px 1px at 70% 9%, #fff 50%, transparent), radial-gradient(1px 1px at 85% 24%, #fff 50%, transparent),
+            linear-gradient(#06041A, #1A1242 60%, #3A2358); }
+          .suelo { inset: 78% -10% 0; transform-origin: 50% 0;
+            background: linear-gradient(90deg, transparent 47%, #F2B57C66 49.5% 50.5%, transparent 53%), linear-gradient(#2A1F4A, #0D0A1E); }
+          .torre { left: 50%; bottom: 22%; width: clamp(64px, 12vw, 112px); height: 48svh; translate: -50% 0;
+            transform-origin: 50% 24%; clip-path: polygon(18% 0, 82% 0, 100% 5%, 100% 100%, 0 100%, 0 5%);
+            background: repeating-linear-gradient(90deg, transparent 0 15%, #241A3D 15% 20%),
+              repeating-linear-gradient(transparent 0 7px, #241A3D 7px 10px),
+              linear-gradient(90deg, #F6C98A, #E39E6C 55%, #5E4782 56%, #3E2F63); }
+          .planta { position: absolute; inset: 23% -2% auto; height: 3%; background: #FFE2B0; box-shadow: 0 0 24px #FFC37A; opacity: 0; }
+          .velo { inset: 0; background: radial-gradient(circle at 50% 50%, #0D0A1E66, #0D0A1Eee 80%); opacity: 0; }
+
+          /* Guion: cada pieza usa su propio tramo del pin */
+          .aviso    { animation-name: fuera;  animation-range: contain 0% contain 4%; }
+          .titular  { animation-name: sube;   animation-range: contain 0% contain 22%; }
+          .noche    { animation-name: luz;    animation-range: contain 8% contain 60%; }
+          .suelo    { animation-name: hunde;  animation-range: contain 5% contain 70%; }
+          .torre    { animation-name: vuela;  animation-range: contain 5% contain 72%; animation-timing-function: cubic-bezier(.55, 0, .8, .4); }
+          .planta   { animation: brilla both; animation-timeline: --vuelo; animation-range: contain 28% contain 74%; }
+          .contador { animation-name: luz, cuenta; animation-range: contain 14% contain 24%, contain 14% contain 64%; }
+          .velo     { animation-name: luz;    animation-range: contain 62% contain 80%; }
+          .ficha    { animation-name: entra;  animation-range: contain 70% contain 90%; }
+          @keyframes fuera { to { opacity: 0; } }
+          @keyframes sube { to { opacity: 0; translate: 0 -60px; } }
+          @keyframes luz { to { opacity: 1; } }
+          @keyframes brilla { 50% { opacity: 1; } }
+          @keyframes hunde { to { scale: 1.8; translate: 0 30svh; } }
+          @keyframes vuela { to { scale: 8; translate: -50% 30svh; } }
+          @keyframes cuenta { from { --planta: 1; } to { --planta: 32; } }
+          @keyframes entra { from { opacity: 0; translate: 40px 0; } }
+
+          .titular { inset: 7svh 0 auto; z-index: 1; text-align: center; font: 600 12px var(--f-sans); letter-spacing: .16em; text-transform: uppercase; }
+          h1 { font: 400 clamp(48px, 9vw, 92px)/.9 var(--f-serif); letter-spacing: 0; text-transform: none; margin-top: 10px; }
+          h1 em { color: #FFD9A8; }
+          .contador { left: 24px; top: 20px; opacity: 0; counter-reset: p var(--planta); font: 500 13px var(--f-mono); }
+          .contador::after { content: "Planta " counter(p, decimal-leading-zero) " / 48"; }
+          .ficha { right: clamp(16px, 6vw, 64px); top: 50%; margin-top: -120px; width: min(320px, 100% - 32px); padding: 26px;
+            border-radius: 14px; background: rgb(20 14 40 / .55); backdrop-filter: blur(16px); border: 1px solid #F5EBDC33; font: 500 13px var(--f-sans); }
+          .ficha h2 { font: 400 40px/1 var(--f-serif); margin: 6px 0 12px; }
+          .ficha p { margin: 0; } .datos { color: #D6C6DD; } .precio { margin-top: 16px !important; font: 400 italic 24px var(--f-serif); color: #FFD9A8; }
+          .aviso { left: 50%; bottom: 24px; translate: -50% 0; padding: 10px 18px; border-radius: 99px; background: #0D0A1E99; font: 600 13px var(--f-sans); white-space: nowrap; }
+          .despues { padding: 30svh 20px; text-align: center; font: 400 clamp(30px, 6vw, 48px) var(--f-serif); }
+          @media (max-width: 600px) {
+            .vuelo { height: 300svh; }                 /* menos recorrido de dedo */
+            .ficha { inset: auto 16px 20px; margin: 0; width: auto; }
+            @keyframes entra { from { opacity: 0; translate: 0 40px; } }
+          }
+        </script>
+        <figcaption>Lee el bloque «Guion» como un storyboard: cada línea dice en qué tramo del pin pasa algo. El cielo pasa del atardecer a la noche con una capa que solo cambia de opacidad. La torre escala desde la planta 32 (<code>transform-origin: 50% 24%</code>, donde está la franja de luz) con una curva que acelera, como un dron que se lanza. El contador es un <code>@property</code> entero animado y pintado con <code>counter()</code>.</figcaption>
+      </figure>
+
+      <details class="more">
+        <summary>Entender más: por qué el contador funciona sin JavaScript</summary>
+        <p>Una propiedad personalizada normal no se puede interpolar: el navegador no sabe qué hay entre «1» y «32». Al registrarla con <code>@property</code> y <code>syntax: "&lt;integer&gt;"</code>, pasa a ser un número que la animación interpola y redondea. Después, <code>counter-reset: p var(--planta)</code> convierte ese número en un contador de CSS, y <code>content: counter(p)</code> lo escribe. Es el mismo truco del porcentaje del visualizador.</p>
+      </details>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una escena fijada aguanta como mucho tres o cuatro «momentos»: titular, viaje, llegada. Escríbelos primero en papel con sus porcentajes, como en el bloque «Guion», y deja un respiro sin cambios al final (del 90 al 100&nbsp;%) para que el usuario pueda leer la ficha antes de que el pin se suelte. Si todo pasa a la vez, nadie entiende el viaje.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Tres reglas concretas para la escena fijada en el teléfono:</p>
+        <ul>
+          <li><strong>Mide el recorrido en <code>svh</code></strong> (<code>.vuelo { height: 300svh }</code>). Si usas <code>vh</code> o <code>dvh</code>, la sección cambia de alto cuando la barra del navegador se esconde y la animación da un salto a mitad del vuelo.</li>
+          <li><strong>El escenario, en <code>100svh</code> o <code>100dvh</code>.</strong> <code>svh</code> nunca salta, pero deja una franja al recoger la barra: pon el mismo color de fondo en la sección para que no se note. <code>dvh</code> siempre llena, pero se recalcula mientras la barra se mueve. Para escenas de imagen a sangre, <code>dvh</code> en el escenario y <code>svh</code> en la sección.</li>
+          <li><strong>Acorta.</strong> 420<code>svh</code> en el escritorio son cuatro giros de rueda; en el móvil son seis o siete golpes de pulgar. Baja a 250–300<code>svh</code> y coloca la ficha abajo, a todo el ancho, donde llega el pulgar.</li>
+        </ul>
+      </div>
+
+      <h2>Soporte, fallbacks y movimiento reducido</h2>
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p>Las animaciones vinculadas al scroll (<code>animation-timeline</code>, <code>scroll()</code>, <code>view()</code>, <code>animation-range</code>) son <strong>Baseline recién disponible desde el 27 de octubre de 2026</strong>, cuando Firefox 159 las activó por defecto. Chrome y Edge las tienen desde la 115 (<code>timeline-scope</code> desde la 116) y Safari desde la 26. En Safari 26.4 pasaron a ejecutarse en el hilo del compositor, lo que las hace más fluidas. Todavía hay mucha gente con un Firefox o un Safari anteriores, así que el fallback no es opcional.</p>
+      </div>
+
+      <p>La estrategia tiene tres capas, de fuera hacia dentro:</p>
+      <script type="text/x-code" data-lang="css" data-label="Plantilla segura para cualquier efecto de scroll">
+        /* 1. Estado normal: visible, quieto y completo. Funciona en todas partes. */
+        .foto { clip-path: inset(0 round 6px); }
+
+        /* 2. Solo si el usuario no ha pedido menos movimiento... */
+        @media (prefers-reduced-motion: no-preference) {
+          /* 3. ...y solo si el navegador entiende las líneas de tiempo */
+          @supports (animation-timeline: view()) {
+            .foto {
+              animation: abre linear both;
+              animation-timeline: view();
+              animation-range: entry 0% cover 45%;
+            }
+          }
+        }
+        @keyframes abre { from { clip-path: inset(22% 18% round 6px); } }
+      </script>
+
+      <p>Para la escena fijada, el fallback no es «sin animación», es <strong>otra composición</strong>. Si no hay soporte, quita el <code>height</code> de la sección y el <code>sticky</code>, y enseña la torre y la ficha una debajo de otra. Si el efecto es imprescindible en todos los navegadores, ese es el momento de usar GSAP ScrollTrigger (lección 08), que lo resuelve con JavaScript.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Fallback de la escena fijada">
+        @supports not (animation-timeline: view()) {
+          .vuelo { height: auto; }
+          .escena { position: relative; height: auto; display: grid; gap: 2rem; padding-block: 4rem; }
+          .escena > * { position: static; opacity: 1; }
+          .noche, .velo, .contador, .aviso { display: none; }
+        }
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Animar <code>opacity</code>, <code>transform</code>, <code>scale</code> o <code>translate</code> en una línea de tiempo de scroll puede ir en el compositor, sin bloquear la página. <code>clip-path</code>, <code>padding</code>, <code>background</code> o una variable registrada se calculan en el hilo principal en cada fotograma. Están bien en dos o tres elementos, no en cuarenta. Si notas tirones, pasa a <code>transform</code> lo que puedas.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Has escrito <code>.card { animation-timeline: view(); animation: aparece linear both; }</code> y la tarjeta no se anima. ¿Por qué?</p>
+        <ol>
+          <li>Falta <code>animation-duration</code>.</li>
+          <li><code>view()</code> necesita un nombre.</li>
+          <li>El shorthand <code>animation</code> va después y resetea <code>animation-timeline</code> a <code>auto</code>.</li>
+        </ol>
+        <p class="why">El shorthand <code>animation</code> también toca <code>animation-timeline</code>. Escríbelo primero y la línea de tiempo después. No hace falta duración, y <code>view()</code> funciona sin nombre.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Con la inercia del dedo (el «fling» de iOS y Android) la página sigue moviéndose después de que levantas el dedo. Estas animaciones van atadas a la posición, así que siguen la inercia sin tirones mientras animes propiedades del compositor. Es su gran ventaja frente a un listener de <code>scroll</code> en JavaScript, que en el móvil llega tarde. Y prueba siempre en un teléfono real: el simulador de DevTools no reproduce la barra de direcciones ni la inercia.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li><code>animation-timeline</code> cambia el reloj: <code>scroll()</code> sigue el scroll de un contenedor y <code>view()</code>, el paso de un elemento por la pantalla. Escríbelo siempre después del shorthand <code>animation</code>.</li>
+          <li><code>animation-range</code> elige el tramo (<code>entry</code>, <code>contain</code>, <code>exit</code>, <code>cover</code> y porcentajes). Las líneas de tiempo con nombre y <code>timeline-scope</code> dejan que un elemento se anime con el recorrido de otro.</li>
+          <li>Estado normal visible, efectos dentro de <code>@supports</code> y <code>prefers-reduced-motion</code>, y en el móvil recorridos más cortos medidos en <code>svh</code>.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Rehaz la portada de un proyecto de la agencia con una escena fijada de tres momentos: titular que se va (0–20&nbsp;%), imagen principal que escala desde un punto concreto (10–70&nbsp;%) y ficha que entra (70–90&nbsp;%). Escribe primero el bloque «Guion» con los rangos, después el resto del CSS. Pruébalo en tu móvil con la sección en <code>300svh</code> y en el escritorio con <code>420svh</code>, y añade el fallback de <code>@supports not</code>.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

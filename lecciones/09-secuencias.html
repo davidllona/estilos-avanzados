@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secuencias de imágenes y vídeo | Hora azul</title>
+<meta name="description" content="La técnica de las webs de scroll cinematográfico: fotogramas en un canvas o un vídeo controlados por el scroll, con carga progresiva y versión móvil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="secuencias">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Secuencias de imágenes y vídeo</h1>
+    <p class="lede">El truco de la web de la torre: no hay 3D en tiempo real, hay 120 fotos y un scroll que decide cuál se ve. Aquí lo construyes con la torre de este cuaderno.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Cuando la cámara «vuela» desde el agua hasta una ventana de la planta 18, lo que pasa en realidad es muy simple: hay una carpeta con fotogramas numerados (<code>0001.webp</code> … <code>0120.webp</code>) y, según cuánto has bajado, se pinta uno u otro en un <code>&lt;canvas&gt;</code> fijo. El scroll hace de cabezal de vídeo.</p>
+      <p>Los fotogramas que usas en esta lección son los de la landing final. Los he renderizado con Three.js, pero el proceso es idéntico con imágenes o vídeos generados con IA (lo verás en la lección de recursos).</p>
+
+      <h2>La idea en 20 líneas</h2>
+      <p>Tres piezas: una sección muy alta que da recorrido de scroll, un escenario <code>position: sticky</code> que se queda fijo mientras recorres esa altura, y un poco de JS que convierte el progreso (0 a 1) en un número de fotograma.</p>
+
+      <figure class="lab" data-title="Fotogramas en un canvas" data-hint="Desliza dentro de la demo" data-height="460" data-height-mobile="620" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="track">
+            <div class="stage">
+              <canvas></canvas>
+              <p class="hud">Fotograma <b id="n">1</b> / 120</p>
+              <p class="cue">Desliza dentro de la demo</p>
+            </div>
+          </section>
+          <p class="after">Fin del recorrido</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ede6; }
+          .track { height: 500vh; }               /* recorrido: 5 pantallas */
+          .stage { position: sticky; top: 0; height: 100vh; }
+          canvas { width: 100%; height: 100%; display: block; }
+          .hud { position: absolute; left: 16px; bottom: 12px; margin: 0; font: 500 13px var(--f-mono); font-variant-numeric: tabular-nums; }
+          .cue { position: absolute; right: 16px; bottom: 12px; margin: 0; font-size: 13px; opacity: .7; }
+          .after { height: 60vh; display: grid; place-items: center; margin: 0; font: italic 28px var(--f-serif); }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const N = 120;
+          const canvas = document.querySelector('canvas');
+          const ctx = canvas.getContext('2d');
+          const track = document.querySelector('.track');
+          const frames = [];
+
+          // 1. Precargar todas las imágenes
+          for (let i = 0; i < N; i++) {
+            const img = new Image();
+            img.src = `../landing/frames/desk/${String(i + 1).padStart(4, '0')}.webp`;
+            frames.push(img);
+          }
+
+          // 2. Pintar un fotograma "a lo cover" en el canvas
+          function draw(i) {
+            const img = frames[i];
+            if (!img.complete) return;
+            const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+            const w = img.naturalWidth * s, h = img.naturalHeight * s;
+            ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+            n.textContent = i + 1;
+          }
+
+          // 3. Progreso del scroll dentro de la sección (0 → 1) = fotograma
+          function update() {
+            const r = track.getBoundingClientRect();
+            const p = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+            draw(Math.round(p * (N - 1)));
+          }
+          function resize() {
+            canvas.width = canvas.clientWidth * devicePixelRatio;
+            canvas.height = canvas.clientHeight * devicePixelRatio;
+            update();
+          }
+          addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+          addEventListener('resize', resize);
+          frames[0].onload = resize;
+        </script>
+        <figcaption>Fíjate en el número: es el único dato que cambia. Todo lo demás (precarga, «cover», resolución) es preparar el terreno para que ese número se vea fluido.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La sensación de lujo depende del <strong>ritmo</strong>, no de la cantidad de fotogramas. 120 fotogramas en 4–5 pantallas de scroll se sienten como un plano de cine. Si estiras la misma secuencia a 10 pantallas, cada movimiento de rueda apenas cambia la imagen y parece que la web va lenta.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: por qué un canvas y no un &lt;img&gt; cambiando el src</summary>
+        <p>Cambiar <code>img.src</code> 60 veces por segundo obliga al navegador a decodificar y a recalcular la imagen en cada cambio, y en Safari provoca parpadeos. Con <code>drawImage</code> sobre imágenes ya cargadas y decodificadas, pintar es casi gratis: solo copias píxeles. Además el canvas te deja hacer el «cover» tú mismo y dibujar encima (degradados, viñetas) en el mismo paso.</p>
+      </details>
+
+      <h2>Cargar sin hacer esperar</h2>
+      <p>120 imágenes de 30 KB son unos 3,5 MB. Nadie quiere ver un 0 % durante diez segundos. El truco profesional: cargar primero <strong>uno de cada ocho</strong> fotogramas. Con 16 imágenes la secuencia ya funciona «a saltos», y mientras el usuario lee el titular se rellenan los huecos. Al pintar, si el fotograma exacto no ha llegado, usas el cargado más cercano.</p>
+
+      <figure class="lab" data-title="Carga por pasadas" data-hint="Pulsa cargar y arrastra el control" data-height="420" data-height-mobile="560" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="wrap">
+            <canvas></canvas>
+            <div class="panel">
+              <div class="grid" id="grid"></div>
+              <label>Cabezal <input id="scrub" type="range" min="0" max="119" value="0"></label>
+              <div class="row">
+                <button id="go">Cargar (red lenta simulada)</button>
+                <span id="status">0 / 120</span>
+              </div>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ede6; padding: 14px; }
+          .wrap { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; height: calc(100vh - 28px); }
+          canvas { width: 100%; height: 100%; border-radius: 8px; background: #1d1838; }
+          .panel { display: grid; align-content: center; gap: 14px; }
+          .grid { display: grid; grid-template-columns: repeat(15, 1fr); gap: 3px; }
+          .grid i { aspect-ratio: 1; border-radius: 2px; background: #2c2650; transition: background .2s; }
+          .grid i.ok { background: #ffb547; }
+          .grid i.first.ok { background: #fff1d6; }
+          .grid i.now { outline: 2px solid #fff; outline-offset: 1px; }
+          label { display: grid; gap: 6px; font-size: 13px; }
+          .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+          button { background: #ffb547; color: #120f24; border: 0; border-radius: 99px; padding: 11px 16px; font-weight: 600; cursor: pointer; }
+          #status { font: 500 13px var(--f-mono); font-variant-numeric: tabular-nums; }
+          @media (max-width: 560px) { .wrap { grid-template-columns: 1fr; grid-template-rows: 45% 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const N = 120, frames = new Array(N);
+          const canvas = document.querySelector('canvas'), ctx = canvas.getContext('2d');
+          grid.innerHTML = Array.from({ length: N }, (_, i) => `<i class="${i % 8 === 0 ? 'first' : ''}"></i>`).join('');
+          const cells = [...grid.children];
+          const url = (i) => `../landing/frames/desk/${String(i + 1).padStart(4, '0')}.webp?demo=${Date.now()}`;
+          const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+          function load(i) {
+            return new Promise((res) => {
+              const img = new Image();
+              img.onload = async () => { await wait(60 + Math.random() * 120); frames[i] = img; cells[i].classList.add('ok'); count(); paint(); res(); };
+              img.src = url(i);
+            });
+          }
+          function count() { status.textContent = frames.filter(Boolean).length + ' / ' + N; }
+
+          // El fotograma pedido o, si no está, el cargado más cercano
+          function nearest(i) {
+            for (let d = 0; d < N; d++) { if (frames[i - d]) return frames[i - d]; if (frames[i + d]) return frames[i + d]; }
+          }
+          function paint() {
+            const i = +scrub.value, img = nearest(i);
+            cells.forEach((c, k) => c.classList.toggle('now', k === i));
+            canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+            if (!img) { ctx.fillStyle = '#8f88b8'; ctx.font = '14px system-ui'; ctx.fillText('Pulsa «Cargar» para empezar', 16, 28); return; }
+            const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+            ctx.drawImage(img, (canvas.width - img.naturalWidth * s) / 2, (canvas.height - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
+          }
+          go.onclick = async () => {
+            go.disabled = true; frames.fill(undefined); cells.forEach((c) => c.classList.remove('ok'));
+            const first = [], rest = [];
+            for (let i = 0; i < N; i++) (i % 8 === 0 ? first : rest).push(i);
+            await Promise.all(first.map(load));            // pasada 1: 16 fotogramas
+            for (let k = 0; k < rest.length; k += 8)        // pasada 2: el resto, en lotes
+              await Promise.all(rest.slice(k, k + 8).map(load));
+            go.disabled = false;
+          };
+          scrub.oninput = paint; paint();
+        </script>
+        <figcaption>Las casillas claras son la primera pasada. Arrastra el cabezal mientras carga: la imagen nunca se queda en negro, solo va ganando suavidad.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En 4G la primera pasada es lo único que importa: con 16 imágenes el usuario ya puede empezar. Lotes pequeños (8–12 a la vez) para no saturar la conexión, y si <code>navigator.connection?.saveData</code> es verdadero, enseña solo el primer y el último fotograma con un fundido. Nadie con el ahorro de datos activado quiere bajarse 4 MB de torre.</p>
+      </div>
+
+      <h2>Vídeo controlado por el scroll</h2>
+      <p>La alternativa a las imágenes es un único vídeo al que le mueves <code>currentTime</code>. Pesa menos (un vídeo comprime mejor que 120 imágenes sueltas) y se prepara con un solo archivo. A cambio, saltar a un instante concreto del vídeo exige que ese instante sea un fotograma clave.</p>
+
+      <figure class="lab" data-title="currentTime según el scroll" data-hint="Desliza dentro de la demo" data-height="440" data-height-mobile="560" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="track">
+            <div class="stage">
+              <video src="../assets/media/torre-scrub.mp4" muted playsinline preload="auto"></video>
+              <p class="hud"><span id="t">0.00</span> s</p>
+            </div>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ede6; }
+          .track { height: 450vh; }
+          .stage { position: sticky; top: 0; height: 100vh; }
+          video { width: 100%; height: 100%; object-fit: cover; display: block; }
+          .hud { position: absolute; left: 16px; bottom: 12px; margin: 0; font: 500 13px var(--f-mono); font-variant-numeric: tabular-nums; background: rgb(0 0 0 / .35); padding: 4px 8px; border-radius: 6px; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const video = document.querySelector('video');
+          const track = document.querySelector('.track');
+          let target = 0, shown = 0;
+
+          function progress() {
+            const r = track.getBoundingClientRect();
+            return Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+          }
+          addEventListener('scroll', () => { target = progress() * (video.duration || 0); }, { passive: true });
+
+          // Suavizado: nos acercamos al objetivo un 15 % por frame (como un scrub de GSAP)
+          (function loop() {
+            shown += (target - shown) * 0.15;
+            if (Math.abs(target - shown) > 0.001 && video.readyState >= 2) video.currentTime = shown;
+            t.textContent = shown.toFixed(2);
+            requestAnimationFrame(loop);
+          })();
+        </script>
+        <figcaption>Este vídeo está codificado con <code>-g 1</code>: todos los fotogramas son clave, por eso el salto es instantáneo. Con un vídeo normal (un fotograma clave cada pocos segundos) el navegador tendría que decodificar desde el último clave en cada salto y verías tirones.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="txt" data-label="Cómo se codificó el vídeo de la demo (ffmpeg)">
+        ffmpeg -framerate 30 -i frames/%04d.png \
+          -vf "scale=960:540,format=yuv420p" \
+          -c:v libx264 -crf 24 -g 1 -preset slow \
+          -movflags +faststart -an torre-scrub.mp4
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>En iOS el vídeo tiene que llevar <code>muted</code> y <code>playsinline</code>, y Safari puede no cargar datos hasta que hay una interacción: llama a <code>video.load()</code> o haz un <code>play().then(() =&gt; pause())</code> tras el primer toque. Por eso muchas webs de scroll cinematográfico usan imágenes en móvil aunque usen vídeo en escritorio.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Técnica</th><th>Peso</th><th>Fluidez</th><th>Cuándo</th></tr></thead>
+          <tbody>
+            <tr><td>Fotogramas en canvas</td><td>Medio-alto (3–8 MB)</td><td>Perfecta en todos los navegadores</td><td>La opción segura, sobre todo en móvil</td></tr>
+            <tr><td>Vídeo con <code>-g 1</code></td><td>Bajo-medio (1–3 MB)</td><td>Muy buena en escritorio, irregular en iOS</td><td>Secuencias largas en escritorio</td></tr>
+            <tr><td>3D en tiempo real</td><td>El de la librería + modelos</td><td>Depende de la GPU del usuario</td><td>Cuando hay que interactuar (girar, elegir estancias)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Tienes un vídeo normal de 6 segundos con un fotograma clave cada 2 segundos y lo controlas con el scroll. ¿Qué notarás?</p>
+        <ol>
+          <li>Que va perfecto, porque el navegador interpola entre fotogramas clave.</li>
+          <li>Tirones al saltar, sobre todo hacia atrás, porque cada salto obliga a decodificar desde el último fotograma clave.</li>
+          <li>Que solo se ven tres imágenes, una por fotograma clave.</li>
+        </ol>
+        <p class="why">El vídeo sí puede mostrar cualquier instante, pero para llegar a él decodifica desde el clave anterior. Con <code>-g 1</code> cada fotograma es clave y el salto es inmediato, a cambio de un archivo algo más pesado.</p>
+      </div>
+
+      <h2>La versión de producción con GSAP</h2>
+      <p>En la landing no calculo el progreso a mano: uso ScrollTrigger con <code>scrub</code>, que suaviza el movimiento y además me deja meter en la misma timeline los textos que aparecen y desaparecen. Un único «reloj» para imagen y tipografía: así nunca se desincronizan.</p>
+
+      <figure class="lab" data-title="Secuencia y textos en una timeline" data-hint="Desliza dentro de la demo" data-height="480" data-height-mobile="640" data-libs="gsap scrolltrigger" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="arrival">
+            <div class="stage">
+              <canvas></canvas>
+              <div class="shade"></div>
+              <h1 class="c1">Vivir a la altura<br>de la hora azul</h1>
+              <p class="c2">Treinta plantas sobre el agua.</p>
+              <p class="c3"><span>Planta</span> 18</p>
+              <i class="bar"></i>
+            </div>
+          </section>
+          <p class="end">Aquí empezaría la siguiente sección</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #15112b; color: #f3eee3; }
+          .arrival { height: 400vh; }
+          .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+          canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+          .shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(21 17 43 / .7), transparent 60%); }
+          .stage h1, .stage p { position: absolute; left: 6%; bottom: 14%; margin: 0; font: 400 clamp(30px, 6vw, 64px)/.95 var(--f-serif); }
+          .c2, .c3 { opacity: 0; }
+          .c3 { color: #ffb547; font-size: clamp(56px, 12vw, 120px); }
+          .c3 span { font: 400 14px var(--f-sans); color: #d9cfc0; vertical-align: middle; }
+          .bar { position: absolute; left: 6%; right: 6%; bottom: 6%; height: 1px; background: #ffb547; transform-origin: left; transform: scaleX(0); }
+          .end { height: 50vh; display: grid; place-items: center; margin: 0; font-size: 14px; opacity: .6; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          gsap.registerPlugin(ScrollTrigger);
+          const N = 120, canvas = document.querySelector('canvas'), ctx = canvas.getContext('2d');
+          // En vertical usamos la secuencia 9:16, con su propio encuadre
+          const set = matchMedia('(max-aspect-ratio: 1/1)').matches ? 'mob' : 'desk';
+          const frames = Array.from({ length: N }, (_, i) => {
+            const img = new Image();
+            img.src = `../landing/frames/${set}/${String(i + 1).padStart(4, '0')}.webp`;
+            return img;
+          });
+          const seq = { f: 0 };
+          function draw() {
+            const img = frames[Math.round(seq.f)]; if (!img.complete) return;
+            const s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+            ctx.drawImage(img, (canvas.width - img.naturalWidth * s) / 2, (canvas.height - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
+          }
+          function size() { canvas.width = innerWidth; canvas.height = innerHeight; draw(); }
+          frames[0].onload = size; addEventListener('resize', size);
+
+          // Una sola timeline: el fotograma y los textos comparten el mismo progreso
+          gsap.timeline({ defaults: { ease: 'none' },
+            scrollTrigger: { trigger: '.arrival', start: 'top top', end: 'bottom bottom', scrub: 0.6 } })
+            .to(seq, { f: N - 1, duration: 1, onUpdate: draw }, 0)
+            .to('.bar', { scaleX: 1, duration: 1 }, 0)
+            .to('.c1', { autoAlpha: 0, y: -30, duration: 0.1 }, 0.15)
+            .fromTo('.c2', { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.1 }, 0.35)
+            .to('.c2', { autoAlpha: 0, duration: 0.08 }, 0.6)
+            .fromTo('.c3', { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.1 }, 0.8);
+        </script>
+        <figcaption>Pulsa «Ver en móvil»: la demo detecta la pantalla vertical y carga la otra secuencia, renderizada en 9:16 con la torre centrada. No es la misma imagen recortada.</figcaption>
+      </figure>
+
+      <p>La timeline dura 1 a propósito: así las posiciones (<code>0.15</code>, <code>0.35</code>, <code>0.8</code>) se leen directamente como «al 15 % del recorrido». Es la forma más cómoda de coreografiar una sección larga.</p>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Tres cambios, siempre: <strong>secuencia vertical propia</strong> (recortar la de 16:9 deja la torre diminuta o cortada), <strong>menos recorrido</strong> (300vh en vez de 400–500vh, el pulgar se cansa) y el escenario con <code>height: 100svh</code> para que la barra del navegador no haga saltar la imagen. En la landing además desactivo Lenis en táctil: el scroll nativo del móvil ya es suave.</p>
+      </div>
+
+      <script type="text/x-code" data-lang="css" data-label="Escenario fijo que no salta en el móvil">
+        .arrival { height: 420vh; }
+        .arrival-stage {
+          position: sticky; top: 0;
+          height: 100vh;    /* respaldo */
+          height: 100svh;   /* alto «pequeño»: con la barra del navegador visible */
+          overflow: hidden;
+        }
+        @media (max-width: 900px) {
+          .arrival { height: 300vh; }
+        }
+      </script>
+
+      <h2>Memoria, resolución y DPR</h2>
+      <p>Cada imagen decodificada ocupa <strong>ancho × alto × 4 bytes</strong> en memoria, pese lo que pese el WebP. 120 fotogramas de 1280 × 720 son unos 440 MB si los tienes todos decodificados a la vez. Los navegadores gestionan parte de eso, pero en un Android de gama media es fácil que la pestaña se recargue sola.</p>
+      <ul>
+        <li><strong>1280 × 720 es suficiente</strong> en escritorio para una imagen a pantalla completa con viñeta y texto encima. Nadie se para a mirar píxeles mientras hace scroll.</li>
+        <li>En móvil, <strong>720 × 1280</strong> y no más.</li>
+        <li>Limita el DPR del canvas a 2: <code>Math.min(devicePixelRatio, 2)</code>. A 3× pintas el doble de píxeles sin diferencia visible.</li>
+        <li>Si la secuencia es muy larga (300+ fotogramas), descarga y libera por tramos en vez de tenerla toda en memoria.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Calcula siempre con el teléfono más modesto de tu público, no con el tuyo: 120 fotogramas de 720 × 1280 son unos 440 MB decodificados. Si la secuencia es larga, sirve en móvil la mitad de fotogramas (uno sí y uno no) en la misma altura de scroll: con el dedo nadie nota la diferencia y la memoria baja a la mitad.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Tu secuencia de 150 fotogramas va fluida en tu Mac pero en el Android de un cliente la pestaña se recarga sola a mitad de scroll. ¿Qué es lo más probable?</p>
+        <ol>
+          <li>Que el WebP no es compatible con Android.</li>
+          <li>Que falta <code>will-change: transform</code> en el canvas.</li>
+          <li>Que los fotogramas son demasiado grandes y se agota la memoria al tenerlos todos decodificados.</li>
+        </ol>
+        <p class="why">El peso en disco no cuenta: en memoria cada fotograma ocupa ancho × alto × 4. Baja la resolución en móvil (secuencia propia de 720 px de ancho) y, si hace falta, reduce el número de fotogramas.</p>
+      </div>
+
+      <h2>Accesibilidad y movimiento reducido</h2>
+      <p>Una cámara volando hacia un edificio es justo el tipo de movimiento que marea a quien tiene trastornos vestibulares. Con <code>prefers-reduced-motion: reduce</code> la sección deja de ser un recorrido: se queda una imagen fija con el texto, sin la altura extra.</p>
+      <script type="text/x-code" data-lang="css">
+        @media (prefers-reduced-motion: reduce) {
+          .arrival { height: auto; }
+          .arrival-stage { position: relative; }
+          .phase-2, .phase-3 { display: none; }   /* solo el titular principal */
+        }
+      </script>
+      <p>Y en el JS no creas la timeline: pinta el primer fotograma y listo. El canvas lleva <code>aria-hidden="true"</code> porque es decorativo; el contenido real (titulares, textos) está en HTML encima.</p>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Muchos usuarios de iPhone tienen activado «Reducir movimiento» sin saberlo (viene con el modo de bajo consumo en algunos casos). Comprueba que la versión estática también se ve bonita: es la que verá más gente de la que crees.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Una sección alta, un escenario <code>sticky</code> y un número de fotograma según el progreso: esa es toda la técnica.</li>
+          <li>Carga por pasadas (1 de cada 8 primero) y pinta siempre el fotograma más cercano disponible.</li>
+          <li>En móvil, secuencia vertical propia, menos recorrido, <code>100svh</code> y cuidado con la memoria.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Graba 4 segundos con el móvil caminando hacia la puerta de la agencia, extrae 90 fotogramas con ffmpeg (verás el comando en la lección de recursos) y monta con la demo de GSAP una portada en la que el scroll te lleva hasta la puerta. Haz dos versiones, horizontal y vertical, y pruébala en tu teléfono.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

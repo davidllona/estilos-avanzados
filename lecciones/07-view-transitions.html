@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>View Transitions | Hora azul</title>
+<meta name="description" content="La API de View Transitions: document.startViewTransition, elementos compartidos con view-transition-name, pseudo-elementos personalizados, tipos, revelado circular de tema, rejillas que se reordenan y transiciones entre páginas.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="view-transitions">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>View Transitions</h1>
+    <p class="lede">El navegador hace una foto de antes, otra de después y anima entre las dos. Así consigues que una miniatura se convierta en ficha, que el tema se revele en círculo o que una rejilla se reordene sin saltos.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Cuando cambias el DOM, el cambio es instantáneo: la lista desaparece y aparece la ficha. En una app nativa, en cambio, la foto que tocas <em>crece</em> hasta convertirse en la cabecera de la pantalla siguiente. Esa continuidad es la que hace que una interfaz se sienta cara.</p>
+      <p>La API de <strong>View Transitions</strong> resuelve esto sin calcular posiciones. Tú cambias el DOM como siempre y el navegador anima la diferencia. En la web de la torre es justo el paso de «clic en la planta» a «panel de la residencia».</p>
+
+      <h2>Una foto antes, otra después</h2>
+      <p>Todo empieza con una función. Le pasas otra función que actualiza el DOM, y el navegador hace lo siguiente:</p>
+      <ol>
+        <li>Captura la página tal como está (la vista <em>vieja</em>).</li>
+        <li>Ejecuta tu función y deja que el DOM cambie.</li>
+        <li>Captura la página nueva (la vista <em>nueva</em>).</li>
+        <li>Crea un árbol de pseudo-elementos encima de la página y anima de una captura a la otra. Por defecto es un fundido de 0,25&nbsp;s.</li>
+      </ol>
+
+      <figure class="lab" data-title="Carta de mediodía y de noche" data-hint="Cambia de carta con y sin transición" data-height="520" data-height-mobile="600">
+        <script type="text/x-demo" data-lang="html">
+          <div class="carta">
+            <header>
+              <p class="marca">Brasa Marina · Grau de Castelló</p>
+              <div class="turnos" role="group" aria-label="Turno">
+                <button data-t="dia" aria-pressed="true">Mediodía</button>
+                <button data-t="noche" aria-pressed="false">Noche</button>
+              </div>
+            </header>
+            <h1 id="titulo"></h1>
+            <ul id="platos"></ul>
+            <label class="vt"><input type="checkbox" id="usarVT" checked> Usar View Transition</label>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F3EEE3; color: #1B1712; }
+          body.noche { background: #14110F; color: #F0E6D6; }
+          .carta { max-width: 640px; margin: 0 auto; padding: 26px clamp(18px, 5vw, 40px); }
+          header { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center; }
+          .marca { margin: 0; font: 600 12px var(--f-sans); letter-spacing: .14em; text-transform: uppercase; color: #B4532A; }
+          .turnos { display: flex; padding: 4px; border-radius: 99px; border: 1px solid currentColor; }
+          .turnos button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 99px; background: none;
+            color: inherit; font: 500 14px var(--f-sans); cursor: pointer; }
+          .turnos [aria-pressed="true"] { background: #B4532A; color: #fff; }
+          h1 { font: 400 clamp(40px, 9vw, 68px)/.95 var(--f-serif); margin: 26px 0 18px; }
+          h1 em { color: #B4532A; }
+          ul { list-style: none; margin: 0; padding: 0; }
+          li { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 14px 0; border-top: 1px solid rgb(127 110 90 / .3); }
+          li b { font: 400 22px var(--f-serif); }
+          li span { font: 500 15px var(--f-sans); }
+          li small { grid-column: 1 / -1; font: 400 14px var(--f-sans); opacity: .65; }
+          .vt { display: flex; gap: 10px; align-items: center; min-height: 44px; margin-top: 12px; font: 500 13px var(--f-sans); opacity: .75; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const cartas = {
+            dia:   { t: 'Arroces <em>de mediodía</em>', p: [['Arroz a banda', '19 €', 'Fumet de galera, alioli de la casa'],
+                     ['Arroz negro con sepia', '21 €', 'Sepia de lonja, tinta y ñora'], ['Ensalada de tomate valenciano', '12 €', 'Ventresca, cebolla tierna']] },
+            noche: { t: 'Brasa <em>de noche</em>', p: [['Lubina a la brasa', '28 €', 'Limón asado, hinojo'],
+                     ['Gamba roja de Dénia', '34 €', 'Sal gruesa y aceite de la Serra'], ['Tarta de naranja amarga', '9 €', 'Helado de leche merengada']] },
+          };
+          function pintar(turno) {
+            const c = cartas[turno];
+            titulo.innerHTML = c.t;
+            platos.innerHTML = c.p.map(([n, pr, d]) => `<li><b>${n}</b><span>${pr}</span><small>${d}</small></li>`).join('');
+            document.body.classList.toggle('noche', turno === 'noche');
+            document.querySelectorAll('.turnos button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.t === turno)));
+          }
+          // El patrón de siempre: si no hay soporte (o no se quiere), se cambia sin animar
+          function conTransicion(actualizar) {
+            if (!document.startViewTransition || !usarVT.checked) return actualizar();
+            document.startViewTransition(actualizar);
+          }
+          document.querySelectorAll('.turnos button').forEach((b) =>
+            b.addEventListener('click', () => conTransicion(() => pintar(b.dataset.t))));
+          pintar('dia');
+        </script>
+        <figcaption>Desmarca la casilla y cambia de turno: el salto es seco. Márcala y el cambio de colores y de platos se funde. No hemos escrito ni una línea de animación: el fundido es el comportamiento por defecto de la API.</figcaption>
+      </figure>
+
+      <p>La función <code>conTransicion()</code> es lo que vas a copiar en todos los proyectos. Si el navegador no tiene la API, el cambio ocurre igual, sin animación. Así la mejora es progresiva: nadie se queda sin la funcionalidad.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="La envoltura segura">
+        function conTransicion(actualizar) {
+          if (!document.startViewTransition) return actualizar();
+          const t = document.startViewTransition(actualizar);
+          t.finished.catch(() => {});   // si se interrumpe, que no ensucie la consola
+          return t;
+        }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El fundido por defecto ya es mejor que nada, pero no es la razón por la que existe la API. Donde brilla es en la <strong>continuidad</strong>: el mismo objeto se mueve de un sitio a otro. Úsala para cambios de estado que el usuario provoca (pestañas, filtros, abrir una ficha). Para cosas que pasan solas, como una notificación o un contador, basta una transición CSS normal.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Mientras dura la transición, la página no responde a toques: los pseudo-elementos están encima de todo. Con 0,25&nbsp;s no se nota. Con 0,8&nbsp;s el usuario toca dos veces y la segunda se pierde. En el móvil, mantén las transiciones de interfaz entre 0,2 y 0,35&nbsp;s y deja las largas para los momentos en que el usuario mira, no en los que actúa.</p>
+      </div>
+
+      <h2>El mismo objeto en dos sitios: view-transition-name</h2>
+      <p>Si dos elementos, uno en la vista vieja y otro en la nueva, tienen el mismo <code>view-transition-name</code>, el navegador los trata como <strong>el mismo objeto</strong>. Interpola su posición y su tamaño, y funde su contenido. Es el efecto «la miniatura se convierte en la foto grande».</p>
+
+      <figure class="lab" data-title="De la planta a la residencia" data-hint="Toca una planta y vuelve" data-height="520" data-height-mobile="640" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="app">
+            <header><p>Torre Alba · Disponibilidad</p><h1>Elige <em>tu planta</em></h1></header>
+            <ul class="lista"></ul>
+            <article class="detalle" aria-live="polite">
+              <div class="grande"></div>
+              <div class="texto">
+                <p class="eyebrow"></p>
+                <h2></h2>
+                <dl></dl>
+                <p class="precio"></p>
+                <div class="acciones"><button class="volver">Volver</button><button class="cta">Reservar visita</button></div>
+              </div>
+            </article>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120E22; color: #F3EADB; }
+          .app { max-width: 760px; margin: 0 auto; padding: 22px clamp(16px, 5vw, 36px); }
+          header p, .eyebrow { margin: 0; font: 600 12px var(--f-sans); letter-spacing: .14em; text-transform: uppercase; color: #E7B47C; }
+          h1 { font: 400 clamp(36px, 7vw, 56px)/1 var(--f-serif); margin: 8px 0 18px; } h1 em { color: #E7B47C; }
+          .lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+          .lista button { width: 100%; display: grid; grid-template-columns: 76px 1fr auto; gap: 16px; align-items: center; padding: 10px;
+            border: 1px solid #ffffff1c; border-radius: 14px; background: #1B1631; color: inherit; text-align: left; cursor: pointer; }
+          .lista button:hover { border-color: #E7B47C88; }
+          .mini, .grande { background: var(--g); border-radius: 10px; }
+          .mini { aspect-ratio: 1; }
+          .nom { display: block; width: fit-content; font: 400 24px/1.1 var(--f-serif); }
+          .lista small { font: 500 13px var(--f-sans); color: #B9AECB; }
+          .lista em { font: 500 14px var(--f-sans); font-style: normal; color: #E7B47C; }
+
+          /* Solo una vista existe a la vez: así no hay nombres duplicados */
+          .detalle, .abierto .lista, .abierto header { display: none; }
+          .abierto .detalle { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; align-items: center; }
+          .abierto .grande { view-transition-name: foto; aspect-ratio: 4/5; border-radius: 18px; }
+          .abierto .detalle h2 { view-transition-name: nombre; }
+          .detalle h2 { font: 400 clamp(40px, 7vw, 60px)/1 var(--f-serif); margin: 8px 0 16px; width: fit-content; }
+          dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 0; font: 400 14px var(--f-sans); }
+          dt { color: #B9AECB; } dd { margin: 0; }
+          .precio { font: 400 italic 28px var(--f-serif); color: #E7B47C; margin: 18px 0; }
+          .acciones { display: flex; gap: 10px; }
+          .acciones button { min-height: 44px; padding: 0 20px; border-radius: 99px; border: 1px solid #F3EADB55;
+            background: none; color: inherit; font: 500 14px var(--f-sans); cursor: pointer; }
+          .acciones .cta { background: #E7B47C; color: #120E22; border-color: transparent; }
+
+          /* La foto cambia de proporción: que recorte en vez de deformarse */
+          ::view-transition-old(foto), ::view-transition-new(foto) { height: 100%; object-fit: cover; }
+          ::view-transition-group(foto), ::view-transition-group(nombre) { animation-duration: .45s;
+            animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+          @media (max-width: 560px) {
+            .abierto .detalle { grid-template-columns: 1fr; gap: 16px; }
+            .abierto .grande { aspect-ratio: 16/10; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const plantas = [
+            { n: 'Estudio Jardín', p: 12, m: 78, d: 1, o: 'Este', pr: '690.000 €', g: 'linear-gradient(160deg, #7FA38A, #2E4A3E)' },
+            { n: 'Residencia Norte', p: 24, m: 186, d: 3, o: 'Norte', pr: '1,9 M€', g: 'linear-gradient(160deg, #8FA3C9, #3B3F6E)' },
+            { n: 'La Residencia', p: 32, m: 248, d: 4, o: 'Sur', pr: '3,2 M€', g: 'linear-gradient(160deg, #F6C98A, #C0627A 55%, #3A2A6B)' },
+            { n: 'Ático Alba', p: 48, m: 410, d: 5, o: 'Sur y oeste', pr: '6,8 M€', g: 'linear-gradient(160deg, #F2A07B, #7A3E6E 60%, #1D1440)' },
+          ];
+          const $ = (s) => document.querySelector(s), lista = $('.lista');
+          lista.innerHTML = plantas.map((x, i) => `<li><button data-i="${i}"><i class="mini" style="--g:${x.g}"></i>
+            <span><small>Planta ${x.p} · ${x.m} m²</small><b class="nom">${x.n}</b></span><em>${x.pr}</em></button></li>`).join('');
+
+          function transicion(actualizar) {
+            if (!document.startViewTransition) return actualizar();
+            return document.startViewTransition(actualizar);
+          }
+          // Pone (o quita) los nombres en la miniatura y el título de la fila elegida
+          const nombrar = (boton, si) => {
+            boton.querySelector('.mini').style.viewTransitionName = si ? 'foto' : '';
+            boton.querySelector('.nom').style.viewTransitionName = si ? 'nombre' : '';
+          };
+          let actual;
+          lista.addEventListener('click', (e) => {
+            const b = e.target.closest('button'); if (!b) return;
+            actual = b; const x = plantas[b.dataset.i];
+            nombrar(b, true);                                 // vista vieja: la fila tiene los nombres
+            transicion(() => {
+              nombrar(b, false);                              // vista nueva: los tiene la ficha
+              $('.grande').style.setProperty('--g', x.g);
+              $('.eyebrow').textContent = `Planta ${x.p} · Orientación ${x.o.toLowerCase()}`;
+              $('.detalle h2').textContent = x.n;
+              $('dl').innerHTML = `<dt>Superficie</dt><dd>${x.m} m²</dd><dt>Dormitorios</dt><dd>${x.d}</dd><dt>Orientación</dt><dd>${x.o}</dd>`;
+              $('.precio').textContent = 'Desde ' + x.pr;
+              document.body.classList.add('abierto');
+            });
+          });
+          $('.volver').addEventListener('click', () => {
+            const t = transicion(() => { document.body.classList.remove('abierto'); nombrar(actual, true); });
+            const limpiar = () => nombrar(actual, false);
+            t ? t.finished.then(limpiar, limpiar) : limpiar();
+          });
+        </script>
+        <figcaption>La miniatura cuadrada de 76&nbsp;px se convierte en la foto grande 4:5, y el título de la fila en el titular de la ficha. Al volver, hacen el camino inverso hasta su fila. El truco está en que <strong>cada nombre exista una sola vez</strong> en cada captura: se pone en la fila justo antes y se pasa a la ficha dentro de la actualización.</figcaption>
+      </figure>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Si dos elementos visibles tienen el mismo <code>view-transition-name</code> a la vez, el navegador cancela la transición y avisa en consola. Por eso en una lista no puedes poner <code>view-transition-name: foto</code> a todas las miniaturas. O se lo das solo a la elegida, como aquí, o le das un nombre único a cada una (<code>foto-12</code>, <code>foto-24</code>…), como en la rejilla de más abajo.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="1">
+        <p class="q">En la demo, ¿qué pasaría si quitas <code>height: 100%; object-fit: cover</code> de <code>::view-transition-old(foto)</code> y <code>::view-transition-new(foto)</code>?</p>
+        <ol>
+          <li>Durante el viaje, las dos capturas mantienen su proporción a lo ancho y se ven descuadradas dentro del marco que crece.</li>
+          <li>No habría transición.</li>
+          <li>La foto viajaría pero sin fundido.</li>
+        </ol>
+        <p class="why">Por defecto, las capturas vieja y nueva ocupan el ancho del grupo con altura automática. Si la proporción cambia (de 1:1 a 4:5), una sobresale y la otra se queda corta. <code>object-fit: cover</code> hace que las dos llenen el marco y recorten, como una foto real.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil la lista es lo único que cabe, así que el elemento compartido es lo que mantiene la orientación: sin él, abrir una ficha parece cambiar de página. Haz que <strong>toda la fila</strong> sea el botón (no solo una flecha pequeña), con 44&nbsp;px de alto como mínimo, y que la ficha se apile en vertical con la foto arriba en 16:10. Así la miniatura viaja hacia arriba, el recorrido natural del pulgar. Y el botón «Volver» debe quedar a mano, no solo arriba a la izquierda.</p>
+      </div>
+
+      <h2>Personalizar la animación</h2>
+      <p>Durante la transición, el navegador crea este árbol encima de la página. Cada parte se puede animar con CSS normal:</p>
+
+      <script type="text/x-code" data-lang="css" data-label="El árbol de pseudo-elementos">
+        ::view-transition                      /* capa raíz, encima de todo */
+        └─ ::view-transition-group(foto)       /* posición y tamaño: viaja de A a B */
+           └─ ::view-transition-image-pair(foto)
+              ├─ ::view-transition-old(foto)   /* captura de antes (una imagen) */
+              └─ ::view-transition-new(foto)   /* captura de después (en vivo) */
+        /* lo que no tiene nombre va todo junto en el grupo «root» */
+      </script>
+
+      <p>El <strong>grupo</strong> mueve y escala. <code>old</code> y <code>new</code> se funden. Para cambiar el efecto, sustituyes sus animaciones por tus <code>@keyframes</code>. Y con los <strong>tipos</strong> de transición puedes tener varios efectos y elegir cuál toca: <code>startViewTransition({ update, types: ['adelante'] })</code> activa el selector <code>:active-view-transition-type<wbr>(adelante)</code> mientras dura.</p>
+
+      <figure class="lab" data-title="Galería con dirección" data-hint="Avanza y retrocede" data-height="500" data-height-mobile="560" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="galeria">
+            <div class="foto"></div>
+            <div class="pie">
+              <p class="num"></p>
+              <h2></h2>
+              <div class="flechas">
+                <button data-d="-1" aria-label="Anterior">Anterior</button>
+                <button data-d="1" aria-label="Siguiente">Siguiente</button>
+              </div>
+            </div>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #0F0C1C; color: #F3EADB; }
+          .galeria { height: 100svh; display: grid; grid-template-rows: 1fr auto; }
+          .foto { view-transition-name: foto; background: var(--g); }
+          .pie { view-transition-name: pie; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: end; padding: 18px clamp(16px, 5vw, 36px) 22px; }
+          .num { margin: 0; font: 500 13px var(--f-mono); color: #E7B47C; flex-basis: 100%; }
+          h2 { margin: 0; font: 400 clamp(30px, 6vw, 46px)/1 var(--f-serif); flex: 1; }
+          .flechas { display: flex; gap: 8px; }
+          button { min-height: 44px; padding: 0 18px; border-radius: 99px; border: 1px solid #F3EADB55; background: none;
+            color: inherit; font: 500 14px var(--f-sans); cursor: pointer; }
+
+          /* Sin esto, old y new se suman (plus-lighter) y la cortinilla se ve quemada */
+          ::view-transition-old(foto), ::view-transition-new(foto) { mix-blend-mode: normal; }
+
+          /* Tipo «adelante»: la nueva entra como una cortinilla desde la derecha */
+          html:active-view-transition-type(adelante) {
+            &::view-transition-old(foto) { animation: hunde .7s cubic-bezier(.7, 0, .2, 1) both; }
+            &::view-transition-new(foto) { animation: cortina-der .7s cubic-bezier(.7, 0, .2, 1) both; }
+          }
+          /* Tipo «atras»: la misma idea en espejo */
+          html:active-view-transition-type(atras) {
+            &::view-transition-old(foto) { animation: hunde .7s cubic-bezier(.7, 0, .2, 1) both; }
+            &::view-transition-new(foto) { animation: cortina-izq .7s cubic-bezier(.7, 0, .2, 1) both; }
+          }
+          @keyframes hunde { to { scale: .9; opacity: .3; } }
+          @keyframes cortina-der { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
+          @keyframes cortina-izq { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+          ::view-transition-group(pie) { animation-duration: .4s; }
+          @media (max-width: 560px) { h2 { flex-basis: 100%; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const estancias = [
+            ['Salón con vistas al puerto', 'linear-gradient(180deg, #3A2A6B, #C0627A 55%, #F6C98A 80%, #2A1F4A 80.5%)'],
+            ['Cocina en roble y piedra', 'radial-gradient(circle at 35% 26%, #FFE2B0 0 2.5%, #FFC37A33 3% 9%, transparent 10%), radial-gradient(circle at 65% 26%, #FFE2B0 0 2.5%, #FFC37A33 3% 9%, transparent 10%), linear-gradient(transparent 60%, #EDE3D3 60% 64%, #6E5440 64%), linear-gradient(90deg, #BFA987, #E3D3BA)'],
+            ['Dormitorio principal', 'linear-gradient(90deg, transparent 22%, #6E5E86 22% 78%, transparent 78%) 0 30% / 100% 30% no-repeat, linear-gradient(transparent 56%, #F4ECE2 56% 70%, #8F7A68 70%), linear-gradient(#D9CDE0, #EDE4D8)'],
+            ['Terraza de 60 m²', 'linear-gradient(180deg, #F2A07B, #F6D3A8 50%, #4F7A8C 50% 64%, #E2D2BA 64%)'],
+          ];
+          let i = 0;
+          const $ = (s) => document.querySelector(s);
+          function pintar() {
+            $('.foto').style.setProperty('--g', estancias[i][1]);
+            $('.pie h2').textContent = estancias[i][0];
+            $('.num').textContent = `Planta 32 · ${String(i + 1).padStart(2, '0')} / ${String(estancias.length).padStart(2, '0')}`;
+          }
+          function ir(d) {
+            const actualizar = () => { i = (i + d + estancias.length) % estancias.length; pintar(); };
+            if (!document.startViewTransition) return actualizar();
+            try {   // con tipos (navegadores recientes)...
+              document.startViewTransition({ update: actualizar, types: [d > 0 ? 'adelante' : 'atras'] });
+            } catch {   // ...o sin ellos: fundido por defecto
+              document.startViewTransition(actualizar);
+            }
+          }
+          document.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => ir(+b.dataset.d)));
+          pintar();
+        </script>
+        <figcaption>La captura nueva se descubre con <code>clip-path</code> mientras la vieja se hunde y se oscurece. La dirección la decide el tipo: el mismo cambio de DOM tiene dos animaciones. El pie tiene su propio nombre para que el texto se funda aparte y no viaje con la cortinilla.</figcaption>
+      </figure>
+
+      <p>Dos herramientas más para escalar esto:</p>
+      <ul>
+        <li><strong><code>view-transition-class</code></strong> agrupa elementos con nombres distintos bajo una clase: <code>::view-transition-group(.tarjeta)</code> estiliza a la vez <code>v-1</code>, <code>v-2</code>, <code>v-3</code>… Lo usarás en la rejilla.</li>
+        <li><strong><code>:only-child</code></strong> sobre <code>::view-transition-new()</code> detecta los elementos que solo existen en la vista nueva, es decir, los que <em>entran</em>. Con <code>::view-transition-old():only-child</code> detectas los que salen.</li>
+      </ul>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La dirección comunica. Si «siguiente» entra por la derecha y «anterior» por la izquierda, el usuario construye un mapa mental sin darse cuenta. Si las dos entran igual, la galería parece un pase de diapositivas. Una curva que arranca lenta y frena suave (<code>cubic-bezier(.7, 0, .2, 1)</code>) se siente editorial. Un <code>ease</code> por defecto se siente de plantilla.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil, el usuario espera pasar de foto <strong>deslizando</strong>, no tocando botones. La forma nativa es un carrusel con <code>scroll-snap</code>, que sigue al dedo. La View Transition, en cambio, se reproduce entera después del toque. Usa esta galería para cambios con botón (fichas, pasos, pestañas) y, si la reutilizas en el móvil, baja la cortinilla a 0,45&nbsp;s y pon los dos botones juntos abajo, donde llega el pulgar.</p>
+      </div>
+
+      <h2>Dos recetas de web cara</h2>
+
+      <h3>Cambio de tema con revelado circular</h3>
+      <p>El nuevo tema se descubre en un círculo que nace del botón. La técnica: desactivar la animación por defecto de la raíz y animar el <code>clip-path</code> de <code>::view-transition-new(root)</code> con la Web Animations API, que conoce el punto del clic.</p>
+
+      <figure class="lab" data-title="Tema con revelado circular" data-hint="Toca el interruptor" data-height="540" data-height-mobile="620">
+        <script type="text/x-demo" data-lang="html">
+          <nav><b>mesa</b><button class="tema" aria-label="Cambiar tema"><i></i></button></nav>
+          <section class="hero">
+            <h1>El compañero de operaciones que <em>nunca duerme.</em></h1>
+            <p>Mesa revisa pedidos, conciliaciones y alertas de madrugada y te deja el resumen listo a las ocho.</p>
+            <a class="cta" href="#">Probar 14 días gratis</a>
+            <aside class="tarjeta">
+              <p>Mientras dormías</p>
+              <ul><li>182 pedidos conciliados</li><li>3 incidencias resueltas</li><li>Informe semanal enviado</li></ul>
+            </aside>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --fondo: #F3EEE3; --tinta: #111; --acento: #D9541E; }
+          :root.oscuro { --fondo: #111014; --tinta: #F3EEE3; --acento: #FF7A45; }
+          body { background: var(--fondo); color: var(--tinta); }
+          nav { display: flex; justify-content: space-between; align-items: center; padding: 18px clamp(18px, 5vw, 48px); }
+          nav b { font: 700 22px var(--f-sans); letter-spacing: -.04em; }
+          .tema { width: 52px; height: 32px; border-radius: 99px; border: 1.5px solid var(--tinta); background: none; padding: 3px; cursor: pointer; }
+          .tema i { display: block; width: 22px; height: 22px; border-radius: 50%; background: var(--acento); }
+          .oscuro .tema i { translate: 20px 0; }
+          .hero { position: relative; padding: 20px clamp(18px, 5vw, 48px) 40px; max-width: 760px; }
+          h1 { font: 700 clamp(38px, 7.4vw, 66px)/.98 var(--f-sans); letter-spacing: -.045em; margin: 14px 0 16px; }
+          h1 em { font: 400 italic 1.08em var(--f-serif); letter-spacing: -.01em;
+            text-decoration: underline 4px var(--acento); text-underline-offset: 6px; }
+          .hero > p { max-width: 42ch; font-size: 17px; opacity: .75; }
+          .cta { display: inline-block; margin-top: 8px; padding: 14px 24px; border-radius: 99px;
+            background: var(--acento); color: #fff; text-decoration: none; font-weight: 600; }
+          .tarjeta { position: absolute; right: clamp(18px, 5vw, 48px); bottom: -10px; width: 230px; padding: 16px 18px; border-radius: 14px;
+            background: var(--fondo); border: 1px solid color-mix(in oklab, var(--tinta) 15%, transparent);
+            box-shadow: 0 20px 40px -18px rgb(0 0 0 / .35); font: 500 14px var(--f-sans); }
+          .tarjeta p { margin: 0 0 8px; font-weight: 700; }
+          .tarjeta ul { margin: 0; padding-left: 18px; } .tarjeta li::marker { color: var(--acento); }
+          @media (max-width: 700px) { .tarjeta { position: static; margin-top: 28px; } }
+
+          /* Fuera el fundido por defecto: la animación la pone el JS */
+          ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const boton = document.querySelector('.tema');
+          boton.addEventListener('click', (e) => {
+            const cambiar = () => document.documentElement.classList.toggle('oscuro');
+            const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!document.startViewTransition || sinMovimiento) return cambiar();
+
+            // Centro del círculo: el dedo o el ratón (o el centro del botón si es con teclado)
+            const r0 = boton.getBoundingClientRect();
+            const x = e.clientX || r0.left + r0.width / 2, y = e.clientY || r0.top + r0.height / 2;
+            // Radio: distancia hasta la esquina más lejana, para cubrir toda la pantalla
+            const radio = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+
+            const t = document.startViewTransition(cambiar);
+            t.ready.then(() => {
+              document.documentElement.animate(
+                { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radio}px at ${x}px ${y}px)`] },
+                { duration: 650, easing: 'cubic-bezier(.65, 0, .35, 1)', pseudoElement: '::view-transition-new(root)' });
+            }).catch(() => {});
+          });
+        </script>
+        <figcaption>El tema cambia de golpe en el DOM (una clase en <code>:root</code>), pero ves la página nueva crecer en círculo desde el interruptor. <code>t.ready</code> se resuelve cuando los pseudo-elementos ya existen, que es el momento de animarlos. Fíjate en que las variables de color no se animan: lo que viaja es una captura.</figcaption>
+      </figure>
+
+      <h3>Rejilla que se filtra y se reordena</h3>
+      <p>Aquí cada tarjeta lleva un nombre único y todas comparten clase. Al filtrar u ordenar se vuelve a pintar la lista entera, y el navegador sigue a cada tarjeta por su nombre hasta su sitio nuevo.</p>
+
+      <figure class="lab" data-title="Disponibilidad: filtrar y ordenar" data-hint="Filtra y ordena" data-height="560" data-height-mobile="640">
+        <script type="text/x-demo" data-lang="html">
+          <div class="panel">
+            <div class="controles">
+              <div class="filtros" role="group" aria-label="Tipo">
+                <button data-f="todas" aria-pressed="true">Todas</button><button data-f="Estudio">Estudios</button>
+                <button data-f="Residencia">Residencias</button><button data-f="Ático">Áticos</button>
+              </div>
+              <button class="orden">Ordenar por precio</button>
+            </div>
+            <ul class="rejilla"></ul>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F5F1EA; color: #1C1A26; }
+          .panel { padding: 20px clamp(14px, 4vw, 32px); }
+          .controles { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 18px; }
+          .filtros { display: flex; flex-wrap: wrap; gap: 6px; }
+          button { min-height: 44px; padding: 0 16px; border-radius: 99px; border: 1px solid #1C1A2633; background: #fff;
+            color: inherit; font: 500 14px var(--f-sans); cursor: pointer; }
+          button[aria-pressed="true"] { background: #1C1A26; color: #F5F1EA; }
+          .orden { background: none; text-decoration: underline; text-underline-offset: 4px; border-color: transparent; }
+          .rejilla { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+          .tarjeta { view-transition-class: tarjeta; background: #fff; border-radius: 14px; overflow: hidden; font: 500 13px var(--f-sans); }
+          .tarjeta i { display: block; aspect-ratio: 4/3; background: var(--g); }
+          .tarjeta div { padding: 10px 12px 14px; }
+          .tarjeta h3 { margin: 2px 0; font: 400 22px/1.1 var(--f-serif); }
+          .tarjeta small { color: #6B6577; } .tarjeta b { color: #9A4A2A; }
+
+          /* Todas las tarjetas a la vez, sin escribir un selector por nombre */
+          ::view-transition-group(.tarjeta) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+          /* Las que entran y las que salen */
+          ::view-transition-new(.tarjeta):only-child { animation: entra .35s .15s both; }
+          ::view-transition-old(.tarjeta):only-child { animation: sale .25s both; }
+          @keyframes entra { from { opacity: 0; scale: .85; } }
+          @keyframes sale { to { opacity: 0; scale: .85; } }
+          @media (max-width: 560px) {   /* en el móvil, los filtros en una sola fila que se desliza */
+            .filtros { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -14px; padding-inline: 14px; }
+            .filtros button { flex: none; }
+            .rejilla { grid-template-columns: 1fr 1fr; gap: 8px; } .tarjeta h3 { font-size: 19px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const pisos = [
+            ['Estudio', 9, 52, 410], ['Residencia', 14, 132, 1150], ['Ático', 47, 380, 6200], ['Estudio', 18, 61, 520],
+            ['Residencia', 24, 186, 1900], ['Residencia', 32, 248, 3200], ['Ático', 48, 410, 6800], ['Estudio', 27, 70, 640],
+          ].map(([tipo, planta, m2, precio], id) => ({ id, tipo, planta, m2, precio }));
+          const tonos = { Estudio: '#8FB09A, #3C5A4C', Residencia: '#9FB0D6, #45487A', Ático: '#F2A07B, #6E3A6A' };
+          let filtro = 'todas', porPrecio = false;
+          const rejilla = document.querySelector('.rejilla');
+          const precio = (k) => k >= 1000 ? (k / 1000).toLocaleString('es-ES') + ' M€' : k + '.000 €';
+
+          function pintar() {
+            let lista = pisos.filter((p) => filtro === 'todas' || p.tipo === filtro);
+            lista = porPrecio ? [...lista].sort((a, b) => a.precio - b.precio) : lista;
+            // Nombre único por tarjeta: así el navegador la reconoce en su nuevo sitio
+            rejilla.innerHTML = lista.map((p) => `<li class="tarjeta" style="view-transition-name: piso-${p.id}">
+              <i style="--g: linear-gradient(150deg, ${tonos[p.tipo]})"></i>
+              <div><small>${p.tipo} · Planta ${p.planta}</small><h3>${p.m2} m²</h3><b>${precio(p.precio)}</b></div></li>`).join('');
+          }
+          const conTransicion = (fn) => document.startViewTransition ? document.startViewTransition(fn) : fn();
+
+          document.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => {
+            filtro = b.dataset.f;
+            document.querySelectorAll('[data-f]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+            conTransicion(pintar);
+          }));
+          document.querySelector('.orden').addEventListener('click', (e) => {
+            porPrecio = !porPrecio;
+            e.target.textContent = porPrecio ? 'Orden por planta' : 'Ordenar por precio';
+            conTransicion(pintar);
+          });
+          pintar();
+        </script>
+        <figcaption>Las tarjetas que se quedan viajan a su nueva posición. Las que salen se encogen y se van, y las que entran aparecen con un pequeño retraso, cuando ya hay sitio. Todo con dos reglas sobre <code>.tarjeta</code>, aunque cada una tiene su propio nombre. Lo que antes pedía GSAP Flip ahora son tres líneas de CSS.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>En una rejilla que se reordena, lo que da calidad es el <strong>orden de los acontecimientos</strong>: primero sale lo que sobra, luego se recoloca lo que queda, y al final entra lo nuevo. Ese pequeño <code>.15s</code> de retraso en las que entran evita que se pisen. En el revelado circular, en cambio, el círculo debe salir exactamente del punto del clic. Si sale del centro de la pantalla, el efecto pierde todo su sentido.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los filtros en el móvil ocupan dos líneas: déjalos en una fila con scroll horizontal (<code>overflow-x: auto; flex-wrap: nowrap</code>) o en un desplegable. Con 8 tarjetas la rejilla se reordena perfecta, pero con 60 el navegador captura 60 imágenes y un móvil de gama media lo nota. Por encima de unas 20 tarjetas visibles, pon nombre solo a las que están en pantalla, o usa un fundido simple. El revelado circular funciona muy bien con el dedo, porque nace justo donde tocas.</p>
+      </div>
+
+      <h2>Entre páginas: @view-transition</h2>
+      <p>Todo lo anterior ocurre dentro de una página (lo que se llama <em>same-document</em>). Las <strong>transiciones entre documentos</strong> hacen lo mismo cuando navegas de <code>listado.html</code> a <code>planta-32.html</code>, sin JavaScript: basta con que las dos páginas, del mismo origen, lo pidan.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="En las dos páginas (listado.html y planta-32.html)">
+        @view-transition { navigation: auto; }
+
+        /* listado.html: la miniatura de la planta 32 */
+        .planta-32 .mini { view-transition-name: foto-32; }
+
+        /* planta-32.html: la foto grande de la cabecera */
+        .cabecera-foto { view-transition-name: foto-32; }
+
+        /* Personalización: exactamente igual que en la misma página */
+        ::view-transition-group(foto-32) { animation-duration: .5s; }
+
+        @media (prefers-reduced-motion: reduce) {
+          @view-transition { navigation: none; }
+        }
+      </script>
+
+      <p>Para elegir animación según la dirección (entrar en una ficha o volver al listado), existen los eventos <code>pageswap</code> (en la página que se va) y <code>pagereveal</code> (en la que llega). Los dos te dan la transición en <code>event.viewTransition</code>, y puedes añadirle tipos con <code>event<wbr>.viewTransition<wbr>.types<wbr>.add('volver')</code>. <!-- verificar soporte --></p>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><strong>Misma página</strong> (<code>document<wbr>.startViewTransition</code>): Baseline recién disponible desde el 14 de octubre de 2025 (Chrome 111, Safari 18, Firefox 144). <code>view-transition-class</code>: Chrome 125, Safari 18.2, Firefox 144. <strong>Tipos</strong> (<code>types</code>, <code>:active-view-transition-type()</code>): Baseline desde el 13 de enero de 2026 (Chrome 125, Safari 18.2, Firefox 147, en Firefox solo dentro de la misma página). <strong>Entre documentos</strong> (<code>@view-transition</code>): Chrome 126 y Safari 18.2, <strong>no en Firefox</strong>, así que su Baseline es limitado. Como sin soporte la navegación funciona igual, puedes usarlo ya: es una mejora gratuita.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Las transiciones entre páginas son donde más se nota la diferencia en el móvil, porque hacen que una web parezca una app. Pero cuidado con el <strong>gesto de volver</strong>: al deslizar desde el borde, iOS y algunos Android ya animan la vuelta con su propia transición del sistema, y si encima se ejecuta la tuya puedes ver una animación doble. Prueba siempre la vuelta con el gesto en un teléfono real, no solo con el botón. Si se duplica, usa para la vuelta un fundido corto (con un tipo en <code>pagereveal</code>) en lugar del viaje completo. En las apps de una sola página, el evento de navegación indica si el navegador ya hizo su animación (<code>hasUAVisualTransition</code>) para que te saltes la tuya. <!-- verificar soporte --></p>
+      </div>
+
+      <h2>Rendimiento, movimiento reducido y GSAP Flip</h2>
+      <p>Cada elemento con nombre es una captura que el navegador guarda en memoria de la GPU, y la vista nueva es en vivo. Algunas reglas prácticas:</p>
+      <ul>
+        <li><strong>Pocos nombres.</strong> Ponlos solo en lo que debe viajar. Todo lo demás va en el grupo <code>root</code> y cuesta una sola captura.</li>
+        <li><strong>Actualizaciones rápidas.</strong> La página se congela desde que llamas a <code>startViewTransition</code> hasta que tu función termina. Si tienes que pedir datos con <code>fetch</code>, espera la respuesta <em>antes</em> y llama a la transición con los datos ya en la mano.</li>
+        <li><strong>Movimiento reducido.</strong> Respeta la preferencia del sistema. Puedes quitar el movimiento y dejar un fundido, que no marea.</li>
+      </ul>
+
+      <script type="text/x-code" data-lang="css" data-label="Movimiento reducido: cambiar el viaje por un fundido">
+        @media (prefers-reduced-motion: reduce) {
+          ::view-transition-group(*) { animation-duration: 0s; }     /* nada viaja ni escala */
+          ::view-transition-old(*), ::view-transition-new(*) { animation-duration: .2s; }  /* solo funde */
+        }
+      </script>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>View Transitions</th><th>GSAP Flip</th></tr></thead>
+          <tbody>
+            <tr><td>Cómo funciona</td><td>Capturas (imágenes) animadas en una capa superior</td><td>Mide posiciones y anima los elementos reales con transform</td></tr>
+            <tr><td>Interacción durante la animación</td><td>No: la página queda tapada</td><td>Sí: los elementos siguen vivos y clicables</td></tr>
+            <tr><td>Interrumpir a mitad</td><td>Salta al final y empieza otra</td><td>Se puede invertir o encadenar con suavidad</td></tr>
+            <tr><td>Entre páginas</td><td>Sí, con <code>@view-transition</code></td><td>No</td></tr>
+            <tr><td>Peso</td><td>0 KB, nativo</td><td>GSAP + plugin Flip</td></tr>
+            <tr><td>Ligar al scroll</td><td>No</td><td>Sí, con ScrollTrigger</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Empieza siempre por View Transitions: no pesa nada y cubre el 80&nbsp;% de los casos (pestañas, filtros, abrir fichas, cambiar de página). Pasa a GSAP Flip cuando necesites que la animación se pueda interrumpir con elegancia (un usuario que filtra muy deprisa), que los elementos sigan siendo clicables mientras se mueven o que el cambio esté atado al scroll, como en la torre (lección 08).</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Tienes una lista de 12 viviendas y quieres que, al ordenarla, cada tarjeta viaje a su nueva posición. ¿Qué necesitas?</p>
+        <ol>
+          <li><code>view-transition-name: tarjeta</code> en todas.</li>
+          <li><code>view-transition-class: tarjeta</code> y nada más.</li>
+          <li>Un <code>view-transition-name</code> distinto en cada una y, para estilizarlas juntas, una <code>view-transition-class</code> común.</li>
+        </ol>
+        <p class="why">Los nombres tienen que ser únicos, porque el navegador empareja «antes» y «después» por nombre. Si repites el nombre, cancela la transición. La clase no empareja nada: solo sirve para escribir un selector común en los pseudo-elementos.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Comprueba las transiciones en un móvil de gama media, no en el tuyo. Si una transición entre páginas tarda en arrancar, suele ser porque la página nueva tarda en estar lista. El navegador espera a la primera pintura útil, y en 4G eso se nota. Reduce el peso de la página de destino antes de culpar a la animación. En el móvil, 0,3&nbsp;s para la interfaz y 0,45&nbsp;s para una foto que viaja son buenos máximos.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li><code>document<wbr>.startViewTransition<wbr>(actualizar)</code> captura antes y después y anima la diferencia. Envuélvelo siempre en una comprobación para que sin soporte el cambio ocurra igual.</li>
+          <li>El mismo <code>view-transition-name</code> en dos estados convierte dos elementos en uno que viaja. Los nombres deben ser únicos; <code>view-transition-class</code> y los tipos te dejan estilizar en grupo y elegir efecto.</li>
+          <li><code>@view-transition { navigation: auto }</code> lleva lo mismo a la navegación entre páginas (todavía no en Firefox). En el móvil: transiciones cortas, objetivos táctiles grandes y cuidado con el gesto de volver.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Monta dos páginas HTML de un cliente de la agencia: un listado de productos (o de proyectos) y una ficha. Activa <code>@view-transition { navigation: auto }</code> en las dos y haz que la foto del producto viaje del listado a la cabecera de la ficha con un nombre único por producto. Después, añade el revelado circular de tema a la ficha. Pruébalo en tu móvil, también volviendo con el gesto, y anota qué duración se siente mejor.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

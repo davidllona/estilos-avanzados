@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radar | Hora azul</title>
+<meta name="description" content="Novedades de CSS y animación web con su soporte real en Chrome, Safari y Firefox.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .page { max-width: var(--wide); margin: 0 auto; padding: clamp(3rem, 8vw, 6rem) var(--gutter) 5rem; }
+  .page h1 { font-size: var(--step-5); font-weight: 560; letter-spacing: -0.04em; line-height: .9; }
+  .page .lede { font-size: var(--step-1); color: var(--muted); max-width: 46ch; margin: 1.4rem 0 0; line-height: 1.45; }
+  .updated { font: 400 var(--step--1)/1 var(--f-display); color: var(--faint); margin: 1.2rem 0 0; }
+  .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: 3rem 0 1.5rem; }
+  .filters button { font: 500 var(--step--1)/1 var(--f-display); color: var(--muted); background: none; border: 1px solid var(--line-2); border-radius: 999px; padding: .6rem .95rem; min-height: 40px; cursor: pointer; }
+  .filters button[aria-pressed="true"] { color: var(--night); background: var(--window); border-color: var(--window); }
+  .timeline { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--line-2); }
+  .timeline li { position: relative; padding: 0 0 2.2rem 1.6rem; display: grid; gap: .4rem; max-width: 70ch; }
+  .timeline li::before { content: ""; position: absolute; left: -5px; top: .45rem; width: 9px; height: 9px; border-radius: 50%; background: var(--night); border: 2px solid var(--c, var(--faint)); }
+  .timeline time { font: 500 var(--step--1)/1 var(--f-display); color: var(--faint); }
+  .timeline h2 { font-size: var(--step-1); font-weight: 600; letter-spacing: -.01em; }
+  .timeline p { margin: 0; color: var(--muted); font-size: var(--step-0); }
+  .timeline .meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; font: 400 var(--step--1)/1.3 var(--f-display); }
+  .badge { border-radius: 999px; padding: .2rem .6rem; border: 1px solid var(--c); color: var(--c); font: 500 .75rem/1.3 var(--f-display); white-space: nowrap; }
+  [data-e="amplio"] { --c: var(--leaf); }
+  [data-e="nuevo"] { --c: var(--sky); }
+  [data-e="limitado"] { --c: var(--dusk); }
+  [data-e="info"] { --c: var(--faint); }
+  .support h2 { font-size: var(--step-3); margin: 4.5rem 0 .6rem; }
+  .support > p { color: var(--muted); max-width: 60ch; margin: 0 0 1.4rem; }
+  td.no { color: var(--dusk); }
+  .legend { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; margin: 1rem 0 0; font: 400 var(--step--1)/1.4 var(--f-display); color: var(--muted); }
+</style>
+<script src="assets/js/radar-data.js" defer></script>
+<script src="assets/js/cuaderno.js" defer></script>
+</head>
+<body>
+<main id="main" class="page">
+  <h1>Radar</h1>
+  <p class="lede">Lo nuevo en CSS y animación que importa para este cuaderno, con su soporte real. Lo más reciente arriba.</p>
+  <p class="updated">Actualizado el <span data-updated></span>. Se revisa una vez al mes.</p>
+
+  <div class="filters" role="group" aria-label="Filtrar por soporte">
+    <button type="button" data-f="todo" aria-pressed="true">Todo</button>
+    <button type="button" data-f="amplio" aria-pressed="false">Úsalo ya</button>
+    <button type="button" data-f="nuevo" aria-pressed="false">Recién en todos</button>
+    <button type="button" data-f="limitado" aria-pressed="false">Aún no en todos</button>
+  </div>
+  <ol class="timeline" data-timeline></ol>
+
+  <section class="support" aria-labelledby="sop-t">
+    <h2 id="sop-t">Soporte de las técnicas del cuaderno</h2>
+    <p>Primera versión estable de escritorio que lo soporta. «Recién disponible» significa que ya funciona en los tres motores, pero hace menos de 30 meses: los usuarios con el navegador sin actualizar no lo tendrán.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Técnica</th><th>Chrome</th><th>Safari</th><th>Firefox</th><th>Estado</th></tr></thead>
+      <tbody data-support></tbody>
+    </table></div>
+    <p class="legend"><span class="badge" data-e="amplio">Úsalo ya</span> Baseline ampliamente disponible <span class="badge" data-e="nuevo">Recién</span> en los tres desde hace poco <span class="badge" data-e="limitado">Limitado</span> falta algún navegador: mejora progresiva</p>
+  </section>
+</main>
+<script>
+  addEventListener('DOMContentLoaded', () => {
+    const NAMES = { amplio: 'Úsalo ya', nuevo: 'Recién en todos', limitado: 'Aún no en todos', info: 'Noticia' };
+    const L = Object.fromEntries(window.HORA_AZUL.LESSONS.map((l, i) => [l.id, { ...l, i }]));
+    const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const month = (d) => new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    document.querySelector('[data-updated]').textContent = new Date(window.RADAR_ACTUALIZADO + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    const items = [...window.RADAR].sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const tl = document.querySelector('[data-timeline]');
+    tl.innerHTML = items.map((r) => `
+      <li data-e="${r.estado}">
+        <time datetime="${r.fecha}">${month(r.fecha)}</time>
+        <h2>${esc(r.titulo)}</h2>
+        <p>${esc(r.texto)}</p>
+        <div class="meta"><span class="badge" data-e="${r.estado}">${NAMES[r.estado]}</span>
+          ${r.leccion && L[r.leccion] ? `<a href="lecciones/${L[r.leccion].file}">Lección ${String(L[r.leccion].i).padStart(2, '0')}</a>` : ''}
+          <a href="${r.fuente}" rel="noopener">Fuente</a></div>
+      </li>`).join('');
+    document.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-f]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      tl.querySelectorAll('li').forEach((li) => (li.hidden = b.dataset.f !== 'todo' && li.dataset.e !== b.dataset.f));
+    }));
+    document.querySelector('[data-support]').innerHTML = window.SOPORTE.map((s) => `
+      <tr><td>${esc(s.f)}</td>${[s.c, s.s, s.x].map((v) => `<td class="${v === 'no' ? 'no' : ''}">${v}</td>`).join('')}<td><span class="badge" data-e="${s.b}">${NAMES[s.b]}</span></td></tr>`).join('');
+  });
+</script>
+</body>
+</html>

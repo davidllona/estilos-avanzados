@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recursos visuales con IA | Hora azul</title>
+<meta name="description" content="Cómo se producen y preparan las imágenes y vídeos de una web de scroll cinematográfico: dirección de arte, lista de planos, prompts repetibles, imagen a vídeo, ffmpeg, versiones 16:9 y 9:16, peso y derechos.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Bloques de texto plano (prompts y comandos): se parten en líneas en vez de desbordar */
+  .prose .code pre:not(:has(.token)) { white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="recursos">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>Recursos visuales con IA</h1>
+    <p class="lede">La web de la torre no empieza en el editor de código: empieza en un brief de luz y una lista de planos. Aquí tienes la cadena completa, del moodboard a los fotogramas WebP que pinta el canvas.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Cuando ves la torre al atardecer y la cámara vuela hasta una planta, lo que parece magia es una cadena de producción bastante prosaica: unas pocas imágenes muy bien dirigidas, varios clips de vídeo generados entre esas imágenes y un montón de fotogramas exportados con <code>ffmpeg</code>. El creador del vídeo usaba Higgsfield, una plataforma que agrupa varios modelos de imagen y vídeo; pero la herramienta cambia cada pocos meses y el método no.</p>
+      <p>Esta lección es ese método. Si lo sigues, puedes cambiar de generador sin rehacer el proyecto.</p>
+
+      <h2>Dirección de arte antes que prompts</h2>
+      <p>El error típico es abrir el generador y escribir «torre de lujo al atardecer». Sale algo bonito, y el siguiente plano sale bonito también, pero con otro cielo, otra fachada y otra hora. Antes de generar nada, decide tres cosas por escrito: la <strong>hora exacta</strong>, la <strong>lente</strong> y la <strong>paleta</strong>.</p>
+
+      <figure class="lab" data-title="Brief de luz" data-hint="Mueve la hora y cambia de lente" data-height="520" data-stage="dark" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <div class="wrap">
+            <div class="scene" id="scene">
+              <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+                <circle cx="250" cy="318" r="26" style="fill:#f8d9b0; opacity: var(--sol)"/>
+                <g id="city" style="fill: var(--fachada)">
+                  <path opacity=".75" d="M120 320v-46h52v-18h40v64zM230 320v-30h70v30zM520 320v-58h46v58zM580 320v-36h80v-16h36v52z"/>
+                  <g id="tower"><path d="M390 44h20v12h10v14h-40v-14h10z"/><rect x="372" y="70" width="56" height="250"/><g id="wins"></g></g>
+                </g>
+                <rect y="320" width="800" height="80" style="fill: var(--agua)"/>
+                <g opacity=".22" transform="translate(0 640) scale(1 -1)"><use href="#city"/></g>
+              </svg>
+              <span class="clock" id="clock"></span>
+            </div>
+            <aside class="brief">
+              <p class="eyebrow">Brief de luz · Torre Alameda</p>
+              <h2>Hora <em id="name"></em></h2>
+              <dl>
+                <dt>Cielo</dt><dd id="d-cielo"></dd>
+                <dt>Ventanas</dt><dd id="d-win"></dd>
+                <dt>Lente</dt><dd id="d-lente"></dd>
+              </dl>
+              <label>Minutos tras la puesta de sol <input id="t" type="range" min="-30" max="60" value="15"></label>
+              <div class="lens" role="group" aria-label="Lente">
+                <button data-mm="24">24 mm</button><button data-mm="35" aria-pressed="true">35 mm</button><button data-mm="85">85 mm</button>
+              </div>
+              <p class="out" id="out"></p>
+            </aside>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; height: 100vh; }
+          .wrap { display: grid; grid-template-columns: 1.3fr 1fr; height: 100%; }
+          .scene { position: relative; background: linear-gradient(var(--s1), var(--s2) 62%, var(--s3) 80%); overflow: hidden; }
+          .scene svg { width: 100%; height: 100%; }
+          .clock { position: absolute; right: 14px; top: 14px; font: 500 12px var(--f-mono); padding: 5px 9px; border-radius: 99px; background: rgb(0 0 0 / .3); backdrop-filter: blur(6px); }
+          .brief { padding: 26px 24px; display: flex; flex-direction: column; gap: 14px; }
+          .eyebrow { margin: 0; font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #b9aed6; }
+          h2 { margin: 0; font: 400 44px/1 var(--f-serif); }
+          h2 em { color: #f5c27a; }
+          dl { margin: 0; display: grid; grid-template-columns: 70px 1fr; gap: 8px 12px; font-size: 14px; line-height: 1.35; }
+          dt { color: #b9aed6; } dd { margin: 0; }
+          label { display: grid; gap: 6px; font-size: 13px; color: #b9aed6; }
+          input { width: 100%; color: #f5c27a; }
+          .lens { display: flex; gap: 6px; }
+          .lens button { flex: 1; min-height: 44px; border-radius: 99px; border: 1px solid rgb(242 235 221 / .25); background: none; color: inherit; font-size: 13px; cursor: pointer; }
+          .lens [aria-pressed="true"] { background: #f2ebdd; color: #120f24; }
+          .out { margin: auto 0 0; font: 400 12px/1.5 var(--f-mono); color: #d8cfee; padding: 10px 12px; border-radius: 8px; background: rgb(242 235 221 / .06); }
+          @media (max-width: 560px) {
+            .wrap { grid-template-columns: 1fr; grid-template-rows: 190px 1fr; }
+            .brief { padding: 14px 16px; gap: 9px; } h2 { font-size: 32px; }
+            dl { font-size: 13px; gap: 4px 10px; } .out { font-size: 11px; padding: 8px 10px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Tres «estados de luz» en OKLCH [L, C, H]: dorada (-30), azul (+15), noche (+60)
+          const K = [
+            { t: -30, s1: [68,.09,240], s2: [86,.1,80], s3: [80,.13,55], f: [60,.05,60], a: [52,.07,230], lit: .08 },
+            { t: 15,  s1: [30,.1,285],  s2: [62,.12,335], s3: [76,.1,35], f: [28,.04,285], a: [24,.06,280], lit: .6 },
+            { t: 60,  s1: [13,.03,280], s2: [21,.05,285], s3: [29,.06,300], f: [15,.02,285], a: [11,.03,280], lit: .88 },
+          ];
+          const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
+          const ok = ([l, c, h]) => `oklch(${l}% ${c} ${h})`;
+          // Ventanas con un orden aleatorio fijo: siempre se encienden las mismas primero
+          const rank = []; let seed = 7;
+          const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+          for (let r = 0; r < 30; r++) for (let c = 0; c < 5; c++) rank.push({ x: 377 + c * 10, y: 76 + r * 8, r: rnd() });
+          const lensTxt = { 24: 'Gran angular: mucho cielo y agua, la torre se aleja', 35: 'Natural: la torre con aire, sin deformar', 85: 'Tele: comprime y corta la coronación' };
+          let mm = 35;
+          function paint() {
+            const t = +document.getElementById('t').value;
+            const [a, b] = t <= 15 ? [K[0], K[1]] : [K[1], K[2]];
+            const k = (t - a.t) / (b.t - a.t), st = document.documentElement.style;
+            ['s1', 's2', 's3'].forEach(n => st.setProperty('--' + n, ok(mix(a[n], b[n], k))));
+            st.setProperty('--fachada', ok(mix(a.f, b.f, k)));
+            st.setProperty('--agua', ok(mix(a.a, b.a, k)));
+            const lit = a.lit + (b.lit - a.lit) * k;
+            st.setProperty('--sol', Math.max(0, Math.min(.8, -t / 25)));
+            wins.innerHTML = rank.map(w => `<rect x="${w.x}" y="${w.y}" width="6" height="4.5" fill="${w.r < lit ? '#f7c57c' : 'rgba(255,255,255,.07)'}"/>`).join('');
+            const s = { 24: .7, 35: 1, 85: 1.6 }[mm];
+            tower.setAttribute('transform', `translate(400 320) scale(${s}) translate(-400 -320)`);
+            const m = 40 + t, hh = 20 + Math.floor(m / 60), mi = ((m % 60) + 60) % 60;
+            clock.textContent = `${hh}:${String(mi).padStart(2, '0')} · ocaso 20:40`;
+            document.getElementById('name').textContent = t < 0 ? 'dorada' : t < 38 ? 'azul' : 'de noche';
+            document.getElementById('d-cielo').textContent = t < 0 ? 'Dorado cálido, sombras largas' : t < 38 ? 'Violeta arriba, rosa en el horizonte' : 'Azul casi negro, sin degradado';
+            document.getElementById('d-win').textContent = `${Math.round(lit * 100)} % encendidas, luz cálida 2700 K`;
+            document.getElementById('d-lente').textContent = lensTxt[mm];
+            // La línea que pegarás en el bloque [LUZ] de cada prompt
+            document.getElementById('out').textContent = `[LUZ] ${t < 0 ? -t + ' min antes' : t + ' min después'} del ocaso, ventanas ${Math.round(lit * 100)} % a 2700 K, lente ${mm} mm`;
+          }
+          document.getElementById('t').addEventListener('input', paint);
+          document.querySelectorAll('.lens button').forEach(b => b.addEventListener('click', () => {
+            mm = +b.dataset.mm;
+            document.querySelectorAll('.lens button').forEach(x => x.setAttribute('aria-pressed', x === b));
+            paint();
+          }));
+          paint();
+        </script>
+        <figcaption>Quince minutos tras la puesta de sol es el punto dulce de la «hora azul»: todavía hay degradado en el cielo y las ventanas ya brillan más que la fachada. Diez minutos antes el cielo es dorado y la torre parece otra; media hora después, el cielo pierde el degradado. El brief fija ese minuto para que todos los planos lo compartan.</figcaption>
+      </figure>
+
+      <p>El brief es un documento corto, una página, que vas a pegar en cada generación:</p>
+      <ul>
+        <li><strong>Moodboard</strong>: 6–10 imágenes de referencia propias o con licencia, elegidas por luz y materiales, no por «me gusta». Anota qué tomas de cada una («este rosa en el horizonte», «estas lamas de piedra»).</li>
+        <li><strong>Paleta</strong>: los mismos tokens que usarás en CSS. Si la web es violeta noche, crema y luz cálida, el cielo y las ventanas tienen que caer en esos colores, o el texto encima chocará.</li>
+        <li><strong>Luz</strong>: hora relativa al ocaso, temperatura de las ventanas (2700 K es luz cálida de casa) y qué porcentaje está encendido.</li>
+        <li><strong>Lente y cámara</strong>: 35 mm a la altura de los ojos para el exterior; 24 mm para interiores; altura y distancia de la cámara.</li>
+      </ul>
+
+      <div class="swatches">
+        <div class="swatch" style="--s:#17122b"><i></i><span><b>Violeta noche</b><small>#17122B</small></span></div>
+        <div class="swatch" style="--s:#8a5a9e"><i></i><span><b>Cielo alto</b><small>#8A5A9E</small></span></div>
+        <div class="swatch" style="--s:#e7a3a8"><i></i><span><b>Horizonte</b><small>#E7A3A8</small></span></div>
+        <div class="swatch" style="--s:#f7c57c"><i></i><span><b>Ventana 2700 K</b><small>#F7C57C</small></span></div>
+        <div class="swatch" style="--s:#f2ebdd"><i></i><span><b>Crema</b><small>#F2EBDD</small></span></div>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Lo que hace que unas imágenes de IA parezcan de estudio de arquitectura y no de banco de imágenes es la <strong>contención</strong>: cielo sin saturar, sin HDR, sin reflejos imposibles, ventanas encendidas de forma irregular (como en un edificio habitado). Si tu primera imagen grita, todas las demás gritarán con ella.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En una pantalla de 6 pulgadas los degradados sutiles del cielo se pierden y las ventanas se convierten en puntitos. Pide la versión vertical con la torre más grande en el encuadre y un contraste de luz algo mayor entre ventanas y fachada: es lo que se lee a un brazo de distancia.</p>
+      </div>
+
+      <h2>La lista de planos de una web de scroll</h2>
+      <p>Una web cinematográfica se planifica como un anuncio: cada plano tiene una función, un formato y un sitio en el recorrido de scroll. Esta es la lista de la torre. Cambia el formato para ver qué pasa con cada encuadre en vertical.</p>
+
+      <figure class="lab" data-title="Storyboard de la torre" data-hint="Alterna 16:9 y 9:16" data-height="500" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <header>
+            <div><p class="eyebrow">Torre Alameda · lista de planos</p><h2>Cinco planos, <em>un recorrido</em></h2></div>
+            <div class="ratio" role="group" aria-label="Formato">
+              <button aria-pressed="true" data-r="h">16:9</button><button data-r="v">9:16</button>
+            </div>
+          </header>
+          <ol class="shots" id="shots">
+            <li><div class="th fpv"></div><b>00 · Intro FPV</b><span>1 s · vídeo sin sonido</span></li>
+            <li><div class="th ext"></div><b>01 · Exterior</b><span>Imagen fija · 0–100 vh</span></li>
+            <li><div class="th fly"></div><b>02 · Vuelo a la 32</b><span>120 fotogramas · canvas</span></li>
+            <li><div class="th iso"></div><b>03 · Planta</b><span>Imagen + hotspots</span></li>
+            <li><div class="th int"></div><b>04 · Interiores</b><span>4 clips de 5 s al tocar</span></li>
+          </ol>
+          <p class="swipe">Desliza los planos hacia la izquierda</p>
+          <div class="track" aria-hidden="true"><i style="flex:.4">intro</i><i style="flex:1">exterior</i><i style="flex:3">vuelo, scrub</i><i style="flex:1.5">planta</i><i style="flex:1.6">interiores</i></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 22px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          header { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 18px; }
+          .eyebrow { margin: 0 0 4px; font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #b9aed6; }
+          h2 { margin: 0; font: 400 32px/1 var(--f-serif); } h2 em { color: #f5c27a; }
+          .ratio { display: flex; border: 1px solid rgb(242 235 221 / .25); border-radius: 99px; padding: 3px; }
+          .ratio button { min-height: 40px; min-width: 56px; border: 0; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .ratio [aria-pressed="true"] { background: #f2ebdd; color: #120f24; }
+          .shots { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: start; }
+          .shots li { display: grid; gap: 4px; font-size: 12px; } .shots b { font-weight: 600; font-size: 13px; } .shots span { color: #b9aed6; }
+          .th { aspect-ratio: 16 / 9; border-radius: 8px; position: relative; overflow: hidden; box-shadow: inset 0 0 0 1px rgb(242 235 221 / .12); }
+          .v .th { aspect-ratio: 9 / 16; }
+          /* Cada miniatura es solo CSS: degradados que imitan el encuadre */
+          .ext, .fly { background: linear-gradient(#3b2a66, #b26a95 60%, #e7a3a8 74%, #1a1530 74%); }
+          .ext::before, .fly::before { content: ""; position: absolute; left: 50%; bottom: 26%; width: 14%; height: 58%; translate: -50%;
+            background: repeating-linear-gradient(90deg, transparent 0 3px, #1d1735 3px 5px), repeating-linear-gradient(#f7c57c 0 2px, #241c40 2px 5px); }
+          .fly::before { width: 70%; height: 130%; bottom: -10%; background-size: 12px 12px; filter: blur(.4px); }
+          .fly::after { content: ""; position: absolute; inset: 0; background: radial-gradient(transparent 40%, rgb(18 15 36 / .7)); }
+          .fpv { background: repeating-linear-gradient(100deg, #2b2050 0 7px, #6c4a86 7px 9px, #2b2050 9px 18px), #2b2050; }
+          .fpv::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 60% 45%, rgb(247 197 124 / .7), transparent 35%); }
+          .iso { background: #ece4d3; }
+          .iso::before { content: ""; position: absolute; inset: 22% 18%; transform: rotateX(55deg) rotateZ(45deg);
+            background: linear-gradient(90deg, #d9c9ad 0 48%, transparent 48% 52%, #c9b391 52%), #bfa985; box-shadow: 0 0 0 3px #8e7a5c; }
+          .int { background: linear-gradient(#3b2a66 0 52%, #8a5a3c 52%); }
+          .int::before { content: ""; position: absolute; inset: 14% 22% 48%; background: linear-gradient(#5a3f86, #e7a3a8); box-shadow: 0 0 0 4px #2a1f18; }
+          .int::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 80% 40%, rgb(247 197 124 / .55), transparent 40%); }
+          .track { display: flex; gap: 3px; margin-top: 20px; font: 500 11px var(--f-mono); }
+          .swipe { display: none; margin: 4px 0 0; font: 500 11px var(--f-mono); color: #b9aed6; }
+          .track i { font-style: normal; padding: 8px 6px; background: rgb(242 235 221 / .08); border-top: 2px solid #f5c27a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          @media (max-width: 560px) {
+            body { padding: 16px; } h2 { font-size: 26px; } header { flex-wrap: wrap; }
+            .shots { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 62%; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+            .v.shots { grid-auto-columns: 38%; } .shots li { scroll-snap-align: start; }
+            .swipe { display: block; } .track { margin-top: 12px; } .track i { font-size: 9px; padding: 6px 3px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          document.querySelectorAll('.ratio button').forEach(b => b.addEventListener('click', () => {
+            document.querySelectorAll('.ratio button').forEach(x => x.setAttribute('aria-pressed', x === b));
+            shots.classList.toggle('v', b.dataset.r === 'v');
+          }));
+        </script>
+        <figcaption>La barra de abajo es el recorrido de scroll: el vuelo ocupa la mitad porque es el momento que justifica la web. Cada plano tiene un tipo de recurso distinto: un vídeo de 1 s, una imagen fija, una secuencia para el canvas, una imagen con capas y clips que solo se cargan al tocar.</figcaption>
+      </figure>
+
+      <div class="table-wrap"><table>
+        <thead><tr><th>Plano</th><th>Función</th><th>Recurso final</th><th>Versión móvil</th></tr></thead>
+        <tbody>
+          <tr><td>00 Intro FPV</td><td>Gancho de 1 s mientras carga lo demás</td><td>MP4 corto, <code>muted playsinline</code></td><td>Mismo clip recortado 9:16, o póster fijo con movimiento reducido</td></tr>
+          <tr><td>01 Exterior</td><td>Situar: el edificio, el agua, la hora</td><td>AVIF/WebP grande, primer fotograma de la secuencia</td><td>Imagen 9:16 propia</td></tr>
+          <tr><td>02 Vuelo</td><td>El momento espectacular</td><td>Secuencia de 90–150 WebP</td><td>Secuencia 9:16 aparte, menos resolución</td></tr>
+          <tr><td>03 Planta</td><td>Explorar estancias</td><td>Imagen + botones encima</td><td>Planta girada o recortada, botones de 44 px</td></tr>
+          <tr><td>04 Interiores</td><td>Emoción: «me veo viviendo aquí»</td><td>Clips de 4–6 s con póster, <code>preload="none"</code></td><td>Versión 9:16, se carga solo al tocar</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Pocos planos, muy buenos. Cinco planos coherentes impresionan más que doce espectaculares que no casan. Y cada plano debe ser el último fotograma del anterior o empezar desde él: así el scroll se siente como una sola toma de cámara.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Planifica desde el principio cada plano en 16:9 <em>y</em> en 9:16. Un vertical no es un recorte de última hora: el exterior necesita aire arriba para el titular, y la planta isométrica suele tener que girarse para que las estancias quepan a lo alto.</p>
+      </div>
+
+      <h2>Prompts repetibles y consistencia</h2>
+      <p>La consistencia entre planos no se consigue con un prompt mágico, sino con un <strong>esqueleto fijo</strong> en el que solo cambia una parte. Escríbelo en lenguaje llano y por bloques. El orden te obliga a no olvidar nada y te deja comparar resultados.</p>
+
+      <script type="text/x-code" data-lang="txt" data-label="Esqueleto de prompt: solo cambia [PLANO]">
+        [PLANO]    Plano general frontal desde el agua. Cámara a 1,6 m, lente 35 mm, torre centrada con aire arriba.
+        [SUJETO]   Torre residencial de 40 plantas, fachada de vidrio con lamas verticales de piedra crema, coronación escalonada.
+        [LUZ]      Hora azul, 15 minutos después de la puesta de sol. Cielo violeta profundo arriba, rosa suave en el horizonte.
+                   Ventanas en luz cálida 2700 K, encendidas de forma irregular, alrededor del 60 %.
+        [ENTORNO]  Paseo marítimo, agua en calma con reflejos, palmeras a contraluz.
+        [ESTILO]   Fotografía de arquitectura realista, colores contenidos, sin HDR, grano fino.
+        [EVITAR]   Texto, logotipos, personas en primer plano, fachada deformada, cielo saturado.
+        [FORMATO]  16:9. (La versión 9:16 se genera aparte, con la torre más grande y aire arriba.)
+      </script>
+
+      <script type="text/x-code" data-lang="txt" data-label="Dos planos más con el mismo esqueleto">
+        [PLANO]    Plano medio de la planta 32, cámara frente a la fachada a la misma altura, lente 50 mm.
+                   Se ven tres ventanales y la terraza con barandilla de vidrio.
+        (SUJETO, LUZ, ENTORNO, ESTILO y EVITAR: idénticos)
+
+        [PLANO]    Interior del salón de la planta 32 hacia los ventanales, lente 24 mm, cámara a 1,2 m.
+                   Sofá bajo color arena, suelo de roble claro, lámpara de pie encendida. Fuera, la misma hora azul.
+        (Mismos bloques; en ENTORNO: «Por la ventana, el mismo cielo y el mar del plano general».)
+      </script>
+
+      <p>Además del esqueleto, casi todos los generadores ofrecen alguna de estas palancas. Los nombres cambian de una herramienta a otra, pero las ideas son las mismas:</p>
+      <ul>
+        <li><strong>Imagen de referencia</strong>: subes la imagen buena (el exterior aprobado) y generas el resto a partir de ella. Es la palanca más potente para mantener fachada, color y luz.</li>
+        <li><strong>Semilla</strong> (<em>seed</em>): si la herramienta la muestra, la misma semilla con el mismo prompt da composiciones parecidas. Sirve para iterar un detalle sin perder el resto.</li>
+        <li><strong>Referencia de estilo o de personaje</strong>: fija un aspecto visual o un elemento recurrente entre generaciones.</li>
+        <li><strong>Edición por zonas</strong>: en vez de regenerar todo, corriges solo una parte (un reflejo raro, una ventana fundida).</li>
+      </ul>
+
+      <div class="callout idea"><span class="t">Idea</span>
+        <p>Guarda cada imagen aprobada con su prompt completo, la herramienta, el modelo y la semilla en un archivo de texto junto a ella (<code>01-exterior-169.png</code> + <code>01-exterior-169.txt</code>). Dentro de dos semanas, cuando el cliente pida «lo mismo pero con la terraza más grande», te salvará la tarde.</p>
+      </div>
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El último paso de consistencia no es de IA: es de etalonaje. Pasa todas las imágenes finales por los mismos ajustes de color (la misma curva o la misma LUT en tu editor). Pequeñas diferencias de tono entre planos desaparecen y el conjunto se ve de una sola sesión de fotos.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Genera la versión vertical a partir de la imagen horizontal aprobada como referencia, no desde cero con el prompt. Si no, el 9:16 acaba siendo otra torre y quien abre la web en el portátil después de verla en el móvil lo nota.</p>
+      </div>
+
+      <h2>De imagen a vídeo entre dos fotogramas</h2>
+      <p>El vuelo hacia la planta 32 se genera con la técnica de <strong>primer y último fotograma</strong>: le das al generador de vídeo la imagen del exterior y la imagen cercana de la planta, y él inventa el movimiento entre las dos. Higgsfield, por ejemplo, lo llama «Start &amp; End Frames». Lo difícil no es generar el clip, sino elegir uno sin <em>deriva</em>.</p>
+
+      <figure class="lab" data-title="Del primer al último fotograma" data-hint="Arrastra y activa la deriva" data-height="480" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="view"><svg id="svg" viewBox="0 0 400 300" aria-hidden="true">
+            <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2056"/><stop offset=".7" stop-color="#a7648f"/><stop offset=".82" stop-color="#e7a3a8"/></linearGradient></defs>
+            <rect x="-400" y="-300" width="1200" height="550" fill="url(#sky)"/>
+            <path d="M-400 246v-30h330v-24h50v54zM60 246v-40h44v40zM280 246v-36h40v-14h60v50zM420 246v-22h380v22z" fill="#231b40"/>
+            <g id="tw"></g>
+            <rect x="-400" y="246" width="1200" height="300" fill="#151029"/>
+            <g opacity=".16" transform="translate(0 492) scale(1 -1)"><use href="#tw"/></g>
+          </svg><span class="tag" id="tag"></span></div>
+          <div class="bar">
+            <button id="a">Primer fotograma</button>
+            <input id="f" type="range" min="1" max="120" value="1" aria-label="Fotograma">
+            <button id="b">Último fotograma</button>
+            <label class="sw"><input type="checkbox" id="drift"> Clip con deriva</label>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; height: 100vh; display: grid; grid-template-rows: 1fr auto; }
+          .view { position: relative; overflow: hidden; } svg { width: 100%; height: 100%; }
+          .tag { position: absolute; left: 14px; top: 12px; font: 500 12px var(--f-mono); background: rgb(0 0 0 / .35); padding: 6px 10px; border-radius: 99px; }
+          .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 14px; background: #1b1633; }
+          .bar input[type=range] { flex: 1; min-width: 140px; color: #f5c27a; }
+          button { min-height: 44px; padding: 0 14px; border-radius: 99px; border: 1px solid rgb(242 235 221 / .25); background: none; color: inherit; cursor: pointer; }
+          .sw { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 14px; }
+          @media (max-width: 560px) { .bar input[type=range] { order: -1; flex-basis: 100%; } button { flex: 1; font-size: 13px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const F = document.getElementById('f'), D = document.getElementById('drift');
+          const ease = t => t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+          const lerp = (a, b, k) => a + (b - a) * k;
+          // Cámara: viewBox del plano general y del plano de la planta 32
+          const A = [0, 0, 400, 300], B = [166, 62, 68, 51];
+          function rand(n) { const x = Math.sin(n * 91.7) * 4375.5; return x - Math.floor(x); }
+          function draw() {
+            const n = +F.value, k = ease((n - 1) / 119), mid = n > 1 && n < 120;
+            const d = D.checked && mid ? Math.sin(n / 7) * Math.sin(k * Math.PI) : 0;
+            svg.setAttribute('viewBox', A.map((v, i) => lerp(v, B[i], k)).join(' '));
+            // Con deriva cambian el ancho, el número de plantas y qué ventanas están encendidas
+            const floors = 40 + Math.round(d * 4), w = 60 + d * 10, x0 = 200 - w / 2, h = 200 / floors;
+            let s = `<path d="M${x0 + w * .3} 34h${w * .4}v12h-${w * .4}z" fill="#1a1433"/><rect x="${x0}" y="46" width="${w}" height="200" fill="#1a1433"/>`;
+            for (let f = 0; f < floors; f++) for (let c = 0; c < 6; c++) {
+              const seed = D.checked && mid ? f * 6 + c + n : f * 6 + c;
+              const lit = rand(seed) < .5, y = 46 + f * h;
+              s += `<rect x="${x0 + 3 + c * (w - 6) / 6}" y="${y + h * .22}" width="${(w - 6) / 6 - 2}" height="${h * .56}" fill="${lit ? '#f7c57c' : '#272046'}"/>`;
+            }
+            const fy = 46 + 8 * (200 / 40);
+            if (k > .6) s += `<rect x="${x0 + 1}" y="${fy}" width="${w - 2}" height="${h}" fill="none" stroke="#f2ebdd" stroke-width=".5" opacity="${(k - .6) * 2.5}"/>`;
+            tw.innerHTML = s;
+            tag.textContent = `Fotograma ${String(n).padStart(3, '0')} / 120` + (n === 120 ? ' · planta 32' : '');
+          }
+          let raf;
+          const go = to => { cancelAnimationFrame(raf); const step = () => { const v = +F.value; if (v === to) return; F.value = v + Math.sign(to - v); draw(); raf = requestAnimationFrame(step); }; step(); };
+          a.onclick = () => go(1); b.onclick = () => go(120);
+          F.addEventListener('input', draw); D.addEventListener('change', draw); draw();
+        </script>
+        <figcaption>Sin deriva, la cámara avanza y la torre es la misma en todos los fotogramas. Con deriva, el principio y el final coinciden (los dos fotogramas que tú diste) pero en medio cambian las plantas, el ancho y las ventanas encendidas. En un vídeo a 24 fps quizá no lo veas; en un scrub fotograma a fotograma, sí.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="txt" data-label="Prompt de movimiento para el clip del vuelo">
+        Primer fotograma: 01-exterior-169.png      Último fotograma: 02-planta32-169.png
+        [MOVIMIENTO] Avance lento y continuo de la cámara hacia la planta 32, en línea recta, sin giros ni cortes.
+        [CÁMARA]     Velocidad constante, horizonte nivelado, sin vibración.
+        [MANTENER]   La geometría de la torre, el número de plantas, la luz y el color del primer fotograma.
+        [EVITAR]     Zoom digital, cambios de luz, ventanas que parpadean, objetos que aparecen o desaparecen.
+      </script>
+
+      <p>Reglas que ahorran muchas generaciones:</p>
+      <ul>
+        <li><strong>Un solo movimiento por clip</strong>: avanzar, o girar, o subir. Los movimientos compuestos se deforman antes.</li>
+        <li><strong>Clips cortos</strong> (5–8 s) y encadenados: el último fotograma del clip A se exporta y se convierte en el primer fotograma del clip B.</li>
+        <li><strong>Revisa fotograma a fotograma</strong> antes de aprobar. Abre el clip en el editor de vídeo y arrastra el cabezal despacio: así es exactamente como lo verá el usuario con el scroll.</li>
+      </ul>
+
+      <script type="text/x-code" data-lang="txt" data-label="Sacar el último fotograma de un clip para encadenar el siguiente">
+        ffmpeg -sseof -0.1 -i 02-vuelo.mp4 -frames:v 1 -update 1 02-vuelo-ultimo.png
+      </script>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Tienes un clip de 6 s que en reproducción normal se ve perfecto. Lo conviertes en secuencia para un scrub largo. ¿Qué es lo más probable que veas?</p>
+        <ol>
+          <li>Nada nuevo: si se ve bien a 24 fps, se ve bien con scroll.</li>
+          <li>Pequeños saltos y ventanas que cambian, porque el usuario se para en fotogramas intermedios.</li>
+          <li>Que la imagen se vuelve borrosa, porque el scroll interpola los píxeles.</li>
+        </ol>
+        <p class="why">A 24 fps cada fotograma dura 40 ms y el ojo funde los errores. Con scrub, el usuario puede quedarse quieto en el fotograma 63: cada defecto de ese fotograma está a la vista todo el tiempo que quiera.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Genera el vuelo vertical como clip propio, con su primer y último fotograma en 9:16. En vertical, avanzar hacia una planta pide menos recorrido lateral y más subida: el «zoom» hacia la planta 32 se lee mejor si la cámara también asciende un poco.</p>
+      </div>
+
+      <h2>Fotogramas con ffmpeg</h2>
+      <p>Del clip aprobado sacas una secuencia de imágenes numeradas para el canvas. <code>ffmpeg</code> lo hace en una línea; lo importante es decidir <strong>cuántos fotogramas</strong>, a qué <strong>tamaño</strong> y con qué <strong>calidad</strong>.</p>
+
+      <script type="text/x-code" data-lang="txt" data-label="Secuencia de escritorio: 24 fps, 1600 px de ancho, WebP calidad 72">
+        mkdir -p frames/desk
+        ffmpeg -i 02-vuelo-169.mp4 -vf "fps=24,scale=1600:-2:flags=lanczos" \
+          -c:v libwebp -quality 72 -compression_level 6 frames/desk/%04d.webp
+        # resultado: frames/desk/0001.webp, 0002.webp ... (cuatro cifras: se ordenan bien)
+      </script>
+      <script type="text/x-code" data-lang="txt" data-label="Secuencia de móvil, desde su propio clip 9:16, y versión AVIF">
+        mkdir -p frames/movil frames/avif
+        ffmpeg -i 02-vuelo-916.mp4 -vf "fps=24,scale=720:-2:flags=lanczos" \
+          -c:v libwebp -quality 68 frames/movil/%04d.webp
+
+        # AVIF pesa menos con la misma calidad, pero tarda más en codificar.
+        # Ojo: para secuencias AVIF hay que forzar -f image2
+        ffmpeg -i 02-vuelo-169.mp4 -vf "fps=24,scale=1600:-2:flags=lanczos" \
+          -c:v libaom-av1 -still-picture 1 -crf 34 -cpu-used 6 -f image2 frames/avif/%04d.avif
+
+        # ¿cuántos fotogramas tiene el clip original?
+        ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 02-vuelo-169.mp4
+      </script>
+
+      <ul>
+        <li><code>fps=24</code> remuestrea el clip: con 12 tienes la mitad de fotogramas y la mitad de peso.</li>
+        <li><code>scale=1600:-2</code> fija el ancho y calcula el alto par. <code>flags=lanczos</code> reduce con más nitidez.</li>
+        <li><code>-quality</code> de WebP va de 0 a 100: entre 65 y 75 es donde un fondo fotográfico deja de mejorar a simple vista.</li>
+        <li><code>%04d</code> numera con cuatro cifras. Así tu JS hace <code>String(i).padStart(4, '0')</code> y el orden alfabético coincide con el numérico.</li>
+      </ul>
+
+      <p>¿Cuántos fotogramas hacen falta? Depende de cuánto scroll ocupa el plano. Lo que importa es cuántos píxeles de scroll le tocan a cada fotograma.</p>
+
+      <figure class="lab" data-title="Fotogramas frente a recorrido de scroll" data-hint="Ajusta duración, fps y recorrido" data-height="500" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="seg" role="group" aria-label="Dispositivo"><button aria-pressed="true" data-d="desk">Escritorio</button><button data-d="mob">Móvil</button></div>
+          <div class="grid">
+            <label>Duración del clip <b id="vd"></b><input id="dur" type="range" min="2" max="12" value="5"></label>
+            <label>Recorrido del pin <b id="vr"></b><input id="run" type="range" min="100" max="800" step="50" value="300"></label>
+            <div class="seg small" role="group" aria-label="fps"><button data-f="12">12 fps</button><button data-f="24" aria-pressed="true">24 fps</button><button data-f="30">30 fps</button></div>
+          </div>
+          <div class="stats">
+            <p><small>Fotogramas</small><b id="o-n"></b></p>
+            <p><small>Px de scroll por fotograma</small><b id="o-px"></b></p>
+            <p><small>Peso de la secuencia</small><b id="o-kb"></b></p>
+          </div>
+          <div class="track" id="track"></div>
+          <p class="verdict" id="verdict"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 20px 22px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: start; }
+          body > * { width: 100%; } .seg { width: auto; display: inline-flex; border: 1px solid rgb(242 235 221 / .25); border-radius: 99px; padding: 3px; }
+          .seg button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .seg [aria-pressed="true"] { background: #f2ebdd; color: #120f24; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end; margin: 18px 0; }
+          label { display: grid; grid-template-columns: 1fr auto; gap: 6px; font-size: 13px; color: #b9aed6; } label b { color: #f2ebdd; font-weight: 500; } label input { grid-column: 1 / -1; }
+          input { width: 100%; color: #f5c27a; }
+          .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+          .stats p { margin: 0; padding: 14px; border-radius: 10px; background: rgb(242 235 221 / .06); }
+          .stats small { display: block; color: #b9aed6; font-size: 12px; }
+          .stats b { font: 400 34px/1.1 var(--f-serif); }
+          .track { height: 46px; margin: 18px 0 10px; border-radius: 6px; position: relative;
+            background: repeating-linear-gradient(90deg, #f5c27a 0 1px, transparent 1px var(--gap)), rgb(242 235 221 / .05); }
+          .track span { position: absolute; top: 100%; font: 500 10px var(--f-mono); color: #b9aed6; translate: -50% 4px; }
+          .verdict { margin: 22px 0 0; font-size: 15px; padding-left: 12px; border-left: 3px solid var(--c, #f5c27a); }
+          @media (max-width: 560px) {
+            body { padding: 14px; } .grid { grid-template-columns: 1fr; gap: 10px; margin: 12px 0; } .track { margin: 12px 0 8px; height: 38px; }
+            .stats { gap: 6px; } .stats p { padding: 10px; } .stats b { font-size: 24px; } .stats small { font-size: 11px; }
+            .verdict { font-size: 14px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Alto de pantalla y peso medio por fotograma (WebP) según dispositivo
+          const DEV = { desk: { vh: 900, kb: 80 }, mob: { vh: 700, kb: 45 } };
+          let dev = 'desk', fps = 24;
+          const $ = id => document.getElementById(id);
+          function calc() {
+            const dur = +$('dur').value, run = +$('run').value, d = DEV[dev];
+            const n = dur * fps, px = run / 100 * d.vh, per = px / n;
+            $('vd').textContent = dur + ' s'; $('vr').textContent = run + ' vh';
+            $('o-n').textContent = n;
+            $('o-px').textContent = per.toFixed(1).replace('.', ',');
+            $('o-kb').textContent = (n * d.kb / 1024).toFixed(1).replace('.', ',') + ' MB';
+            // Cada raya del track es un fotograma; los números marcan pantallas
+            const track = $('track'), w = track.clientWidth;
+            track.style.setProperty('--gap', Math.max(1.5, w / n) + 'px');
+            const screens = run / 100;
+            track.innerHTML = Array.from({ length: Math.floor(screens) + 1 }, (_, i) => `<span style="left:${i / screens * 100}%">${i}</span>`).join('');
+            let txt, c;
+            if (per < 6) { txt = 'Sobran fotogramas: el dedo avanza 50–100 px por gesto y se saltan varios. Baja a 12 fps o alarga el recorrido.'; c = '#e7a3a8'; }
+            else if (per <= 30) { txt = 'Buena relación: el movimiento se ve continuo y no pagas fotogramas que nadie verá.'; c = '#9fd8b5'; }
+            else { txt = 'Se verán saltos al hacer scroll despacio: añade fotogramas o acorta el recorrido.'; c = '#e7a3a8'; }
+            $('verdict').textContent = txt; $('verdict').style.setProperty('--c', c);
+          }
+          document.querySelectorAll('[data-d],[data-f]').forEach(b => b.addEventListener('click', () => {
+            b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+            if (b.dataset.d) dev = b.dataset.d; else fps = +b.dataset.f;
+            calc();
+          }));
+          ['dur', 'run'].forEach(id => $(id).addEventListener('input', calc));
+          addEventListener('resize', calc); calc();
+        </script>
+        <figcaption>La regla práctica: entre 6 y 30 px de scroll por fotograma. Por debajo pagas peso que no se ve; por encima se nota el paso de una imagen a otra. Fíjate en que el mismo pin de 300 vh son menos píxeles en el móvil: con los mismos fotogramas, cada uno dura menos.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>12 fps de extracción bastan casi siempre para un vuelo lento con scrub: el scroll ya suaviza. Gasta los fotogramas donde hay movimiento rápido y no en los segundos en que la cámara casi se para; puedes recortar el clip antes de exportar con <code>-ss</code> y <code>-t</code>.</p>
+      </div>
+
+      <h3>Escritorio 16:9 y móvil 9:16: dos secuencias</h3>
+      <p>Servir la secuencia horizontal en un móvil vertical con <code>object-fit: cover</code> recorta tres cuartas partes de la imagen y descarga píxeles que nadie ve. Lo profesional son dos secuencias. Si el presupuesto no da para generar el vertical, al menos recórtalo dirigiendo el encuadre: decide qué debe quedar dentro.</p>
+
+      <figure class="lab" data-title="Recorte vertical dirigido" data-hint="Mueve la ventana 9:16" data-height="470" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="cols">
+            <div class="wide"><svg viewBox="0 0 1600 900" aria-label="Plano 16:9 con la ventana de recorte">
+              <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2056"/><stop offset=".66" stop-color="#b26a95"/><stop offset=".78" stop-color="#e7a3a8"/></linearGradient>
+                <g id="esc"><rect width="1600" height="700" fill="url(#g)"/><rect y="700" width="1600" height="200" fill="#151029"/>
+                  <circle cx="330" cy="560" r="70" fill="#f2c7a5" opacity=".5"/>
+                  <path d="M0 700V600h120v-50h90v150h140v-90h110v90" fill="#1d1735"/>
+                  <pattern id="vent" width="26" height="22" patternUnits="userSpaceOnUse" x="960" y="150"><rect width="26" height="22" fill="#1d1735"/><rect x="6" y="6" width="14" height="9" fill="#f7c57c" opacity=".55"/></pattern>
+                  <rect x="960" y="150" width="130" height="550" fill="url(#vent)"/><rect x="985" y="110" width="80" height="40" fill="#1d1735"/>
+                  <rect id="p32" x="960" y="330" width="130" height="22" fill="#f7c57c"/>
+                  <path d="M1300 700v-140h120v140M1430 700v-90h170v90" fill="#231c3f"/></g></defs>
+              <use href="#esc"/>
+              <path id="mask" fill="rgb(10 8 20 / .62)" fill-rule="evenodd"/>
+              <rect id="win" y="2" width="506" height="896" fill="none" stroke="#f2ebdd" stroke-width="4"/>
+            </svg></div>
+            <div class="tall"><svg id="prev" viewBox="0 0 506 900" aria-label="Resultado 9:16"><use href="#esc"/></svg></div>
+          </div>
+          <input id="x" type="range" min="0" max="100" value="68" aria-label="Posición del recorte">
+          <p class="st" id="st"></p>
+          <code id="cmd"></code>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 18px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          .cols { display: grid; grid-template-columns: 1fr 150px; gap: 16px; align-items: start; }
+          svg { width: 100%; height: auto; border-radius: 8px; }
+          .tall svg { aspect-ratio: 9 / 16; }
+          input { width: 100%; margin: 16px 0 8px; color: #f5c27a; height: 32px; }
+          .st { margin: 0 0 10px; font-size: 15px; padding-left: 12px; border-left: 3px solid var(--c); }
+          code { display: block; font: 500 12px var(--f-mono); background: rgb(242 235 221 / .07); padding: 10px 12px; border-radius: 8px; overflow-wrap: anywhere; }
+          @media (max-width: 560px) {
+            body { padding: 12px; } .cols { grid-template-columns: 1fr 96px; gap: 10px; }
+            .st { font-size: 13px; } code { font-size: 11px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const W = 1600, CW = 506;                     // 9:16 de un fotograma de 900 px de alto
+          const MUST = [960, 1090];                     // la torre entera debe quedar dentro
+          const $ = id => document.getElementById(id);
+          function upd() {
+            const f = $('x').value / 100, x = Math.round((W - CW) * f);
+            $('win').setAttribute('x', x);
+            $('mask').setAttribute('d', `M0 0H1600V900H0Z M${x} 0H${x + CW}V900H${x}Z`);
+            $('prev').setAttribute('viewBox', `${x} 0 ${CW} 900`);
+            const inside = MUST[0] >= x + 20 && MUST[1] <= x + CW - 20;
+            const centred = Math.abs((MUST[0] + MUST[1]) / 2 - (x + CW / 2)) < 90;
+            const st = $('st');
+            st.textContent = !inside ? 'La torre se corta: en vertical, el sujeto no puede tocar los bordes.'
+              : centred ? 'Torre centrada con aire a los lados. El titular irá arriba, sobre el cielo.'
+              : 'Dentro, pero descentrada: deja más aire del lado hacia el que avanza la cámara.';
+            st.style.setProperty('--c', !inside ? '#e7a3a8' : centred ? '#9fd8b5' : '#f5c27a');
+            $('cmd').textContent = `ffmpeg -i 02-vuelo-169.mp4 -vf "crop=ih*9/16:ih:(iw-ow)*${f.toFixed(2)}:0,scale=720:1280" ...`;
+          }
+          $('x').addEventListener('input', upd); upd();
+        </script>
+        <figcaption>La ventana clara es lo que verá el móvil. El comando de abajo es el recorte real de ffmpeg para esa posición: <code>(iw-ow)*0.62</code> desplaza la ventana al 62 % del margen sobrante. Si la cámara se mueve durante el clip, comprueba el recorte en el primer, el medio y el último fotograma.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Elige la secuencia en JS con la orientación real, no con el ancho: <code>matchMedia('(orientation: portrait)')</code> o <code>(max-aspect-ratio: 3/4)</code>. Una tablet en vertical también quiere la 9:16, y un móvil en horizontal la 16:9. Decide una sola vez al cargar; cambiar de secuencia a mitad de scroll obliga a descargar otra vez.</p>
+      </div>
+
+      <h2>Vídeo para scrub, pósters y peso</h2>
+      <p>La alternativa a la secuencia es un solo vídeo cuyo <code>currentTime</code> mueves con el scroll. Pesa menos, pero un MP4 normal solo tiene un fotograma completo (<em>keyframe</em>) cada pocos segundos, y saltar a un punto intermedio obliga al navegador a reconstruir desde el último keyframe. Resultado: tirones. La solución es codificar con keyframes muy frecuentes.</p>
+
+      <script type="text/x-code" data-lang="txt" data-label="Vídeos preparados para scrub">
+        # Todos los fotogramas son keyframe (-g 1): saltos instantáneos, archivo más grande
+        ffmpeg -i 02-vuelo-169.mp4 -an -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p \
+          -g 1 -movflags +faststart vuelo-scrub.mp4
+
+        # Compromiso: un keyframe cada 6 fotogramas, sin fotogramas B
+        ffmpeg -i 02-vuelo-169.mp4 -an -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p \
+          -x264-params keyint=6:min-keyint=6:scenecut=0 -bf 0 -movflags +faststart vuelo-scrub-g6.mp4
+
+        # WebM VP9 como alternativa (suele pesar menos)
+        ffmpeg -i 02-vuelo-169.mp4 -an -c:v libvpx-vp9 -b:v 0 -crf 36 -g 6 -row-mt 1 vuelo-scrub.webm
+
+        # Póster: el primer fotograma, para que no haya hueco mientras carga
+        ffmpeg -i 02-vuelo-169.mp4 -frames:v 1 -c:v libwebp -quality 80 vuelo-poster.webp
+      </script>
+      <ul>
+        <li><code>-an</code> quita el audio: un vídeo de scrub no lo necesita y algunos navegadores bloquean la reproducción automática de vídeos con sonido.</li>
+        <li><code>-movflags +faststart</code> mueve el índice del MP4 al principio del archivo. Sin él, el navegador tiene que descargar casi todo antes de poder mostrar el primer fotograma.</li>
+        <li><code>-pix_fmt yuv420p</code> asegura que se reproduce en todos los dispositivos.</li>
+      </ul>
+
+      <script type="text/x-code" data-lang="html" data-label="Marcado: póster inmediato, vídeo y fotogramas sin bloquear">
+        <link rel="preload" as="image" href="frames/desk/0001.webp" fetchpriority="high">
+
+        <video class="scrub" muted playsinline preload="auto" poster="vuelo-poster.webp">
+          <source src="vuelo-scrub.webm" type="video/webm">
+          <source src="vuelo-scrub.mp4" type="video/mp4">
+        </video>
+
+        <!-- Interiores: no descargan nada hasta que alguien toca la estancia -->
+        <video preload="none" poster="salon-poster.webp" muted playsinline>
+          <source src="salon.mp4" type="video/mp4">
+        </video>
+      </script>
+
+      <p>Para la secuencia de imágenes, el truco que mejor funciona es la <strong>carga por pasadas</strong>: primero uno de cada ocho fotogramas (la animación ya se puede usar, a saltos), luego uno de cada cuatro, y al final el resto. Mientras falta un fotograma, el canvas pinta el más cercano que ya ha llegado.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="Carga por pasadas de una secuencia">
+        const N = 120, frames = new Array(N);
+        const url = i => `frames/${isPortrait ? 'movil' : 'desk'}/${String(i + 1).padStart(4, '0')}.webp`;
+
+        async function load(i) {
+          if (frames[i]) return;
+          const img = new Image();
+          img.src = url(i);
+          await img.decode().catch(() => {});   // decodifica fuera del momento de pintar
+          frames[i] = img;
+        }
+        // Pasadas: cada 8, cada 4, cada 2, todos. Cada pasada solo pide lo que falta.
+        for (const step of [8, 4, 2, 1]) {
+          const batch = [];
+          for (let i = 0; i < N; i += step) batch.push(load(i));
+          await Promise.all(batch);
+        }
+        // Al pintar: el fotograma pedido o el más cercano ya cargado
+        function nearest(i) { for (let d = 0; d < N; d++) { if (frames[i - d]) return frames[i - d]; if (frames[i + d]) return frames[i + d]; } }
+      </script>
+
+      <figure class="lab" data-title="Presupuesto de peso" data-hint="Cambia de dispositivo y de red" data-height="500" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="top">
+            <div class="seg" role="group" aria-label="Dispositivo"><button data-d="mob" aria-pressed="true">Móvil</button><button data-d="desk">Escritorio</button></div>
+            <select id="net" aria-label="Red"><option value="5">4G flojo · 5 Mbps</option><option value="15" selected>4G normal · 15 Mbps</option><option value="60">Wi-Fi · 60 Mbps</option></select>
+          </div>
+          <label>Fotogramas <b id="vn"></b><input id="n" type="range" min="30" max="240" step="10"></label>
+          <label>KB por fotograma <b id="vk"></b><input id="kb" type="range" min="15" max="200" step="5"></label>
+          <div class="bar" id="bar"><i class="a"></i><i class="b"></i><i class="c"></i><span id="limit"></span></div>
+          <ul class="legend"><li class="a">Fotos fijas, fuentes y JS</li><li class="b">Primera pasada de fotogramas</li><li class="c">Resto de fotogramas</li></ul>
+          <div class="out">
+            <p><small>Lista para usar</small><b id="o1"></b></p>
+            <p><small>Secuencia completa</small><b id="o2"></b></p>
+            <p><small>Total frente a presupuesto</small><b id="o3"></b></p>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #120f24; color: #f2ebdd; padding: 18px 22px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+          .top { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 14px; }
+          .seg { display: inline-flex; border: 1px solid rgb(242 235 221 / .25); border-radius: 99px; padding: 3px; }
+          .seg button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .seg [aria-pressed="true"] { background: #f2ebdd; color: #120f24; }
+          select { min-height: 44px; border-radius: 99px; padding: 0 14px; background: #1b1633; color: inherit; border: 1px solid rgb(242 235 221 / .25); }
+          label { display: grid; grid-template-columns: 1fr auto; gap: 4px; font-size: 13px; color: #b9aed6; margin: 8px 0; } label b { color: #f2ebdd; font-weight: 500; } label input { grid-column: 1 / -1; }
+          input { width: 100%; color: #f5c27a; }
+          .bar { position: relative; display: flex; height: 34px; margin: 22px 0 8px; border-radius: 6px; background: rgb(242 235 221 / .06); }
+          .bar i { height: 100%; transition: width .3s; } .bar i:first-child { border-radius: 6px 0 0 6px; }
+          .a { --c: #8a7bbd; } .b { --c: #f5c27a; } .c { --c: #e7a3a8; }
+          .bar i, .legend li::before { background: var(--c); }
+          #limit { position: absolute; top: -8px; bottom: -8px; width: 2px; background: #f2ebdd; }
+          #limit::after { content: "presupuesto"; position: absolute; top: -16px; translate: -50%; font: 500 10px var(--f-mono); white-space: nowrap; }
+          .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: #b9aed6; }
+          .legend li::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+          .out { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+          .out p { margin: 0; padding: 12px 14px; border-radius: 10px; background: rgb(242 235 221 / .06); }
+          .out small { display: block; font-size: 12px; color: #b9aed6; } .out b { font: 400 28px/1.15 var(--f-serif); }
+          @media (max-width: 560px) { body { padding: 14px; } .top { margin-bottom: 6px; } .bar { margin: 20px 0 8px; } .legend { font-size: 11px; } .out { gap: 6px; margin-top: 12px; } .out p { padding: 9px; } .out b { font-size: 20px; } .out small { font-size: 11px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Presets de proyecto (MB). Los interiores van aparte: solo se cargan al tocar.
+          const P = { mob: { n: 120, kb: 40, fixed: 0.9, budget: 6 }, desk: { n: 150, kb: 85, fixed: 1.8, budget: 16 } };
+          let d = 'mob';
+          const $ = id => document.getElementById(id);
+          const f = (v, u) => v.toFixed(1).replace('.', ',') + u;
+          function set() { $('n').value = P[d].n; $('kb').value = P[d].kb; calc(); }
+          function calc() {
+            const n = +$('n').value, kb = +$('kb').value, p = P[d], mbps = +$('net').value;
+            const seq = n * kb / 1024, first = seq / 8;            // primera pasada: 1 de cada 8
+            const ready = p.fixed + first, total = p.fixed + seq;
+            const max = Math.max(total, p.budget) * 1.1;
+            const pct = v => v / max * 100 + '%';
+            const [a, b, c] = document.querySelectorAll('.bar i');
+            a.style.width = pct(p.fixed); b.style.width = pct(first); c.style.width = pct(seq - first);
+            $('limit').style.left = pct(p.budget);
+            const secs = mb => mb * 8 / mbps;                      // MB a segundos con esa red
+            $('vn').textContent = n; $('vk').textContent = kb + ' KB';
+            $('o1').textContent = f(secs(ready), ' s');
+            $('o2').textContent = f(secs(total), ' s');
+            $('o3').textContent = f(total, '') + ' / ' + p.budget + ' MB';
+            $('o3').style.color = total > p.budget ? '#e7a3a8' : '#9fd8b5';
+          }
+          document.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => {
+            document.querySelectorAll('[data-d]').forEach(x => x.setAttribute('aria-pressed', x === b));
+            d = b.dataset.d; set();
+          }));
+          ['n', 'kb', 'net'].forEach(id => $(id).addEventListener('input', calc));
+          set();
+        </script>
+        <figcaption>Los presupuestos (6 MB en móvil, 16 MB en escritorio) son una decisión de proyecto razonable, no una norma. Lo que de verdad cuenta es «lista para usar»: con 4G flojo, más de 3–4 segundos hasta poder hacer scroll se siente roto. Baja los KB por fotograma (720 px y calidad 65 en móvil) antes que el número de fotogramas.</figcaption>
+      </figure>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Peso en disco no es memoria. 120 WebP de 45 KB son 5 MB de descarga, pero una vez decodificados en el canvas ocupan ancho × alto × 4 bytes cada uno. En la lección siguiente calculas cuánto aguanta un Android de gama media.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Muchos usuarios abren la web por datos móviles y con el modo de ahorro activado. Ten siempre un camino ligero: póster, titular y la planta con hotspots funcionan sin la secuencia. Si <code>navigator.connection?.saveData</code> es <code>true</code> (solo lo exponen los navegadores Chromium), sirve 12 fps o salta directamente a la planta.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">El vídeo de scrub da tirones en el portátil cuando haces scroll hacia atrás. ¿Qué cambias primero?</p>
+        <ol>
+          <li>Subes el bitrate para que tenga más calidad.</li>
+          <li>Lo conviertes a WebM porque MP4 no permite ir hacia atrás.</li>
+          <li>Lo recodificas con keyframes muy frecuentes (<code>-g 1</code> o un GOP corto) y <code>+faststart</code>.</li>
+        </ol>
+        <p class="why">Ir hacia atrás obliga a reconstruir desde el keyframe anterior. Con un keyframe en cada fotograma (o cada pocos), cada salto es inmediato. El bitrate no cambia eso, y MP4 permite buscar en ambas direcciones.</p>
+      </div>
+
+      <h2>Licencias y derechos de uso</h2>
+      <p>Que puedas generar una imagen no significa que puedas usarla para lo que quieras. Antes de entregar una web hecha con recursos de IA, revisa cuatro cosas:</p>
+      <ol>
+        <li><strong>Las condiciones de la herramienta y del plan</strong> con el que generaste. Muchas ligan el uso comercial al plan de pago, y las condiciones cambian. Guarda una copia o captura de los términos vigentes cuando generaste.</li>
+        <li><strong>Lo que subes como referencia</strong>: si usas la foto de otro fotógrafo o el render de otro estudio como referencia, estás usando su obra. Usa material propio, del cliente o con licencia.</li>
+        <li><strong>Quién es el autor</strong>. En Estados Unidos, la Oficina de Copyright concluyó en enero de 2025 que el material generado solo con prompts no es protegible; sí puede serlo la aportación humana suficiente: selección, composición y modificaciones (<a href="https://datamatters.sidley.com/2025/02/07/u-s-copyright-office-issues-report-on-artificial-intelligence-and-copyrightability/">resumen del informe</a>). En la UE la lógica general es parecida: la protección exige creación humana. Consecuencia práctica: no prometas al cliente una «propiedad intelectual exclusiva» de las imágenes que quizá no exista.</li>
+        <li><strong>Transparencia</strong>. Desde el 2 de agosto de 2026 se aplican las obligaciones de transparencia del artículo 50 del Reglamento europeo de IA: quien publica contenido generado que pueda pasar por real (un <em>deepfake</em>) debe indicar que es artificial, con una obligación más ligera para obras claramente artísticas o de ficción (<a href="https://artificialintelligenceact.eu/?p=6131">guía práctica del artículo 50</a>). En una promoción inmobiliaria, además, las imágenes de un edificio sin construir ya suelen llevar «imágenes orientativas, no contractuales». Añade que están generadas con IA.</li>
+      </ol>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Pon una línea en el presupuesto y en el contrato: «Las imágenes y vídeos se generan con herramientas de IA bajo las condiciones comerciales de [herramienta, plan]. Representan el proyecto de forma orientativa». Te protege a ti, protege al cliente y evita que alguien compre un piso por un reflejo que no existe.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El aviso «Imágenes generadas con IA, orientativas» tiene que verse también en la versión vertical. No lo escondas en un pie de página que en el móvil está a quince pantallas: un texto pequeño fijo en la esquina del plano exterior, con contraste suficiente, cumple sin estorbar.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Un cliente te pasa el render de una torre de otro estudio y te pide «algo como esto» generado con IA para su promoción. ¿Qué es lo más sensato?</p>
+        <ol>
+          <li>Usarlo solo como inspiración verbal en el brief y generar desde imágenes propias o del cliente.</li>
+          <li>Subirlo como imagen de referencia: lo que sale es nuevo, así que no hay problema.</li>
+          <li>Generar con él y luego poner «imágenes orientativas».</li>
+        </ol>
+        <p class="why">Subir la obra de otro como referencia es usarla. El brief puede describir lo que te gusta (materiales, luz, encuadre) sin copiar su imagen. Y el aviso de «orientativas» resuelve la transparencia, no los derechos.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Primero el brief (hora, lente, paleta) y la lista de planos en 16:9 y 9:16; después los prompts, con un esqueleto fijo y la imagen aprobada como referencia.</li>
+          <li>El vuelo es un clip entre primer y último fotograma sin deriva, que se convierte con <code>ffmpeg</code> en una secuencia de 6–30 px de scroll por fotograma, o en un vídeo con keyframes frecuentes y <code>+faststart</code>.</li>
+          <li>Mide el peso hasta «lista para usar» en 4G, carga por pasadas, deja los interiores para cuando se toquen y revisa licencias y avisos de IA antes de publicar.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Escribe el brief de luz y la lista de cinco planos para una bodega de la Plana (una masía entre viñas al atardecer, el vuelo entra a la sala de barricas). Genera con la herramienta que tengas solo el plano exterior en 16:9 y en 9:16, con el mismo esqueleto de prompt. Después extrae 12 fps de cualquier clip de prueba con el comando de <code>ffmpeg</code> de esta lección, a 1600 px y a 720 px, y anota cuánto pesa cada secuencia. Mete esos números en la calculadora de presupuesto.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

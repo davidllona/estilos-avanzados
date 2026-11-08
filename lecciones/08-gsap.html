@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSAP, ScrollTrigger y Lenis | Hora azul</title>
+<meta name="description" content="Timelines, ScrollTrigger con pin y scrub, SplitText, Flip, gsap.matchMedia y Lenis: la caja de herramientas de las webs de scroll cinematográfico, con su versión para móvil.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="gsap">
+<main id="main">
+  <header class="lesson-hero">
+    <h1>GSAP, ScrollTrigger y Lenis</h1>
+    <p class="lede">Las tres piezas que hay debajo de casi todas las webs de scroll que te gustan: cómo se coordinan, cómo se fija una escena mientras cuenta algo y cómo se adapta todo al móvil sin que el usuario lo sufra.</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>La web de la torre que viste no es CSS con suerte. Es una <strong>escena</strong>: la sección se queda fija, el titular sube palabra a palabra, la cámara se acerca, el cielo pasa del rosa al azul noche y las ventanas se encienden. Cinco cosas coordinadas por una sola barra de scroll. Para eso existe GSAP.</p>
+      <p>En esta lección montas esa escena por piezas. Todas las demos tienen scroll propio: <strong>desliza dentro de cada demo</strong>, no en la página.</p>
+
+      <h2>Por qué GSAP si CSS ya anima con scroll</h2>
+      <p>En la lección 06 viste <code>animation-timeline: view()</code>. Para un fundido al entrar o un parallax suave es perfecto, y además corre en el hilo del compositor. GSAP no compite ahí: entra cuando la animación deja de ser decoración y pasa a ser <em>narrativa</em>.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Necesitas</th><th>CSS con scroll</th><th>GSAP + ScrollTrigger</th></tr></thead>
+          <tbody>
+            <tr><td>Aparecer al entrar, parallax simple</td><td>Ideal</td><td>Funciona, pero sobra</td></tr>
+            <tr><td>Seis pasos con solapes y ritmo</td><td>Un <code>animation-range</code> por elemento, frágil</td><td>Una timeline</td></tr>
+            <tr><td>Fijar una sección mientras anima</td><td><code>sticky</code> y alturas a mano</td><td><code>pin: true</code>, calcula el espacio</td></tr>
+            <tr><td>Suavizar el seguimiento del scroll</td><td>No</td><td><code>scrub: 1</code></td></tr>
+            <tr><td>Lógica: contador, vídeo, canvas</td><td>No</td><td><code>onUpdate</code></td></tr>
+            <tr><td>Versión distinta en móvil</td><td>Media queries</td><td><code>gsap.matchMedia()</code>, con limpieza automática</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte y licencia</span>
+        <p>Las animaciones de CSS ligadas al scroll funcionan en Chrome 115, Safari 26 y Firefox 159: son Baseline recién disponible desde el 27 de octubre de 2026. GSAP (aquí la 3.15.1) es <strong>gratis desde la 3.13, incluidos todos los plugins</strong> (SplitText, Flip, MorphSVG), también para clientes. Ojo: no es MIT, es la licencia «no charge» de Webflow. Lo único que prohíbe en la práctica es meterlo en una herramienta visual que compita con Webflow. Lenis sí es MIT.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>GSAP con ScrollTrigger pesa unos 46 KB comprimidos. No los cargues para tres fundidos: eso es CSS. Merecen la pena cuando hay una escena con pasos, un pin o lógica. Muchas webs premium combinan las dos cosas: CSS para los detalles de toda la página y GSAP solo para la portada y una o dos secciones clave.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En táctil el scroll lo mueve el compositor y ScrollTrigger se entera un frame después, desde el hilo principal. Con un parallax simple ese pequeño retraso se nota y la versión CSS va más pegada al dedo. Usa GSAP en el móvil para escenas con pasos, no para efectos que CSS ya resuelve.</p>
+      </div>
+
+      <h2>Tweens, timelines y eases</h2>
+      <p>Un <strong>tween</strong> anima propiedades de uno o varios elementos. Hay tres verbos:</p>
+      <script type="text/x-code" data-lang="js">
+        // to: desde como está hasta estos valores
+        gsap.to('.card', { y: 0, opacity: 1, duration: 0.8 });
+        // from: desde estos valores hasta como está en el CSS
+        gsap.from('.titulo', { yPercent: 100 });
+        // fromTo: tú fijas los dos extremos
+        gsap.fromTo('.panel', { x: 0 }, { x: 16, ease: 'expo.out' });
+      </script>
+      <p>Una <strong>timeline</strong> encadena tweens. Su gran herramienta es el <strong>parámetro de posición</strong>, el tercer argumento: sin él, cada tween empieza cuando acaba el anterior. Con <code>"-=0.3"</code> empieza 0,3 s antes de que acabe la timeline (se solapan). Con <code>"&lt;"</code> empieza a la vez que el anterior. También vale un número absoluto (<code>1.2</code>) o <code>"&lt;0.2"</code>, que es 0,2 s después del inicio del anterior.</p>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q"><code>tl.to(a, {duration: 1}).to(b, {duration: 1}, "&lt;").to(c, {duration: 1}, "-=0.5")</code>. ¿Cuánto dura la timeline?</p>
+        <ol>
+          <li>3 segundos</li>
+          <li>1,5 segundos</li>
+          <li>2 segundos</li>
+          <li>2,5 segundos</li>
+        </ol>
+        <p class="why"><code>a</code> va de 0 a 1. <code>b</code>, con <code>"&lt;"</code>, empieza con <code>a</code>: también de 0 a 1. <code>c</code> empieza 0,5 s antes del final de la timeline (que está en 1), así que va de 0,5 a 1,5.</p>
+      </div>
+
+      <figure class="lab" data-title="Timeline de una portada" data-hint="Cambia la posición y la ease" data-height="560" data-libs="gsap" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <main class="hero">
+            <div class="copy">
+              <p class="eyebrow">Bodega Terral · Les Useres, Castelló</p>
+              <h1>
+                <span class="line"><span class="l1">Vinos de altura,</span></span>
+                <span class="line"><em class="l2">sin ninguna prisa.</em></span>
+              </h1>
+              <p class="sub">Garnacha y monastrell a 700 metros. Vendimia a mano, de noche.</p>
+              <a class="cta" href="#">Reservar una cata</a>
+            </div>
+            <div class="media">
+              <div class="panel"></div>
+              <svg class="photo" viewBox="0 0 400 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#2e2347"/><stop offset=".5" stop-color="#b8687a"/><stop offset=".72" stop-color="#f0b183"/>
+                </linearGradient></defs>
+                <rect width="400" height="460" fill="url(#g)"/>
+                <circle cx="268" cy="238" r="30" fill="#ffe0b0" opacity=".85"/>
+                <path d="M0 250 Q120 196 240 236 T400 222 V460 H0Z" fill="#6a3a50"/>
+                <path d="M0 290 Q140 244 262 282 T400 270 V460 H0Z" fill="#40243a"/>
+                <path d="M0 322 L400 306 V460 H0Z" fill="#231427"/>
+                <path d="M230 312 L-260 460 M230 312 L-90 460 M230 312 L70 460 M230 312 L230 460 M230 312 L390 460 M230 312 L560 460" stroke="#0f0912" stroke-width="5" opacity=".7"/>
+              </svg>
+              <div class="card"><small>Añada 2024</small><b>Monastrell de La Font</b><span>14 meses en roble francés</span></div>
+            </div>
+          </main>
+          <nav class="ctrl" aria-label="Opciones de la timeline">
+            <div class="seg">
+              <button data-pos="fila" aria-pressed="true">En fila</button>
+              <button data-pos="-=0.3" aria-pressed="false">-=0.3</button>
+              <button data-pos="<" aria-pressed="false">"&lt;"</button>
+            </div>
+            <select id="ease" aria-label="Ease">
+              <option>power3.out</option><option>expo.out</option><option>back.out(1.7)</option><option>none</option>
+            </select>
+            <input id="scrub" type="range" min="0" max="1" step="0.001" value="0" aria-label="Recorrer la timeline">
+            <output id="dur">0 s</output>
+            <button id="play">Repetir</button>
+          </nav>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --crema: #F1EBDF; --tinta: #1B1512; --vino: #7A2233; }
+          body { height: 100vh; display: grid; grid-template-rows: minmax(0, 1fr) auto; background: var(--crema); color: var(--tinta); }
+          .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(18px, 4vw, 48px); align-items: center; padding: clamp(18px, 4vw, 44px); }
+          .eyebrow { margin: 0 0 18px; font: 500 11px/1.3 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #7a675b; }
+          h1 { margin: 0; font: 650 clamp(32px, 6.2vw, 62px)/.96 var(--f-sans); letter-spacing: -.045em; }
+          .line { display: block; overflow: hidden; padding-bottom: .08em; }  /* la máscara */
+          .line > * { display: inline-block; }
+          em { font: italic 400 1.1em/1 var(--f-serif); letter-spacing: -.02em; color: var(--vino); }
+          .sub { max-width: 30ch; margin: 16px 0 22px; font-size: 15px; color: #54463d; }
+          .cta { display: inline-flex; align-items: center; min-height: 46px; padding: 0 22px; border-radius: 99px; background: var(--tinta); color: var(--crema); font-size: 14px; font-weight: 600; text-decoration: none; }
+          .media { position: relative; width: 100%; max-width: 330px; aspect-ratio: 4 / 4.6; justify-self: center; }
+          .panel { position: absolute; inset: 0; background: var(--vino); border-radius: 3px; }
+          .photo { position: relative; width: 100%; height: 100%; border-radius: 3px; clip-path: inset(0% 0% 0% 0%); }
+          .card { position: absolute; left: -26px; bottom: 24px; display: grid; gap: 2px; padding: 12px 16px; border-radius: 10px; background: #fffaf2; font-size: 12px; color: #6b5a50;
+                  box-shadow: 0 18px 40px -18px rgb(40 20 10 / .5); opacity: 0; transform: translateY(24px); }
+          .card small { font: 500 10px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--vino); }
+          .card b { font: 400 19px/1.1 var(--f-serif); color: var(--tinta); }
+          /* Controles */
+          .ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; background: var(--tinta); color: var(--crema); font-size: 13px; }
+          .seg { display: flex; border-radius: 99px; background: #2e2622; padding: 2px; }
+          button, select { min-height: 44px; border: 0; border-radius: 99px; padding: 0 14px; background: transparent; color: inherit; cursor: pointer; }
+          .seg [aria-pressed="true"] { background: var(--crema); color: var(--tinta); }
+          select { background: #2e2622; }
+          #scrub { flex: 1; min-width: 90px; height: 44px; accent-color: #e9a46a; }
+          output { font: 500 12px var(--f-mono); min-width: 44px; color: #e9a46a; }
+          #play { background: #e9a46a; color: var(--tinta); font-weight: 600; }
+          @media (max-width: 560px) {
+            .hero { grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 18px; }
+            .sub { display: none; }
+            .media { max-width: none; aspect-ratio: auto; min-height: 120px; align-self: stretch; }
+            .photo { position: absolute; inset: 0; }   /* que mande el hueco, no la proporción del SVG */
+            .card { left: 10px; bottom: 10px; padding: 8px 12px; }
+            .card b { font-size: 16px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          let pos = 'fila', tl;
+          const ease = document.querySelector('#ease');
+          const scrub = document.querySelector('#scrub');
+
+          function build() {
+            if (tl) tl.revert();                    // deja el DOM como estaba antes de reconstruir
+            const p = pos === 'fila' ? '>' : pos;   // '>' = al acabar el anterior (lo de siempre)
+
+            tl = gsap.timeline({
+              defaults: { duration: 0.9, ease: ease.value },
+              onUpdate: () => (scrub.value = tl.progress()),
+            });
+            tl.from('.eyebrow', { y: 14, opacity: 0 })
+              .from('.l1', { yPercent: 105 }, p)                    // sube desde debajo de la máscara
+              .from('.l2', { yPercent: 105 }, p)
+              .from('.photo', { clipPath: 'inset(100% 0% 0% 0%)', duration: 1.2 }, p)
+              .fromTo('.panel', { x: 0, y: 0 }, { x: 16, y: 16 }, p) // el panel se desplaza detrás
+              .from(['.sub', '.cta'], { y: 18, opacity: 0, stagger: 0.08 }, p)
+              .to('.card', { y: 0, opacity: 1, rotate: -2 }, p);
+            document.querySelector('#dur').textContent = tl.duration().toFixed(1) + ' s';
+          }
+
+          document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
+            pos = b.dataset.pos;
+            document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+            build();
+          }));
+          ease.addEventListener('change', build);
+          // Una timeline se puede recorrer a mano: es lo mismo que hará el scroll después
+          scrub.addEventListener('input', () => tl.pause().progress(+scrub.value));
+          document.querySelector('#play').addEventListener('click', () => tl.restart());
+          build();
+        </script>
+        <figcaption>Mira el contador de duración: <strong>en fila</strong> la portada tarda más de seis segundos y se siente robótica. Con <code>-=0.3</code> cada pieza entra mientras la anterior frena, y eso es lo que da sensación de fluidez. Con <code>"&lt;"</code> todo entra a la vez y se pierde la jerarquía. Arrastra el control deslizante: estás haciendo a mano lo que luego hará el scroll.</figcaption>
+      </figure>
+
+      <p>Las <strong>eases</strong> son la personalidad del movimiento. Para entradas, <code>power3.out</code> o <code>expo.out</code>: arrancan rápido y aterrizan con calma, que es como se mueven las cosas caras. <code>back</code> y <code>elastic</code> rebotan y casi nunca encajan en una marca premium. Y cuando la animación va atada al scroll, <code>ease: 'none'</code>, porque el ritmo ya lo pone el dedo.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Lo que separa una portada de plantilla de una de estudio es el <strong>solape</strong>, no la cantidad de efectos. Tres o cuatro piezas, duraciones entre 0,7 y 1,2 s, una sola ease para todo (ponla en <code>defaults</code>) y solapes de 0,2 a 0,4 s. Si la intro pasa de dos segundos, el usuario ya está haciendo scroll.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil la gente hace scroll antes de que acabe la intro. Acorta las duraciones un 30 % y no ocultes con <code>from()</code> nada que tenga que leerse en el primer segundo. Si el JS tarda en cargar, ese contenido se queda invisible. Usa <code>gsap.matchMedia()</code> (sección 05) para tener una timeline más corta solo en pantallas pequeñas.</p>
+      </div>
+
+      <h2>ScrollTrigger: start, end y scrub</h2>
+      <p>ScrollTrigger conecta una animación con la posición del scroll. Lo que más cuesta al principio son <code>start</code> y <code>end</code>. Cada uno son <strong>dos palabras</strong>: la primera es un punto del <em>elemento</em> y la segunda un punto del <em>viewport</em>. <code>start: "top 80%"</code> significa «cuando el borde superior del elemento llegue al 80 % de la altura de la pantalla, contando desde arriba». <code>end: "+=300"</code> significa «300 px de scroll después del start».</p>
+      <p>Cambia los valores y mira los <strong>markers</strong>: las etiquetas de la derecha del visor son el viewport (<code>scroller-start</code>, <code>scroller-end</code>) y las que van con la obra son el elemento (<code>start</code>, <code>end</code>). La animación ocurre mientras unas cruzan a las otras.</p>
+
+      <figure class="lab" data-title="Visualizador de start y end" data-hint="Desliza el visor y cambia los valores" data-height="560" data-libs="gsap scrolltrigger" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div id="visor">
+            <header class="intro">
+              <p class="kicker">Estudio Morera · Obra 2025</p>
+              <h1>Una casa entre <em>pinos.</em></h1>
+              <p class="cue">Desliza dentro de la demo</p>
+            </header>
+            <figure class="obra">
+              <div class="img">
+                <svg viewBox="0 0 600 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d2348"/><stop offset=".7" stop-color="#a66a78"/><stop offset="1" stop-color="#e9a77a"/></linearGradient>
+                  <linearGradient id="v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd59a"/><stop offset="1" stop-color="#e0844a"/></linearGradient></defs>
+                  <rect width="600" height="340" fill="url(#c)"/>
+                  <path d="M20 250 L60 120 L100 250Z M70 250 L120 90 L170 250Z M460 250 L505 105 L550 250Z M520 250 L560 140 L600 250Z" fill="#141a2a"/>
+                  <rect x="230" y="92" width="230" height="10" fill="#d9d3c9"/><rect x="250" y="102" width="190" height="52" fill="url(#v)"/>
+                  <rect x="120" y="154" width="370" height="12" fill="#e6e0d6"/><rect x="150" y="166" width="300" height="78" fill="url(#v)"/>
+                  <path d="M210 166V244M270 166V244M330 166V244M390 166V244M300 102V154M360 102V154" stroke="#3a2a22" stroke-width="2"/>
+                  <rect y="244" width="600" height="96" fill="#10131f"/><rect x="140" y="258" width="330" height="18" fill="#e9a77a" opacity=".25"/>
+                </svg>
+              </div>
+              <figcaption><b>Casa del Pinar</b><span>Benicàssim · 240 m² · Hormigón y pino</span></figcaption>
+            </figure>
+            <p class="outro">Sigue bajando hasta que la obra salga por arriba</p>
+          </div>
+          <aside class="panel">
+            <label>start <select id="start"><option>top bottom</option><option selected>top 80%</option><option>top center</option><option>center center</option><option>top top</option></select></label>
+            <label>end <select id="end"><option>bottom top</option><option selected>bottom 60%</option><option>center center</option><option>+=300</option></select></label>
+            <div class="seg" id="scrub"><button data-v="no" aria-pressed="true">Sin scrub</button><button data-v="true">scrub: true</button><button data-v="1">scrub: 1</button></div>
+            <p id="frase"></p>
+            <div class="meter"><span>Scroll</span><i><b id="b1"></b></i><span>Animación</span><i><b id="b2"></b></i></div>
+          </aside>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { height: 100vh; display: grid; grid-template-columns: 1fr 250px; background: #0e1020; color: #ece6dc; overflow: hidden; }
+          #visor { position: relative; overflow-y: auto; overscroll-behavior: contain; }  /* el scroller de esta demo */
+          .intro { height: 78%; display: grid; align-content: center; padding: 0 8%; position: relative; }
+          .kicker { font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #a9a3c4; margin: 0 0 12px; }
+          h1 { margin: 0; font: 400 clamp(36px, 7vw, 64px)/1 var(--f-serif); letter-spacing: -.01em; }
+          h1 em { color: #f0b183; }
+          .cue { position: absolute; bottom: 22px; left: 8%; margin: 0; display: flex; gap: 10px; align-items: center; font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #a9a3c4; }
+          .cue::before { content: ""; width: 1px; height: 22px; background: currentColor; animation: cue 1.6s ease-in-out infinite; transform-origin: top; }
+          @keyframes cue { 50% { scale: 1 .3; } }
+          .obra { margin: 0 8%; }
+          .img { aspect-ratio: 16 / 10; overflow: hidden; clip-path: inset(0% 0% 0% 0% round 4px); }
+          .img svg { width: 100%; height: 100%; }
+          .obra figcaption { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 0; font-size: 13px; color: #a9a3c4; }
+          .obra b { font: 400 22px/1 var(--f-serif); color: #ece6dc; }
+          .outro { height: 140%; padding: 30% 8% 0; margin: 0; font: 400 20px var(--f-serif); color: #6f6a8e; }
+          /* Panel */
+          .panel { display: grid; align-content: start; gap: 12px; padding: 18px 16px; background: #171a30; border-left: 1px solid #2a2d4a; font-size: 13px; }
+          label { display: grid; gap: 4px; font: 500 11px var(--f-mono); color: #a9a3c4; }
+          select { min-height: 44px; border-radius: 8px; border: 1px solid #34375a; background: #0e1020; color: #ece6dc; padding: 0 10px; font: 500 13px var(--f-mono); }
+          .seg { display: grid; gap: 4px; }
+          .seg button { min-height: 44px; border-radius: 8px; border: 1px solid #34375a; background: none; color: #ece6dc; font: 500 12px var(--f-mono); cursor: pointer; }
+          .seg [aria-pressed="true"] { background: #f0b183; color: #14101c; border-color: #f0b183; }
+          #frase { margin: 0; line-height: 1.45; color: #cfc9e0; }
+          .meter { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font: 500 11px var(--f-mono); color: #a9a3c4; }
+          .meter i { height: 6px; border-radius: 9px; background: #2a2d4a; overflow: hidden; }
+          .meter b { display: block; height: 100%; background: #f0b183; transform-origin: left; scale: 0 1; }
+          .meter i + span + i b { background: #8fb8ff; }
+          @media (max-width: 600px) {
+            body { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+            .panel { grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px; border: 0; border-top: 1px solid #2a2d4a; }
+            .seg { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+            .seg button { font-size: 11px; padding: 0 4px; }
+            #frase, .meter { grid-column: 1 / -1; font-size: 12px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          gsap.registerPlugin(ScrollTrigger);
+          const $ = (s) => document.querySelector(s);
+          let modo = 'no', ctx;
+
+          function montar() {
+            if (ctx) ctx.revert();                 // borra la animación anterior y sus markers
+            ctx = gsap.context(() => {
+              const tl = gsap.timeline({
+                defaults: { ease: modo === 'no' ? 'power3.out' : 'none' },
+                onUpdate: () => ($('#b2').style.scale = tl.progress() + ' 1'),
+                scrollTrigger: {
+                  trigger: '.obra',
+                  scroller: '#visor',              // en esta demo el scroll es un div, no la ventana
+                  start: $('#start').value,
+                  end: $('#end').value,
+                  scrub: modo === 'no' ? false : modo === 'true' ? true : 1,
+                  toggleActions: 'play none none reverse',   // solo cuenta sin scrub
+                  markers: { startColor: '#f0b183', endColor: '#ff6fa8', indent: 8 },
+                  onUpdate: (self) => ($('#b1').style.scale = self.progress + ' 1'),
+                },
+              });
+              tl.from('.img', { clipPath: 'inset(16% 20% 16% 20% round 18px)', duration: 1 })
+                .from('.img svg', { scale: 1.35, duration: 1 }, 0)
+                .from('.obra figcaption', { y: 20, opacity: 0, duration: 0.6 }, 0.4);
+            });
+            $('#frase').textContent = `Empieza cuando ${frase($('#start').value)}. Termina cuando ${frase($('#end').value, true)}.`;
+          }
+
+          // Traduce "top 80%" a una frase
+          function frase(v, fin) {
+            if (v.startsWith('+=')) return `hayas bajado ${v.slice(2)} px más desde el start`;
+            const [el, vp] = v.split(' ');
+            const parte = { top: 'el borde superior', center: 'el centro', bottom: 'el borde inferior' };
+            const sitio = vp.endsWith('%') ? `el ${parseInt(vp)} % del visor` : { top: 'arriba del visor', center: 'la mitad del visor', bottom: 'abajo del visor' }[vp];
+            return `${parte[el]} de la obra llegue a ${sitio}`;
+          }
+
+          $('#start').onchange = $('#end').onchange = montar;
+          document.querySelectorAll('#scrub button').forEach((b) => (b.onclick = () => {
+            modo = b.dataset.v;
+            document.querySelectorAll('#scrub button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+            montar();
+          }));
+          $('#visor').addEventListener('scroll', () => $('.cue').style.opacity = 0, { once: true });
+          montar();
+        </script>
+        <figcaption>Compara las dos barras. <strong>Sin scrub</strong>, la animación se dispara entera al cruzar el start y la de scroll va por su cuenta. Con <code>scrub: true</code> las dos barras van idénticas: la animación es el scroll. Con <code>scrub: 1</code> la animación persigue al scroll con un segundo de retraso. Ese «colchón» es el que da la sensación cinematográfica.</figcaption>
+      </figure>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Quieres que una imagen empiece a animarse cuando su centro llegue a la mitad de la pantalla. ¿Qué <code>start</code> escribes?</p>
+        <ol>
+          <li><code>start: "50%"</code></li>
+          <li><code>start: "center center"</code></li>
+          <li><code>start: "top center"</code></li>
+        </ol>
+        <p class="why">Primera palabra, el elemento (su centro). Segunda, el viewport (su mitad). <code>"top center"</code> empezaría antes, cuando el borde superior de la imagen toca la mitad.</p>
+      </div>
+
+      <h3>toggleActions y batch</h3>
+      <p>Sin scrub, ScrollTrigger decide qué hacer con la animación en cuatro momentos: al entrar bajando, al salir por arriba, al volver a entrar subiendo y al salir por abajo. <code>toggleActions</code> son esas cuatro acciones en ese orden:</p>
+      <script type="text/x-code" data-lang="js" data-label="onEnter · onLeave · onEnterBack · onLeaveBack">
+        // por defecto: se reproduce una vez y ya
+        toggleActions: 'play none none none'
+        // se rebobina si vuelves a subir por encima del start
+        toggleActions: 'play none none reverse'
+        // reinicia, pausa al salir, sigue al volver, resetea arriba
+        toggleActions: 'restart pause resume reset'
+      </script>
+      <p>Para listas largas, crear un ScrollTrigger por fila es caro y queda descoordinado. <code>ScrollTrigger.batch()</code> agrupa los elementos que entran en el mismo frame y te los da juntos para escalonarlos.</p>
+
+      <figure class="lab" data-title="Índice de obra con batch" data-hint="Desliza dentro de la demo" data-height="520" data-libs="gsap scrolltrigger" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <header class="top">
+            <p class="kicker">Estudio Morera</p>
+            <p class="lead">Arquitectura residencial en el Mediterráneo desde 2016.</p>
+            <p class="cue">Desliza dentro de la demo</p>
+          </header>
+          <h2 class="claim"><span class="ln"><span>Construimos poco.</span></span><span class="ln"><em>Lo construimos bien.</em></span></h2>
+          <ol class="index">
+            <li class="row" style="--a:#c98b5e;--b:#33402f"><i class="thumb"></i><span class="n">01</span><b>Casa del Pinar</b><span class="lugar">Benicàssim</span><span class="y">2025</span></li>
+            <li class="row" style="--a:#d9cbb4;--b:#6c7a8a"><i class="thumb"></i><span class="n">02</span><b>Edificio Albereda</b><span class="lugar">Valencia</span><span class="y">2024</span></li>
+            <li class="row" style="--a:#e6b48a;--b:#7d4a3a"><i class="thumb"></i><span class="n">03</span><b>Mas de les Oliveres</b><span class="lugar">Vilafamés</span><span class="y">2024</span></li>
+            <li class="row" style="--a:#b9c6c4;--b:#2f4a56"><i class="thumb"></i><span class="n">04</span><b>Casa Varadero</b><span class="lugar">Xàbia</span><span class="y">2023</span></li>
+            <li class="row" style="--a:#e8d8c0;--b:#9c6b4e"><i class="thumb"></i><span class="n">05</span><b>Taller Cerámico Alcora</b><span class="lugar">L'Alcora</span><span class="y">2022</span></li>
+            <li class="row" style="--a:#cbb8d6;--b:#3c3358"><i class="thumb"></i><span class="n">06</span><b>Viviendas Grau</b><span class="lugar">Castelló</span><span class="y">2021</span></li>
+            <li class="row" style="--a:#d4c79a;--b:#4d5a33"><i class="thumb"></i><span class="n">07</span><b>Refugio Penyagolosa</b><span class="lugar">Vistabella</span><span class="y">2019</span></li>
+            <li class="row" style="--a:#f0c9a8;--b:#8a3f2f"><i class="thumb"></i><span class="n">08</span><b>Casa Patio</b><span class="lugar">Vila-real</span><span class="y">2016</span></li>
+          </ol>
+          <p class="foot">8 obras construidas · Ver archivo completo</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #ECE8E0; color: #191714; padding: 0 clamp(18px, 5vw, 48px); }
+          .top { height: 92vh; display: grid; align-content: center; position: relative; }
+          .kicker { font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #8a8276; margin: 0 0 10px; }
+          .lead { margin: 0; max-width: 16ch; font: 500 clamp(28px, 5.4vw, 48px)/1.02 var(--f-sans); letter-spacing: -.04em; }
+          .cue { position: absolute; bottom: 20px; margin: 0; font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #8a8276; }
+          .claim { margin: 0 0 8vh; font: 400 clamp(40px, 8vw, 78px)/.98 var(--f-serif); letter-spacing: -.02em; }
+          .ln { display: block; overflow: hidden; padding-bottom: .06em; }
+          .ln > * { display: inline-block; }
+          .claim em { color: #9a4a2e; }
+          .index { list-style: none; margin: 0; padding: 0; border-top: 1px solid #191714; }
+          .row { position: relative; display: grid; grid-template-columns: 44px 1.4fr 1fr 60px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid #cfc8bc; cursor: pointer; }
+          .n, .y { font: 500 12px var(--f-mono); color: #8a8276; }
+          .y { text-align: right; }
+          .row b { font: 500 clamp(18px, 2.6vw, 24px)/1.1 var(--f-sans); letter-spacing: -.02em; }
+          .lugar { color: #6b645a; font-size: 14px; }
+          .thumb { position: absolute; right: 90px; top: 50%; width: 150px; aspect-ratio: 4 / 3; translate: 0 -50%; border-radius: 3px; pointer-events: none;
+                   background: linear-gradient(180deg, var(--a) 55%, var(--b) 55%); opacity: 0; scale: .9; transition: opacity .3s, scale .4s cubic-bezier(.2, .8, .2, 1); z-index: 2; }
+          /* La miniatura solo aparece con ratón: en táctil el hover no existe */
+          @media (hover: hover) { .row:hover .thumb { opacity: 1; scale: 1; } .row:hover b { color: #9a4a2e; } }
+          .foot { padding: 40px 0 80px; font: 500 12px var(--f-mono); color: #8a8276; }
+          @media (max-width: 560px) {
+            .row { grid-template-columns: 56px 1fr auto; grid-template-rows: auto auto; row-gap: 2px; align-items: center; }
+            .thumb { position: static; grid-row: span 2; width: 44px; aspect-ratio: 1; translate: none; opacity: 1; scale: 1; }
+            .n { display: none; }
+            .lugar { grid-column: 2; grid-row: 2; font-size: 13px; }
+            .y { grid-column: 3; grid-row: 1 / span 2; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          gsap.registerPlugin(ScrollTrigger);
+
+          // 1) El titular: entra al llegar y se rebobina si vuelves a subir
+          gsap.from('.claim .ln > *', {
+            yPercent: 110, duration: 1.1, ease: 'expo.out', stagger: 0.12,
+            scrollTrigger: { trigger: '.claim', start: 'top 85%', toggleActions: 'play none none reverse' },
+          });
+
+          // 2) Las filas, en lotes: las que entran juntas se escalonan entre sí
+          gsap.set('.row', { opacity: 0, y: 30 });
+          ScrollTrigger.batch('.row', {
+            start: 'top 92%',
+            onEnter: (lote) => gsap.to(lote, {
+              opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.08, overwrite: true,
+            }),
+            onLeaveBack: (lote) => gsap.to(lote, { opacity: 0, y: 30, duration: 0.4, overwrite: true }),
+          });
+
+          addEventListener('scroll', () => gsap.to('.cue', { opacity: 0 }), { once: true });
+        </script>
+        <figcaption>Baja despacio y luego rápido. Si bajas rápido entran varias filas en el mismo frame y <code>batch</code> las escalona como un grupo, en vez de lanzar ocho animaciones sueltas. Con ratón, pasa por encima de una fila: la miniatura solo existe con <code>@media (hover: hover)</code>. En el móvil está siempre visible y más pequeña.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p><code>scrub: true</code> se siente mecánico y <code>scrub: 2</code> o más, borracho. Entre <code>0.5</code> y <code>1.2</code> está el punto dulce para escenas. Para apariciones de contenido no uses scrub: que la animación se dispare y acabe sola, porque nadie quiere leer un párrafo a medio aparecer.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>La inercia del dedo ya suaviza el scroll, así que en táctil <code>scrub: 1</code> se nota «de goma»: usa <code>true</code> o <code>0.5</code>. Escribe <code>start</code> y <code>end</code> en porcentajes y no en píxeles, porque <code>"top 600px"</code> ni siquiera existe en una pantalla de 640 px de alto. Y prueba los markers en un móvil de verdad: lo que en escritorio entra al 80 %, en vertical puede estar ya entero en pantalla al cargar.</p>
+      </div>
+
+      <h2>Pin y SplitText: la escena de portada</h2>
+      <p>Con <code>pin: true</code>, ScrollTrigger fija la sección mientras dura el recorrido entre <code>start</code> y <code>end</code>, y añade debajo el espacio necesario (<code>pinSpacing</code>) para que el contenido siguiente no se meta por debajo. <code>end: "+=220%"</code> quiere decir «mantenla fija durante 2,2 pantallas de scroll». Esa distancia es el <strong>tempo</strong> de la escena: si la duplicas, todo pasa a la mitad de velocidad.</p>
+      <p><strong>SplitText</strong> parte un texto en líneas, palabras o letras. Con <code>mask: 'words'</code> envuelve cada palabra en un contenedor con <code>overflow: clip</code>, así que la palabra puede «subir desde debajo de una línea invisible», el efecto editorial por excelencia. Además pone un <code>aria-label</code> con la frase completa para que el lector de pantalla no lea palabras sueltas.</p>
+
+      <figure class="lab" data-title="Torre Alba: portada fijada" data-hint="Desliza dentro de la demo" data-height="560" data-libs="gsap scrolltrigger splittext" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="escena">
+            <div class="cielo"></div><div class="cielo noche"></div>
+            <div class="estrellas"></div><div class="sol"></div>
+            <div class="mundo">
+              <svg class="ciudad" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40V22h18V12h14v10h20V18h12V6h10v16h26V14h16v8h30V10h12v12h40V16h18V4h8v18h34V12h20v10h26V18h18v22Z"/></svg>
+              <div class="torre"><i class="luces"></i></div>
+            </div>
+            <div class="agua"><i class="reflejo"></i></div>
+            <nav class="nav"><b>Torre Alba</b><span>Residencias · Alicante</span></nav>
+            <div class="textos">
+              <h1 class="t1">Vivir por encima <em>de la ciudad.</em></h1>
+              <h2 class="t2">Y cuando cae la noche, <em>se enciende.</em></h2>
+            </div>
+            <p class="cue">Desliza dentro de la demo</p>
+          </section>
+          <section class="ficha">
+            <p class="kicker">Planta 32 · The Residence</p>
+            <h3>212 m² con la bahía <em>a tus pies.</em></h3>
+            <dl><div><dt>Dormitorios</dt><dd>4</dd></div><div><dt>Terraza</dt><dd>48 m²</dd></div><div><dt>Desde</dt><dd>1,9 M€</dd></div></dl>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #0b0a1c; color: #f4ecdf; }
+          .escena { position: relative; height: 100vh; overflow: hidden; }
+          .cielo { position: absolute; inset: 0; background: linear-gradient(#2a1f5c, #7b4a8f 36%, #e38a8e 60%, #f8c58c 74%); }
+          .noche { background: linear-gradient(#04051a, #121640 42%, #35296a 64%, #5e3a6e 74%); opacity: 0; }
+          .estrellas { position: absolute; inset: 0 0 45%; opacity: 0; background:
+            radial-gradient(1.5px 1.5px at 12% 20%, #fff, transparent), radial-gradient(1px 1px at 28% 46%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 44% 12%, #fff, transparent), radial-gradient(1px 1px at 67% 32%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 82% 16%, #fff, transparent), radial-gradient(1px 1px at 91% 52%, #fff, transparent); }
+          .sol { position: absolute; left: 24%; top: 56%; width: 120px; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(#fff4da, #ffc48a 40%, transparent 70%); }
+          .mundo { position: absolute; inset: 0 0 26%; transform-origin: 60% 100%; }
+          .ciudad { position: absolute; bottom: 0; width: 100%; height: 12%; fill: #1b1538; }
+          .torre { position: absolute; bottom: 0; left: 56%; width: clamp(64px, 12vw, 116px); height: 76%;
+                   background: linear-gradient(90deg, #2b2456, #6a5a9c 45%, #221c48); clip-path: polygon(10% 3%, 50% 0, 90% 3%, 100% 100%, 0 100%); }
+          /* Ventanas encendidas: dos franjas irregulares que se cruzan con una máscara */
+          .luces { position: absolute; inset: 5% 0 0; background: #ffc979; opacity: 0;
+                   -webkit-mask: repeating-linear-gradient(0deg, #000 0 22px, transparent 0 33px, #000 0 44px, transparent 0 77px), repeating-linear-gradient(90deg, #000 0 12px, transparent 0 20px, #000 0 26px, transparent 0 40px);
+                   -webkit-mask-composite: source-in; mask-composite: intersect; }
+          .torre::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 6px, #17123a 0 8px), repeating-linear-gradient(0deg, transparent 0 9px, #17123a 0 11px); opacity: .7; }
+          .agua { position: absolute; inset: 74% 0 0; background: repeating-linear-gradient(0deg, rgb(255 220 170 / .07) 0 1px, transparent 0 7px), linear-gradient(#3a2b60, #0e0b24); }
+          .reflejo { position: absolute; left: 56%; top: 0; width: clamp(64px, 12vw, 116px); height: 80%; background: linear-gradient(#ffc979, transparent); filter: blur(8px); opacity: 0; }
+          .nav { position: absolute; top: 0; inset-inline: 0; display: flex; justify-content: space-between; padding: 18px clamp(18px, 5vw, 44px) 28px; font-size: 13px; background: linear-gradient(rgb(11 10 28 / .55), transparent); }
+          .nav b { font: 400 20px var(--f-serif); letter-spacing: .02em; }
+          .nav span { opacity: .75; }
+          .textos { position: absolute; top: 20%; left: clamp(18px, 5vw, 44px); width: min(58%, 520px); }
+          .t1, .t2 { position: absolute; top: 0; margin: 0; font: 400 clamp(38px, 7.4vw, 76px)/.98 var(--f-serif); letter-spacing: -.015em; text-wrap: balance; }
+          .t2 { font-size: clamp(32px, 6vw, 60px); }
+          .textos em { color: #ffd6a0; }
+          .cue { position: absolute; bottom: 16px; left: 50%; translate: -50% 0; margin: 0; padding: 8px 14px; border-radius: 99px; background: rgb(255 255 255 / .12); backdrop-filter: blur(8px); font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+          .ficha { padding: 70px clamp(18px, 5vw, 44px) 90px; }
+          .kicker { font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #b9a7d8; }
+          .ficha h3 { margin: 0 0 28px; font: 400 clamp(32px, 5vw, 52px)/1 var(--f-serif); }
+          .ficha em { color: #ffd6a0; }
+          dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0; border-top: 1px solid #3a3360; padding-top: 16px; }
+          dt { font-size: 12px; color: #b9a7d8; } dd { margin: 0; font: 400 28px var(--f-serif); }
+          @media (max-width: 600px) { .textos { width: 54%; top: 17%; } .torre { left: 62%; } .reflejo { left: 62%; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          gsap.registerPlugin(ScrollTrigger, SplitText);
+
+          // Partir el texto DESPUÉS de cargar las fuentes: si no, los cortes salen mal
+          document.fonts.ready.then(() => {
+            const s1 = SplitText.create('.t1', { type: 'words', mask: 'words' });
+            const s2 = SplitText.create('.t2', { type: 'words', mask: 'words' });
+
+            // Entrada al cargar: no depende del scroll
+            gsap.from(s1.words, { yPercent: 110, duration: 1.2, ease: 'expo.out', stagger: 0.06, delay: 0.2 });
+            gsap.set(s2.words, { yPercent: 110 });
+
+            const mm = gsap.matchMedia();
+            mm.add({ movil: '(max-width: 600px)', escritorio: '(min-width: 601px)' }, (ctx) => {
+              const { movil } = ctx.conditions;
+              const tl = gsap.timeline({
+                defaults: { ease: 'none' },
+                scrollTrigger: {
+                  trigger: '.escena', start: 'top top',
+                  end: movil ? '+=120%' : '+=220%',  // en móvil, la mitad de recorrido
+                  pin: true,
+                  scrub: movil ? true : 1,
+                },
+              });
+              // y (px) y yPercent son canales distintos: la entrada y el scroll no se pisan
+              tl.to(s1.words, { y: (i, el) => -el.offsetHeight * 1.2, stagger: 0.04, duration: 0.6, ease: 'power2.in' })
+                .to('.cue', { opacity: 0, duration: 0.2 }, 0)
+                .to('.mundo', { scale: movil ? 1.45 : 1.9, duration: 2 }, 0.2)       // la cámara se acerca
+                .to('.sol', { yPercent: 150, opacity: 0, duration: 1.4 }, 0.2)
+                .to('.noche', { opacity: 1, duration: 1.6 }, 0.4)                     // el cielo cambia
+                .to('.estrellas', { opacity: 1, duration: 0.8 }, 1.2)
+                .to(['.luces', '.reflejo'], { opacity: (i) => [1, 0.5][i], duration: 0.8 }, 1.3)
+                .to(s2.words, { yPercent: 0, stagger: 0.06, duration: 0.6, ease: 'power3.out' }, 1.6);
+            });
+          });
+        </script>
+        <figcaption>Una sola timeline con <code>scrub</code>, fijada mientras dura: el titular sale por su máscara, la torre crece desde su base (<code>transform-origin</code> abajo), el sol baja, el cielo nocturno aparece encima del atardecer, se encienden las ventanas y entra el segundo titular. Al terminar, el pin se suelta y la ficha sube con normalidad. Pulsa «Ver en móvil»: el pin dura la mitad.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una escena fijada aguanta <strong>una idea</strong> y unos tres «golpes» (aquí: el titular sale, cae la noche, entra el titular nuevo). A partir de ahí el usuario siente que el scroll no le obedece. Fíjate también en que el cielo no se anima con un degradado: son dos capas y cambia la opacidad de la de encima. Animar <code>opacity</code> y <code>transform</code> es barato, y repintar un degradado en cada frame no lo es.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En la demo, <code>gsap.matchMedia()</code> deja el pin en <code>+=120%</code> en móvil y en <code>+=220%</code> en escritorio, y la torre crece menos. Un pin de tres pantallas con el pulgar cansa. En una web real, la sección fijada debe medir <code>100svh</code> y no <code>100vh</code>: si no, al ocultarse la barra del navegador queda una franja o el titular se corta. Y el titular de 76 px se queda en 38 px con <code>clamp()</code>.</p>
+      </div>
+
+      <h3>Flip, en dos líneas</h3>
+      <p>Flip resuelve otro problema: animar un <strong>cambio de layout</strong> que CSS no puede interpolar (filtrar una rejilla, pasar de cuadrícula a lista, mover un elemento a otro contenedor). Haces una foto del estado (<code>Flip.getState</code>), cambias el DOM como te dé la gana y <code>Flip.from</code> anima desde la foto vieja hasta el layout nuevo.</p>
+
+      <figure class="lab" data-title="Disponibilidad con Flip" data-hint="Filtra las residencias" data-height="520" data-height-mobile="600" data-libs="gsap flip" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <header class="top">
+            <div><p class="kicker">Torre Alba · Disponibilidad</p><h1>Elige tu <em>planta.</em></h1></div>
+            <div class="chips" role="group" aria-label="Filtrar residencias">
+              <button data-f="todas" aria-pressed="true">Todas</button><button data-f="2" aria-pressed="false">2 dorm.</button>
+              <button data-f="3" aria-pressed="false">3 dorm.</button><button data-f="atico" aria-pressed="false">Áticos</button>
+            </div>
+          </header>
+          <ul class="grid">
+            <li class="u" data-t="2"><i class="plano"></i><b>Planta 08 · A</b><span>2 dorm. · 96 m²</span><em>620.000 €</em></li>
+            <li class="u" data-t="3"><i class="plano p3"></i><b>Planta 12 · C</b><span>3 dorm. · 138 m²</span><em>910.000 €</em></li>
+            <li class="u" data-t="2"><i class="plano"></i><b>Planta 15 · B</b><span>2 dorm. · 101 m²</span><em>680.000 €</em></li>
+            <li class="u" data-t="atico"><i class="plano pa"></i><b>Ático 40 · Norte</b><span>4 dorm. · 260 m²</span><em>2,6 M€</em></li>
+            <li class="u" data-t="3"><i class="plano p3"></i><b>Planta 21 · A</b><span>3 dorm. · 142 m²</span><em>990.000 €</em></li>
+            <li class="u" data-t="2"><i class="plano"></i><b>Planta 26 · D</b><span>2 dorm. · 94 m²</span><em>720.000 €</em></li>
+            <li class="u" data-t="3"><i class="plano p3"></i><b>Planta 32 · B</b><span>3 dorm. · 151 m²</span><em>1,2 M€</em></li>
+            <li class="u" data-t="atico"><i class="plano pa"></i><b>Ático 41 · Sur</b><span>4 dorm. · 284 m²</span><em>2,9 M€</em></li>
+          </ul>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #EFE9DD; color: #1d1838; padding: clamp(16px, 4vw, 36px); }
+          .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 22px; }
+          .kicker { margin: 0 0 6px; font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #7d7590; }
+          h1 { margin: 0; font: 400 clamp(34px, 6vw, 54px)/1 var(--f-serif); }
+          h1 em { color: #b0532e; }
+          .chips { display: flex; gap: 6px; overflow-x: auto; max-width: 100%; }
+          .chips button { flex: none; min-height: 44px; padding: 0 16px; border-radius: 99px; border: 1px solid #cfc6d6; background: none; color: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+          .chips [aria-pressed="true"] { background: #1d1838; border-color: #1d1838; color: #EFE9DD; }
+          .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+          .u { display: grid; gap: 2px; padding: 12px; border-radius: 10px; background: #fbf8f2; font-size: 12px; color: #6d6680; }
+          .u b { margin-top: 8px; font-size: 14px; color: #1d1838; }
+          .u em { font: italic 400 18px var(--f-serif); color: #b0532e; }
+          .u.fuera { display: none; }
+          /* Un plano dibujado con degradados: tabiques y una estancia marcada */
+          .plano { height: 84px; border: 2px solid #1d1838; border-radius: 2px;
+                   background: linear-gradient(#1d1838 0 0) 45% 0 / 2px 60% no-repeat, linear-gradient(#1d1838 0 0) 0 60% / 45% 2px no-repeat,
+                               linear-gradient(#e9d3b8 0 0) 100% 100% / 40% 45% no-repeat, #fff; }
+          .p3 { background-size: 2px 60%, 45% 2px, 30% 100%; background-position: 30% 0, 0 60%, 100% 0; }
+          .pa { border-style: double; border-width: 4px; background-size: 2px 50%, 60% 2px, 100% 30%; }
+          @media (max-width: 560px) { .grid { grid-template-columns: 1fr 1fr; gap: 8px; } .plano { height: 64px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          gsap.registerPlugin(Flip);
+          const units = gsap.utils.toArray('.u');
+          const chips = document.querySelectorAll('.chips button');
+
+          chips.forEach((chip) => chip.addEventListener('click', () => {
+            // 1) Foto del estado actual: posición y tamaño de cada residencia
+            const state = Flip.getState(units);
+
+            // 2) Cambia el DOM como quieras. Aquí, ocultar con una clase
+            const f = chip.dataset.f;
+            units.forEach((u) => u.classList.toggle('fuera', f !== 'todas' && u.dataset.t !== f));
+            chips.forEach((c) => c.setAttribute('aria-pressed', c === chip));
+
+            // 3) Flip anima desde la foto vieja hasta el layout nuevo
+            Flip.from(state, {
+              duration: 0.7, ease: 'power3.inOut', stagger: 0.03,
+              absolute: true,        // evita que la rejilla «salte» mientras anima
+              onEnter: (els) => gsap.fromTo(els, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.5 }),
+              onLeave: (els) => gsap.to(els, { opacity: 0, scale: 0.85, duration: 0.4 }),
+            });
+          }));
+        </script>
+        <figcaption>Sin Flip, al filtrar las tarjetas saltarían a su nuevo hueco de golpe. Con Flip se deslizan, las que sobran se encogen y las nuevas aparecen. El CSS no sabe nada de la animación: solo hay una clase <code>.fuera</code> con <code>display: none</code>.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los filtros son chips de 44 px de alto en una fila con <code>overflow-x: auto</code>: si no caben, se deslizan en vez de partirse en tres líneas. La rejilla pasa a dos columnas y <code>absolute: true</code> evita el salto de altura mientras anima, que en pantallas estrechas se nota mucho.</p>
+      </div>
+
+      <h2>Responsive de verdad con gsap.matchMedia</h2>
+      <p>Una galería horizontal fijada es preciosa con ratón. En el móvil es un error: el usuario desliza hacia abajo y la página se mueve hacia el lado, en contra de su gesto, cuando el dedo ya sabe deslizar en horizontal. La solución profesional no es «la misma animación más corta», sino <strong>otra interfaz</strong>: en escritorio, pin con desplazamiento horizontal; en móvil, una tira nativa con <code>scroll-snap</code>, sin JS.</p>
+      <p><code>gsap.matchMedia()</code> ejecuta cada bloque solo cuando su media query se cumple y, cuando deja de cumplirse, <strong>revierte todo lo que creó dentro</strong>: tweens, ScrollTriggers, pins y estilos en línea. No tienes que limpiar a mano al girar el móvil o redimensionar.</p>
+
+      <figure class="lab" data-title="Galería: pin en escritorio, swipe en móvil" data-hint="Desliza dentro y prueba «Ver en móvil»" data-height="540" data-libs="gsap scrolltrigger" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="intro">
+            <p class="kicker">Torre Alba · Vivir aquí</p>
+            <h1>Cinco plantas <em>que no son casa.</em></h1>
+            <p class="cue">Desliza dentro de la demo</p>
+          </section>
+          <section class="galeria">
+            <p class="pista-hint">Desliza a los lados</p>
+            <div class="pista">
+              <article class="pieza"><div class="foto"><i class="f1"></i></div><p class="num">01 / 05 · Planta 40</p><h2>Piscina infinita</h2><p>El agua termina donde empieza la bahía.</p></article>
+              <article class="pieza"><div class="foto"><i class="f2"></i></div><p class="num">02 / 05 · Planta 39</p><h2>Spa y hammam</h2><p>Piedra caliza, vapor y luz cenital.</p></article>
+              <article class="pieza"><div class="foto"><i class="f3"></i></div><p class="num">03 / 05 · Planta 41</p><h2>Sky lounge</h2><p>Coctelería privada para residentes.</p></article>
+              <article class="pieza"><div class="foto"><i class="f4"></i></div><p class="num">04 / 05 · Sótano 1</p><h2>Bodega privada</h2><p>Taquillas climatizadas para 120 botellas.</p></article>
+              <article class="pieza"><div class="foto"><i class="f5"></i></div><p class="num">05 / 05 · Planta 20</p><h2>Jardín suspendido</h2><p>Olivos y lavanda a 70 metros.</p></article>
+            </div>
+            <div class="barra"><i></i></div>
+          </section>
+          <section class="fin"><p>Visitas privadas de lunes a sábado.</p><a href="#">Pedir visita</a></section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #100d22; color: #f1eadf; }
+          .intro { height: 80vh; display: grid; align-content: center; padding: 0 clamp(18px, 6vw, 56px); position: relative; }
+          .kicker, .num { font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #b3a6d6; }
+          h1 { margin: 0; font: 400 clamp(38px, 7vw, 68px)/.98 var(--f-serif); }
+          em { color: #ffd2a0; }
+          .cue { position: absolute; bottom: 18px; left: clamp(18px, 6vw, 56px); font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #b3a6d6; }
+          .galeria { height: 100vh; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+          .pista { display: flex; gap: 4vw; padding: 0 8vw; width: max-content; }
+          .pieza { width: min(58vw, 460px); }
+          .foto { position: relative; height: 58vh; overflow: hidden; border-radius: 3px; }
+          .foto::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, rgb(16 13 34 / .55)); }
+          .foto i { display: block; height: 100%; width: 120%; margin-left: -10%; }
+          .pieza h2 { margin: 4px 0 2px; font: 400 30px/1 var(--f-serif); }
+          .pieza p:last-child { margin: 0; font-size: 14px; color: #c9c0dd; }
+          .num { margin: 14px 0 0; }
+          .barra { margin: 22px 8vw 0; height: 2px; background: #2e2850; }
+          .barra i { display: block; height: 100%; background: #ffd2a0; transform-origin: left; scale: 0 1; }
+          .pista-hint { display: none; }
+          .fin { padding: 60px clamp(18px, 6vw, 56px) 80px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; font: 400 24px var(--f-serif); }
+          .fin p { margin: 0; }
+          .fin a { min-height: 46px; display: inline-flex; align-items: center; padding: 0 22px; border-radius: 99px; background: #ffd2a0; color: #100d22; font: 600 14px var(--f-sans); text-decoration: none; }
+          /* Fotos «de mentira» con degradados */
+          .f1 { background: radial-gradient(ellipse 22% 3% at 62% 53%, rgb(255 225 190 / .8), transparent), linear-gradient(#f3b48c, #c9758c 32%, #574a92 52%, #2b8193 52.5%, #12506a 78%, #0a2c40); }
+          .f2 { background: radial-gradient(circle at 30% 30%, rgb(255 255 255 / .5), transparent 35%), linear-gradient(160deg, #d8ddd6, #8aa39b 50%, #2e4743); }
+          .f3 { background: radial-gradient(circle at 20% 70%, #ffcf7a 0 2%, transparent 7%), radial-gradient(circle at 38% 82%, #ffe2b0 0 1%, transparent 4%), radial-gradient(circle at 68% 88%, #ffb36b 0 1.5%, transparent 5%), radial-gradient(circle at 90% 55%, #c8b5ff 0 1%, transparent 4%), radial-gradient(circle at 55% 60%, #ff9f9f 0 1.5%, transparent 6%), radial-gradient(circle at 80% 75%, #ffd99a 0 2%, transparent 8%), linear-gradient(#120f2e, #3d2c6a); }
+          .f4 { background: repeating-linear-gradient(90deg, rgb(0 0 0 / .35) 0 3px, transparent 0 36px), repeating-linear-gradient(0deg, rgb(0 0 0 / .3) 0 3px, transparent 0 30px), linear-gradient(#2a140c, #6b3418 60%, #b5682e); }
+          .f5 { background: radial-gradient(circle at 72% 26%, #f0f4cf, transparent 30%), linear-gradient(170deg, #a7bd85, #4f6e3e 55%, #22341d); }
+
+          /* Móvil o movimiento reducido: tira nativa con scroll-snap. Sin JS. */
+          @media (max-width: 640px), (prefers-reduced-motion: reduce) {
+            .intro { height: 62vh; }
+            .galeria { height: auto; padding: 10px 0 30px; }
+            .pista { width: auto; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 20px; gap: 14px; scroll-padding: 0 20px; scrollbar-width: none; }
+            .pieza { flex: 0 0 82%; scroll-snap-align: start; }   /* la siguiente asoma: invita a deslizar */
+            .foto { height: 280px; }
+            .barra { display: none; }
+            .pista-hint { display: block; margin: 0 20px 12px; font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #b3a6d6; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          gsap.registerPlugin(ScrollTrigger);
+          const pista = document.querySelector('.pista');
+          const mm = gsap.matchMedia();
+
+          mm.add({
+            escritorio: '(min-width: 641px)',
+            reducido: '(prefers-reduced-motion: reduce)',
+          }, (ctx) => {
+            const { escritorio, reducido } = ctx.conditions;
+            // Móvil o movimiento reducido: no creamos nada. El CSS ya da la tira nativa.
+            if (!escritorio || reducido) return;
+
+            const distancia = () => pista.scrollWidth - innerWidth;
+            const tween = gsap.to(pista, {
+              x: () => -distancia(),
+              ease: 'none',
+              scrollTrigger: {
+                trigger: '.galeria', pin: true, scrub: 1,
+                end: () => '+=' + distancia(),   // tanto scroll vertical como recorrido horizontal
+                invalidateOnRefresh: true,       // recalcula las funciones al redimensionar
+                onUpdate: (self) => gsap.set('.barra i', { scaleX: self.progress }),
+              },
+            });
+
+            // Parallax dentro de cada foto, atado al movimiento horizontal
+            gsap.utils.toArray('.foto i').forEach((img) => {
+              gsap.fromTo(img, { xPercent: -6 }, {
+                xPercent: 6, ease: 'none',
+                scrollTrigger: { trigger: img.parentNode, containerAnimation: tween, start: 'left right', end: 'right left', scrub: true },
+              });
+            });
+            // No hay return de limpieza: matchMedia lo revierte todo si cambia la condición
+          });
+
+          addEventListener('scroll', () => gsap.to('.cue', { opacity: 0 }), { once: true });
+        </script>
+        <figcaption>En escritorio, el scroll vertical mueve la pista hacia la izquierda y cada foto tiene su propio parallax con <code>containerAnimation</code>. Pulsa «Ver en móvil»: la misma página pasa a una tira que se desliza con el dedo y se ajusta con <code>scroll-snap</code>, y el pin desaparece. Lo mismo pasa si tienes activado «reducir movimiento» en el sistema.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Usa el <strong>mismo breakpoint</strong> en CSS y en <code>matchMedia</code> (aquí 640/641 px): si no coinciden, hay una franja de anchos con el layout de móvil y el pin de escritorio a la vez. Deja que la siguiente pieza asome (82 % de ancho) y pon un «Desliza a los lados» discreto. Si alguna vez necesitas detectar el dedo en vez del ancho, la condición es <code>'(pointer: coarse)'</code>.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Movimiento reducido no significa «sin diseño». Significa sin desplazamientos grandes ni parallax: deja los fundidos cortos, los cambios de color y las transiciones de estado. Reserva siempre una condición <code>reducido</code> en tus <code>matchMedia</code> y decide qué ve esa persona, en vez de apagarlo todo con <code>animation: none</code>.</p>
+      </div>
+
+      <h2>Lenis: scroll suave sin romper ScrollTrigger</h2>
+      <p>Lenis sustituye el scroll de la rueda por uno interpolado: cada frame la página avanza un porcentaje de lo que le falta (<code>lerp</code>). Es ese deslizamiento «con peso» de las webs de estudio. El riesgo es que ScrollTrigger y Lenis vayan cada uno a su ritmo, y entonces los pins tiemblan. La conexión correcta son tres líneas:</p>
+      <script type="text/x-code" data-lang="js" data-label="Lenis + ScrollTrigger, un solo reloj">
+        const lenis = new Lenis({ autoRaf: false });
+        // 1) ScrollTrigger se entera de cada frame de Lenis
+        lenis.on('scroll', ScrollTrigger.update);
+        // 2) un solo bucle, el de GSAP (que da segundos; Lenis quiere ms)
+        gsap.ticker.add((time) => lenis.raf(time * 1000));
+        // 3) sin compensación de lag: nada de saltos tras un frame lento
+        gsap.ticker.lagSmoothing(0);
+      </script>
+
+      <figure class="lab" data-title="Café Ostra con Lenis" data-hint="Usa rueda o trackpad y compara" data-height="540" data-libs="gsap scrolltrigger lenis" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav"><b>Café Ostra</b><button id="toggle" aria-pressed="true">Lenis activado</button></header>
+          <section class="hero">
+            <p class="kicker">Tostadores en el Grau · Valencia</p>
+            <h1>Café de especialidad, <em>tostado frente al mar.</em></h1>
+            <p class="cue">Desliza dentro de la demo</p>
+          </section>
+          <section class="fila"><figure class="img" data-speed="0.12"><i class="a"></i></figure>
+            <p class="txt"><span>Origen</span>Compramos a cuatro fincas de Huila y Sidama. Sin intermediarios y con el precio publicado.</p></section>
+          <section class="lema"><p>Tostamos los martes. <em>Te llega el jueves.</em></p></section>
+          <section class="fila inv"><figure class="img" data-speed="0.18"><i class="b"></i></figure>
+            <p class="txt"><span>Tueste</span>Perfiles claros para filtro y uno medio para espresso. Nada de tostados quemados para tapar el grano.</p></section>
+          <section class="fila"><figure class="img" data-speed="0.1"><i class="c"></i></figure>
+            <p class="txt"><span>Barra</span>Abierto de 8 a 14 h en la calle de la Reina, a dos calles de la playa.</p></section>
+          <footer class="pie">Suscripción desde 14 € al mes</footer>
+          <p class="vel">velocidad <b id="vel">0.0</b></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html.lenis, html.lenis body { height: auto; }   /* lo único imprescindible de lenis.css */
+          body { background: #1a1310; color: #f1e6d6; }
+          .nav { position: fixed; top: 0; inset-inline: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px clamp(16px, 5vw, 40px); background: linear-gradient(#1a1310 45%, transparent); }
+          .nav b { font: 400 22px var(--f-serif); }
+          #toggle { min-height: 44px; padding: 0 16px; border-radius: 99px; border: 1px solid #f1e6d6; background: #f1e6d6; color: #1a1310; font: 600 13px var(--f-sans); cursor: pointer; }
+          #toggle[aria-pressed="false"] { background: transparent; color: #f1e6d6; }
+          .hero { height: 90vh; display: grid; align-content: center; padding: 0 clamp(16px, 6vw, 56px); position: relative; }
+          .kicker, .txt span, .vel { font: 500 11px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #c79e78; }
+          h1 { margin: 0; max-width: 14ch; font: 400 clamp(40px, 7.5vw, 76px)/.96 var(--f-serif); }
+          em { color: #e7a874; }
+          .cue { position: absolute; bottom: 20px; left: clamp(16px, 6vw, 56px); font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: #c79e78; }
+          .fila { display: grid; grid-template-columns: 1.2fr 1fr; gap: clamp(18px, 5vw, 56px); align-items: center; padding: 8vh clamp(16px, 6vw, 56px); }
+          .inv .img { order: 2; }
+          .img { margin: 0; height: 62vh; overflow: hidden; border-radius: 3px; }
+          .img i { display: block; height: 130%; margin-top: -15%; will-change: transform; }
+          /* Un espresso visto desde arriba, solo con degradados */
+          .a { background: radial-gradient(circle at 50% 50%, #5e3018 0 13%, #b97a45 14% 15.5%, #f2ebe0 16.5% 21%, rgb(0 0 0 / .35) 22%, transparent 26%),
+                           radial-gradient(circle at 50% 50%, transparent 0 30%, #e9e1d5 30.5% 36%, rgb(0 0 0 / .3) 37%, transparent 40%),
+                           linear-gradient(135deg, #4a3326, #1d140f); }
+          .b { background: radial-gradient(ellipse at 50% 30%, #f4e3c8 0 18%, #d6b48a 26%, transparent 48%), linear-gradient(#b9875a, #4a2a18); }
+          .c { background: linear-gradient(#9fb7c4, #e8c9a4 48%, #3d5866 49%, #22343e); }
+          .txt { margin: 0; font: 400 clamp(20px, 2.6vw, 26px)/1.3 var(--f-read); }
+          .txt span { display: block; margin-bottom: 10px; }
+          .lema { padding: 12vh clamp(16px, 6vw, 56px); font: 400 clamp(36px, 6.4vw, 64px)/1 var(--f-serif); }
+          .lema p { margin: 0; }
+          .pie { padding: 60px clamp(16px, 6vw, 56px) 90px; font: 500 14px var(--f-sans); border-top: 1px solid #3a2c24; }
+          .vel { position: fixed; right: 12px; bottom: 12px; margin: 0; padding: 8px 12px; border-radius: 99px; background: rgb(26 19 16 / .85); backdrop-filter: blur(6px); }
+          .vel b { color: #f1e6d6; }
+          @media (max-width: 600px) { .fila { grid-template-columns: 1fr; } .inv .img { order: 0; } .img { height: 44vh; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          gsap.registerPlugin(ScrollTrigger);
+          const vel = document.querySelector('#vel'), toggle = document.querySelector('#toggle');
+          const inclinar = gsap.quickTo('.img i', 'skewY', { duration: 0.5, ease: 'power3' });
+          let lenis = null;
+          const raf = (time) => lenis && lenis.raf(time * 1000);    // GSAP da segundos; Lenis quiere ms
+
+          function encender() {
+            lenis = new Lenis({
+              lerp: 0.09,           // cuánto arrastra: más bajo = más suave y más lento
+              autoRaf: false,       // el bucle lo pone GSAP, no Lenis
+              // Solo para el cuaderno: en los extremos, la rueda pasa a la página de fuera
+              virtualScroll: ({ deltaY }) => {
+                const arriba = lenis.scroll <= 0 && deltaY < 0;
+                const abajo = lenis.scroll >= lenis.limit - 1 && deltaY > 0;
+                return !(arriba || abajo);   // false = Lenis deja pasar este evento
+              },
+            });
+            lenis.on('scroll', ScrollTrigger.update);
+            lenis.on('scroll', (l) => {
+              inclinar(gsap.utils.clamp(-5, 5, l.velocity * 0.3));   // las fotos se inclinan con la velocidad
+              vel.textContent = l.velocity.toFixed(1);
+            });
+            gsap.ticker.add(raf);
+          }
+          function apagar() { gsap.ticker.remove(raf); lenis.destroy(); lenis = null; inclinar(0); vel.textContent = '0.0'; }
+          gsap.ticker.lagSmoothing(0);
+          encender();
+
+          // Parallax: cada foto se mueve a su velocidad dentro de su marco
+          gsap.utils.toArray('[data-speed]').forEach((fig) => {
+            const v = fig.dataset.speed * 100;
+            gsap.fromTo(fig.querySelector('i'), { yPercent: -v }, {
+              yPercent: v, ease: 'none',
+              scrollTrigger: { trigger: fig, start: 'top bottom', end: 'bottom top', scrub: true },
+            });
+          });
+
+          toggle.addEventListener('click', () => {
+            lenis ? apagar() : encender();
+            toggle.setAttribute('aria-pressed', !!lenis);
+            toggle.textContent = lenis ? 'Lenis activado' : 'Scroll nativo';
+          });
+          addEventListener('scroll', () => gsap.to('.cue', { opacity: 0 }), { once: true });
+        </script>
+        <figcaption>Con ratón, gira la rueda a golpes con Lenis activado y luego desactivado. Con Lenis el movimiento llega amortiguado y las fotos se inclinan un poco según la velocidad (<code>lenis.velocity</code>). Sin Lenis, cada golpe de rueda es un salto. En un móvil verás que el botón casi no cambia nada, y es a propósito.</figcaption>
+      </figure>
+
+      <p>¿Por qué no cambia nada en el móvil? Porque Lenis, por defecto, <strong>no toca el scroll táctil</strong> (<code>syncTouch: false</code>): solo suaviza rueda y trackpad. La inercia nativa de iOS y Android ya es excelente, y reemplazarla con JS suele sentirse peor, con un poco de retraso, rebotes distintos y conflictos con la barra del navegador. Por eso muchos estudios ni siquiera crean Lenis en táctil:</p>
+      <script type="text/x-code" data-lang="js" data-label="Lenis solo con ratón o trackpad">
+        let lenis;
+        gsap.matchMedia().add('(hover: hover) and (pointer: fine)', () => {
+          lenis = new Lenis({ autoRaf: false });
+          lenis.on('scroll', ScrollTrigger.update);
+          const raf = (t) => lenis.raf(t * 1000);
+          gsap.ticker.add(raf);
+          // limpieza si deja de cumplirse (p. ej. conectas un ratón al iPad y lo quitas)
+          return () => { gsap.ticker.remove(raf); lenis.destroy(); };
+        });
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Lenis intercepta la rueda en toda la página: cualquier zona con scroll propio (un menú largo, un modal, un mapa) necesita el atributo <code>data-lenis-prevent</code>, o la rueda moverá la página de detrás. Y no lo combines con <code>ScrollTrigger.normalizeScroll()</code>: los dos quieren controlar el mismo scroll.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>No actives <code>syncTouch: true</code> para que «se sienta igual que en escritorio»: en el móvil nadie echa de menos el scroll suave y todo el mundo nota un scroll que no sigue al dedo. Si quieres efectos ligados a la velocidad en táctil, lee <code>ScrollTrigger.getVelocity()</code> o la diferencia de <code>scrollY</code> entre frames, sin reemplazar el scroll.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Activas Lenis en una web con un pin y el pin empieza a temblar y a ir un poco por detrás. ¿Qué falta casi seguro?</p>
+        <ol>
+          <li><code>scrub: true</code> en el pin</li>
+          <li>Quitar <code>pinSpacing</code></li>
+          <li><code>lenis.on('scroll', ScrollTrigger.update)</code> y mover Lenis al <code>gsap.ticker</code></li>
+        </ol>
+        <p class="why">Si Lenis tiene su propio <code>requestAnimationFrame</code> y ScrollTrigger lee el scroll por su lado, cada uno ve un número distinto en cada frame. Con un solo reloj (el ticker de GSAP) y la actualización explícita, los dos van sincronizados.</p>
+      </div>
+
+      <h2>Limpieza y bugs típicos</h2>
+      <p>En una web de páginas sueltas, recargar lo limpia todo. En una SPA (React, Vue, Astro con transiciones) o al reconstruir algo, como en el visualizador, tienes que deshacer lo que creaste o se acumulan ScrollTriggers fantasma. <code>gsap.context()</code> registra todo lo que creas dentro y lo revierte de una vez:</p>
+      <script type="text/x-code" data-lang="js" data-label="Montar y desmontar una sección">
+        const ctx = gsap.context(() => {
+          gsap.from('.titulo', { yPercent: 100, scrollTrigger: '.titulo' });
+          ScrollTrigger.create({ trigger: '.galeria', pin: true, end: '+=150%' });
+        }, seccion);   // acota los selectores a esa sección
+
+        // Al salir: mata los ScrollTriggers, quita pins y estilos en línea
+        ctx.revert();
+
+        // Otras herramientas
+        trigger.kill();            // uno concreto
+        ScrollTrigger.refresh();   // recalcula posiciones (algo cambió de alto)
+      </script>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Síntoma</th><th>Causa</th><th>Arreglo</th></tr></thead>
+          <tbody>
+            <tr><td>Los triggers de abajo se disparan antes o después de tiempo</td><td>Las imágenes o las fuentes cargaron después de calcular posiciones</td><td>Pon <code>width</code> y <code>height</code> a las imágenes, y llama a <code>ScrollTrigger.refresh()</code> en <code>load</code> y tras <code>document.fonts.ready</code></td></tr>
+            <tr><td>El contenido se mete debajo de la sección fijada</td><td><code>pinSpacing: false</code>, o el padre del pin es flex o grid</td><td>Deja <code>pinSpacing</code> por defecto y envuelve el pin en un bloque normal</td></tr>
+            <tr><td>El pin salta un poco al empezar</td><td>Animas el <code>transform</code> del propio elemento fijado</td><td>Fija un envoltorio y anima sus hijos</td></tr>
+            <tr><td>Un trigger de más abajo calcula mal</td><td>Se creó antes que un pin que está por encima</td><td>Créalos en el orden de la página o usa <code>refreshPriority</code></td></tr>
+            <tr><td>En el móvil todo da un salto al hacer scroll</td><td>La barra del navegador cambia la altura y <code>100vh</code> con ella</td><td><code>100svh</code> en secciones fijadas y <code>ScrollTrigger.config({ ignoreMobileResize: true })</code></td></tr>
+            <tr><td>Markers en producción</td><td>Se olvidó <code>markers: true</code></td><td>Actívalos solo en local: <code>markers: location.hostname === 'localhost'</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: ignoreMobileResize y normalizeScroll</summary>
+        <p>Cuando la barra de direcciones del móvil aparece o desaparece, la ventana cambia de alto y el navegador lanza un <code>resize</code>. Si ScrollTrigger recalculase en cada uno, los pins saltarían a media escena. Por eso en táctil ya ignora por defecto los cambios pequeños de alto (solo recalcula si cambia el ancho o si el alto cambia más de un 25 %). Es lo que hace <code>ignoreMobileResize: true</code>, y conviene escribirlo explícito para que nadie lo desactive sin querer.</p>
+        <p><code>ScrollTrigger.normalizeScroll(true)</code> va más lejos: mueve el scroll táctil al hilo de JavaScript. Así evita que la barra se oculte y los desfases en iOS con pins complejos. A cambio, la inercia ya no es exactamente la nativa, pueden fallar zonas con scroll propio, añade trabajo al hilo principal y no se puede combinar con Lenis. Úsalo solo si una escena concreta falla en iOS y has probado lo demás.</p>
+      </details>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Prueba siempre en un móvil real, no solo en el simulador de DevTools: la barra del navegador, la inercia y el retraso del hilo principal solo aparecen ahí. Abre tu servidor local desde el teléfono con la IP del ordenador (<code>http://192.168.1.x:5173</code>), haz scroll rápido por cada pin y gira el teléfono a horizontal y vuelta: si después de girarlo algo queda descolocado, falta un <code>invalidateOnRefresh</code> o una limpieza.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>CSS para decorar el scroll y GSAP cuando hay una escena: una timeline con solapes (<code>"-=0.3"</code>, <code>"&lt;"</code>), una sola ease y <code>ease: 'none'</code> cuando manda el scroll.</li>
+          <li><code>start</code> y <code>end</code> son «punto del elemento, punto del viewport». <code>pin</code> fija la escena, <code>scrub: 0.5–1</code> le da peso y la distancia del <code>end</code> marca el tempo.</li>
+          <li>Con <code>gsap.matchMedia()</code> el móvil tiene otra versión: pin más corto, tira nativa en lugar de galería horizontal y Lenis solo con ratón. Y limpia siempre con <code>gsap.context()</code> o con el propio <code>matchMedia</code>.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Monta la portada de la torre en un proyecto Vite propio. Una sección de <code>100svh</code> fijada con un titular partido con SplitText y máscaras, y un fondo de dos capas que pase del atardecer a la noche. Dale dos versiones con <code>gsap.matchMedia()</code>: <code>end: '+=200%'</code> y <code>scrub: 1</code> en escritorio, y <code>'+=100%'</code> y <code>scrub: true</code> en móvil. Añade Lenis solo para <code>(pointer: fine)</code>. Ábrela en tu teléfono con la IP local y apunta qué tuviste que cambiar para que se sintiera bien con el pulgar.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+</body>
+</html>

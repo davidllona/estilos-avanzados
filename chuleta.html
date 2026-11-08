@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chuleta | Hora azul</title>
+<meta name="description" content="Todos los fragmentos de código del cuaderno Hora azul en una página, con buscador.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+  .page { max-width: var(--wide); margin: 0 auto; padding: clamp(3rem, 8vw, 6rem) var(--gutter) 5rem; }
+  .page h1 { font-size: var(--step-5); font-weight: 560; letter-spacing: -0.04em; line-height: .9; }
+  .page .lede { font-size: var(--step-1); color: var(--muted); max-width: 46ch; margin: 1.4rem 0 0; line-height: 1.45; }
+  .search { position: sticky; top: 3.6rem; z-index: 5; background: var(--night); padding: 1.2rem 0 1rem; margin-top: 2rem; display: grid; gap: .8rem; }
+  .search input { width: 100%; font: 400 16px/1.3 var(--f-display); color: var(--text); background: var(--night-2); border: 1px solid var(--line-2); border-radius: 999px; padding: .85rem 1.2rem; min-height: 48px; }
+  .search input:focus { outline: none; border-color: var(--window); }
+  .chips { display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .chips button { flex: none; font: 500 var(--step--1)/1 var(--f-display); color: var(--muted); background: none; border: 1px solid var(--line-2); border-radius: 999px; padding: .55rem .85rem; min-height: 38px; cursor: pointer; white-space: nowrap; }
+  .chips button[aria-pressed="true"] { color: var(--night); background: var(--window); border-color: var(--window); }
+  .count { font: 400 var(--step--1)/1 var(--f-display); color: var(--faint); margin: 0; }
+  .group h2 { font-size: var(--step-2); margin: 3rem 0 .4rem; }
+  .group h2 a { color: inherit; text-decoration: none; }
+  .group h2 a:hover { color: var(--window); }
+  .snip { margin: 1rem 0 0; }
+  .snip .where { font: 400 var(--step--1)/1.4 var(--f-display); color: var(--muted); margin: 0 0 -.9rem; }
+  .empty { color: var(--muted); padding: 3rem 0; }
+</style>
+<script src="vendor/prism/prism.min.js" defer></script>
+<script src="assets/js/chuleta-data.js" defer></script>
+<script src="assets/js/cuaderno.js" defer></script>
+</head>
+<body>
+<main id="main" class="page">
+  <h1>Chuleta</h1>
+  <p class="lede">Todos los fragmentos de código del cuaderno, agrupados por lección. Busca por propiedad, función o idea: «svh», «oklch», «scrub», «hover».</p>
+  <div class="search">
+    <input type="search" placeholder="Buscar en el código y en los títulos" aria-label="Buscar en la chuleta" data-q>
+    <div class="chips" role="group" aria-label="Filtrar por tipo" data-chips>
+      <button type="button" data-l="" aria-pressed="true">Todo</button>
+      <button type="button" data-l="css" aria-pressed="false">CSS</button>
+      <button type="button" data-l="js" aria-pressed="false">JavaScript</button>
+      <button type="button" data-l="html" aria-pressed="false">HTML</button>
+      <button type="button" data-l="txt" aria-pressed="false">Terminal y prompts</button>
+    </div>
+    <p class="count" data-count aria-live="polite"></p>
+  </div>
+  <div data-list></div>
+</main>
+<script>
+  addEventListener('DOMContentLoaded', () => {
+    const data = window.CHULETA || [];
+    const list = document.querySelector('[data-list]');
+    const q = document.querySelector('[data-q]');
+    const count = document.querySelector('[data-count]');
+    let lang = '';
+    const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const map = { html: 'markup', css: 'css', js: 'javascript' };
+    const hl = (code, l) => (window.Prism && Prism.languages[map[l]]) ? Prism.highlight(code, Prism.languages[map[l]], map[l]) : esc(code);
+    const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    function render() {
+      const term = norm(q.value.trim());
+      const hits = data.filter((d) => (!lang || d.lang === lang) && (!term || norm(d.codigo + ' ' + d.etiqueta + ' ' + d.seccion + ' ' + d.titulo).includes(term)));
+      count.textContent = `${hits.length} de ${data.length} fragmentos`;
+      if (!hits.length) { list.innerHTML = '<p class="empty">Nada con esa búsqueda. Prueba con el nombre de una propiedad, como «sticky» o «clamp».</p>'; return; }
+      const byLesson = {};
+      hits.forEach((d) => (byLesson[d.archivo] ??= []).push(d));
+      list.innerHTML = Object.entries(byLesson).map(([file, arr]) => `
+        <section class="group"><h2><a href="lecciones/${file}">${file.slice(0, 2)} ${esc(arr[0].titulo)}</a></h2>
+          ${arr.map((d, i) => `<div class="snip"><p class="where">${esc(d.seccion)}</p>
+            <div class="code">${d.etiqueta ? `<span class="label">${esc(d.etiqueta)}</span>` : ''}<pre>${hl(d.codigo, d.lang)}</pre><button class="copy" type="button" data-copy="${file}:${i}">Copiar</button></div></div>`).join('')}
+        </section>`).join('');
+      list._hits = byLesson;
+    }
+    list.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-copy]'); if (!b) return;
+      const [file, i] = b.dataset.copy.split(':');
+      try { await navigator.clipboard.writeText(list._hits[file][+i].codigo); b.textContent = 'Copiado'; } catch { b.textContent = 'No se pudo copiar'; }
+      setTimeout(() => (b.textContent = 'Copiar'), 1500);
+    });
+    q.addEventListener('input', render);
+    document.querySelectorAll('[data-l]').forEach((b) => b.addEventListener('click', () => {
+      lang = b.dataset.l;
+      document.querySelectorAll('[data-l]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      render();
+    }));
+    render();
+  });
+</script>
+</body>
+</html>
