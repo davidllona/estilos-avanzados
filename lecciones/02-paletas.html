@@ -6,18 +6,189 @@
 <title>Paletas con criterio | Hora azul</title>
 <meta name="description" content="Base, tinta y acento; 60/30/10; neutros con tono; cielos de hora azul en oklch; un tema entero con tres variables; light-dark(), contraste medible y color en el móvil.">
 <link rel="stylesheet" href="../assets/css/base.css">
+<meta name="theme-color" content="oklch(26% 0.05 225)">
 <style>
-  /* Altura propia de cada demo en pantallas estrechas (data-height-mobile + --hm) */
+  /* Identidad de la lección: «Cambio de piel».
+     Azul petróleo profundo, crema y coral. Syne 700 para titulares, Newsreader para leer.
+     La lección se predica con el ejemplo: la portada cambia --bg, --fg y --accent
+     y todo lo demás (superficies, texto suave, filetes) se deriva con color-mix(). */
+  :root {
+    --bg: oklch(26% 0.05 225);
+    --fg: oklch(95% 0.02 85);
+    --accent: oklch(72% 0.15 35);
+    --on-accent: oklch(26% 0.05 225);
+    --code-bg: oklch(17% 0.035 225);
+    --scheme: dark;
+    /* Derivados: sirven para cualquier piel */
+    --bg-2: color-mix(in oklab, var(--fg) 7%, var(--bg));
+    --bg-3: color-mix(in oklab, var(--fg) 14%, var(--bg));
+    --muted: color-mix(in oklab, var(--fg) 72%, var(--bg));
+    --faint: color-mix(in oklab, var(--fg) 52%, var(--bg));
+    --f-display: "Syne", "Inter Tight", system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 700;
+    --display-tracking: -0.03em;
+  }
+  body { font-size: clamp(1.06rem, 1rem + 0.25vw, 1.2rem); }
+  .prose h2 { font-size: clamp(2.2rem, 1.4rem + 3.2vw, 4.2rem); line-height: .95; letter-spacing: -0.04em; }
+  .prose h2 .n { letter-spacing: 0; }
+  /* Fallback sin View Transitions: un fundido corto de los colores */
+  html.fade body, html.fade .lab, html.fade .quiz, html.fade .recap, html.fade .callout, html.fade .band { transition: background-color .5s, color .5s, border-color .5s; }
   @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+
+  /* El revelado circular lo hace el JS sobre la instantánea nueva: aquí apagamos el fundido por defecto */
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+  /* =========================================================
+     Portada: seis pieles. Cada columna es una paleta en proporción 60/30/10.
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); grid-template-rows: 1fr auto; background: var(--bg); color: var(--fg); }
+  .hero-text { grid-column: 1; grid-row: 1; align-self: end; padding: 7rem var(--gutter) 2.2rem; }
+  .hero [data-kicker] { margin: 0 0 1.2rem; font: 600 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { font-size: clamp(3.3rem, 0.9rem + 6.7vw, 8.6rem); font-weight: 800; line-height: .84; letter-spacing: -0.055em; margin: 0 0 1.6rem; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero .lede { margin: 0; max-width: 40ch; font-size: var(--step-1); line-height: 1.38; color: var(--muted); }
+
+  .skin { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: auto 1fr; gap: .4rem 2rem; align-items: end; padding: 1.4rem var(--gutter) 1.8rem; border-top: 1px solid var(--line-2); }
+  .skin-name { margin: 0; font: 800 clamp(2.2rem, 1.4rem + 2.6vw, 3.8rem)/.9 var(--f-display); letter-spacing: -0.045em; }
+  .skin-name small { display: block; margin-bottom: .5rem; font: 500 var(--step--1)/1 var(--f-ui); letter-spacing: 0; color: var(--muted); }
+  .skin-vals { display: grid; gap: .3rem; margin: 0; font: 500 .86rem/1.3 var(--f-code); }
+  .skin-vals div { display: grid; grid-template-columns: 4.6rem 1fr; align-items: center; }
+  .skin-vals dt { display: flex; align-items: center; gap: .5rem; font-family: var(--f-ui); color: var(--muted); }
+  .skin-vals dt i { width: .8rem; height: .8rem; border-radius: 50%; box-shadow: 0 0 0 1px var(--line-2); }
+  .skin-vals dd { margin: 0; white-space: nowrap; }
+  .skin-meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: .8rem 0 0; font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .skin-meta b { color: var(--fg); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .skin-meta .chip { margin-left: auto; color: var(--fg); }
+
+  .skins { grid-column: 2; grid-row: 1 / -1; display: flex; gap: 3px; padding: 4.4rem 0 0 3px; }
+  .skins button { position: relative; flex: 1 1 0; min-width: 0; display: grid; grid-template-rows: 6fr 3fr 1fr; padding: 0; border: 0; cursor: pointer; background: none; color: inherit; font: inherit;
+    transition: flex-grow .7s var(--ease-out); -webkit-tap-highlight-color: transparent; container-type: inline-size; }
+  .skins button[aria-pressed="true"] { flex-grow: 2.6; }
+  .skins i { display: block; }
+  .skins i:nth-of-type(1) { background: var(--b); }
+  .skins i:nth-of-type(2) { background: var(--f); }
+  .skins i:nth-of-type(3) { background: var(--a); }
+  .skins .aa { position: absolute; left: 0; right: 0; top: 0; height: 60%; display: flex; flex-direction: column; justify-content: space-between; padding: 1.4rem clamp(.5rem, 8cqi, .9rem) 1rem; color: var(--f); text-align: left; overflow: hidden; }
+  .skins .aa b { font: 800 clamp(1.3rem, 34cqi, 3.6rem)/.9 var(--f-display); letter-spacing: -0.05em; }
+  .skins .aa b span { color: var(--a); }
+  .skins .aa small { writing-mode: vertical-rl; rotate: 180deg; font: 600 .82rem/1 var(--f-ui); letter-spacing: .01em; white-space: nowrap; }
+  .skins button[aria-pressed="true"] .aa small { writing-mode: horizontal-tb; rotate: none; font: 700 1rem/1 var(--f-display); }
+  .skins button:focus-visible { outline: 3px solid var(--fg); outline-offset: -6px; border-radius: 0; z-index: 2; }
+  @media (hover: hover) { .skins button:not([aria-pressed="true"]):hover { flex-grow: 1.35; } }
+  .tap { position: absolute; z-index: 3; right: var(--gutter); bottom: 1.4rem; margin: 0; padding: .55rem .9rem; border-radius: 999px; background: var(--fg); color: var(--bg); font: 600 var(--step--1)/1.2 var(--f-ui); pointer-events: none; }
+  .tap::before { content: ""; display: inline-block; width: .55rem; height: .55rem; margin-right: .5rem; border-radius: 50%; background: var(--accent); vertical-align: .05em; animation: ping 2s var(--ease-out) infinite; }
+  .touched .tap { opacity: 0; transition: opacity .4s; }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 var(--accent); } 70%, 100% { box-shadow: 0 0 0 .7rem transparent; } }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(13rem, 1fr); }
+    .hero-text { padding: 5.2rem var(--gutter) 1.2rem; align-self: start; }
+    .hero [data-kicker] { margin-bottom: .9rem; }
+    .hero h1 { font-size: clamp(3rem, 0.6rem + 11vw, 4.6rem); margin-bottom: 1rem; }
+    .hero .lede { font-size: 1.02rem; }
+    .skin { grid-row: 2; grid-template-columns: 1fr; padding-top: 1rem; padding-bottom: 1.1rem; gap: .6rem; }
+    .skin-name small { display: inline; margin: 0 .6rem 0 0; }
+    .skin-name { font-size: 2.1rem; }
+    .skin-vals { font-size: .76rem; }
+    .skin-vals div { grid-template-columns: 3.9rem 1fr; }
+    .skin-meta { margin-top: .5rem; }
+    .skins { grid-column: 1; grid-row: 3; padding: 0; min-height: 12rem; }
+    .skins .aa { padding: .8rem .55rem; }
+    .skins button[aria-pressed="true"] { flex-grow: 2.2; }
+    .tap { bottom: auto; top: calc(100% - 3.4rem); right: .8rem; font-size: .78rem; }
+  }
+  @media (max-width: 860px) and (max-height: 760px) { .hero .lede { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .tap::before { animation: none; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  /* Dos referencias, una junto a otra */
+  .refpair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 2rem 0; }
+  .refpair figure { margin: 0; }
+  .refpair figcaption { font: 600 var(--step--1)/1.3 var(--f-ui); color: var(--muted); margin-bottom: .6rem; }
+  .refpair .swatches { margin: 0; gap: 0; flex-wrap: nowrap; }
+  .refpair .swatch { flex: 1; width: auto; border-radius: 0; }
+  .refpair .swatch:first-child { border-radius: var(--radius-s) 0 0 var(--radius-s); } .refpair .swatch:last-child { border-radius: 0 var(--radius-s) var(--radius-s) 0; }
+  @media (max-width: 640px) { .refpair { grid-template-columns: 1fr; } }
+
+  /* 60/30/10 a sangre: pinta la piel actual */
+  .ratio-strip { display: flex; height: clamp(13rem, 30vw, 22rem); margin-block: 3.4rem; font-family: var(--f-display); }
+  .ratio-strip div { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; padding: 1.2rem clamp(.8rem, 2vw, 1.6rem); overflow: hidden; }
+  .ratio-strip b { font-size: clamp(3.6rem, 1rem + 10vw, 11rem); font-weight: 800; line-height: .8; letter-spacing: -0.06em; }
+  .ratio-strip span { font: 600 var(--step--1)/1.2 var(--f-ui); }
+  .ratio-strip .r60 { flex: 60; background: var(--bg-2); color: var(--fg); }
+  .ratio-strip .r30 { flex: 30; background: var(--fg); color: var(--bg); }
+  .ratio-strip .r10 { flex: 10; background: var(--accent); color: var(--on-accent); }
+  .ratio-strip .r10 b { font-size: clamp(1.6rem, .6rem + 3.4vw, 4rem); }
+  @media (max-width: 640px) { .ratio-strip { height: 11rem; } .ratio-strip .r10 { padding-inline: .5rem; } .ratio-strip .r10 span { display: none; } }
+
+  .band.coral { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.coral p { margin: 0; max-width: 15ch; font: 800 clamp(2rem, 0.9rem + 5vw, 6rem)/.92 var(--f-display); letter-spacing: -0.05em; }
+
+  /* Neutros: la rampa de la piel actual, fija junto al texto */
+  .split.neutral > div > :first-child { margin-top: 0; }
+  .ramp { display: grid; grid-template-rows: repeat(7, 1fr); height: 26rem; border-radius: var(--radius-m); overflow: hidden; box-shadow: 0 0 0 1px var(--line); font: 500 .76rem/1 var(--f-code); }
+  .ramp i { display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; font-style: normal; background: color-mix(in oklab, var(--fg) var(--p), var(--bg)); color: var(--t, var(--fg)); }
+  .ramp-cap { margin: .8rem 0 0; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  @media (max-width: 760px) { .ramp { height: auto; grid-template-rows: none; grid-template-columns: repeat(7, 1fr); } .ramp i { height: 4.4rem; padding: .5rem; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: .3rem; font-size: .62rem; } .ramp i span:last-child { display: none; } }
+
+  /* Carta de pieles: tres paletas propias explicadas */
+  .carta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; list-style: none; padding: 0 !important; margin: 2.4rem 0 3rem; border-top: 1px solid var(--fg); }
+  .carta li { margin: 0; padding: 1.4rem 1.4rem 1.4rem 0; }
+  .carta li + li { padding-left: 1.4rem; border-left: 1px solid var(--line-2); }
+  .carta .chips { display: flex; height: 3.2rem; margin-bottom: 1.2rem; border-radius: var(--radius-s); overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+  .carta .chips i { flex: 6; background: var(--c1); } .carta .chips i + i { flex: 3; background: var(--c2); } .carta .chips i + i + i { flex: 1.4; background: var(--c3); }
+  .carta b { display: block; margin-bottom: .4rem; font: 800 var(--step-2)/1 var(--f-display); letter-spacing: -0.04em; }
+  .carta p { margin: 0; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  @media (max-width: 760px) { .carta { grid-template-columns: 1fr; } .carta li, .carta li + li { padding: 1.2rem 0; border-left: 0; border-bottom: 1px solid var(--line-2); } }
+
+  /* Tres cielos a sangre: el mismo degradado en tres espacios */
+  .skies { display: grid; grid-template-columns: repeat(3, 1fr); height: clamp(18rem, 42vw, 30rem); margin-block: 3rem; }
+  .skies div { position: relative; display: flex; align-items: flex-end; padding: 1.2rem clamp(1rem, 2.5vw, 2rem); color: oklch(97% 0.01 80); font: 500 .9rem/1.3 var(--f-code); }
+  .skies div::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: linear-gradient(transparent, oklch(16% .04 285 / .7)); }
+  .skies span { position: relative; z-index: 1; }
+  .skies .s1 { background: linear-gradient(in srgb, oklch(22% .07 285), oklch(46% .14 300) 30%, oklch(68% .15 350) 58%, oklch(86% .11 62) 80%); }
+  .skies .s2 { background: linear-gradient(in oklab, oklch(22% .07 285), oklch(46% .14 300) 30%, oklch(68% .15 350) 58%, oklch(86% .11 62) 80%); }
+  .skies .s3 { background: linear-gradient(in oklch, oklch(22% .07 285), oklch(46% .14 300) 30%, oklch(68% .15 350) 58%, oklch(86% .11 62) 80%); }
+  @media (max-width: 640px) { .skies { height: 20rem; } .skies div { font-size: .78rem; padding: .8rem; } }
+
+  .statement { font-size: clamp(2.1rem, 1.2rem + 3.6vw, 4.4rem); line-height: .95; letter-spacing: -0.05em; max-width: 17ch !important; }
+  .statement em { font-style: normal; color: var(--accent); }
 </style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="paletas">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Paletas con criterio</h1>
-    <p class="lede">Tres colores bien elegidos valen más que treinta. Cómo se construyen las paletas de los vídeos, cómo sacar un tema entero de tres variables y cómo comprobar que se lee, también al sol y en modo oscuro.</p>
+  <header class="hero" aria-labelledby="t">
+    <div class="hero-text">
+      <p data-kicker>Lección 02</p>
+      <h1 id="t">Paletas con <em>criterio</em></h1>
+      <p class="lede">Tres colores bien elegidos valen más que treinta. Cómo se construyen las paletas de los vídeos, cómo sacar un tema entero de tres variables y cómo comprobar que se lee, también al sol y en modo oscuro.</p>
+    </div>
+
+    <div class="skin" aria-live="polite">
+      <p class="skin-name"><small>Piel actual</small><span data-name>Marea</span></p>
+      <dl class="skin-vals">
+        <div><dt><i style="background:var(--bg)"></i>Base</dt><dd data-v="bg">oklch(26% 0.05 225)</dd></div>
+        <div><dt><i style="background:var(--fg)"></i>Tinta</dt><dd data-v="fg">oklch(95% 0.02 85)</dd></div>
+        <div><dt><i style="background:var(--accent)"></i>Acento</dt><dd data-v="ac">oklch(72% 0.15 35)</dd></div>
+      </dl>
+      <p class="skin-meta"><span>Tinta sobre base: <b data-cr>13,3:1</b></span><span class="chip" data-meta>20 min</span></p>
+    </div>
+
+    <div class="skins" role="group" aria-label="Piel de la lección: cambia los colores de toda la página">
+      <button type="button" data-skin="marea" aria-pressed="true" style="--b:oklch(26% 0.05 225);--f:oklch(95% 0.02 85);--a:oklch(72% 0.15 35)"><i></i><i></i><i></i><span class="aa"><b>A<span>a</span></b><small>Marea</small></span></button>
+      <button type="button" data-skin="mesa" aria-pressed="false" style="--b:oklch(94.8% 0.014 85);--f:oklch(19% 0.01 60);--a:oklch(57% 0.18 40)"><i></i><i></i><i></i><span class="aa"><b>A<span>a</span></b><small>Mesa</small></span></button>
+      <button type="button" data-skin="tab" aria-pressed="false" style="--b:oklch(22.6% 0.07 266);--f:oklch(98% 0.005 266);--a:oklch(66% 0.236 1)"><i></i><i></i><i></i><span class="aa"><b>A<span>a</span></b><small>Tab</small></span></button>
+      <button type="button" data-skin="hora" aria-pressed="false" style="--b:oklch(21% 0.06 292);--f:oklch(95% 0.02 78);--a:oklch(82% 0.13 72)"><i></i><i></i><i></i><span class="aa"><b>A<span>a</span></b><small>Hora azul</small></span></button>
+      <button type="button" data-skin="olivar" aria-pressed="false" style="--b:oklch(93% 0.018 105);--f:oklch(27% 0.04 135);--a:oklch(56% 0.12 72)"><i></i><i></i><i></i><span class="aa"><b>A<span>a</span></b><small>Olivar</small></span></button>
+      <button type="button" data-skin="grafito" aria-pressed="false" style="--b:oklch(18% 0.004 90);--f:oklch(93% 0.01 90);--a:oklch(91% 0.2 125)"><i></i><i></i><i></i><span class="aa"><b>A<span>a</span></b><small>Grafito</small></span></button>
+    </div>
+    <p class="tap" aria-hidden="true">Toca una piel</p>
   </header>
 
   <div class="lesson">
@@ -32,18 +203,34 @@
         <li><strong>Tinta</strong>: el texto y los elementos estructurales. Casi nunca es negro puro, aunque en <em>mesa</em> se acerca mucho.</li>
         <li><strong>Acento</strong>: el único color saturado. Marca la acción y lo que debes recordar.</li>
       </ul>
-      <div class="swatches">
-        <div class="swatch" style="--s:#F3EEE3"><i></i><span><b>Cream</b><small>#F3EEE3</small></span></div>
-        <div class="swatch" style="--s:#111111"><i></i><span><b>Ink</b><small>#111111</small></span></div>
-        <div class="swatch" style="--s:#D9541E"><i></i><span><b>Burnt Orange</b><small>#D9541E</small></span></div>
-      </div>
-      <div class="swatches">
-        <div class="swatch" style="--s:#0F1B3D"><i></i><span><b>Navy</b><small>#0F1B3D</small></span></div>
-        <div class="swatch" style="--s:#FFFFFF"><i></i><span><b>White</b><small>#FFFFFF</small></span></div>
-        <div class="swatch" style="--s:#FF3D8B"><i></i><span><b>Hot Pink</b><small>#FF3D8B</small></span></div>
+      <div class="refpair wide">
+        <figure>
+          <figcaption>mesa</figcaption>
+          <div class="swatches">
+            <div class="swatch" style="--s:#F3EEE3"><i></i><span><b>Cream</b><small>#F3EEE3</small></span></div>
+            <div class="swatch" style="--s:#111111"><i></i><span><b>Ink</b><small>#111111</small></span></div>
+            <div class="swatch" style="--s:#D9541E"><i></i><span><b>Burnt Orange</b><small>#D9541E</small></span></div>
+          </div>
+        </figure>
+        <figure>
+          <figcaption>tab</figcaption>
+          <div class="swatches">
+            <div class="swatch" style="--s:#0F1B3D"><i></i><span><b>Navy</b><small>#0F1B3D</small></span></div>
+            <div class="swatch" style="--s:#FFFFFF"><i></i><span><b>White</b><small>#FFFFFF</small></span></div>
+            <div class="swatch" style="--s:#FF3D8B"><i></i><span><b>Hot Pink</b><small>#FF3D8B</small></span></div>
+          </div>
+        </figure>
       </div>
       <p>¿Por qué funciona un solo acento? Porque el ojo va a lo saturado. Si solo hay una cosa saturada, el ojo sabe adónde ir. Si hay cuatro, salta entre ellas y la página parece nerviosa. Por eso <em>mesa</em> pone la foto en blanco y negro: cualquier color en la foto competiría con el naranja.</p>
-      <p>La regla clásica de interiorismo, <strong>60/30/10</strong>, traduce esto a superficie: 60&nbsp;% base, 30&nbsp;% tinta (texto, filetes, fotos oscuras), 10&nbsp;% acento. No es una ley, es una alarma: si el acento pasa del 15–20&nbsp;%, deja de ser acento. Compruébalo.</p>
+      <p>La regla clásica de interiorismo, <strong>60/30/10</strong>, traduce esto a superficie: 60&nbsp;% base, 30&nbsp;% tinta (texto, filetes, fotos oscuras), 10&nbsp;% acento. No es una ley, es una alarma: si el acento pasa del 15–20&nbsp;%, deja de ser acento. Esta franja reparte la superficie así, con los colores de la piel que hayas elegido arriba.</p>
+
+      <div class="ratio-strip bleed" aria-label="Reparto 60/30/10 con los colores de la piel actual">
+        <div class="r60"><span>Base, superficies y aire</span><b>60</b></div>
+        <div class="r30"><span>Tinta: texto, filetes, fotos</span><b>30</b></div>
+        <div class="r10"><span>Acento</span><b>10</b></div>
+      </div>
+
+      <p>Ahora compruébalo sobre una página real: sube la cantidad de acento.</p>
 
       <figure class="lab" data-title="60/30/10: cuánto acento aguanta una página" data-hint="Sube la cantidad de acento" data-height="480" data-height-mobile="640" style="--hm:640px">
         <script type="text/x-demo" data-lang="html">
@@ -113,6 +300,8 @@
         <p>En el móvil el acento ocupa más porcentaje de pantalla sin que lo decidas: un botón de ancho completo en 390&nbsp;px es mucha superficie naranja. Si en escritorio el CTA es una píldora, en el móvil puede ser ancho completo, pero entonces quita el acento de otros sitios (el subrayado, la etiqueta) para que el reparto siga siendo 60/30/10.</p>
       </div>
 
+      <div class="band coral"><div class="inner"><p>Tres colores bien elegidos valen más que treinta.</p></div></div>
+
       <h2>Neutros con un toque de tono</h2>
       <p>La base y la tinta son neutros, pero un neutro caro casi nunca es gris puro. Un gris con croma <code>0</code> parece muerto, de interfaz de sistema. Añádele un croma mínimo, entre <code>0.005</code> y <code>0.03</code>, con un tono que tenga que ver con la marca, y la página gana temperatura sin que nadie sepa decir por qué.</p>
 
@@ -177,12 +366,28 @@
         <figcaption>Con «Gris puro» todo funciona, pero parece una herramienta interna. «Cálido» (tono 75, el del crema de <em>mesa</em>) hace que el naranja parezca de la familia. «Frío» crea tensión con el naranja: puede ser bonito, pero es una decisión, no un accidente. Todos los neutros salen de dos variables.</figcaption>
       </figure>
 
-      <div class="callout criterio"><span class="t">Criterio</span>
-        <p>Inclina los neutros hacia el tono del acento (crema con naranja, gris azulado con un acento frío) o hacia su opuesto si quieres contraste. Lo que nunca funciona es mezclar neutros de temperaturas distintas en la misma página: un fondo cálido con tarjetas gris azulado parece una web a medio migrar.</p>
-      </div>
-
-      <div class="callout movil"><span class="t">En el móvil</span>
-        <p>Los croma muy bajos (por debajo de <code>0.008</code>) se pierden en pantallas OLED con brillo alto o con modo de tono automático (True Tone, Night Shift). Si la calidez es parte de la marca, sube algo el croma del fondo y compruébalo en un móvil real, no solo en el monitor calibrado.</p>
+      <div class="split neutral">
+        <div>
+          <p>Esta página hace lo mismo. Sus superficies, el texto suave y los filetes no están escritos a mano: salen de mezclar la tinta con la base en distintas proporciones. La rampa de la derecha son siete de esas mezclas; cambia de piel en la portada y se recalculan todas.</p>
+          <div class="callout criterio"><span class="t">Criterio</span>
+            <p>Inclina los neutros hacia el tono del acento (crema con naranja, gris azulado con un acento frío) o hacia su opuesto si quieres contraste. Lo que nunca funciona es mezclar neutros de temperaturas distintas en la misma página: un fondo cálido con tarjetas gris azulado parece una web a medio migrar.</p>
+          </div>
+          <div class="callout movil"><span class="t">En el móvil</span>
+            <p>Los croma muy bajos (por debajo de <code>0.008</code>) se pierden en pantallas OLED con brillo alto o con modo de tono automático (True Tone, Night Shift). Si la calidez es parte de la marca, sube algo el croma del fondo y compruébalo en un móvil real, no solo en el monitor calibrado.</p>
+          </div>
+        </div>
+        <figure class="stick" style="margin:0">
+          <div class="ramp" aria-label="Siete neutros derivados de la piel actual">
+            <i style="--p:0%"><span>base</span><span>0 %</span></i>
+            <i style="--p:7%"><span>bg-2</span><span>7 %</span></i>
+            <i style="--p:14%"><span>bg-3</span><span>14 %</span></i>
+            <i style="--p:30%"><span>línea</span><span>30 %</span></i>
+            <i style="--p:52%; --t: var(--bg)"><span>faint</span><span>52 %</span></i>
+            <i style="--p:72%; --t: var(--bg)"><span>muted</span><span>72 %</span></i>
+            <i style="--p:100%; --t: var(--bg)"><span>tinta</span><span>100 %</span></i>
+          </div>
+          <figcaption class="ramp-cap"><code>color-mix(in oklab, var(--fg) N%, var(--bg))</code>: dos variables, siete neutros de la misma familia.</figcaption>
+        </figure>
       </div>
 
       <h2>Un tema entero con tres variables</h2>
@@ -388,10 +593,10 @@
       </figure>
 
       <p>Las tres paletas propias tienen una lógica que puedes reutilizar:</p>
-      <ul>
-        <li><strong>Olivar</strong>: hueso verdoso, verde casi negro y azafrán. Paleta de tierra para una bodega, un aceite, un hotel rural. El acento es poco saturado: elegancia antes que energía.</li>
-        <li><strong>Salitre</strong>: blanco frío con un punto de azul, tinta petróleo y coral. El coral es el complementario del azul: el contraste de temperatura hace el trabajo que en <em>mesa</em> hace la saturación.</li>
-        <li><strong>Grafito</strong>: casi negro, hueso cálido y lima. Tecnología o diseño con un punto de riesgo. En fondos oscuros el acento necesita una L alta (en torno a 90&nbsp;%) para brillar.</li>
+      <ul class="carta wide">
+        <li><span class="chips" style="--c1:#ECEADF;--c2:#23301F;--c3:#B5832A"><i></i><i></i><i></i></span><b>Olivar</b><p>Hueso verdoso, verde casi negro y azafrán. Paleta de tierra para una bodega, un aceite, un hotel rural. El acento es poco saturado: elegancia antes que energía.</p></li>
+        <li><span class="chips" style="--c1:#E7EDEF;--c2:#0E2A36;--c3:#E8553D"><i></i><i></i><i></i></span><b>Salitre</b><p>Blanco frío con un punto de azul, tinta petróleo y coral. El coral es el complementario del azul: el contraste de temperatura hace el trabajo que en <em>mesa</em> hace la saturación.</p></li>
+        <li><span class="chips" style="--c1:#141414;--c2:#ECEAE4;--c3:#C8F23A"><i></i><i></i><i></i></span><b>Grafito</b><p>Casi negro, hueso cálido y lima. Tecnología o diseño con un punto de riesgo. En fondos oscuros el acento necesita una L alta (en torno a 90&nbsp;%) para brillar.</p></li>
       </ul>
 
       <div class="quiz" data-kind="Predice" data-answer="2">
@@ -465,6 +670,13 @@
         <figcaption>En <code>srgb</code> la franja entre violeta y rosa se apaga y pierde viveza, sobre todo al anochecer. En <code>oklab</code> la transición es limpia y natural. En <code>oklch</code> el tono recorre la rueda y aparece un magenta más vivo: es el más «de póster». A partir de las 21:10 las ventanas empiezan a encenderse una a una.</figcaption>
       </figure>
 
+      <p>Los tres espacios, uno junto a otro y a sangre: el mismo cielo con las mismas cuatro paradas de color.</p>
+      <div class="skies bleed" aria-label="El mismo degradado de cielo interpolado en srgb, oklab y oklch">
+        <div class="s1"><span>in srgb</span></div>
+        <div class="s2"><span>in oklab</span></div>
+        <div class="s3"><span>in oklch</span></div>
+      </div>
+
       <div class="callout criterio"><span class="t">Criterio</span>
         <p>Un degradado parece caro cuando representa una luz real (un cielo, un foco, un reflejo) y barato cuando es un lavado decorativo de dos colores de moda. La regla de la torre: el cielo puede tener cinco colores porque es una imagen, pero la interfaz encima sigue teniendo tres. El crema del texto y la luz de las ventanas son los únicos colores de UI.</p>
       </div>
@@ -474,7 +686,9 @@
       </div>
 
       <h2>Modo oscuro que mantiene la marca</h2>
-      <p>El modo oscuro barato invierte los colores. El bueno es otra versión de la misma paleta: la base pasa a un oscuro con el mismo tono que el crema, la tinta a un claro cálido y el acento sube un poco de luminosidad y baja algo de croma para no vibrar sobre negro. <code>light-dark()</code> te deja escribir las dos versiones en la misma línea.</p>
+      <p>El modo oscuro barato invierte los colores. El bueno es otra versión de la misma paleta: la base pasa a un oscuro con el mismo tono que el crema, la tinta a un claro cálido y el acento sube un poco de luminosidad y baja algo de croma para no vibrar sobre negro.</p>
+      <p class="statement">El buen modo oscuro es <em>la misma paleta</em> con la luz apagada.</p>
+      <p><code>light-dark()</code> te deja escribir las dos versiones en la misma línea.</p>
 
       <figure class="lab" data-title="Claro, oscuro e invertido" data-hint="Compara las tres opciones" data-height="470" data-height-mobile="640" style="--hm:640px">
         <script type="text/x-demo" data-lang="html">
@@ -667,5 +881,71 @@
     </article>
   </div>
 </main>
+<script>
+  // Portada: seis pieles. Cada una son tres colores (base, tinta, acento) más el texto sobre el acento
+  // y el fondo del código; el resto de tokens se deriva solo en CSS con color-mix().
+  // El cambio usa una View Transition con un revelado circular desde el punto tocado.
+  (() => {
+    const root = document.documentElement;
+    const SKINS = {
+      marea:   { name: 'Marea',     bg: [26, .05, 225],   fg: [95, .02, 85],   ac: [72, .15, 35],   on: 'bg',  code: 'oklch(17% 0.035 225)', scheme: 'dark' },
+      mesa:    { name: 'Mesa',      bg: [94.8, .014, 85], fg: [19, .01, 60],   ac: [57, .18, 40],   on: '#fff', code: 'oklch(19% 0.012 60)', scheme: 'light' },
+      tab:     { name: 'Tab',       bg: [22.6, .07, 266], fg: [98, .005, 266], ac: [66, .236, 1],   on: 'oklch(15% 0.05 266)', code: 'oklch(15% 0.05 266)', scheme: 'dark' },
+      hora:    { name: 'Hora azul', bg: [21, .06, 292],   fg: [95, .02, 78],   ac: [82, .13, 72],   on: 'bg',  code: 'oklch(14% 0.045 292)', scheme: 'dark' },
+      olivar:  { name: 'Olivar',    bg: [93, .018, 105],  fg: [27, .04, 135],  ac: [56, .12, 72],   on: '#fff', code: 'oklch(20% 0.03 135)', scheme: 'light' },
+      grafito: { name: 'Grafito',   bg: [18, .004, 90],   fg: [93, .01, 90],   ac: [91, .2, 125],   on: 'bg',  code: 'oklch(12% 0.004 90)', scheme: 'dark' },
+    };
+    const fmt = ([l, c, h]) => `oklch(${l}% ${c} ${h})`;
+    // Contraste WCAG 2 a partir de OKLCH (OKLCH → sRGB lineal → luminancia relativa)
+    function lum([L, C, H]) {
+      const a = C * Math.cos(H * Math.PI / 180), b = C * Math.sin(H * Math.PI / 180), l0 = L / 100;
+      const l = (l0 + .3963377774 * a + .2158037573 * b) ** 3, m = (l0 - .1055613458 * a - .0638541728 * b) ** 3, s = (l0 - .0894841775 * a - 1.291485548 * b) ** 3;
+      const rgb = [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s, -.0041960863 * l - .7034186147 * m + 1.707614701 * s]
+        .map((v) => Math.min(1, Math.max(0, v)));
+      return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
+    }
+    const ratio = (x, y) => { const [hi, lo] = [lum(x), lum(y)].sort((p, q) => q - p); return (hi + .05) / (lo + .05); };
+
+    const hero = document.querySelector('.hero');
+    const btns = [...hero.querySelectorAll('[data-skin]')];
+    const out = { name: hero.querySelector('[data-name]'), cr: hero.querySelector('[data-cr]'), v: [...hero.querySelectorAll('[data-v]')] };
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+    function apply(key) {
+      const k = SKINS[key];
+      root.style.setProperty('--bg', fmt(k.bg));
+      root.style.setProperty('--fg', fmt(k.fg));
+      root.style.setProperty('--accent', fmt(k.ac));
+      root.style.setProperty('--on-accent', k.on === 'bg' ? fmt(k.bg) : k.on);
+      root.style.setProperty('--code-bg', k.code);
+      root.style.setProperty('--scheme', k.scheme);
+      meta.content = fmt(k.bg);                       // la barra del navegador del móvil se tiñe con la base
+      out.name.textContent = k.name;
+      out.v.forEach((dd) => (dd.textContent = fmt(k[dd.dataset.v])));
+      out.cr.textContent = ratio(k.fg, k.bg).toFixed(1).replace('.', ',') + ':1';
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.skin === key)));
+      hero.classList.add('touched');
+    }
+
+    btns.forEach((b) => b.addEventListener('click', (e) => {
+      const key = b.dataset.skin;
+      if (b.getAttribute('aria-pressed') === 'true') return;
+      // Con teclado no hay coordenadas: el círculo nace del centro del botón
+      const r = b.getBoundingClientRect();
+      const x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
+      if (!document.startViewTransition || reduce.matches) {
+        root.classList.toggle('fade', !reduce.matches);
+        return apply(key);
+      }
+      const vt = document.startViewTransition(() => apply(key));
+      vt.ready.then(() => {
+        const R = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+        root.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${R}px at ${x}px ${y}px)`] },
+          { duration: 850, easing: 'cubic-bezier(.65, 0, .35, 1)', pseudoElement: '::view-transition-new(root)' });
+      }).catch(() => {});
+    }));
+  })();
+</script>
 </body>
 </html>

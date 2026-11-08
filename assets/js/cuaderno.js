@@ -12,20 +12,21 @@
 
   /* ---------- Temario: única fuente de verdad ---------- */
   const LESSONS = [
-    { id: 'criterio',         file: '00-criterio.html',         title: 'Qué hace que una web parezca cara', block: 'Criterio',  min: 12 },
-    { id: 'oklch',            file: '01-oklch.html',            title: 'Color que se comporta',             block: 'Color',     min: 15 },
-    { id: 'paletas',          file: '02-paletas.html',          title: 'Paletas con criterio',              block: 'Color',     min: 20 },
-    { id: 'tipografia',       file: '03-tipografia.html',       title: 'Tipografía que manda',              block: 'Forma',     min: 18 },
-    { id: 'composicion',      file: '04-composicion.html',      title: 'Más allá de las cards',             block: 'Forma',     min: 20 },
-    { id: 'movimiento',       file: '05-movimiento.html',       title: 'Movimiento con intención',          block: 'Movimiento', min: 18 },
-    { id: 'scroll-css',       file: '06-scroll-css.html',       title: 'Scroll animado solo con CSS',       block: 'Movimiento', min: 22 },
-    { id: 'view-transitions', file: '07-view-transitions.html', title: 'View Transitions',                  block: 'Movimiento', min: 15 },
-    { id: 'gsap',             file: '08-gsap.html',             title: 'GSAP, ScrollTrigger y Lenis',       block: 'Scroll cinematográfico', min: 25 },
-    { id: 'secuencias',       file: '09-secuencias.html',       title: 'Secuencias de imágenes y vídeo',    block: 'Scroll cinematográfico', min: 22 },
-    { id: 'interaccion',      file: '10-interaccion.html',      title: 'Capas interactivas sobre imagen',   block: 'Scroll cinematográfico', min: 18 },
-    { id: 'recursos',         file: '11-recursos.html',         title: 'Recursos visuales con IA',          block: 'Producción', min: 15 },
-    { id: 'rendimiento',      file: '12-rendimiento.html',      title: 'Rendimiento y accesibilidad',       block: 'Producción', min: 15 },
-    { id: 'proyecto',         file: '13-proyecto.html',         title: 'Proyecto final: la torre',          block: 'Proyecto',  min: 30 },
+    // t: identidad visual de cada lección (la usa la portada para previsualizarla)
+    { id: 'criterio',         file: '00-criterio.html',         title: 'Qué hace que una web parezca cara', block: 'Criterio',  min: 12, t: { bg: 'oklch(94% 0.006 90)', fg: 'oklch(17% 0 0)', ac: 'oklch(58% 0.21 28)', f: '"Archivo"', w: 800, s: '125%' } },
+    { id: 'oklch',            file: '01-oklch.html',            title: 'Color que se comporta',             block: 'Color',     min: 15, t: { bg: 'oklch(95% 0.016 80)', fg: 'oklch(19% 0.012 60)', ac: 'oklch(60% 0.18 40)', f: '"Fraunces"', w: 380 } },
+    { id: 'paletas',          file: '02-paletas.html',          title: 'Paletas con criterio',              block: 'Color',     min: 20, t: { bg: 'oklch(26% 0.05 225)', fg: 'oklch(95% 0.02 85)', ac: 'oklch(72% 0.15 35)', f: '"Syne"', w: 700 } },
+    { id: 'tipografia',       file: '03-tipografia.html',       title: 'Tipografía que manda',              block: 'Forma',     min: 18, t: { bg: 'oklch(97.5% 0.004 90)', fg: 'oklch(14% 0 0)', ac: 'oklch(52% 0.22 265)', f: '"Bodoni Moda"', w: 500 } },
+    { id: 'composicion',      file: '04-composicion.html',      title: 'Más allá de las cards',             block: 'Forma',     min: 20, t: { bg: 'oklch(86% 0.012 80)', fg: 'oklch(16% 0.005 80)', ac: 'oklch(86% 0.17 95)', f: '"Big Shoulders"', w: 800 } },
+    { id: 'movimiento',       file: '05-movimiento.html',       title: 'Movimiento con intención',          block: 'Movimiento', min: 18, t: { bg: 'oklch(24% 0.045 180)', fg: 'oklch(94% 0.02 90)', ac: 'oklch(72% 0.16 35)', f: '"Unbounded"', w: 600 } },
+    { id: 'scroll-css',       file: '06-scroll-css.html',       title: 'Scroll animado solo con CSS',       block: 'Movimiento', min: 22, t: { bg: 'oklch(88% 0.05 60)', fg: 'oklch(22% 0.06 270)', ac: 'oklch(62% 0.2 20)', f: '"Bricolage"', w: 800, s: '75%' } },
+    { id: 'view-transitions', file: '07-view-transitions.html', title: 'View Transitions',                  block: 'Movimiento', min: 15, t: { bg: 'oklch(97% 0.01 85)', fg: 'oklch(18% 0.01 260)', ac: 'oklch(52% 0.22 264)', f: '"Instrument Serif"', w: 400, i: 1 } },
+    { id: 'gsap',             file: '08-gsap.html',             title: 'GSAP, ScrollTrigger y Lenis',       block: 'Scroll cinematográfico', min: 25, t: { bg: 'oklch(20% 0.05 20)', fg: 'oklch(90% 0.04 85)', ac: 'oklch(78% 0.12 80)', f: '"Cormorant"', w: 500, i: 1 } },
+    { id: 'secuencias',       file: '09-secuencias.html',       title: 'Secuencias de imágenes y vídeo',    block: 'Scroll cinematográfico', min: 22, t: { bg: 'oklch(17% 0.05 292)', fg: 'oklch(95% 0.016 78)', ac: 'oklch(80% 0.13 68)', f: '"Instrument Serif"', w: 400 } },
+    { id: 'interaccion',      file: '10-interaccion.html',      title: 'Capas interactivas sobre imagen',   block: 'Scroll cinematográfico', min: 18, t: { bg: 'oklch(28% 0.08 255)', fg: 'oklch(96% 0.01 250)', ac: 'oklch(82% 0.15 75)', f: '"JetBrains Mono"', w: 500 } },
+    { id: 'recursos',         file: '11-recursos.html',         title: 'Recursos visuales con IA',          block: 'Producción', min: 15, t: { bg: 'oklch(90% 0.03 78)', fg: 'oklch(27% 0.01 60)', ac: 'oklch(52% 0.13 245)', f: '"Newsreader"', w: 300 } },
+    { id: 'rendimiento',      file: '12-rendimiento.html',      title: 'Rendimiento y accesibilidad',       block: 'Producción', min: 15, t: { bg: 'oklch(98.5% 0.003 250)', fg: 'oklch(22% 0.01 250)', ac: 'oklch(62% 0.17 150)', f: '"Inter Tight"', w: 850 } },
+    { id: 'proyecto',         file: '13-proyecto.html',         title: 'Proyecto final: la torre',          block: 'Proyecto',  min: 30, t: { bg: 'oklch(17% 0.05 292)', fg: 'oklch(95% 0.016 78)', ac: 'oklch(80% 0.13 68)', f: '"Instrument Serif"', w: 400, i: 1 } },
   ];
   window.HORA_AZUL = { LESSONS, ROOT: ROOT.href, done: getDone };
 
@@ -83,6 +84,18 @@
       <span class="read-progress" aria-hidden="true"></span>`;
     document.body.prepend(top);
 
+    // Transparente sobre la portada; sólida al bajar; se esconde al bajar rápido y vuelve al subir
+    const hasHero = !!document.querySelector('.hero');
+    let lastY = scrollY;
+    const onScroll = () => {
+      const y = scrollY;
+      top.classList.toggle('solid', !hasHero || y > innerHeight * 0.6);
+      top.classList.toggle('away', y > innerHeight && y > lastY + 4 && !document.querySelector('.toc.open'));
+      if (y < lastY - 4 || y < innerHeight) top.classList.remove('away');
+      lastY = y;
+    };
+    addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
     // Progreso de lectura: fallback si el navegador no tiene scroll-timeline
     if (!CSS.supports('animation-timeline: scroll()')) {
       const bar = top.querySelector('.read-progress');
@@ -92,7 +105,12 @@
     if (!lesson) return;
 
     // Cabecera: número, bloque y minutos
-    const hero = document.querySelector('.lesson-hero');
+    const kicker = document.querySelector('[data-kicker]');
+    const metaSlot = document.querySelector('[data-meta]');
+    if (kicker) kicker.textContent = `Lección ${pad(idx)}, ${lesson.block}`;
+    if (metaSlot) metaSlot.textContent = `${lesson.min} min` + (getDone().includes(lesson.id) ? ', completada' : '');
+    if (kicker || metaSlot) document.title = `${lesson.title} | Hora azul`;
+    const hero = !kicker && document.querySelector('.lesson-hero');
     if (hero) {
       hero.prepend(el('p', { class: 'num' }, `Lección ${pad(idx)}, bloque ${esc(lesson.block)}`));
       const meta = el('div', { class: 'meta' });
@@ -105,7 +123,7 @@
     const prose = document.querySelector('.prose');
     const wrap = document.querySelector('.lesson');
     if (prose && wrap) {
-      const hs = [...prose.querySelectorAll(':scope > h2:not(.no-toc)')];
+      const hs = [...prose.querySelectorAll('h2:not(.no-toc)')].filter((h) => !h.closest('.lab, .quiz'));
       const toc = el('nav', { class: 'toc', 'aria-label': 'En esta lección' });
       const ol = el('ol');
       hs.forEach((h, i) => {
@@ -115,7 +133,11 @@
         ol.append(el('li', {}, `<a href="#${h.id}">${esc(text)}</a>`));
       });
       toc.append(el('p', {}, 'En esta lección'), ol);
-      wrap.append(toc);
+      document.body.append(toc);
+      // En pantallas anchas el carril aparece cuando la portada ha salido de la vista
+      const heroEl = document.querySelector('.hero, .lesson-hero');
+      if (heroEl) new IntersectionObserver((e) => toc.classList.toggle('show', !e[0].isIntersecting)).observe(heroEl);
+      else toc.classList.add('show');
       const links = [...toc.querySelectorAll('a')];
       // Sección activa: el último h2 que ha pasado del 35 % de la pantalla
       let ticking = false;

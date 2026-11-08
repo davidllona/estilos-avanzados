@@ -6,14 +6,318 @@
 <title>Scroll animado solo con CSS | Hora azul</title>
 <meta name="description" content="Animaciones vinculadas al scroll con animation-timeline, scroll(), view() y animation-range: barras de progreso, reveals, parallax, escenas fijadas y el vuelo hacia la torre, sin una línea de JavaScript.">
 <link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: Descenso.
+     Empieza al amanecer y la página entera anochece mientras bajas.
+     Bricolage condensada (font-stretch 75 %, 800) para titulares, Newsreader para leer. */
+  @property --t { syntax: "<integer>"; inherits: true; initial-value: 0; }   /* avance de la página, 0–100 */
+  @property --n { syntax: "<integer>"; inherits: true; initial-value: 0; }   /* la noche cae en la banda, 0–100 */
+  @property --min { syntax: "<integer>"; inherits: false; initial-value: 1231; }   /* reloj de la portada, en minutos */
+  @property --hh { syntax: "<integer>"; inherits: false; initial-value: 20; }
+  :root {
+    --bg: oklch(88% 0.05 60);
+    --bg-2: oklch(84.5% 0.055 58);
+    --bg-3: oklch(80% 0.06 56);
+    --fg: oklch(22% 0.06 270);
+    --muted: oklch(38% 0.06 270);
+    --faint: oklch(50% 0.05 270);
+    --accent: oklch(62% 0.2 20);
+    --on-accent: oklch(18% 0.05 270);
+    --code-bg: oklch(19% 0.045 272);
+    --scheme: light;
+    --f-display: "Bricolage", "Arial Narrow", system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 800;
+    --display-tracking: -0.012em;
+    /* Los dos extremos del viaje */
+    --amanecer: oklch(88% 0.05 60);
+    --tarde: oklch(80% 0.08 42);
+    --anochecer: oklch(30% 0.07 295);
+    --noche: oklch(18% 0.05 270);
+    --tinta: oklch(22% 0.06 270);
+    --luna: oklch(94% 0.02 85);
+    timeline-scope: --ocaso, --cielo;   /* las declaran la banda y la portada; las usan el body y la barra */
+  }
+
+  /* ---- El fondo de TODA la lección depende de dos números ----
+     --t sigue al scroll del documento (scroll(root)): la tarde avanza poco a poco.
+     --n solo cambia mientras cruzas la banda del ocaso: ahí se invierte la tinta. */
+  body {
+    --dia: calc(min(var(--t) * 2, 100) * 1%);
+    --noct: calc(max(var(--t) * 2 - 100, 0) * 1%);
+    --bg-dia: color-mix(in oklch, var(--amanecer), var(--tarde) var(--dia));
+    --bg-noche: color-mix(in oklch, var(--anochecer), var(--noche) var(--noct));
+    --bg: color-mix(in oklch, var(--bg-dia), var(--bg-noche) calc(var(--n) * 1%));
+    --fg: color-mix(in oklab, var(--tinta), var(--luna) calc(var(--n) * 1%));
+    --muted: color-mix(in oklab, var(--fg) 76%, var(--bg));
+    --faint: color-mix(in oklab, var(--fg) 58%, var(--bg));
+    --line: color-mix(in oklab, var(--fg) 14%, transparent);
+    --line-2: color-mix(in oklab, var(--fg) 26%, transparent);
+    --bg-2: color-mix(in oklab, var(--bg), var(--fg) 6%);
+    --bg-3: color-mix(in oklab, var(--bg), var(--fg) 11%);
+    --ink-accent: color-mix(in oklab, var(--accent), var(--fg) 28%);
+    font-size: clamp(1.04rem, 1rem + 0.2vw, 1.16rem); line-height: 1.62;
+  }
+  @supports (animation-timeline: scroll()) {
+    body {
+      animation: descenso linear both, ocaso linear both;
+      animation-timeline: scroll(root), --ocaso;
+      animation-range: normal, contain 8% contain 92%;
+    }
+  }
+  @keyframes descenso { from { --t: 0; } to { --t: 100; } }
+  @keyframes ocaso { from { --n: 0; } to { --n: 100; } }
+
+  h1, h2, h3, h4, .statement, .quiz .q, .pager b { font-stretch: 75%; }
+  .prose h2 { font-size: clamp(2.6rem, 1.5rem + 4.2vw, 5rem); line-height: .9; max-width: 13ch; }
+  .prose h2 .n { font: 600 var(--step--1)/1 var(--f-code); color: var(--ink-accent); letter-spacing: 0; }
+  .prose h3 { font-weight: 750; font-size: clamp(1.7rem, 1.3rem + 1.4vw, 2.5rem); }
+  .callout.criterio .t, .quiz .kind { color: var(--ink-accent); }
+  /* La página practica lo que enseña: los titulares asoman con view() */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .prose > h2 { animation: asoma linear both; animation-timeline: view(); animation-range: entry 10% entry 100%; }
+    }
+  }
+  @keyframes asoma { from { opacity: 0; translate: 0 .5em; } }
+
+  /* =========================================================
+     Portada: parallax de capas solo con CSS
+     ========================================================= */
+  .hero { color: var(--tinta); }
+  .escena { position: relative; height: 100vh; height: 100svh; overflow: hidden; isolation: isolate; }
+  .escena > * { position: absolute; }
+  .cielo { inset: 0; background: linear-gradient(oklch(79% 0.055 250), oklch(87% 0.05 70) 46%, oklch(91% 0.065 72) 70%); }
+  .cielo.tarde { opacity: .55; background: linear-gradient(oklch(36% 0.09 288), oklch(56% 0.13 345) 34%, oklch(73% 0.15 32) 56%, oklch(85% 0.11 68) 74%); }
+  .estrellas { inset: 0 0 62%; opacity: 0;
+    background:
+      radial-gradient(1.4px 1.4px at 12% 18%, #fff 60%, transparent), radial-gradient(1px 1px at 27% 8%, #fff 60%, transparent),
+      radial-gradient(1.6px 1.6px at 41% 26%, #fff 60%, transparent), radial-gradient(1px 1px at 58% 12%, #fff 60%, transparent),
+      radial-gradient(1.3px 1.3px at 73% 30%, #fff 60%, transparent), radial-gradient(1px 1px at 86% 9%, #fff 60%, transparent),
+      radial-gradient(1.5px 1.5px at 94% 22%, #fff 60%, transparent), radial-gradient(1px 1px at 6% 36%, #fff 60%, transparent);
+    background-size: 560px 100%; }
+  .sol { left: calc(71% - clamp(84px, 9vw, 150px) / 2); top: 9%; width: clamp(84px, 9vw, 150px); aspect-ratio: 1; border-radius: 50%;
+    background: oklch(96% 0.07 92); translate: 0 24svh;
+    box-shadow: 0 0 0 10px oklch(96% 0.07 92 / .18), 0 0 90px 40px oklch(93% 0.1 80 / .45); }
+  .sol::before { content: ""; position: absolute; inset: -260%; border-radius: 50%; z-index: -1;
+    background: radial-gradient(closest-side, oklch(92% 0.1 75 / .5), oklch(90% 0.1 70 / .12) 55%, transparent); }
+  .sol i { position: absolute; inset: 0; border-radius: inherit; background: oklch(70% 0.19 35); opacity: .45; }
+
+  .cresta { left: 0; right: 0; top: var(--top); color: var(--c); }
+  .cresta svg { max-width: none; width: max(100%, 1100px); aspect-ratio: 4; height: auto; margin-left: calc(50% - max(50%, 550px) + var(--shift, 0px)); }
+  .cresta svg path { fill: currentColor; }
+  .cresta::after { content: ""; display: block; height: 130svh; margin-top: -2px; background: currentColor; }
+  .c1 { --top: 29%; --c: oklch(73% 0.065 315); }
+  .c2 { --top: 37%; --c: oklch(62% 0.075 305); }
+  .c3 { --top: 47%; --c: oklch(49% 0.075 295); }
+  .c4 { --top: 56%; --c: oklch(35% 0.06 285); }
+  .cumbre { position: absolute; left: calc(50% - max(50%, 550px) + max(100%, 1100px) * .711 + 10px); top: calc(max(100vw, 1100px) * .055 - .45rem);
+    display: flex; align-items: center; gap: .5rem; font: 600 .72rem/1 var(--f-ui); color: var(--tinta); white-space: nowrap; }
+  .cumbre::before { content: ""; width: 4.6rem; height: 1px; background: currentColor; opacity: .7; }
+
+  .titular { left: var(--gutter); right: var(--gutter); top: 15%; }
+  .hero h1 { font-size: clamp(4.4rem, 1rem + 10.6vw, 13.5rem); line-height: .84; letter-spacing: -0.015em; text-transform: uppercase; color: var(--tinta); }
+  .hero h1 span { display: block; }
+  .kicker-wrap { left: var(--gutter); top: 5.4rem; z-index: 2; }
+  .hero [data-kicker] { margin: 0; font: 600 var(--step--1)/1 var(--f-ui); color: var(--tinta); }
+
+  .niebla { left: 0; right: 0; top: 68%; height: 140svh;
+    background: linear-gradient(color-mix(in oklab, var(--bg) 0%, transparent), color-mix(in oklab, var(--bg) 62%, transparent) 8svh, var(--bg) 14svh); }
+  .pie { left: 0; right: 0; bottom: 0; z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 1rem 3rem;
+    padding: 0 var(--gutter) clamp(1.4rem, 3.4svh, 2.4rem); }
+  .hero .lede { margin: 0; max-width: 38ch; font-size: var(--step-1); line-height: 1.32; color: color-mix(in oklab, var(--tinta) 82%, var(--bg)); }
+  .lectura { display: grid; justify-items: end; gap: .55rem; text-align: right; font: 500 var(--step--1)/1.25 var(--f-ui); color: color-mix(in oklab, var(--tinta) 80%, var(--bg)); }
+  .reloj { --hh: calc((var(--min) - 30) / 60); counter-reset: h var(--hh) m mod(var(--min), 60);
+    font: 800 clamp(2.6rem, 1.6rem + 2.6vw, 4rem)/.9 var(--f-display); font-stretch: 75%; color: var(--tinta); font-variant-numeric: tabular-nums; }
+  .reloj::before { content: counter(h) ":" counter(m, decimal-leading-zero); }
+  .lectura .fila { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .6rem 1rem; }
+  .hero .chip { opacity: 1; border-color: color-mix(in oklab, var(--tinta) 45%, transparent); }
+  .hero .quieto { display: none; }
+
+  /* ---- La animación: solo si hay soporte y el usuario no pide menos movimiento ----
+     Fuera de este bloque, la portada es una estampa quieta a la hora dorada. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .hero { height: 215svh; view-timeline: --cielo; view-timeline-inset: 0; }
+      .escena { position: sticky; top: 0; }
+      .escena > *, .reloj { animation: var(--a) linear both; animation-timeline: --cielo; animation-range: contain 0% contain 100%; }
+      .sol      { --a: pone; }
+      .sol i    { animation: enrojece linear both; animation-timeline: --cielo; animation-range: contain 10% contain 80%; }
+      .cielo.tarde { --a: aparece; animation-range: contain 5% contain 85%; }
+      .estrellas { --a: aparece; animation-range: contain 62% contain 100%; }
+      .titular  { --a: hunde; }
+      .c1 { --a: sube1; } .c2 { --a: sube2; } .c3 { --a: sube3; } .c4 { --a: sube4; } .niebla { --a: sube5; }
+      .reloj    { --a: reloj; }
+      .pie { animation: none; }
+      /* La barra superior no se vuelve sólida mientras la escena está fijada, y aclara su tinta al anochecer */
+      .topbar { animation: barra linear; animation-timeline: --cielo; animation-range: contain 0% contain 100%; }
+      .kicker-wrap { --a: kicker; animation-range: contain 0% contain 30%; }
+      .cumbre { animation: cumbre linear both; animation-timeline: --cielo; animation-range: contain 30% contain 70%; }
+    }
+  }
+  @keyframes pone { from { translate: 0 0; } to { translate: 0 44svh; scale: 1.1; } }
+  @keyframes enrojece { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes aparece { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes hunde { to { translate: 0 54svh; } }
+  @keyframes sube1 { from { color: oklch(83% 0.04 285); } to { translate: 0 -1.5svh; color: oklch(58% 0.11 348); } }
+  @keyframes sube2 { from { color: oklch(73% 0.05 290); } to { translate: 0 -4svh; color: oklch(45% 0.1 322); } }
+  @keyframes sube3 { from { color: oklch(59% 0.06 290); } to { translate: 0 -8svh; color: oklch(34% 0.08 302); } }
+  @keyframes sube4 { from { color: oklch(43% 0.06 285); } to { translate: 0 -12svh; color: oklch(24% 0.06 290); } }
+  @keyframes sube5 { to { translate: 0 -6svh; } }
+  @keyframes kicker { to { opacity: 0; } }
+  @keyframes barra {
+    from, to { background-color: transparent; border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    from, 55% { color: var(--tinta); } 80%, to { color: var(--luna); }
+  }
+  @keyframes cumbre { to { color: oklch(94% 0.02 85); } }
+  @keyframes reloj { from { --min: 1192; } to { --min: 1267; } }
+  @media (prefers-reduced-motion: reduce) { .hero .mov { display: none; } .hero .quieto { display: inline; } .hero-scroll::before { display: none; } }
+  @supports not (animation-timeline: view()) { .hero .mov { display: none; } .hero .quieto { display: inline; } .hero-scroll::before { display: none; } }
+
+  @media (max-width: 760px) {
+    .sol { left: 60%; top: 15%; width: 92px; }
+    .c1 { --top: 37%; --shift: -130px; }
+    .c2 { --top: 43%; --shift: 150px; }
+    .c3 { --top: 55%; --shift: -60px; }
+    .c4 { --top: 64%; --shift: 40px; }
+    .titular { top: 13%; }
+    .hero h1 { font-size: clamp(3.6rem, 21vw, 6.2rem); line-height: .86; }
+    .hero h1 span { display: inline; }
+    .kicker-wrap { top: 4.6rem; }
+    .niebla { top: 66%; }
+    .pie { grid-template-columns: 1fr; gap: .9rem; }
+    .hero .lede { font-size: 1.06rem; max-width: 34ch; }
+    .lectura { grid-template-columns: auto 1fr; justify-items: start; text-align: left; align-items: end; gap: .2rem 1rem; }
+    .lectura .fila { justify-content: flex-start; grid-column: 1 / -1; }
+    .reloj { font-size: 2.6rem; grid-row: span 1; }
+    .cumbre { display: none; }
+    .hero { height: auto; }
+  }
+  @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) { .hero { height: 195svh; } }
+  }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  .statement { font-size: clamp(2.3rem, 1.4rem + 3.6vw, 4.4rem); line-height: .94; margin: 4.5rem 0; }
+  .statement em { font-style: normal; color: var(--ink-accent); }
+
+  /* ---- Diagrama vivo de rangos: este bloque ES el sujeto de view() ---- */
+  .rangos { height: 50svh; min-height: 300px; margin: 3rem 0; display: grid; align-content: center; gap: 1.1rem;
+    padding: 0 clamp(1rem, 3vw, 2rem); border-block: 1px solid var(--fg); view-timeline: --rangos; view-timeline-inset: 0; }
+  .rangos > p { margin: 0; font: 500 var(--step--1)/1.4 var(--f-ui); color: var(--muted); max-width: 60ch; }
+  .pista { display: grid; grid-template-columns: 5.6rem 1fr; row-gap: .7rem; align-items: center; position: relative; }
+  .marcas { grid-column: 2; position: relative; height: 1.4rem; font: 500 .74rem/1 var(--f-ui); color: var(--muted); }
+  .marcas span { position: absolute; left: var(--x); bottom: 0; translate: -50% 0; white-space: nowrap; }
+  .marcas span:first-child { translate: 0 0; } .marcas span:last-child { translate: -100% 0; }
+  .pista b { font: 600 .82rem/1 var(--f-code); }
+  .tramo { position: relative; height: 12px; }
+  .tramo::before { content: ""; position: absolute; inset: 5px 0; background: var(--line); }
+  .tramo i { position: absolute; top: 0; bottom: 0; left: calc(var(--a) * 1%); width: calc((var(--b) - var(--a)) * 1%);
+    background: var(--accent); border-radius: 2px; transform-origin: 0 50%; }
+  .tramo i::after { content: ""; position: absolute; inset: 0; outline: 1px solid var(--accent); outline-offset: -1px; }
+  .cabezal { grid-column: 2; grid-row: 1 / -1; align-self: stretch; container-type: inline-size; pointer-events: none; display: none; }
+  .cabezal::before { content: ""; position: absolute; top: -.3rem; bottom: -.3rem; width: 2px; margin-left: -1px; background: var(--fg); }
+  @supports (animation-timeline: view()) {
+    .tramo i { animation: llena linear both; animation-timeline: --rangos; }
+    .tramo.entry i { animation-range: entry; } .tramo.contain i { animation-range: contain; }
+    .tramo.exit i { animation-range: exit; } .tramo.cover i { animation-range: cover; }
+    .cabezal { display: block; position: relative; }
+    .cabezal::before { animation: cabezal linear both; animation-timeline: --rangos; animation-range: cover; }
+  }
+  @keyframes llena { from { scale: 0 1; } }
+  @keyframes cabezal { from { translate: 0; } to { translate: 100cqw; } }
+  @media (max-width: 640px) { .pista { grid-template-columns: 4.4rem 1fr; } .marcas { font-size: .68rem; } }
+  @media (max-height: 560px) { .rangos { height: auto; padding-block: 2rem; } }
+
+  /* ---- Banda del ocaso: aquí la página cambia de tinta ---- */
+  .band.ocaso { position: relative; overflow: clip; isolation: isolate; min-height: 135svh; padding: 0 var(--gutter);
+    --band-fg: var(--tinta); view-timeline: --ocaso; view-timeline-inset: 0;
+    background: linear-gradient(var(--bg) 0%, oklch(74% 0.14 38) 30%, oklch(64% 0.19 22) 56%, oklch(50% 0.17 8) 86%); }
+  .ocaso .inner { position: sticky; top: 30svh; padding-block: 34svh 46svh; }
+  .ocaso .claim { font: 800 clamp(2.6rem, 1.2rem + 5.4vw, 6.4rem)/.9 var(--f-display); font-stretch: 75%; letter-spacing: -0.015em; margin: 0; max-width: 13ch; text-wrap: balance; }
+  .ocaso .nota { margin: 1.4rem 0 0; max-width: 46ch; font: 500 var(--step-0)/1.45 var(--f-ui); }
+  .ocaso .nota code { background: oklch(22% 0.06 270 / .14); }
+  .sol-banda { position: absolute; z-index: -1; left: 58%; top: 30%; width: clamp(180px, 30vw, 440px); aspect-ratio: 1; border-radius: 50%;
+    background: oklch(88% 0.11 72); box-shadow: 0 0 120px 40px oklch(85% 0.13 60 / .45); translate: 0 30svh; }
+  .horizonte { position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; color: var(--anochecer); }
+  .horizonte svg { max-width: none; width: max(100%, 1100px); aspect-ratio: 4; margin-left: calc(50% - max(50%, 550px)); }
+  .horizonte svg use { fill: currentColor; }
+  .horizonte::after { content: ""; display: block; height: 4svh; margin-top: -2px; background: currentColor; }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .sol-banda { animation: puesta linear both; animation-timeline: view(); animation-range: cover 10% cover 85%; }
+    }
+  }
+  @keyframes puesta { from { translate: 0 -10svh; } to { translate: 0 90svh; } }
+  @media (max-width: 760px) { .sol-banda { left: 40%; } }
+
+  /* ---- Split con código fijo ---- */
+  @media (min-width: 761px) { .split { grid-template-columns: .85fr 1.15fr; } }
+  .split > * { min-width: 0; }
+  .split .stick .code { margin-top: 0; }
+  .split > div > p:last-child { margin-bottom: 0; }
+
+  /* ---- Nocturno final: la misma sierra, de noche ---- */
+  .nocturno { position: relative; overflow: clip; isolation: isolate; height: 92svh; min-height: 520px; margin-top: 6rem;
+    display: grid; align-content: start; padding: 18svh var(--gutter) 0; color: var(--luna); }
+  .nocturno .txt { max-width: var(--wide); margin: 0 auto; width: 100%; }
+  .nocturno .cielo-n { position: absolute; inset: 0; z-index: -3; max-width: none; background:
+      radial-gradient(1.4px 1.4px at 12% 18%, #fff 60%, transparent), radial-gradient(1px 1px at 33% 8%, #fff 60%, transparent),
+      radial-gradient(1.6px 1.6px at 47% 31%, #fff 60%, transparent), radial-gradient(1px 1px at 64% 14%, #fff 60%, transparent),
+      radial-gradient(1.2px 1.2px at 79% 27%, #fff 60%, transparent), radial-gradient(1px 1px at 91% 6%, #fff 60%, transparent),
+      radial-gradient(1px 1px at 4% 40%, #fff 60%, transparent) 0 0 / 480px 300px; opacity: .85; }
+  .luna { position: absolute; z-index: -2; right: 14%; top: 16%; width: clamp(56px, 7vw, 96px); aspect-ratio: 1; border-radius: 50%;
+    box-shadow: inset -14px 8px 0 0 var(--luna); filter: drop-shadow(0 0 22px oklch(94% 0.02 85 / .35)); }
+  .nocturno .sierra { position: absolute; left: 0; right: 0; max-width: none; z-index: -1; color: var(--c); top: var(--top); }
+  .nocturno .sierra svg { max-width: none; width: max(100%, 1100px); aspect-ratio: 4; margin-left: calc(50% - max(50%, 550px) + var(--shift, 0px)); }
+  .nocturno .sierra svg use { fill: currentColor; }
+  .nocturno .sierra::after { content: ""; display: block; height: 60svh; margin-top: -2px; background: currentColor; }
+  .nocturno .s1 { --top: 42%; --c: oklch(33% 0.07 295); }
+  .nocturno .s2 { --top: 52%; --c: oklch(26% 0.06 285); --shift: 120px; }
+  .nocturno .s3 { --top: 64%; --c: oklch(20.5% 0.05 275); }
+  .nocturno .hora-n { font: 800 clamp(4rem, 2rem + 9vw, 10rem)/.8 var(--f-display); font-stretch: 75%; letter-spacing: -0.02em; margin: 0; }
+  .nocturno p.dicho { margin: 1.2rem auto 0; font: 400 var(--step-1)/1.35 var(--f-body); max-width: var(--wide); color: oklch(84% 0.03 280); }
+  .nocturno p.dicho span { display: block; max-width: 34ch; }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .luna { animation: sale-luna linear both; animation-timeline: view(); animation-range: entry 20% contain 30%; }
+      .nocturno .s1 { animation: baja-s linear both; animation-timeline: view(); animation-range: entry 0% contain 40%; }
+    }
+  }
+  @keyframes sale-luna { from { translate: 0 22svh; opacity: 0; } }
+  @keyframes baja-s { from { translate: 0 10svh; } }
+  @media (max-width: 760px) { .nocturno { height: 80svh; padding-top: 14svh; } .nocturno .s1 { --top: 50%; } .nocturno .s2 { --top: 58%; } .nocturno .s3 { --top: 68%; } .luna { right: 10%; top: 10%; } }
+</style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="scroll-css">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Scroll animado solo con CSS</h1>
-    <p class="lede">Cambia el reloj de una animación por la barra de scroll. Barras de progreso, reveals, parallax y una escena fijada que vuela hacia la torre, sin JavaScript.</p>
+  <header class="hero" aria-labelledby="t">
+    <div class="escena">
+      <div class="cielo" aria-hidden="true"></div>
+      <div class="cielo tarde" aria-hidden="true"></div>
+      <div class="estrellas" aria-hidden="true"></div>
+      <div class="sol" aria-hidden="true"><i></i></div>
+      <div class="cresta c1" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><path id="cr1" d="M0 400L0 191L6 187L12 186L18 190L25 187L31 184L37 178L43 174L50 170L56 171L62 170L68 175L75 176L81 178L87 177L93 178L100 177L106 178L112 181L118 179L125 183L131 183L137 184L143 183L150 179L156 187L162 191L168 194L175 198L181 201L187 205L193 208L200 205L206 204L212 198L218 197L225 197L231 197L237 200L243 201L250 201L256 203L262 203L268 206L275 209L281 215L287 218L293 222L300 220L306 221L312 226L318 229L325 228L331 231L337 229L343 225L350 220L356 219L362 213L368 214L375 213L381 206L387 204L393 204L400 199L406 196L412 196L418 200L425 200L431 201L437 207L443 207L450 205L456 202L462 201L468 199L475 192L481 195L487 198L493 199L500 194L506 191L512 194L518 192L525 192L531 196L537 198L543 200L550 206L556 207L562 211L568 213L575 209L581 215L587 222L593 225L600 228L606 228L612 227L618 229L625 226L631 224L637 223L643 223L650 220L656 219L662 212L668 210L675 208L681 204L687 206L693 205L700 204L706 202L712 198L718 192L725 190L731 192L737 193L743 194L750 193L756 193L762 190L768 183L775 183L781 180L787 175L793 179L800 177L806 174L812 172L818 172L825 171L831 169L837 168L843 170L850 169L856 169L862 166L868 163L875 162L881 165L887 163L893 165L900 170L906 166L912 167L918 162L925 160L931 159L937 153L943 152L950 150L956 149L962 149L968 153L975 154L981 154L987 154L993 148L1000 145L1006 145L1012 141L1018 133L1025 129L1031 129L1037 125L1043 125L1050 124L1056 119L1062 119L1068 117L1075 117L1081 112L1087 111L1093 104L1100 99L1106 100L1112 95L1118 92L1125 94L1131 93L1137 88L1143 92L1150 92L1156 97L1162 96L1168 102L1175 102L1181 102L1187 99L1193 104L1200 106L1206 106L1212 110L1218 116L1225 122L1231 128L1237 130L1243 133L1250 142L1256 153L1262 158L1268 166L1275 170L1281 175L1287 179L1293 176L1300 180L1306 182L1312 182L1318 185L1325 188L1331 194L1337 195L1343 201L1350 205L1356 206L1362 202L1368 203L1375 205L1381 206L1387 210L1393 208L1400 209L1406 214L1412 213L1418 214L1425 211L1431 213L1437 221L1443 223L1450 223L1456 221L1462 221L1468 223L1475 227L1481 225L1487 224L1493 221L1500 219L1506 214L1512 213L1518 212L1525 216L1531 220L1537 218L1543 226L1550 230L1556 226L1562 225L1568 222L1575 220L1581 222L1587 221L1593 223L1600 225L1600 400Z"/></svg><span class="cumbre">Penyagolosa, 1.813 m</span></div>
+      <div class="cresta c2" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><path id="cr2" d="M0 400L0 256L6 257L12 256L18 255L25 256L31 254L37 255L43 255L50 255L56 256L62 256L68 259L75 260L81 261L87 261L93 260L100 261L106 259L112 257L118 257L125 257L131 255L137 253L143 252L150 252L156 253L162 254L168 254L175 255L181 254L187 254L193 252L200 251L206 252L212 254L218 254L225 254L231 252L237 252L243 252L250 251L256 249L262 247L268 245L275 240L281 238L287 237L293 233L300 229L306 227L312 225L318 220L325 215L331 213L337 209L343 204L350 200L356 195L362 187L368 182L375 175L381 169L387 164L393 160L400 156L406 151L412 147L418 144L425 139L431 135L437 130L443 127L450 125L456 122L462 121L468 122L475 125L481 131L487 140L493 150L500 160L506 169L512 178L518 186L525 196L531 205L537 214L543 220L550 228L556 234L562 241L568 247L575 255L581 258L587 261L593 264L600 268L606 272L612 277L618 279L625 281L631 283L637 287L643 287L650 289L656 292L662 296L668 297L675 300L681 302L687 303L693 303L700 304L706 306L712 309L718 311L725 314L731 315L737 314L743 315L750 318L756 319L762 318L768 319L775 320L781 319L787 319L793 320L800 320L806 320L812 318L818 317L825 318L831 316L837 314L843 314L850 315L856 311L862 308L868 306L875 304L881 302L887 301L893 301L900 300L906 300L912 300L918 299L925 299L931 296L937 295L943 296L950 295L956 293L962 293L968 291L975 288L981 286L987 283L993 280L1000 278L1006 279L1012 278L1018 277L1025 276L1031 276L1037 275L1043 275L1050 273L1056 275L1062 275L1068 276L1075 276L1081 277L1087 277L1093 279L1100 280L1106 279L1112 278L1118 277L1125 276L1131 274L1137 272L1143 272L1150 270L1156 270L1162 270L1168 269L1175 267L1181 265L1187 263L1193 262L1200 259L1206 258L1212 257L1218 257L1225 256L1231 255L1237 254L1243 254L1250 252L1256 251L1262 250L1268 252L1275 253L1281 253L1287 254L1293 256L1300 257L1306 257L1312 257L1318 256L1325 254L1331 253L1337 252L1343 253L1350 253L1356 253L1362 253L1368 252L1375 251L1381 248L1387 247L1393 245L1400 244L1406 246L1412 250L1418 250L1425 252L1431 253L1437 255L1443 255L1450 257L1456 258L1462 259L1468 258L1475 259L1481 261L1487 262L1493 262L1500 262L1506 260L1512 261L1518 259L1525 256L1531 256L1537 257L1543 258L1550 258L1556 257L1562 256L1568 256L1575 257L1581 259L1587 262L1593 262L1600 264L1600 400Z"/></svg></div>
+      <div class="kicker-wrap"><p data-kicker>Lección 06</p></div>
+      <div class="titular"><h1 id="t"><span>Scroll animado</span> <span>solo con CSS</span></h1></div>
+      <div class="cresta c3" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><path id="cr3" d="M0 400L0 183L12 184L25 185L37 184L50 186L62 180L75 176L87 177L100 176L112 171L125 169L137 161L150 156L162 155L175 150L187 153L200 153L212 156L225 161L237 171L250 181L262 188L275 191L287 198L300 207L312 208L325 212L337 213L350 210L362 213L375 215L387 217L400 220L412 218L425 219L437 216L450 211L462 213L475 211L487 216L500 217L512 222L525 225L537 228L550 229L562 228L575 227L587 231L600 232L612 234L625 238L637 236L650 236L662 233L675 231L687 231L700 226L712 222L725 223L737 227L750 229L762 233L775 237L787 236L800 235L812 235L825 233L837 230L850 231L862 226L875 223L887 224L900 221L912 220L925 221L937 217L950 218L962 218L975 215L987 218L1000 219L1012 219L1025 215L1037 214L1050 207L1062 205L1075 198L1087 197L1100 190L1112 191L1125 191L1137 188L1150 186L1162 188L1175 188L1187 192L1200 200L1212 207L1225 212L1237 216L1250 224L1262 225L1275 228L1287 230L1300 234L1312 229L1325 226L1337 228L1350 225L1362 229L1375 230L1387 227L1400 224L1412 228L1425 230L1437 230L1450 235L1462 234L1475 229L1487 231L1500 229L1512 233L1525 238L1537 242L1550 245L1562 247L1575 250L1587 249L1600 248L1600 400Z"/></svg></div>
+      <div class="cresta c4" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><path id="cr4" d="M0 400L0 256L25 259L50 262L75 269L100 274L125 278L150 279L175 279L200 281L225 282L250 283L275 285L300 288L325 287L350 288L375 291L400 295L425 296L450 296L475 298L500 302L525 301L550 303L575 301L600 302L625 300L650 299L675 301L700 300L725 298L750 297L775 294L800 289L825 290L850 289L875 288L900 284L925 286L950 288L975 287L1000 287L1025 283L1050 281L1075 279L1100 278L1125 277L1150 278L1175 278L1200 277L1225 276L1250 275L1275 272L1300 269L1325 269L1350 267L1375 265L1400 266L1425 266L1450 265L1475 268L1500 270L1525 267L1550 263L1575 262L1600 262L1600 400ZM-1 261L10 227L21 261ZM67 273L74 249L82 273ZM86 277L95 249L103 277ZM99 279L110 246L121 279ZM122 282L132 249L143 282ZM140 283L151 250L161 283ZM158 283L169 248L180 283ZM182 284L192 252L202 284ZM242 287L248 265L255 287ZM320 291L329 263L337 291ZM331 292L341 260L351 292ZM357 294L366 263L376 294ZM378 296L386 270L394 296ZM463 301L472 272L481 301ZM482 304L493 270L504 304ZM526 305L534 279L542 305ZM539 306L548 276L558 306ZM563 305L572 275L581 305ZM585 306L593 280L600 306ZM603 305L610 283L616 305ZM623 303L634 271L644 303ZM650 304L656 283L662 304ZM670 305L680 274L690 305ZM687 304L696 277L704 304ZM715 302L722 281L728 302ZM735 301L743 274L752 301ZM783 294L795 256L808 294ZM857 292L869 256L881 292ZM881 290L892 255L903 290ZM899 289L909 256L919 289ZM909 289L920 256L930 289ZM926 291L937 257L948 291ZM940 292L946 270L953 292ZM954 292L961 267L969 292ZM979 291L986 267L994 291ZM1000 289L1010 258L1020 289ZM1018 286L1027 258L1036 286ZM1035 285L1043 260L1050 285ZM1089 282L1099 250L1109 282ZM1177 282L1185 255L1193 282ZM1191 281L1199 254L1208 281ZM1210 280L1222 243L1234 280ZM1222 280L1231 252L1240 280ZM1230 280L1240 246L1251 280ZM1254 278L1262 251L1270 278ZM1338 272L1344 250L1351 272ZM1360 270L1369 239L1379 270ZM1381 269L1392 235L1403 269ZM1402 270L1409 248L1415 270ZM1410 270L1420 239L1430 270ZM1422 270L1432 238L1441 270ZM1432 269L1442 238L1452 269ZM1457 271L1467 240L1477 271ZM1467 273L1478 238L1489 273ZM1486 274L1497 237L1509 274ZM1573 266L1582 238L1591 266Z"/></svg></div>
+      <div class="niebla" aria-hidden="true"></div>
+      <div class="pie">
+        <p class="lede">Cuatro capas de sierra, un sol y un reloj, y ni una línea de JavaScript. <span class="mov">Baja despacio: el sol se pone con tu scroll y la página entera anochece contigo.</span><span class="quieto">La estampa se queda quieta, pero la página entera anochecerá mientras bajas.</span></p>
+        <div class="lectura">
+          <span class="reloj" aria-hidden="true"></span>
+          <span>Hora en la sierra, calculada por CSS</span>
+          <span class="fila"><span class="hero-scroll"><span class="mov">Baja despacio</span><span class="quieto">Estampa fija a la hora dorada</span></span><span class="chip" data-meta>22 min</span></span>
+        </div>
+      </div>
+    </div>
   </header>
 
   <div class="lesson">
@@ -22,6 +326,8 @@
       <p>Una animación CSS normal avanza con el tiempo: dura <code>1s</code> y termina. Una animación <strong>vinculada al scroll</strong> avanza con la posición de scroll: si bajas, avanza; si subes, retrocede; si te paras, se para. El <code>@keyframes</code> es el mismo de siempre. Lo único que cambia es el reloj, que se declara con <code>animation-timeline</code>.</p>
       <p>Hasta hace poco esto pedía GSAP o un <code>addEventListener<wbr>('scroll')</code>. Desde el 27 de octubre de 2026 funciona en los tres motores. Para la mitad de los efectos que viste en los vídeos ya no hace falta ninguna librería.</p>
       <p>Todas las demos de esta lección tienen su propio scroll. <strong>Desliza dentro del recuadro de la demo</strong> (rueda, trackpad o dedo), no en la página.</p>
+
+      <p class="statement">La animación es la de siempre. <em>Solo cambia el reloj.</em></p>
 
       <h2>scroll(): el scroll como reloj</h2>
       <p><code>scroll()</code> crea una línea de tiempo anónima a partir de un contenedor con scroll. El 0&nbsp;% es arriba del todo y el 100&nbsp;%, abajo del todo. Dos usos clásicos: la barra de progreso de lectura y la cabecera que se compacta al bajar.</p>
@@ -264,6 +570,18 @@
       <h2>animation-range: elegir el tramo</h2>
       <p>Un <code>view()</code> recorre varias fases, y <code>animation-range</code> te deja elegir en cuál ocurre la animación. Las cuatro que vas a usar:</p>
 
+      <div class="rangos wide" role="img" aria-label="Diagrama de los cuatro rangos de view(): entry ocupa el primer tercio del recorrido, contain el segundo, exit el tercero y cover todo el recorrido.">
+        <p>Este bloque mide media pantalla y es el sujeto de su propio <code>view()</code>. Las barras se llenan mientras lo cruzas, y la línea vertical marca dónde estás dentro de <code>cover</code>.</p>
+        <div class="pista" aria-hidden="true">
+          <div class="marcas"><span style="--x:0%">asoma</span><span style="--x:33.333%">dentro</span><span style="--x:66.666%">sale</span><span style="--x:100%">fuera</span></div>
+          <b>entry</b><span class="tramo entry" style="--a:0; --b:33.333"><i></i></span>
+          <b>contain</b><span class="tramo contain" style="--a:33.333; --b:66.666"><i></i></span>
+          <b>exit</b><span class="tramo exit" style="--a:66.666; --b:100"><i></i></span>
+          <b>cover</b><span class="tramo cover" style="--a:0; --b:100"><i></i></span>
+          <span class="cabezal"></span>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table>
           <thead><tr><th>Rango</th><th>0&nbsp;%</th><th>100&nbsp;%</th><th>Uso típico</th></tr></thead>
@@ -364,23 +682,36 @@
         <p>Los porcentajes de <code>animation-range</code> son relativos a la altura de la pantalla, así que en un móvil vertical <code>entry</code> dura más píxeles que en un portátil apaisado. No suele hacer falta tocarlos. Lo que sí cambia es la proporción: una tarjeta de <code>34svh</code> en el móvil es casi un tercio de la pantalla, y si mide más que la pantalla, <code>contain</code> cambia de significado. Pon un tope de altura a los sujetos (<code>max-height: 80svh</code>) para que los rangos se comporten igual en los dos formatos.</p>
       </div>
 
+      <div class="band ocaso">
+        <div class="sol-banda" aria-hidden="true"></div>
+        <div class="horizonte" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><use href="#cr3"/></svg></div>
+        <div class="inner">
+          <p class="claim">Esta página lleva toda la lección anocheciendo.</p>
+          <p class="nota">Su fondo y su tinta dependen de dos números registrados con <code>@property</code>: uno avanza con <code>scroll(root)</code> y el otro con el paso de esta banda por la pantalla. Cuando salgas de ella, será de noche.</p>
+        </div>
+      </div>
+
       <h2>Líneas de tiempo con nombre</h2>
-      <p><code>view()</code> y <code>scroll()</code> son anónimas: cada elemento se mira a sí mismo o a su contenedor. Cuando quieres que <strong>un elemento se anime con el recorrido de otro</strong>, le pones nombre a la línea de tiempo:</p>
+      <div class="split">
+        <div>
+          <p><code>view()</code> y <code>scroll()</code> son anónimas: cada elemento se mira a sí mismo o a su contenedor. Cuando quieres que <strong>un elemento se anime con el recorrido de otro</strong>, le pones nombre a la línea de tiempo:</p>
+          <p>Los nombres empiezan por <code>--</code>, como las variables. Sin <code>timeline-scope</code>, el nombre solo existe dentro del subárbol del elemento que lo declara. Con él, lo «sube» hasta el ancestro que digas. Es lo que usaba el visualizador de antes: el HUD fijo no está dentro de la tarjeta.</p>
+        </div>
+        <div class="stick">
+          <script type="text/x-code" data-lang="css" data-label="Nombrar y usar una línea de tiempo">
+            /* La sección crea la línea de tiempo... */
+            .galeria { view-timeline-name: --galeria; }     /* o view-timeline: --galeria block; */
+            .carrusel { scroll-timeline-name: --carrusel; scroll-timeline-axis: inline; }
 
-      <script type="text/x-code" data-lang="css" data-label="Nombrar y usar una línea de tiempo">
-        /* La sección crea la línea de tiempo... */
-        .galeria { view-timeline-name: --galeria; }     /* o view-timeline: --galeria block; */
-        .carrusel { scroll-timeline-name: --carrusel; scroll-timeline-axis: inline; }
+            /* ...y cualquier descendiente la usa por su nombre */
+            .galeria .pista { animation: desliza linear both; animation-timeline: --galeria; }
 
-        /* ...y cualquier descendiente la usa por su nombre */
-        .galeria .pista { animation: desliza linear both; animation-timeline: --galeria; }
-
-        /* Para un elemento que NO es descendiente (un HUD fijo, un menú hermano),
-           sube el alcance del nombre a un ancestro común */
-        body { timeline-scope: --galeria; }
-      </script>
-
-      <p>Los nombres empiezan por <code>--</code>, como las variables. Sin <code>timeline-scope</code>, el nombre solo existe dentro del subárbol del elemento que lo declara. Con él, lo «sube» hasta el ancestro que digas. Es lo que usaba el visualizador de antes: el HUD fijo no está dentro de la tarjeta.</p>
+            /* Para un elemento que NO es descendiente (un HUD fijo, un menú hermano),
+               sube el alcance del nombre a un ancestro común */
+            body { timeline-scope: --galeria; }
+          </script>
+        </div>
+      </div>
       <p>El caso estrella del nombre es el <strong>scroll horizontal dirigido por el vertical</strong>: una sección alta, un escenario fijado y una pista que se desplaza de lado mientras tú bajas.</p>
 
       <figure class="lab" data-title="Obra seleccionada en horizontal" data-hint="Desliza dentro de la demo" data-height="500" data-stage="dark">
@@ -633,6 +964,32 @@
         @keyframes abre { from { clip-path: inset(22% 18% round 6px); } }
       </script>
 
+      <p>Esta misma página sigue la plantilla. El fondo y la tinta salen de dos números; si el navegador no entiende <code>animation-timeline</code>, un script de diez líneas los calcula a mano y la página anochece igual.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="Así anochece esta página">
+        @property --t { syntax: "<integer>"; inherits: true; initial-value: 0; }
+        @property --n { syntax: "<integer>"; inherits: true; initial-value: 0; }
+
+        body {
+          /* la tarde avanza con --t; la noche cae con --n */
+          --bg: color-mix(in oklch, var(--bg-dia), var(--bg-noche) calc(var(--n) * 1%));
+          --fg: color-mix(in oklab, var(--tinta), var(--luna) calc(var(--n) * 1%));
+        }
+        @supports (animation-timeline: scroll()) {
+          body {
+            animation: descenso linear both, ocaso linear both;
+            animation-timeline: scroll(root), --ocaso;     /* --ocaso: la banda */
+            animation-range: normal, contain 8% contain 92%;
+          }
+        }
+        @keyframes descenso { to { --t: 100; } }
+        @keyframes ocaso { to { --n: 100; } }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Los números son enteros a propósito. Un <code>&lt;integer&gt;</code> solo cambia cien veces en toda la página, y cada cambio de una variable heredada obliga a recalcular los estilos de todo lo que hereda de ella. Con un número decimal lo harías en cada fotograma. Y la tinta no se invierte poco a poco a la vista: cambia dentro de la banda, cuando ningún texto de la página está en pantalla.</p>
+      </div>
+
       <p>Para la escena fijada, el fallback no es «sin animación», es <strong>otra composición</strong>. Si no hay soporte, quita el <code>height</code> de la sección y el <code>sticky</code>, y enseña la torre y la ficha una debajo de otra. Si el efecto es imprescindible en todos los navegadores, ese es el momento de usar GSAP ScrollTrigger (lección 08), que lo resuelve con JavaScript.</p>
 
       <script type="text/x-code" data-lang="css" data-label="Fallback de la escena fijada">
@@ -662,6 +1019,18 @@
         <p>Con la inercia del dedo (el «fling» de iOS y Android) la página sigue moviéndose después de que levantas el dedo. Estas animaciones van atadas a la posición, así que siguen la inercia sin tirones mientras animes propiedades del compositor. Es su gran ventaja frente a un listener de <code>scroll</code> en JavaScript, que en el móvil llega tarde. Y prueba siempre en un teléfono real: el simulador de DevTools no reproduce la barra de direcciones ni la inercia.</p>
       </div>
 
+      <section class="nocturno bleed" aria-label="Final de la lección">
+        <div class="cielo-n" aria-hidden="true"></div>
+        <div class="luna" aria-hidden="true"></div>
+        <div class="sierra s1" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><use href="#cr1"/></svg></div>
+        <div class="sierra s2" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><use href="#cr2"/></svg></div>
+        <div class="sierra s3" aria-hidden="true"><svg viewBox="0 0 1600 400" preserveAspectRatio="none"><use href="#cr4"/></svg></div>
+        <div class="txt">
+          <p class="hora-n">Medianoche</p>
+          <p class="dicho"><span>Todo lo que se ha movido en esta página lo ha movido tu scroll: el sol, la sierra, el reloj y el color del papel.</span></p>
+        </div>
+      </section>
+
       <section class="recap">
         <h2 class="no-toc">Resumen</h2>
         <ol>
@@ -679,5 +1048,25 @@
     </article>
   </div>
 </main>
+<script>
+  // La portada y el anochecer son CSS puro. Esto solo corre en navegadores sin
+  // animation-timeline: calcula a mano los dos números (--t y --n) del fondo.
+  (() => {
+    if (CSS.supports('animation-timeline: scroll()')) return;
+    const body = document.body, banda = document.querySelector('.ocaso');
+    const clamp = (v) => Math.min(1, Math.max(0, v));
+    let pend = false;
+    const pinta = () => {
+      pend = false;
+      const doc = document.documentElement, max = Math.max(1, doc.scrollHeight - innerHeight);
+      const r = banda.getBoundingClientRect(), recorrido = Math.max(1, r.height - innerHeight);
+      const n = clamp((-r.top / recorrido - 0.08) / 0.84);
+      body.style.setProperty('--t', Math.round(clamp(scrollY / max) * 100));
+      body.style.setProperty('--n', Math.round(n * 100));
+    };
+    addEventListener('scroll', () => { if (!pend) { pend = true; requestAnimationFrame(pinta); } }, { passive: true });
+    addEventListener('resize', pinta); pinta();
+  })();
+</script>
 </body>
 </html>

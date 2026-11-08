@@ -239,6 +239,15 @@ window.CHULETA = [
   "archivo": "06-scroll-css.html",
   "titulo": "Scroll animado solo con CSS",
   "seccion": "Soporte, fallbacks y movimiento reducido",
+  "etiqueta": "Así anochece esta página",
+  "lang": "css",
+  "codigo": "@property --t { syntax: \"<integer>\"; inherits: true; initial-value: 0; }\n@property --n { syntax: \"<integer>\"; inherits: true; initial-value: 0; }\n\nbody {\n  /* la tarde avanza con --t; la noche cae con --n */\n  --bg: color-mix(in oklch, var(--bg-dia), var(--bg-noche) calc(var(--n) * 1%));\n  --fg: color-mix(in oklab, var(--tinta), var(--luna) calc(var(--n) * 1%));\n}\n@supports (animation-timeline: scroll()) {\n  body {\n    animation: descenso linear both, ocaso linear both;\n    animation-timeline: scroll(root), --ocaso;     /* --ocaso: la banda */\n    animation-range: normal, contain 8% contain 92%;\n  }\n}\n@keyframes descenso { to { --t: 100; } }\n@keyframes ocaso { to { --n: 100; } }"
+ },
+ {
+  "leccion": "scroll-css",
+  "archivo": "06-scroll-css.html",
+  "titulo": "Scroll animado solo con CSS",
+  "seccion": "Soporte, fallbacks y movimiento reducido",
   "etiqueta": "Fallback de la escena fijada",
   "lang": "css",
   "codigo": "@supports not (animation-timeline: view()) {\n  .vuelo { height: auto; }\n  .escena { position: relative; height: auto; display: grid; gap: 2rem; padding-block: 4rem; }\n  .escena > * { position: static; opacity: 1; }\n  .noche, .velo, .contador, .aviso { display: none; }\n}"

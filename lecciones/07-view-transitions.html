@@ -6,15 +6,289 @@
 <title>View Transitions | Hora azul</title>
 <meta name="description" content="La API de View Transitions: document.startViewTransition, elementos compartidos con view-transition-name, pseudo-elementos personalizados, tipos, revelado circular de tema, rejillas que se reordenan y transiciones entre páginas.">
 <link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: Galería que muta.
+     Papel de sala blanco cálido, tinta casi negra y un único cobalto.
+     Instrument Serif en cursiva para titulares, Inter Tight para leer. */
+  :root {
+    --bg: oklch(97% 0.01 85);
+    --bg-2: oklch(94.3% 0.012 85);
+    --bg-3: oklch(90.5% 0.014 85);
+    --fg: oklch(18% 0.01 260);
+    --muted: oklch(43% 0.015 260);
+    --faint: oklch(56% 0.012 260);
+    --accent: oklch(52% 0.22 264);
+    --on-accent: oklch(97% 0.01 85);
+    --code-bg: oklch(19% 0.025 262);
+    --scheme: light;
+    --f-display: "Instrument Serif", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 400;
+    --display-tracking: -0.012em;
+    --curva: cubic-bezier(.7, 0, .2, 1);
+    --llega: cubic-bezier(.2, .8, .2, 1);
+  }
+  body { font-size: clamp(1.02rem, 0.98rem + 0.18vw, 1.12rem); line-height: 1.62; }
+  h1, h2, h3, .statement, .quiz .q, .pager b { font-style: italic; }
+  .prose h2 { font-size: clamp(2.7rem, 1.6rem + 4vw, 5.2rem); line-height: .95; letter-spacing: -0.02em; max-width: 15ch; }
+  .prose h2 .n { font: 500 var(--step--1)/1 var(--f-ui); font-style: normal; color: var(--accent); }
+  .prose h3 { font-size: clamp(1.9rem, 1.4rem + 1.6vw, 2.8rem); letter-spacing: -0.015em; }
+  .prose h2 code, .prose h3 code { font-style: normal; font-size: .62em; vertical-align: .12em; }
+
+  /* =========================================================
+     Portada: la sala. Seis obras en un muro que se puede volver a colgar.
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, 37fr) minmax(0, 63fr); gap: clamp(1.5rem, 3.2vw, 3.4rem);
+    padding: 5rem var(--gutter) clamp(1.2rem, 3svh, 2rem); background: var(--bg); }
+  .sala-txt { display: flex; flex-direction: column; min-height: 0; }
+  .titulo-wrap { flex: 1; display: flex; flex-direction: column; }
+  .hero [data-kicker] { margin: .4rem 0 0; font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { font-size: clamp(3.9rem, 1rem + 6.6vw, 9rem); line-height: .86; letter-spacing: -0.03em; margin: auto 0 0; padding-top: 1.2rem; }
+  .hero h1 span { display: block; }
+  .hero h1 span + span { color: var(--accent); padding-left: .42em; }
+  .hero .lede { margin: 1.6rem 0 0; max-width: 34ch; font-size: var(--step-1); line-height: 1.35; color: var(--muted); }
+  .montaje { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1rem; padding-top: 2.4rem; }
+  .montaje .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; padding: 3px; }
+  .montaje .seg button { font: 500 var(--step--1)/1 var(--f-ui); color: var(--fg); background: none; border: 0; border-radius: 999px;
+    min-height: 44px; padding: 0 1.05rem; cursor: pointer; transition: background-color .25s, color .25s; }
+  .montaje .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  .montaje .lbl { font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .montaje .chip { margin-left: auto; opacity: 1; color: var(--muted); }
+
+  .muro { display: grid; grid-template: repeat(8, minmax(0, 1fr)) / repeat(12, minmax(0, 1fr)); gap: clamp(8px, 0.9vw, 14px);
+    height: calc(100svh - 5rem - clamp(1.2rem, 3svh, 2rem)); min-height: 460px; }
+  .obra { position: relative; display: block; min-width: 0; min-height: 0; padding: 0; border: 0; background: var(--bg-3); color: inherit;
+    cursor: zoom-in; overflow: hidden; container-type: size; view-transition-class: obra; }
+  .muro.nombrando .obra { view-transition-name: var(--vt); }
+  .lienzo { position: absolute; inset: 0; overflow: hidden; display: block; }
+  .lienzo img { width: 100%; height: 100%; object-fit: cover; transition: scale .8s var(--llega); }
+  .lienzo.contain { background: #050506; }
+  .lienzo.contain img { object-fit: contain; }
+  @media (hover: hover) { .obra:hover .lienzo img, .obra:hover .arte { scale: 1.035; } }
+  .obra:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .cartela { position: absolute; left: 8px; bottom: 8px; display: flex; align-items: baseline; gap: .5rem; max-width: calc(100% - 16px);
+    padding: .38rem .6rem .42rem; background: var(--bg); color: var(--fg); text-align: left; }
+  .cartela i { font: 500 .7rem/1 var(--f-ui); font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cartela b { font: 400 italic clamp(.95rem, .8rem + .3vw, 1.15rem)/1.05 var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: fit-content; }
+  @container (max-width: 190px) { .cartela b { display: none; } }
+
+  /* Obras hechas solo con CSS (escalan con el marco gracias a cqmin) */
+  .arte { position: absolute; inset: 0; container-type: size; transition: scale .8s var(--llega); }
+  .albers { background: oklch(46% 0.2 266); }
+  .albers i { position: absolute; left: 50%; translate: -50% 0; aspect-ratio: 1; }
+  .albers i:nth-child(1) { width: 76cqmin; bottom: 8cqmin; background: oklch(60% 0.16 258); }
+  .albers i:nth-child(2) { width: 52cqmin; bottom: 14cqmin; background: oklch(78% 0.1 245); }
+  .albers i:nth-child(3) { width: 28cqmin; bottom: 20cqmin; background: oklch(86% 0.11 85); }
+  .sol { background: linear-gradient(oklch(68% 0.17 42) 0 58%, oklch(30% 0.13 266) 58%); }
+  .sol i { position: absolute; left: 50%; top: 58%; width: 46cqmin; aspect-ratio: 1; border-radius: 50%; translate: -50% -50%;
+    background: oklch(94% 0.045 85); clip-path: inset(0 0 50% 0); }
+
+  /* Montajes: el mismo DOM, tres retículas */
+  .muro[data-montaje="salon"] .o1 { grid-area: 1 / 1 / 5 / 8; }
+  .muro[data-montaje="salon"] .o2 { grid-area: 1 / 11 / 9 / 13; }
+  .muro[data-montaje="salon"] .o3 { grid-area: 1 / 8 / 4 / 11; }
+  .muro[data-montaje="salon"] .o4 { grid-area: 4 / 8 / 9 / 11; }
+  .muro[data-montaje="salon"] .o5 { grid-area: 5 / 1 / 9 / 4; }
+  .muro[data-montaje="salon"] .o6 { grid-area: 5 / 4 / 9 / 8; }
+  .muro[data-montaje="reticula"] { grid-template: repeat(2, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr)); }
+  .muro[data-montaje="tira"] { grid-template: minmax(0, 1fr) / repeat(6, minmax(0, 1fr)); }
+  .muro[data-montaje="reticula"] .o3 { order: -3; } .muro[data-montaje="reticula"] .o5 { order: -2; } .muro[data-montaje="reticula"] .o1 { order: -1; }
+  .muro[data-montaje="tira"] .o5 { order: -4; } .muro[data-montaje="tira"] .o2 { order: -3; } .muro[data-montaje="tira"] .o4 { order: -2; } .muro[data-montaje="tira"] .o6 { order: -1; }
+
+  /* ---- El visor: la obra a pantalla completa ---- */
+  .visor { position: fixed; inset: 0; z-index: 60; display: grid; grid-template-columns: minmax(0, 1fr) minmax(22rem, 33vw); background: var(--bg); color: var(--fg); }
+  .visor[hidden] { display: none; }
+  .visor-arte { position: relative; margin: 0; overflow: hidden; background: var(--bg-3); view-transition-name: visor-obra; }
+  .visor-arte { touch-action: pan-y; }
+  .visor-arte .lienzo img { transition: none; }
+  .visor-cartela { display: flex; flex-direction: column; padding: 5.2rem clamp(1.6rem, 3vw, 3rem) clamp(1.4rem, 3svh, 2.4rem); overflow: auto; view-transition-name: visor-cartela; }
+  .visor-n { margin: 0; font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .visor h2 { margin: 1.2rem 0 .8rem; font-size: clamp(2.6rem, 1.4rem + 2.8vw, 4.6rem); line-height: .94; letter-spacing: -0.02em; width: fit-content; view-transition-name: visor-titulo; }
+  .visor-autor { margin: 0 0 1.6rem; font-size: var(--step-0); }
+  .visor dl { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1.2rem; margin: 0 0 1.4rem; font: 400 var(--step--1)/1.4 var(--f-ui); }
+  .visor dt { color: var(--muted); } .visor dd { margin: 0; }
+  .visor-texto { margin: 0 0 1.2rem; color: var(--muted); max-width: 40ch; }
+  .visor-vt { margin: 0; font: 400 var(--step--1)/1.4 var(--f-ui); color: var(--muted); }
+  .visor-nav { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: auto; padding-top: 2rem; }
+  .visor-nav .btn { border-color: var(--line-2); min-height: 44px; }
+  .visor-nav .btn.primary { margin-left: auto; }
+  .visor-x { position: absolute; top: 1rem; right: var(--gutter); min-height: 44px; }
+  html.visor-abierto { overflow: hidden; }
+
+  /* ---- Coreografía de las transiciones (por tipo) ---- */
+  ::view-transition-group(*) { animation-duration: .6s; animation-timing-function: var(--llega); }
+  ::view-transition-old(visor-obra), ::view-transition-new(visor-obra) { height: 100%; object-fit: cover; }
+  ::view-transition-group(.obra) { animation-duration: .75s; animation-timing-function: var(--curva); }
+  ::view-transition-group(obra-2) { animation-delay: 40ms; } ::view-transition-group(obra-3) { animation-delay: 80ms; }
+  ::view-transition-group(obra-4) { animation-delay: 120ms; } ::view-transition-group(obra-5) { animation-delay: 160ms; }
+  ::view-transition-group(obra-6) { animation-delay: 200ms; }
+  /* En el montaje cada obra es la misma imagen con otro recorte: basta la foto nueva, recortada con cover */
+  ::view-transition-old(.obra) { animation: none; opacity: 0; }
+  ::view-transition-new(.obra) { animation: none; height: 100%; object-fit: cover; }
+  ::view-transition-image-pair(.obra), ::view-transition-image-pair(visor-obra) { overflow: clip; }
+  ::view-transition-old(visor-obra), ::view-transition-new(visor-obra), ::view-transition-new(.obra) { overflow: clip; }
+  html:active-view-transition-type(abrir) {
+    &::view-transition-new(visor-cartela) { animation: cartela-entra .55s .12s var(--llega) both; }
+    &::view-transition-old(root), &::view-transition-new(root) { animation-duration: .4s; }
+  }
+  html:active-view-transition-type(cerrar) {
+    &::view-transition-old(visor-cartela) { animation: cartela-sale .3s var(--curva) both; }
+    &::view-transition-group(visor-obra) { animation-duration: .55s; }
+  }
+  html:active-view-transition-type(siguiente), html:active-view-transition-type(anterior) {
+    &::view-transition-old(visor-obra), &::view-transition-new(visor-obra) { mix-blend-mode: normal; }
+    &::view-transition-old(visor-obra) { animation: hunde .65s var(--curva) both; }
+    &::view-transition-old(visor-titulo) { animation: fuera .2s both; }
+    &::view-transition-new(visor-titulo) { animation: dentro .35s .2s both; }
+    &::view-transition-group(visor-titulo) { animation-duration: 0s; }
+  }
+  html:active-view-transition-type(siguiente)::view-transition-new(visor-obra) { animation: cortina-der .65s var(--curva) both; }
+  html:active-view-transition-type(anterior)::view-transition-new(visor-obra) { animation: cortina-izq .65s var(--curva) both; }
+  @keyframes cartela-entra { from { opacity: 0; translate: 3rem 0; } }
+  @keyframes cartela-sale { to { opacity: 0; translate: 2rem 0; } }
+  @keyframes hunde { to { scale: .92; opacity: .35; } }
+  @keyframes cortina-der { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
+  @keyframes cortina-izq { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+  @keyframes fuera { to { opacity: 0; } }
+  @keyframes dentro { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*) { animation-duration: 0s !important; animation-delay: 0s !important; }
+    ::view-transition-old(*) { animation: fuera .2s both !important; }
+    ::view-transition-new(*) { animation: dentro .2s both !important; }
+  }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) auto; gap: 1rem; padding-top: 4.4rem; height: 100svh; min-height: 640px; }
+    .sala-txt { display: contents; }
+    .titulo-wrap { display: block; }
+    .titulo-wrap { grid-row: 1; }
+    .hero h1 { font-size: clamp(3.4rem, 17vw, 6rem); margin: 0; padding-top: .7rem; }
+    .hero h1 span + span { padding-left: .3em; }
+    .hero .lede { margin-top: .9rem; font-size: 1rem; max-width: 36ch; }
+    .muro { grid-row: 2; height: auto; min-height: 0; grid-template: repeat(8, minmax(0, 1fr)) / repeat(6, minmax(0, 1fr)); gap: 7px; }
+    .montaje { grid-row: 3; padding-top: 0; margin: 0; gap: .6rem; }
+    .montaje .lbl { display: none; }
+    .muro[data-montaje="salon"] .o1 { grid-area: 1 / 1 / 4 / 5; }
+    .muro[data-montaje="salon"] .o2 { grid-area: 1 / 5 / 6 / 7; }
+    .muro[data-montaje="salon"] .o3 { grid-area: 4 / 1 / 6 / 3; }
+    .muro[data-montaje="salon"] .o4 { grid-area: 4 / 3 / 6 / 5; }
+    .muro[data-montaje="salon"] .o5 { grid-area: 6 / 1 / 9 / 4; }
+    .muro[data-montaje="salon"] .o6 { grid-area: 6 / 4 / 9 / 7; }
+    .muro[data-montaje="reticula"] { grid-template: repeat(3, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr)); }
+    .visor { grid-template-columns: 1fr; grid-template-rows: 54svh minmax(0, 1fr); }
+    .visor-cartela { padding: 1.4rem var(--gutter) 1rem; }
+    .visor h2 { margin-top: .7rem; font-size: clamp(2.3rem, 10vw, 3rem); }
+    .visor-autor { margin-bottom: 1rem; }
+    .visor-nav { position: sticky; bottom: 0; background: var(--bg); margin: auto calc(-1 * var(--gutter)) 0; padding: .8rem var(--gutter) 0; }
+    .visor-x { top: .8rem; background: var(--bg); color: var(--fg); border-color: transparent; }
+    @keyframes cartela-entra { from { opacity: 0; translate: 0 2rem; } }
+    @keyframes cartela-sale { to { opacity: 0; translate: 0 1.5rem; } }
+  }
+  @media (max-width: 380px) { .montaje .seg button { padding: 0 .8rem; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  /* ---- Cuatro pasos con números gigantes ---- */
+  .pasos { list-style: none; padding: 0 !important; display: grid; grid-template-columns: repeat(4, 1fr); margin: 2.6rem 0 3rem; border-top: 1px solid var(--fg); counter-reset: paso; }
+  .pasos li { counter-increment: paso; padding: 1rem 1.4rem 0 0; margin: 0; border-right: 1px solid var(--line); }
+  .pasos li + li { padding-left: 1.4rem; }
+  .pasos li:last-child { border-right: 0; }
+  .pasos li::before { content: counter(paso); display: block; font: 400 italic clamp(5rem, 3rem + 6vw, 8.5rem)/.8 var(--f-display); color: var(--accent); margin-bottom: .8rem; }
+  .pasos li:nth-child(odd)::before { color: var(--fg); }
+  .pasos b { display: block; font: 600 var(--step-0)/1.25 var(--f-ui); margin-bottom: .3rem; }
+  .pasos span { font-size: var(--step--1); color: var(--muted); line-height: 1.5; display: block; }
+  @media (max-width: 760px) {
+    .pasos { grid-template-columns: 1fr 1fr; }
+    .pasos li, .pasos li + li { padding: 1rem .9rem 1.2rem 0; border-right: 0; border-bottom: 1px solid var(--line); }
+    .pasos li:nth-child(even) { padding-left: .9rem; border-left: 1px solid var(--line); }
+    .pasos li::before { font-size: 4.4rem; }
+  }
+
+  /* ---- Banda cobalto ---- */
+  .band.cobalto { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.cobalto .claim { font: 400 italic clamp(2.8rem, 1.4rem + 5.4vw, 6.6rem)/.92 var(--f-display); letter-spacing: -0.025em; margin: 0; max-width: 14ch; }
+  .band.cobalto .claim + p { margin: 1.6rem 0 0; max-width: 46ch; font-size: var(--step-0); opacity: .9; }
+  .band.cobalto code { background: oklch(100% 0 0 / .14); }
+
+  /* ---- Fotogramas de un morph (tira a sangre) ---- */
+  .fotogramas { margin-block: 3rem 3.4rem; padding: 0 var(--gutter); }
+  .fotogramas ol { list-style: none; margin: 0 auto; padding: 0 !important; max-width: var(--wide); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(.6rem, 1.2vw, 1.2rem); }
+  .fotogramas li { margin: 0; }
+  .pantalla { position: relative; aspect-ratio: 16 / 10; background: var(--bg-2); border: 1px solid var(--line-2); overflow: hidden; }
+  .pantalla .m { position: absolute; background: var(--fg); opacity: calc(.12 * (1 - var(--p))); }
+  .pantalla .vt { position: absolute; background: var(--accent);
+    left: calc(52% * (1 - var(--p))); top: calc(14% * (1 - var(--p))); width: calc(22% + 40% * var(--p)); height: calc(36% + 64% * var(--p)); }
+  .pantalla .cart { position: absolute; right: 6%; top: 18%; width: 28%; display: grid; gap: 6%; opacity: var(--p); translate: calc(30% * (1 - var(--p))) 0; }
+  .pantalla .cart i { display: block; height: 7px; background: var(--fg); opacity: .55; }
+  .pantalla .cart i:first-child { height: 12px; width: 80%; opacity: .85; }
+  .pantalla .cart i:last-child { width: 60%; }
+  .fotogramas .ms { display: flex; justify-content: space-between; gap: .5rem; margin-top: .6rem; font: 500 .78rem/1.3 var(--f-ui); color: var(--muted); }
+  .fotogramas .ms b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .fotogramas figcaption { max-width: var(--wide); margin: 1rem auto 0; font-size: var(--step--1); color: var(--muted); }
+  @media (max-width: 760px) {
+    .fotogramas { padding: 0; }
+    .fotogramas ol { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 var(--gutter) .6rem !important; scrollbar-width: thin; }
+    .fotogramas li { flex: 0 0 62%; scroll-snap-align: center; }
+    .fotogramas figcaption { padding: 0 var(--gutter); }
+  }
+
+  /* ---- Split con el árbol de pseudo-elementos fijo ---- */
+  .split > * { min-width: 0; }
+  @media (min-width: 761px) { .split { grid-template-columns: .82fr 1.18fr; } }
+  .split .stick .code { margin-top: 0; }
+  .split > div > :last-child { margin-bottom: 0; }
+
+  .statement em { color: var(--accent); }
+</style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="view-transitions">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>View Transitions</h1>
-    <p class="lede">El navegador hace una foto de antes, otra de después y anima entre las dos. Así consigues que una miniatura se convierta en ficha, que el tema se revele en círculo o que una rejilla se reordene sin saltos.</p>
+  <header class="hero" aria-labelledby="t">
+    <div class="sala-txt">
+      <div class="titulo-wrap">
+        <p data-kicker>Lección 07</p>
+        <h1 id="t"><span>View</span> <span>Transitions</span></h1>
+        <p class="lede">Toca una obra y crecerá hasta llenar la pantalla; vuelve y regresará a su hueco. Cambia el montaje y las seis viajan a su sitio nuevo. El navegador solo hace dos fotos y anima entre ellas.</p>
+      </div>
+      <div class="montaje">
+        <span class="lbl" id="montaje-l">Montaje</span>
+        <span class="seg" role="group" aria-labelledby="montaje-l">
+          <button type="button" data-m="salon" aria-pressed="true">Salón</button><button type="button" data-m="reticula" aria-pressed="false">Retícula</button><button type="button" data-m="tira" aria-pressed="false">Tira</button>
+        </span>
+        <span class="chip" data-meta>15 min</span>
+      </div>
+    </div>
+    <div class="muro" data-montaje="salon">
+      <button type="button" class="obra o1" style="--vt: obra-1" data-i="0" aria-label="Ver «Azotea, hora azul» a pantalla completa"><span class="lienzo"><img src="../landing/media/azotea.webp" alt="" width="1600" height="1000" decoding="async"></span><span class="cartela"><i>01</i><b>Azotea, hora azul</b></span></button>
+      <button type="button" class="obra o2" style="--vt: obra-2" data-i="1" aria-label="Ver «Ochenta balcones» a pantalla completa"><span class="lienzo"><img src="../landing/media/balcones.webp" alt="" width="1600" height="1000" decoding="async" style="object-position: 50% 30%"></span><span class="cartela"><i>02</i><b>Ochenta balcones</b></span></button>
+      <button type="button" class="obra o3" style="--vt: obra-3" data-i="2" aria-label="Ver «Homenaje al cuadrado, cobalto» a pantalla completa"><span class="lienzo"><span class="arte albers"><i></i><i></i><i></i></span></span><span class="cartela"><i>03</i><b>Homenaje al cuadrado</b></span></button>
+      <button type="button" class="obra o4" style="--vt: obra-4" data-i="3" aria-label="Ver «La Residencia, planta 32» a pantalla completa"><span class="lienzo contain"><img src="../landing/media/residencia.webp" alt="" width="1600" height="1000" decoding="async"></span><span class="cartela"><i>04</i><b>La Residencia</b></span></button>
+      <button type="button" class="obra o5" style="--vt: obra-5" data-i="4" aria-label="Ver «Sol de las 19:40» a pantalla completa"><span class="lienzo"><span class="arte sol"><i></i></span></span><span class="cartela"><i>05</i><b>Sol de las 19:40</b></span></button>
+      <button type="button" class="obra o6" style="--vt: obra-6" data-i="5" aria-label="Ver «Fachada sur, fotograma 120» a pantalla completa"><span class="lienzo"><img src="../landing/frames/desk/0120.webp" alt="" width="1280" height="720" decoding="async"></span><span class="cartela"><i>06</i><b>Fachada sur</b></span></button>
+    </div>
   </header>
+
+  <div class="visor" role="dialog" aria-modal="true" aria-labelledby="visor-t" hidden>
+    <figure class="visor-arte"></figure>
+    <div class="visor-cartela">
+      <p class="visor-n"></p>
+      <h2 id="visor-t"></h2>
+      <p class="visor-autor"></p>
+      <dl></dl>
+      <p class="visor-texto"></p>
+      <p class="visor-vt">Ha llegado hasta aquí con <code>view-transition-name: visor-obra</code>.</p>
+      <div class="visor-nav">
+        <button type="button" class="btn" data-d="-1">Anterior</button>
+        <button type="button" class="btn" data-d="1">Siguiente</button>
+        <button type="button" class="btn primary" data-cerrar>Volver a la sala</button>
+      </div>
+    </div>
+    <button type="button" class="btn visor-x" data-cerrar>Cerrar</button>
+  </div>
 
   <div class="lesson">
     <article class="prose">
@@ -24,11 +298,11 @@
 
       <h2>Una foto antes, otra después</h2>
       <p>Todo empieza con una función. Le pasas otra función que actualiza el DOM, y el navegador hace lo siguiente:</p>
-      <ol>
-        <li>Captura la página tal como está (la vista <em>vieja</em>).</li>
-        <li>Ejecuta tu función y deja que el DOM cambie.</li>
-        <li>Captura la página nueva (la vista <em>nueva</em>).</li>
-        <li>Crea un árbol de pseudo-elementos encima de la página y anima de una captura a la otra. Por defecto es un fundido de 0,25&nbsp;s.</li>
+      <ol class="pasos wide">
+        <li><b>Foto de antes</b><span>Captura la página tal como está (la vista <em>vieja</em>).</span></li>
+        <li><b>Tu función</b><span>Ejecuta tu función y deja que el DOM cambie.</span></li>
+        <li><b>Foto de después</b><span>Captura la página nueva (la vista <em>nueva</em>).</span></li>
+        <li><b>La animación</b><span>Crea un árbol de pseudo-elementos encima de la página y anima de una captura a la otra. Por defecto es un fundido de 0,25&nbsp;s.</span></li>
       </ol>
 
       <figure class="lab" data-title="Carta de mediodía y de noche" data-hint="Cambia de carta con y sin transición" data-height="520" data-height-mobile="600">
@@ -110,8 +384,24 @@
         <p>Mientras dura la transición, la página no responde a toques: los pseudo-elementos están encima de todo. Con 0,25&nbsp;s no se nota. Con 0,8&nbsp;s el usuario toca dos veces y la segunda se pierde. En el móvil, mantén las transiciones de interfaz entre 0,2 y 0,35&nbsp;s y deja las largas para los momentos en que el usuario mira, no en los que actúa.</p>
       </div>
 
-      <h2>El mismo objeto en dos sitios: view-transition-name</h2>
+      <div class="band cobalto"><div class="inner">
+        <p class="claim">Mismo nombre, mismo objeto.</p>
+        <p>Si un elemento de la foto de antes y otro de la de después comparten <code>view-transition-name</code>, el navegador no los funde: lleva uno hasta el otro. Es lo que hace cada obra de la portada al abrirse.</p>
+      </div></div>
+
+      <h2>El mismo objeto en dos sitios: <code>view-transition-name</code></h2>
       <p>Si dos elementos, uno en la vista vieja y otro en la nueva, tienen el mismo <code>view-transition-name</code>, el navegador los trata como <strong>el mismo objeto</strong>. Interpola su posición y su tamaño, y funde su contenido. Es el efecto «la miniatura se convierte en la foto grande».</p>
+
+      <figure class="fotogramas bleed" aria-label="Cinco fotogramas de un morph: la miniatura crece hasta ocupar la pantalla mientras la ficha entra por la derecha">
+        <ol>
+          <li><div class="pantalla" style="--p:0"><i class="m" style="left:4%;top:14%;width:22%;height:36%"></i><i class="m" style="left:28%;top:14%;width:22%;height:36%"></i><i class="m" style="left:4%;top:56%;width:22%;height:36%"></i><i class="m" style="left:28%;top:56%;width:22%;height:36%"></i><i class="m" style="left:76%;top:56%;width:20%;height:36%"></i><span class="vt"></span><span class="cart"><i></i><i></i><i></i></span></div><p class="ms"><b>0 ms</b><span>Foto de antes</span></p></li>
+          <li><div class="pantalla" style="--p:.38"><i class="m" style="left:4%;top:14%;width:22%;height:36%"></i><i class="m" style="left:28%;top:14%;width:22%;height:36%"></i><i class="m" style="left:4%;top:56%;width:22%;height:36%"></i><i class="m" style="left:28%;top:56%;width:22%;height:36%"></i><i class="m" style="left:76%;top:56%;width:20%;height:36%"></i><span class="vt"></span><span class="cart"><i></i><i></i><i></i></span></div><p class="ms"><b>150 ms</b><span>Arranca rápido</span></p></li>
+          <li><div class="pantalla" style="--p:.72"><i class="m" style="left:4%;top:14%;width:22%;height:36%"></i><i class="m" style="left:28%;top:14%;width:22%;height:36%"></i><i class="m" style="left:4%;top:56%;width:22%;height:36%"></i><i class="m" style="left:28%;top:56%;width:22%;height:36%"></i><i class="m" style="left:76%;top:56%;width:20%;height:36%"></i><span class="vt"></span><span class="cart"><i></i><i></i><i></i></span></div><p class="ms"><b>300 ms</b><span>Ya casi está</span></p></li>
+          <li><div class="pantalla" style="--p:.92"><i class="m" style="left:4%;top:14%;width:22%;height:36%"></i><i class="m" style="left:28%;top:14%;width:22%;height:36%"></i><i class="m" style="left:4%;top:56%;width:22%;height:36%"></i><i class="m" style="left:28%;top:56%;width:22%;height:36%"></i><i class="m" style="left:76%;top:56%;width:20%;height:36%"></i><span class="vt"></span><span class="cart"><i></i><i></i><i></i></span></div><p class="ms"><b>450 ms</b><span>Frena</span></p></li>
+          <li><div class="pantalla" style="--p:1"><i class="m" style="left:4%;top:14%;width:22%;height:36%"></i><i class="m" style="left:28%;top:14%;width:22%;height:36%"></i><i class="m" style="left:4%;top:56%;width:22%;height:36%"></i><i class="m" style="left:28%;top:56%;width:22%;height:36%"></i><i class="m" style="left:76%;top:56%;width:20%;height:36%"></i><span class="vt"></span><span class="cart"><i></i><i></i><i></i></span></div><p class="ms"><b>600 ms</b><span>Vista nueva</span></p></li>
+        </ol>
+        <figcaption>El grupo con nombre interpola posición y tamaño; todo lo demás se funde. Con una curva que arranca deprisa y frena despacio (<code>cubic-bezier(.2, .8, .2, 1)</code>), a mitad de tiempo la foto ya ha hecho casi todo el viaje.</figcaption>
+      </figure>
 
       <figure class="lab" data-title="De la planta a la residencia" data-hint="Toca una planta y vuelve" data-height="520" data-height-mobile="640" data-stage="dark">
         <script type="text/x-demo" data-lang="html">
@@ -231,18 +521,22 @@
       </div>
 
       <h2>Personalizar la animación</h2>
-      <p>Durante la transición, el navegador crea este árbol encima de la página. Cada parte se puede animar con CSS normal:</p>
-
-      <script type="text/x-code" data-lang="css" data-label="El árbol de pseudo-elementos">
-        ::view-transition                      /* capa raíz, encima de todo */
-        └─ ::view-transition-group(foto)       /* posición y tamaño: viaja de A a B */
-           └─ ::view-transition-image-pair(foto)
-              ├─ ::view-transition-old(foto)   /* captura de antes (una imagen) */
-              └─ ::view-transition-new(foto)   /* captura de después (en vivo) */
-        /* lo que no tiene nombre va todo junto en el grupo «root» */
-      </script>
-
-      <p>El <strong>grupo</strong> mueve y escala. <code>old</code> y <code>new</code> se funden. Para cambiar el efecto, sustituyes sus animaciones por tus <code>@keyframes</code>. Y con los <strong>tipos</strong> de transición puedes tener varios efectos y elegir cuál toca: <code>startViewTransition({ update, types: ['adelante'] })</code> activa el selector <code>:active-view-transition-type<wbr>(adelante)</code> mientras dura.</p>
+      <div class="split">
+        <div>
+          <p>Durante la transición, el navegador crea este árbol encima de la página. Cada parte se puede animar con CSS normal:</p>
+          <p>El <strong>grupo</strong> mueve y escala. <code>old</code> y <code>new</code> se funden. Para cambiar el efecto, sustituyes sus animaciones por tus <code>@keyframes</code>. Y con los <strong>tipos</strong> de transición puedes tener varios efectos y elegir cuál toca: <code>startViewTransition({ update, types: ['adelante'] })</code> activa el selector <code>:active-view-transition-type<wbr>(adelante)</code> mientras dura.</p>
+        </div>
+        <div class="stick">
+          <script type="text/x-code" data-lang="css" data-label="El árbol de pseudo-elementos">
+            ::view-transition                      /* capa raíz, encima de todo */
+            └─ ::view-transition-group(foto)       /* posición y tamaño: viaja de A a B */
+               └─ ::view-transition-image-pair(foto)
+                  ├─ ::view-transition-old(foto)   /* captura de antes (una imagen) */
+                  └─ ::view-transition-new(foto)   /* captura de después (en vivo) */
+            /* lo que no tiene nombre va todo junto en el grupo «root» */
+          </script>
+        </div>
+      </div>
 
       <figure class="lab" data-title="Galería con dirección" data-hint="Avanza y retrocede" data-height="500" data-height-mobile="560" data-stage="dark">
         <script type="text/x-demo" data-lang="html">
@@ -487,8 +781,10 @@
         <p>Los filtros en el móvil ocupan dos líneas: déjalos en una fila con scroll horizontal (<code>overflow-x: auto; flex-wrap: nowrap</code>) o en un desplegable. Con 8 tarjetas la rejilla se reordena perfecta, pero con 60 el navegador captura 60 imágenes y un móvil de gama media lo nota. Por encima de unas 20 tarjetas visibles, pon nombre solo a las que están en pantalla, o usa un fundido simple. El revelado circular funciona muy bien con el dedo, porque nace justo donde tocas.</p>
       </div>
 
-      <h2>Entre páginas: @view-transition</h2>
+      <h2>Entre páginas: <code>@view-transition</code></h2>
       <p>Todo lo anterior ocurre dentro de una página (lo que se llama <em>same-document</em>). Las <strong>transiciones entre documentos</strong> hacen lo mismo cuando navegas de <code>listado.html</code> a <code>planta-32.html</code>, sin JavaScript: basta con que las dos páginas, del mismo origen, lo pidan.</p>
+
+      <p class="statement">Dos páginas, <em>una sola foto que viaja.</em></p>
 
       <script type="text/x-code" data-lang="css" data-label="En las dos páginas (listado.html y planta-32.html)">
         @view-transition { navigation: auto; }
@@ -581,5 +877,123 @@
     </article>
   </div>
 </main>
+<script>
+  // Portada: la sala. Abrir una obra es un morph con view-transition-name;
+  // cambiar el montaje es la receta de la rejilla que se reordena.
+  (() => {
+    const OBRAS = [
+      { t: 'Azotea, hora azul', a: 'Estudio Alba, 2026', tec: 'Render digital, impresión giclée', m: '120 × 75 cm', x: 'La azotea de la Torre Alba en el último minuto de luz. La ciudad se disuelve en la bruma violeta y solo siguen encendidas las ventanas de la última planta.' },
+      { t: 'Ochenta balcones', a: 'Estudio Alba, 2026', tec: 'Render digital', m: '60 × 90 cm', x: 'La fachada curva en contrapicado. Cada balcón repite al anterior con un giro de dos grados, y esa variación mínima es la que hace girar la torre.' },
+      { t: 'Homenaje al cuadrado, cobalto', a: 'Inés Ferrando, 2025', tec: 'CSS sobre pantalla: un fondo y tres cuadrados', m: 'Variables', x: 'Tres cuadrados encajados y desplazados hacia abajo, como en la serie de Josef Albers. El cobalto de fuera hace que el ocre del centro parezca más cálido de lo que es.' },
+      { t: 'La Residencia, planta 32', a: 'Estudio Alba, 2026', tec: 'Maqueta isométrica, render', m: '100 × 62 cm', x: 'Los 248 m² de la planta 32 vistos desde arriba, con el techo levantado: salón al sur, cocina abierta y una terraza que dobla la esquina.' },
+      { t: 'Sol de las 19:40', a: 'Inés Ferrando, 2025', tec: 'CSS: un círculo y dos planos de color', m: 'Variables', x: 'Un disco crema que se hunde en una franja de cobalto. Es la puesta de sol de la lección anterior reducida a tres formas.' },
+      { t: 'Fachada sur, fotograma 120', a: 'Estudio Alba, 2026', tec: 'Fotograma de vídeo', m: '1280 × 720 px', x: 'El último fotograma del vuelo hacia la torre: la cámara ya está pegada a la fachada y las ventanas llenan el encuadre. Lo verás en movimiento en la lección 09.' },
+    ];
+    const root = document.documentElement;
+    const muro = document.querySelector('.muro');
+    const obras = [...muro.querySelectorAll('.obra')];
+    const botones = [...document.querySelectorAll('.montaje [data-m]')];
+    const visor = document.querySelector('.visor');
+    const $v = (s) => visor.querySelector(s);
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pad = (n) => String(n).padStart(2, '0');
+
+    // La envoltura de siempre: con tipos si se puede, sin ellos si no, y sin API, el cambio a secas
+    function transicion(update, tipo) {
+      if (!document.startViewTransition) { update(); return null; }
+      let t;
+      try { t = document.startViewTransition({ update, types: [tipo] }); }
+      catch { t = document.startViewTransition(update); }
+      t.finished.catch(() => {});
+      return t;
+    }
+    const alAcabar = (t, fn) => (t ? t.finished.finally(fn) : fn());
+
+    /* ---- Montaje: cada obra lleva su nombre solo mientras dura el viaje ---- */
+    function montar(m, animar = true) {
+      const cambia = () => {
+        muro.dataset.montaje = m;
+        botones.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+      };
+      if (!animar) return cambia();
+      muro.classList.add('nombrando');
+      alAcabar(transicion(cambia, 'montaje'), () => muro.classList.remove('nombrando'));
+    }
+    botones.forEach((b) => b.addEventListener('click', () => { if (muro.dataset.montaje !== b.dataset.m) montar(b.dataset.m); }));
+
+    /* ---- Visor ---- */
+    let actual = -1;
+    const nombrar = (i, si) => {
+      const o = obras[i];
+      o.querySelector('.lienzo').style.viewTransitionName = si ? 'visor-obra' : '';
+      o.querySelector('.cartela b').style.viewTransitionName = si ? 'visor-titulo' : '';
+    };
+    function pintar(i) {
+      actual = i;
+      const d = OBRAS[i];
+      $v('.visor-arte').innerHTML = obras[i].querySelector('.lienzo').outerHTML;
+      $v('.visor-n').textContent = `${pad(i + 1)} / ${pad(OBRAS.length)}`;
+      $v('h2').textContent = d.t;
+      $v('.visor-autor').textContent = d.a;
+      $v('dl').innerHTML = `<dt>Técnica</dt><dd>${d.tec}</dd><dt>Medidas</dt><dd>${d.m}</dd>`;
+      $v('.visor-texto').textContent = d.x;
+    }
+    function abrir(i) {
+      nombrar(i, true);                                   // foto de antes: los nombres están en la miniatura
+      const t = transicion(() => {
+        nombrar(i, false);                                // foto de después: los tiene el visor
+        pintar(i);
+        visor.hidden = false;
+        root.classList.add('visor-abierto');
+      }, 'abrir');
+      (t ? t.updateCallbackDone : Promise.resolve()).then(() => $v('[data-cerrar].primary').focus({ preventScroll: true }));
+    }
+    function cerrar() {
+      if (visor.hidden) return;
+      const i = actual;
+      const t = transicion(() => {
+        visor.hidden = true;
+        root.classList.remove('visor-abierto');
+        nombrar(i, true);                                 // vuelven a la miniatura para el viaje de vuelta
+      }, 'cerrar');
+      alAcabar(t, () => nombrar(i, false));
+      obras[i].focus({ preventScroll: true });
+    }
+    function pasar(d) {
+      const j = (actual + d + OBRAS.length) % OBRAS.length;
+      transicion(() => pintar(j), d > 0 ? 'siguiente' : 'anterior');
+    }
+    obras.forEach((o) => o.addEventListener('click', () => abrir(+o.dataset.i)));
+    visor.querySelectorAll('[data-cerrar]').forEach((b) => b.addEventListener('click', cerrar));
+    visor.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => pasar(+b.dataset.d)));
+    addEventListener('keydown', (e) => {
+      if (visor.hidden) return;
+      if (e.key === 'Escape') cerrar();
+      else if (e.key === 'ArrowRight') pasar(1);
+      else if (e.key === 'ArrowLeft') pasar(-1);
+      else if (e.key === 'Tab') {                          // el foco no sale del visor
+        const f = [...visor.querySelectorAll('button')];
+        const k = f.indexOf(document.activeElement);
+        if (e.shiftKey && k <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && k === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      }
+    });
+    // Con el dedo: desliza en el visor para pasar de obra
+    let x0 = null;
+    $v('.visor-arte').addEventListener('pointerdown', (e) => { x0 = e.clientX; });
+    $v('.visor-arte').addEventListener('pointerup', (e) => {
+      if (x0 === null) return;
+      const dx = e.clientX - x0; x0 = null;
+      if (Math.abs(dx) > 50) pasar(dx < 0 ? 1 : -1);
+    });
+
+    /* ---- Al entrar, la sala se cuelga sola: de la tira al salón ---- */
+    if (!reduce && document.startViewTransition && scrollY < innerHeight / 2) {
+      montar('tira', false);
+      const colgar = () => setTimeout(() => { if (muro.dataset.montaje === 'tira' && visor.hidden) montar('salon'); }, 450);
+      document.readyState === 'complete' ? colgar() : addEventListener('load', colgar, { once: true });
+    }
+  })();
+</script>
 </body>
 </html>

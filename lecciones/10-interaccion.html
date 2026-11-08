@@ -6,23 +6,264 @@
 <title>Capas interactivas sobre imagen | Hora azul</title>
 <meta name="description" content="Plantas que se iluminan al pasar por la torre, hotspots en una planta isométrica, contadores tabulares y zoom a una estancia: interacción encima de una imagen.">
 <link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: plano técnico.
+     Azul de plano, líneas blancas al 20 %, cotas y un único ámbar: la luz de las ventanas.
+     JetBrains Mono para titulares, Inter Tight para leer. */
+  :root {
+    --bg: oklch(28% 0.08 255);
+    --bg-2: oklch(32% 0.085 255);
+    --bg-3: oklch(37% 0.085 255);
+    --fg: oklch(96% 0.01 250);
+    --muted: oklch(82% 0.03 250);
+    --faint: oklch(70% 0.04 250);
+    --line: oklch(100% 0 0 / .2);
+    --line-2: oklch(100% 0 0 / .32);
+    --accent: oklch(82% 0.15 75);
+    --on-accent: oklch(24% 0.07 255);
+    --code-bg: oklch(20% 0.06 255);
+    --scheme: dark;
+    --f-display: "JetBrains Mono", ui-monospace, monospace;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 650;
+    --display-tracking: -0.045em;
+    --minor: oklch(100% 0 0 / .05);
+    --major: oklch(100% 0 0 / .1);
+    --ink: oklch(24% 0.07 255);
+  }
+  /* La retícula del plano recorre toda la página, muy tenue */
+  body { font-size: clamp(1.02rem, 0.98rem + 0.2vw, 1.12rem); line-height: 1.62;
+    background-color: var(--bg);
+    background-image: linear-gradient(var(--major) 1px, transparent 1px), linear-gradient(90deg, var(--major) 1px, transparent 1px),
+      linear-gradient(var(--minor) 1px, transparent 1px), linear-gradient(90deg, var(--minor) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px; background-position: -1px -1px; }
+  .prose h2 { font-size: clamp(2rem, 1.3rem + 2.6vw, 3.5rem); max-width: 20ch; line-height: 1; }
+  .prose h2 .n { font-family: var(--f-display); font-weight: 500; letter-spacing: 0; }
+  .prose h2 .n::before { content: "A-"; }
+  .prose h3 { font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.75rem); letter-spacing: -0.035em; }
+  .quiz .q { font-size: var(--step-0); letter-spacing: -0.02em; line-height: 1.35; }
+
+  /* ---------- Portada: la torre como plano interactivo ---------- */
+  .hero { height: 100vh; height: 100svh; min-height: 600px; color: var(--fg); background: var(--bg); }
+  .hero .grid-bg { position: absolute; inset: 0; z-index: -3;
+    background-image: linear-gradient(var(--major) 1px, transparent 1px), linear-gradient(90deg, var(--major) 1px, transparent 1px),
+      linear-gradient(var(--minor) 1px, transparent 1px), linear-gradient(90deg, var(--minor) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px; background-position: -1px -1px; }
+  .stage { position: absolute; inset: 0; z-index: -1; }
+  .pic { position: absolute; left: 50%; top: 50%; width: max(100%, 160svh); aspect-ratio: 16 / 10; translate: -50% -50%; touch-action: manipulation; }
+  .pic img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* La foto se convierte en «copia de plano»: su luminosidad sobre el azul */
+  .pic .base { mix-blend-mode: luminosity; opacity: .62; filter: contrast(1.15); }
+  .pic .litwrap { position: absolute; inset: 0; filter: drop-shadow(0 0 10px oklch(82% 0.15 75 / .75)) drop-shadow(0 0 2px oklch(90% 0.12 80)); pointer-events: none; }
+  .pic .lit { clip-path: polygon(0 0, 0 0, 0 0); transition: clip-path .55s var(--ease-out); }
+  .scrim { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, var(--bg) 0 24%, color-mix(in oklab, var(--bg) 70%, transparent) 42%, transparent 58%); }
+  /* Cota vertical: del suelo a la planta elegida, con trazos a 45° en los extremos */
+  .cota { position: absolute; width: 0; border-left: 1px solid var(--accent); pointer-events: none; transition: top .55s var(--ease-out), height .55s var(--ease-out); }
+  .cota::before, .cota::after { content: ""; position: absolute; left: -7px; width: 13px; border-top: 1.5px solid var(--accent); rotate: -45deg; }
+  .cota::before { top: 0; } .cota::after { bottom: 0; }
+  .cota span { position: absolute; top: 50%; right: 10px; translate: 0 -50%; writing-mode: vertical-rl; rotate: 180deg; font: 500 12px/1 var(--f-display); color: var(--accent); white-space: nowrap; }
+  /* Línea de nivel a todo el ancho */
+  .level { position: absolute; left: 0; right: 0; top: 0; height: 0; border-top: 1px dashed oklch(100% 0 0 / .45); pointer-events: none; transition: translate .55s var(--ease-out); }
+  .level span { position: absolute; left: 0; bottom: 6px; font: 500 12px/1 var(--f-display); color: var(--fg); white-space: nowrap; }
+  /* Anotación con línea de referencia */
+  .tag { position: absolute; display: flex; align-items: center; gap: 12px; translate: 0 -50%; pointer-events: none; transition: top .55s var(--ease-out); }
+  .tag::before { content: ""; width: clamp(28px, 4vw, 64px); border-top: 1px solid var(--fg); }
+  .tag dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 2px 14px; font: 500 12px/1.35 var(--f-display); color: var(--muted); }
+  .tag dt { color: var(--muted); } .tag dd { margin: 0; color: var(--fg); }
+  .tag b { grid-column: 1 / -1; font: 700 15px/1.2 var(--f-display); color: var(--accent); margin-bottom: 4px; }
+  .hit { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hit polygon { fill: transparent; stroke: none; }
+  .hit polygon.hover { fill: oklch(100% 0 0 / .1); stroke: oklch(100% 0 0 / .6); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+
+  .hero-copy { position: relative; padding: clamp(6rem, 13vh, 8rem) var(--gutter) 0; max-width: min(44rem, 54vw); }
+  .hero-copy [data-kicker] { margin: 0 0 1.4rem; font: 500 var(--step--1)/1 var(--f-display); color: var(--accent); }
+  .hero h1 { font-size: clamp(2.3rem, 0.9rem + 4.4vw, 5rem); font-weight: 700; line-height: .95; letter-spacing: -0.06em; margin: 0 0 1.6rem; }
+  .hero h1 span { display: block; }
+  .hero .lede { margin: 0; font-size: var(--step-1); line-height: 1.4; color: var(--muted); max-width: 30ch; }
+
+  /* Cajetín: la carátula del plano es también el mando de la torre */
+  .cajetin { position: absolute; left: var(--gutter); bottom: clamp(1.2rem, 4vh, 2.6rem); width: min(560px, calc(100% - 2 * var(--gutter)));
+    display: grid; grid-template-columns: 1.1fr 1fr; border: 1px solid var(--line-2); background: color-mix(in oklab, var(--bg) 82%, transparent);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font: 500 12px/1.3 var(--f-display); }
+  .cajetin > * { border: 0 solid var(--line-2); }
+  .cj-floor { grid-row: span 3; border-right-width: 1px; padding: .7rem .9rem .8rem; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr; align-items: end; column-gap: .6rem; }
+  .cj-floor small { grid-column: 1 / -1; color: var(--faint); }
+  .digits { display: flex; height: 1em; overflow: hidden; font: 700 clamp(4.2rem, 3rem + 4vw, 6.6rem)/1 var(--f-display); letter-spacing: -0.06em; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .digits .col { display: flex; flex-direction: column; transition: translate .6s var(--ease-out); }
+  .digits .col span { height: 1em; line-height: 1; }
+  .digits .of { align-self: end; font-size: .22em; letter-spacing: 0; color: var(--faint); margin: 0 0 .5em .25em; }
+  .steps { display: grid; gap: 6px; align-self: center; }
+  .steps button { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid var(--line-2); background: transparent; color: var(--fg); cursor: pointer; transition: background-color .2s, color .2s, border-color .2s; }
+  .steps button:hover { border-color: var(--accent); }
+  .steps button:active { background: var(--accent); color: var(--on-accent); }
+  .steps button:disabled { opacity: .35; cursor: default; }
+  .steps svg { width: 18px; height: 18px; }
+  .cj-kv { display: flex; justify-content: space-between; gap: .8rem; padding: .55rem .8rem; border-bottom-width: 1px; }
+  .cj-kv span { color: var(--faint); } .cj-kv b { font-weight: 600; color: var(--fg); }
+  .cj-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 1rem; padding: .55rem .8rem; border-top-width: 1px; color: var(--muted); }
+  .cj-foot .chip { margin-left: auto; font-family: var(--f-display); font-size: 11px; }
+  .cj-kv:nth-of-type(3) { border-bottom-width: 0; }
+
+  @media (min-aspect-ratio: 9/5) and (min-width: 761px) {
+    .pic { height: 100%; width: auto; left: auto; right: 0; translate: 0 -50%;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%); mask-image: linear-gradient(90deg, transparent, #000 18%); }
+  }
+  @media (max-width: 760px) {
+    .hero { display: grid; grid-template-rows: auto 1fr auto; min-height: 560px; }
+    .hero-copy { grid-row: 1; } .stage { grid-row: 2; } .cajetin { grid-row: 3; }
+    .scrim { display: none; }
+    .stage { position: relative; inset: auto; z-index: 0; min-height: 0; }
+    .pic { top: 0; bottom: 0; height: 100%; width: auto; aspect-ratio: 800 / 1267; translate: -50% 0;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent), linear-gradient(transparent, #000 14%, #000 90%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent), linear-gradient(transparent, #000 14%, #000 90%, transparent);
+      -webkit-mask-composite: source-in; mask-composite: intersect; }
+    .tag { display: none; }
+    .hero-copy { max-width: none; padding: 4.6rem var(--gutter) .6rem; }
+    .hero-copy [data-kicker] { margin-bottom: .8rem; }
+    .hero h1 { font-size: clamp(2rem, 9.4vw, 2.6rem); margin-bottom: .7rem; }
+    .hero .lede { font-size: .95rem; line-height: 1.45; max-width: 36ch; }
+    .cajetin { position: relative; left: auto; bottom: auto; width: auto; margin: 0 var(--gutter) max(.9rem, env(safe-area-inset-bottom)); grid-template-columns: 1.15fr 1fr; }
+    .cj-floor { padding: .5rem .6rem .6rem; }
+    .digits { font-size: 3.6rem; }
+    .steps { position: absolute; }
+    .cj-foot { display: none; }
+    .cj-kv { padding: .42rem .6rem; font-size: 11px; }
+    .cj-kv:nth-of-type(3) { border-bottom-width: 0; }
+  }
+  @media (max-width: 760px) {
+    .cj-floor { grid-template-columns: 1fr; position: relative; }
+    .steps { right: .5rem; bottom: .55rem; gap: 6px; }
+    .steps button { width: 44px; height: 44px; }
+  }
+
+  /* ---------- Banda de afirmación en ámbar ---------- */
+  .band.claim { --band-bg: var(--accent); --band-fg: var(--ink); background-image: linear-gradient(oklch(24% 0.07 255 / .08) 1px, transparent 1px), linear-gradient(90deg, oklch(24% 0.07 255 / .08) 1px, transparent 1px); background-size: 24px 24px; }
+  .band.claim p { font: 700 clamp(1.9rem, 1rem + 3.6vw, 4.2rem)/1 var(--f-display); letter-spacing: -0.06em; margin: 0; max-width: 20ch; }
+  .band.claim small { display: block; margin-top: 1.6rem; font: 500 var(--step--1)/1.4 var(--f-display); max-width: 52ch; }
+
+  /* ---------- Despiece: las tres capas en axonometría ---------- */
+  .despiece { display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(1rem, 3vw, 3rem); align-items: center; margin: 3.5rem 0; }
+  .planes { position: relative; height: clamp(360px, 38vw, 520px); perspective: 1800px; }
+  .plane { position: absolute; left: 6%; top: 50%; width: 78%; aspect-ratio: 16 / 10; border: 1px solid var(--line-2);
+    transform: translateY(-50%) rotateX(58deg) rotateZ(-36deg) translateZ(var(--z, 0px)); transition: transform 1.1s var(--ease-out); }
+  .exploded .p1 { --z: -120px; } .exploded .p3 { --z: 120px; }
+  .p1 { background: var(--bg-3); overflow: hidden; }
+  .p1 img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: luminosity; opacity: .8; }
+  .p2 { background: oklch(100% 0 0 / .03); }
+  .p2 svg { width: 100%; height: 100%; }
+  .p2 rect { fill: none; stroke: oklch(100% 0 0 / .55); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+  .p2 rect.on { fill: oklch(82% 0.15 75 / .55); stroke: var(--accent); }
+  .p3 { border-style: dashed; }
+  .p3 i { position: absolute; left: 66%; top: 44%; width: 22px; height: 22px; border-radius: 50%; translate: -50% -50%; background: radial-gradient(circle, var(--accent) 0 5px, oklch(82% 0.15 75 / .3) 6px); }
+  .p3 b { position: absolute; left: 7%; bottom: 8%; font: 700 clamp(2.4rem, 5vw, 4.4rem)/1 var(--f-display); color: var(--accent); letter-spacing: -0.06em; }
+  .layers { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--fg); counter-reset: none; }
+  .layers li { display: grid; grid-template-columns: 3.4rem 1fr; gap: .2rem 1rem; padding: 1rem 0; border-bottom: 1px solid var(--line-2); margin: 0; }
+  .layers b { grid-row: span 2; font: 700 1.6rem/1 var(--f-display); color: var(--accent); letter-spacing: -0.05em; }
+  .layers strong { font: 600 var(--step-0)/1.2 var(--f-display); letter-spacing: -0.03em; }
+  .layers span { font-size: var(--step--1); color: var(--muted); }
+  @media (max-width: 760px) {
+    .despiece { grid-template-columns: 1fr; }
+    .planes { height: 300px; }
+    .plane { left: 10%; width: 80%; }
+    .exploded .p1 { --z: -80px; } .exploded .p3 { --z: 80px; }
+  }
+
+  /* ---------- Coordenadas: figura fija junto al texto ---------- */
+  .coords { margin: 0; padding: 1.2rem; border: 1px solid var(--line-2); background: color-mix(in oklab, var(--bg-2) 70%, transparent); }
+  .coords svg { width: 100%; height: auto; overflow: visible; }
+  .coords figcaption { margin-top: .9rem; font: 500 var(--step--1)/1.5 var(--f-display); color: var(--muted); }
+  .split > div > :first-child { margin-top: 0; }
+
+  /* ---------- Cifras: proporcionales frente a tabulares, medidas en vivo ---------- */
+  .figs { margin: 2.6rem 0; border-top: 1px solid var(--fg); }
+  .figs .row { display: grid; grid-template-columns: minmax(0, 11rem) repeat(2, auto) 1fr; align-items: end; gap: 0 clamp(1.2rem, 4vw, 3.5rem); padding: 1.4rem 0 1.2rem; border-bottom: 1px solid var(--line-2); }
+  .figs .lbl { align-self: center; font: 500 var(--step--1)/1.35 var(--f-display); color: var(--muted); }
+  .figs .num { display: grid; justify-items: start; }
+  .figs .num span { font: 300 clamp(3.4rem, 2rem + 6vw, 7.5rem)/1 var(--f-body); letter-spacing: 0; color: var(--fg); }
+  .figs .tab .num span { font-variant-numeric: tabular-nums; color: var(--accent); }
+  .figs .num i { position: relative; display: block; height: 0; width: var(--w, 100%); border-top: 1px solid var(--faint); margin-top: .5rem; font: 500 11px/1 var(--f-display); font-style: normal; color: var(--muted); }
+  .figs .num i::before, .figs .num i::after { content: ""; position: absolute; top: -5px; height: 9px; border-left: 1px solid var(--faint); }
+  .figs .num i::before { left: 0; } .figs .num i::after { right: 0; }
+  .figs .num i em { position: absolute; left: 50%; top: 6px; translate: -50% 0; font-style: normal; white-space: nowrap; }
+  @media (max-width: 640px) { .figs .row { grid-template-columns: repeat(2, auto) 1fr; } .figs .lbl { grid-column: 1 / -1; margin-bottom: .6rem; } }
+
+  /* ---------- Frase grande ---------- */
+  .statement { font-size: clamp(1.8rem, 1.1rem + 2.8vw, 3.4rem); letter-spacing: -0.055em; line-height: 1.02; }
+  .statement em { font-style: normal; color: var(--accent); }
+
+  /* ---------- Hoja de especificación (accesibilidad) ---------- */
+  .spec { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--fg); border-left: 1px solid var(--line-2); margin: 2rem 0 3rem; }
+  .spec > div { padding: 1.2rem 1.3rem 1.4rem; border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+  .spec .ref { display: block; font: 700 var(--step-2)/1 var(--f-display); letter-spacing: -0.05em; color: var(--accent); margin-bottom: .7rem; }
+  .spec p { margin: 0; font-size: clamp(.95rem, .9rem + .2vw, 1.05rem); line-height: 1.55; color: var(--muted); }
+  .spec p strong { color: var(--fg); }
+  @media (max-width: 640px) { .spec { grid-template-columns: 1fr; } }
+</style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="interaccion">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Capas interactivas sobre imagen</h1>
-    <p class="lede">La imagen no sabe nada: es una foto. La interacción vive en una capa de SVG o de botones colocada exactamente encima. Así se hacen las plantas que se iluminan y las estancias que se pueden tocar.</p>
+  <header class="hero" aria-labelledby="t">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="stage" data-stage>
+      <div class="pic" data-pic role="img" aria-label="Torre al atardecer dibujada como un plano. La planta elegida se ilumina en color.">
+        <picture>
+          <source media="(max-width: 760px)" srcset="../landing/media/torre-plantas-mob.webp" width="800" height="1267">
+          <img class="base" src="../landing/media/torre-plantas.webp" alt="" width="1600" height="1000" fetchpriority="high">
+        </picture>
+        <div class="litwrap"><img class="lit" alt="" src="../landing/media/torre-plantas.webp" width="1600" height="1000"></div>
+        <svg class="hit" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" data-hit></svg>
+        <div class="cota" data-cota><span></span></div>
+        <div class="tag" data-tag aria-hidden="true"><dl><b></b><dt>Cota</dt><dd data-t="cota"></dd><dt>Viviendas</dt><dd>3</dd><dt>Libres</dt><dd data-t="libres"></dd></dl></div>
+      </div>
+      <div class="level" data-level aria-hidden="true"><span></span></div>
+    </div>
+    <div class="scrim" aria-hidden="true"></div>
+    <div class="hero-copy">
+      <p data-kicker>Lección 10</p>
+      <h1 id="t"><span>Capas</span> <span>interactivas</span> <span>sobre imagen</span></h1>
+      <p class="lede">La foto no sabe nada. Encima vive una capa de polígonos y botones: pasa el ratón por la torre, tócala o usa las flechas.</p>
+    </div>
+    <div class="cajetin">
+      <div class="cj-floor">
+        <small>Planta</small>
+        <div class="digits" data-digits aria-hidden="true"></div>
+        <div class="steps">
+          <button type="button" data-step="1" aria-label="Subir una planta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 15l7-7 7 7"/></svg></button>
+          <button type="button" data-step="-1" aria-label="Bajar una planta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l7 7 7-7"/></svg></button>
+        </div>
+      </div>
+      <p class="cj-kv"><span>Cota</span><b data-k="cota">+62,10 m</b></p>
+      <p class="cj-kv"><span>Viviendas</span><b>3</b></p>
+      <p class="cj-kv"><span>Libres</span><b data-k="libres">2 de 3</b></p>
+      <p class="cj-foot"><span>Torre Alameda, alzado oeste</span><span>E 1:500</span><span class="chip" data-meta>18 min</span></p>
+      <p class="vh" aria-live="polite" data-live></p>
+    </div>
   </header>
 
   <div class="lesson">
     <article class="prose">
 
       <p>En la web de la torre pasas el ratón por el edificio y se resalta una planta con su número. Parece que el edificio «sabe» dónde está cada planta, pero lo que hay es una imagen y, encima, un dibujo invisible con la forma de cada planta. Cuando el ratón entra en una de esas formas, la pintas.</p>
-      <p>En esta lección construyes las tres capas típicas: <strong>polígonos</strong> (plantas), <strong>puntos</strong> (estancias) y <strong>contadores</strong> (el número de planta), y ves cómo adaptarlas al dedo.</p>
+      <p>La imagen no sabe nada: es una foto. La interacción vive en una capa de SVG o de botones colocada exactamente encima. Así se hacen las plantas que se iluminan y las estancias que se pueden tocar. En esta lección construyes las tres capas típicas: <strong>polígonos</strong> (plantas), <strong>puntos</strong> (estancias) y <strong>contadores</strong> (el número de planta), y ves cómo adaptarlas al dedo.</p>
 
-      <h2>Polígonos encima de una foto</h2>
+      <figure class="despiece wide" data-explode aria-label="Despiece de las tres capas: imagen, polígonos y botones con contador">
+        <div class="planes" aria-hidden="true">
+          <div class="plane p1"><img src="../landing/media/torre-plantas.webp" alt="" loading="lazy" width="1600" height="1000"></div>
+          <div class="plane p2"><svg viewBox="0 0 1 1" preserveAspectRatio="none"><rect x="0.588" y="0.853" width="0.141" height="0.047"/><rect x="0.588" y="0.827" width="0.141" height="0.045"/><rect x="0.588" y="0.800" width="0.141" height="0.042"/><rect x="0.588" y="0.774" width="0.141" height="0.040"/><rect x="0.588" y="0.748" width="0.141" height="0.037"/><rect x="0.588" y="0.722" width="0.140" height="0.035"/><rect x="0.588" y="0.696" width="0.140" height="0.033"/><rect x="0.588" y="0.670" width="0.140" height="0.030"/><rect x="0.587" y="0.644" width="0.140" height="0.028"/><rect x="0.587" y="0.618" width="0.140" height="0.025"/><rect x="0.587" y="0.591" width="0.140" height="0.024"/><rect x="0.587" y="0.563" width="0.140" height="0.025"/><rect x="0.587" y="0.535" width="0.140" height="0.028"/><rect x="0.587" y="0.506" width="0.140" height="0.030"/><rect x="0.587" y="0.478" width="0.140" height="0.032"/><rect x="0.587" y="0.451" width="0.139" height="0.034"/><rect x="0.587" y="0.423" width="0.139" height="0.037" class="on"/><rect x="0.587" y="0.395" width="0.139" height="0.039"/><rect x="0.587" y="0.367" width="0.139" height="0.041"/><rect x="0.587" y="0.339" width="0.139" height="0.043"/><rect x="0.587" y="0.311" width="0.139" height="0.046"/><rect x="0.587" y="0.283" width="0.139" height="0.048"/><rect x="0.586" y="0.256" width="0.139" height="0.050"/><rect x="0.586" y="0.228" width="0.138" height="0.052"/><rect x="0.586" y="0.201" width="0.138" height="0.054"/><rect x="0.586" y="0.173" width="0.138" height="0.057"/><rect x="0.586" y="0.146" width="0.138" height="0.059"/><rect x="0.586" y="0.118" width="0.138" height="0.061"/></svg></div>
+          <div class="plane p3"><i></i><b>18</b></div>
+        </div>
+        <ol class="layers">
+          <li><b>03</b><strong>Botones y contador</strong><span>Lo que se toca y lo que se anuncia: <code>button</code>, <code>aria-live</code> y cifras tabulares.</span></li>
+          <li><b>02</b><strong>Polígonos en SVG</strong><span>Un <code>viewBox="0 0 1 1"</code> que se estira con la foto. Una forma por planta, invisible hasta que la eliges.</span></li>
+          <li><b>01</b><strong>La imagen</strong><span>Un render o una foto que no sabe nada de plantas. 1600 × 1000 en horizontal y su versión vertical.</span></li>
+        </ol>
+      </figure>
+
+<h2>Polígonos encima de una foto</h2>
       <p>El truco está en un SVG con <code>viewBox="0 0 1 1"</code> y <code>preserveAspectRatio="none"</code>. Eso convierte el SVG en un sistema de coordenadas de 0 a 1 que se estira con la imagen: el punto <code>0.5,0.5</code> es siempre el centro de la foto, mida lo que mida. Las coordenadas de cada planta se guardan en un JSON como fracciones.</p>
 
       <figure class="lab" data-title="Elige tu planta" data-hint="Pasa el ratón o toca una planta" data-height="520" data-height-mobile="600" data-open="js" data-stage="dark">
@@ -97,11 +338,31 @@
         <figcaption>Pulsa <kbd>Tab</kbd> dentro de la demo: los polígonos también se recorren con el teclado. Es la diferencia entre un efecto bonito y una interfaz que se puede usar.</figcaption>
       </figure>
 
-      <h3>¿De dónde salen las coordenadas?</h3>
-      <ul>
-        <li><strong>Si la imagen sale de un 3D</strong> (como aquí), se proyectan los vértices de cada planta a la pantalla con la misma cámara del render. En Three.js es <code>vector.project(camera)</code> y pasar de -1…1 a 0…1. Así lo he hecho para este cuaderno.</li>
-        <li><strong>Si la imagen es de IA o una foto</strong>, dibujas las formas encima en Figma o Illustrator con la imagen de fondo, exportas el SVG y divides las coordenadas entre el ancho y el alto de la imagen. Diez minutos por imagen.</li>
-      </ul>
+      <div class="split">
+        <div>
+        <h3>¿De dónde salen las coordenadas?</h3>
+        <ul>
+          <li><strong>Si la imagen sale de un 3D</strong> (como aquí), se proyectan los vértices de cada planta a la pantalla con la misma cámara del render. En Three.js es <code>vector.project(camera)</code> y pasar de -1…1 a 0…1. Así lo he hecho para este cuaderno.</li>
+          <li><strong>Si la imagen es de IA o una foto</strong>, dibujas las formas encima en Figma o Illustrator con la imagen de fondo, exportas el SVG y divides las coordenadas entre el ancho y el alto de la imagen. Diez minutos por imagen.</li>
+        </ul>
+        </div>
+        <figure class="stick coords">
+          <svg viewBox="-40 -60 680 230" role="img" aria-label="La planta 18 con las coordenadas de cuatro vértices en fracciones de la imagen">
+            <rect x="0" y="0" width="600" height="109.3" fill="none" stroke="oklch(100% 0 0 / .3)" stroke-dasharray="4 5"/>
+            <polygon points="0.0,27.2 2.2,23.7 9.0,20.5 25.4,14.0 34.0,10.5 46.9,7.3 67.6,4.0 96.9,1.6 132.2,0.3 169.3,0.0 205.9,0.3 242.1,0.8 313.6,1.6 385.1,2.7 456.1,3.8 491.9,4.3 526.3,5.1 557.8,6.5 582.8,8.6 597.0,11.3 599.1,14.5 600.0,87.8 594.0,90.5 582.8,93.4 570.7,96.1 559.1,98.8 547.5,101.5 531.5,103.9 509.1,106.3 480.3,108.0 446.7,109.0 412.2,109.3 378.6,109.0 279.5,108.0 113.3,106.1 80.1,105.5 49.5,104.7 23.7,103.1 6.9,100.7 0.4,98.3" fill="oklch(82% 0.15 75 / .3)" stroke="oklch(82% 0.15 75)" stroke-width="1.5"/>
+            <g fill="oklch(96% 0.01 250)"><circle cx="2.2" cy="23.7" r="4"/><circle cx="597" cy="11.3" r="4"/><circle cx="600" cy="87.8" r="4"/><circle cx="0.4" cy="98.3" r="4"/></g>
+            <g font-family="JetBrains Mono, monospace" font-size="19" fill="oklch(82% 0.03 250)">
+              <text x="0" y="-18">0.5873, 0.4294</text>
+              <text x="600" y="-16" text-anchor="end">0.7254, 0.4248</text>
+              <text x="600" y="140" text-anchor="end">0.7261, 0.4532</text>
+              <text x="0" y="140">0.5869, 0.4571</text>
+            </g>
+            <g stroke="oklch(70% 0.04 250)" stroke-width="1"><path d="M0 162H600M0 154v16M600 154v16"/></g>
+            <text x="300" y="158" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="17" fill="oklch(70% 0.04 250)" paint-order="stroke" stroke="oklch(28% 0.08 255)" stroke-width="8">0,139 del ancho de la foto</text>
+          </svg>
+          <figcaption>Planta 18 de <code>plantas-desk.json</code>: 40 vértices, todos entre 0 y 1. Mida lo que mida la foto en pantalla, el punto <code>0.5873, 0.4294</code> cae siempre en la esquina de esa planta.</figcaption>
+        </figure>
+      </div>
 
       <script type="text/x-code" data-lang="js" data-label="Pasar un SVG exportado de Figma (en píxeles) a fracciones">
         // points="412,880 640,872 652,910 420,918" en una imagen de 1600 × 1000
@@ -119,6 +380,8 @@
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>El hover no existe, así que el estado que importa es el <strong>seleccionado</strong>, y tiene que verse muy claro. Las plantas miden unos 10 px de alto en una torre vertical: muy por debajo de los 44 px recomendados para un dedo. Soluciones: usa una imagen vertical más grande (la torre ocupa toda la altura), deja que el toque elija la planta más cercana aunque no aciertes de lleno, y añade botones de subir y bajar planta junto al contador. Oculta la etiqueta flotante con <code>@media (hover: none)</code>.</p>
       </div>
+
+      <div class="band claim"><div class="inner"><p>Una foto, una capa encima y coordenadas de 0 a 1.</p><small>Ese es todo el truco de la torre que «sabe» dónde está cada planta. Lo demás es cuidar el resaltado, el dedo y el teclado.</small></div></div>
 
       <h2>Hotspots en la planta isométrica</h2>
       <p>Para las estancias no hacen falta polígonos: basta un punto por estancia. Son <strong>botones de verdad</strong> posicionados con porcentajes encima de la imagen. Al tocar uno se abre una ficha. Aquí la ficha es un <code>popover</code> nativo, colocado junto a su botón con <strong>anchor positioning</strong>.</p>
@@ -198,6 +461,14 @@
 
       <h2>El contador de planta</h2>
       <p>El número grande que cambia es un detalle pequeño que da muchísima sensación de calidad. Dos claves: <code>font-variant-numeric: tabular-nums</code> para que todas las cifras midan lo mismo (si no, el número «baila» al cambiar de 11 a 18) y animar el <em>valor</em>, no la caja.</p>
+
+      <figure class="figs wide" data-figs aria-label="Las mismas cifras con anchos proporcionales y tabulares, medidas en tu navegador">
+        <div class="row"><span class="lbl">Por defecto, cifras proporcionales</span><span class="num"><span>11</span><i><em></em></i></span><span class="num"><span>18</span><i><em></em></i></span></div>
+        <div class="row tab"><span class="lbl"><code>tabular-nums</code></span><span class="num"><span>11</span><i><em></em></i></span><span class="num"><span>18</span><i><em></em></i></span></div>
+      </figure>
+      <p>Las cotas de arriba están medidas en vivo en tu navegador, con Inter Tight. En la fila proporcional el «11» es más estrecho que el «18»: si el contador pasa de uno a otro, todo lo que está a su lado se desplaza. En la fila tabular las dos miden lo mismo.</p>
+
+      <p class="statement">Anima el <em>valor</em>, no la caja.</p>
 
       <figure class="lab" data-title="Contador tipo marcador" data-hint="Usa los botones" data-height="300" data-height-mobile="320" data-open="css">
         <script type="text/x-demo" data-lang="html">
@@ -308,12 +579,12 @@
       </div>
 
       <h2>Accesibilidad de las capas</h2>
-      <ul>
-        <li>Cada zona interactiva es un <code>button</code> o lleva <code>role="button"</code>, <code>tabindex="0"</code> y un <code>aria-label</code> con información útil («Planta 18, 2 de 3 disponibles»).</li>
-        <li>Lo que cambia (el contador, la ficha) se anuncia con <code>aria-live="polite"</code>.</li>
-        <li>Siempre hay una alternativa en lista: el lector de pantalla no puede «ver» dónde está la planta 18 en una foto.</li>
-        <li>El foco es visible y tiene el mismo aspecto que el hover.</li>
-      </ul>
+      <div class="spec wide">
+        <div><span class="ref">A-1</span><p>Cada zona interactiva es un <code>button</code> o lleva <code>role="button"</code>, <code>tabindex="0"</code> y un <code>aria-label</code> con información útil («Planta 18, 2 de 3 disponibles»).</p></div>
+        <div><span class="ref">A-2</span><p>Lo que cambia (el contador, la ficha) se anuncia con <code>aria-live="polite"</code>.</p></div>
+        <div><span class="ref">A-3</span><p>Siempre hay una <strong>alternativa en lista</strong>: el lector de pantalla no puede «ver» dónde está la planta 18 en una foto.</p></div>
+        <div><span class="ref">A-4</span><p>El foco es visible y tiene el mismo aspecto que el hover.</p></div>
+      </div>
 
       <section class="recap">
         <h2 class="no-toc">Resumen</h2>
@@ -329,8 +600,150 @@
         <p>Coge una foto de la fachada de tu edificio o de uno de tu ciudad, dibuja en Figma un polígono por planta, exporta el SVG, conviértelo a fracciones con la función de arriba y monta la demo de «Elige tu planta» con ella. Pruébala en el móvil y añade los botones de subir y bajar.</p>
       </section>
 
-    </article>
+        </article>
   </div>
 </main>
+<script>
+  // Portada: la torre como plano. Polígonos reales (plantas-desk|mob.json) remuestreados
+  // a 64 vértices para que el clip-path pueda interpolar de una planta a otra.
+  (() => {
+    const hero = document.querySelector('.hero');
+    const stage = hero.querySelector('[data-stage]'), pic = hero.querySelector('[data-pic]');
+    const base = pic.querySelector('.base'), lit = pic.querySelector('.lit'), hit = pic.querySelector('[data-hit]');
+    const cota = pic.querySelector('[data-cota]'), tag = pic.querySelector('[data-tag]'), level = hero.querySelector('[data-level]');
+    const digits = hero.querySelector('[data-digits]'), live = hero.querySelector('[data-live]');
+    const steps = [...hero.querySelectorAll('[data-step]')];
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mq = matchMedia('(max-width: 760px)');
+    const MIN = 2, MAX = 29, N = 64;
+    let shapes = [], boxes = [], cur = 18, set = '';
+
+    const avail = (f) => Math.floor(Math.abs(Math.sin(f * 127.1) * 43758.5) % 1 * 4);
+    const cotaM = (f) => (4.5 + f * 3.2).toFixed(2).replace('.', ',');
+
+    // Contador de cifras rodantes (el mismo truco que el laboratorio de la sección 3)
+    digits.innerHTML = [0, 1].map(() => `<span class="col">${[...'0123456789'].map((d) => `<span>${d}</span>`).join('')}</span>`).join('') + '<span class="of">/29</span>';
+    const cols = [...digits.querySelectorAll('.col')];
+
+    function resample(pts) {
+      let a = 0;
+      pts.forEach(([x1, y1], i) => { const [x2, y2] = pts[(i + 1) % pts.length]; a += x1 * y2 - x2 * y1; });
+      if (a < 0) pts = pts.slice().reverse();
+      const minX = Math.min(...pts.map((p) => p[0])), minY = Math.min(...pts.map((p) => p[1]));
+      let s = 0, best = Infinity;
+      pts.forEach((p, i) => { const d = (p[0] - minX) ** 2 + ((p[1] - minY) * 3) ** 2; if (d < best) { best = d; s = i; } });
+      pts = pts.slice(s).concat(pts.slice(0, s));
+      const seg = pts.map((p, i) => Math.hypot(pts[(i + 1) % pts.length][0] - p[0], pts[(i + 1) % pts.length][1] - p[1]));
+      const per = seg.reduce((t, v) => t + v, 0), out = [];
+      let i = 0, acc = 0;
+      for (let k = 0; k < N; k++) {
+        const t = (k * per) / N;
+        while (acc + seg[i] < t) { acc += seg[i]; i++; }
+        const f = (t - acc) / (seg[i] || 1), p = pts[i], q = pts[(i + 1) % pts.length];
+        out.push([p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f]);
+      }
+      return out;
+    }
+
+    function load() {
+      const next = mq.matches ? 'mob' : 'desk';
+      if (next === set) return;
+      set = next;
+      lit.src = `../landing/media/torre-plantas${set === 'mob' ? '-mob' : ''}.webp`;
+      fetch(`../landing/media/plantas-${set}.json`).then((r) => r.json()).then((floors) => {
+        boxes = floors.map((pts) => {
+          const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+          return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+        });
+        shapes = floors.map((pts) => `polygon(${resample(pts).map(([x, y]) => `${(x * 100).toFixed(2)}% ${(y * 100).toFixed(2)}%`).join(',')})`);
+        hit.innerHTML = floors.map((pts, f) => f < MIN ? '' : `<polygon data-f="${f}" points="${pts.map((p) => p.join(',')).join(' ')}"/>`).join('');
+        if (reduce || !intro) select(cur, true); else runIntro();
+      }).catch(() => {});
+    }
+
+    function place() {
+      if (!boxes.length) return;
+      const b = boxes[cur], g = boxes[0].y1;
+      const s = stage.getBoundingClientRect(), p = pic.getBoundingClientRect();
+      const x = b.x0 - (mq.matches ? 0.05 : 0.035);
+      cota.style.left = x * 100 + '%';
+      cota.style.top = b.y0 * 100 + '%';
+      cota.style.height = (g - b.y0) * 100 + '%';
+      level.style.left = Math.max(0, p.left - s.left + (x - 0.02) * p.width) + 'px';
+      level.style.translate = `0 ${p.top - s.top + b.y0 * p.height}px`;
+      tag.style.left = b.x1 * 100 + '%';
+      tag.style.top = ((b.y0 + b.y1) / 2) * 100 + '%';
+    }
+
+    function select(f, quiet) {
+      cur = Math.max(MIN, Math.min(MAX, f));
+      if (shapes[cur]) lit.style.clipPath = shapes[cur];
+      String(cur).padStart(2, '0').split('').forEach((d, i) => (cols[i].style.translate = `0 ${-d}em`));
+      const n = avail(cur), libres = n ? `${n} de 3` : 'Vendida';
+      hero.querySelector('[data-k="cota"]').textContent = `+${cotaM(cur)} m`;
+      hero.querySelector('[data-k="libres"]').textContent = libres;
+      tag.querySelector('b').textContent = `Planta ${String(cur).padStart(2, '0')}`;
+      tag.querySelector('[data-t="cota"]').textContent = `+${cotaM(cur)} m`;
+      tag.querySelector('[data-t="libres"]').textContent = libres;
+      cota.querySelector('span').textContent = cotaM(cur);
+      level.querySelector('span').textContent = `N +${cotaM(cur)}`;
+      steps[0].disabled = cur >= MAX; steps[1].disabled = cur <= MIN;
+      if (!quiet) live.textContent = `Planta ${cur}, ${n ? n + ' de 3 disponibles' : 'vendida'}`;
+      place();
+    }
+
+    // Arranque: el nivel sube de la planta 2 a la 18 una sola vez
+    let intro = true;
+    function runIntro() {
+      intro = false;
+      let f = MIN;
+      const fast = [lit, ...cols];
+      fast.forEach((el) => (el.style.transitionDuration = '.12s'));
+      const tick = () => { select(f, true); if (f < 18) { f++; setTimeout(tick, 32); } else setTimeout(() => fast.forEach((el) => (el.style.transitionDuration = '')), 150); };
+      setTimeout(tick, 120);
+    }
+
+    // Ratón: la planta sigue al puntero. Dedo: el toque elige la planta más cercana.
+    function floorAt(e, loose) {
+      const r = pic.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      const b0 = boxes[MIN]; if (!b0) return null;
+      const pad = loose ? 0.12 : 0.01;
+      if (x < b0.x0 - pad || x > b0.x1 + pad) return null;
+      let best = null, dist = Infinity;
+      for (let f = MIN; f <= MAX; f++) {
+        const b = boxes[f], d = y < b.y0 ? b.y0 - y : y > b.y1 ? y - b.y1 : 0;
+        if (d < dist) { dist = d; best = f; }
+      }
+      return dist < (loose ? 0.08 : 0.004) ? best : null;
+    }
+    pic.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; const f = floorAt(e, false); if (f && f !== cur) select(f, true); });
+    pic.addEventListener('click', (e) => { const f = floorAt(e, true); if (f) select(f); });
+    steps.forEach((b) => b.addEventListener('click', () => select(cur + +b.dataset.step)));
+    hero.querySelector('.cajetin').addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); select(cur + (e.key === 'ArrowUp' ? 1 : -1)); }
+    });
+
+    base.addEventListener('load', place);
+    addEventListener('resize', () => { load(); place(); });
+    load();
+
+    // Despiece: las capas se separan cuando entran en pantalla
+    const ex = document.querySelector('[data-explode]');
+    if (ex) {
+      if (reduce) ex.classList.add('exploded');
+      else new IntersectionObserver((en, o) => { if (en[0].isIntersecting) { ex.classList.add('exploded'); o.disconnect(); } }, { threshold: 0.45 }).observe(ex);
+    }
+
+    // Cifras: medimos el ancho real de cada número y lo escribimos en su cota
+    const figs = document.querySelector('[data-figs]');
+    const measure = () => figs.querySelectorAll('.num').forEach((n) => {
+      const w = n.querySelector('span').getBoundingClientRect().width;
+      n.style.setProperty('--w', w + 'px');
+      n.querySelector('em').textContent = Math.round(w) + ' px';
+    });
+    if (figs) { document.fonts.ready.then(measure); addEventListener('resize', measure); }
+  })();
+</script>
 </body>
 </html>

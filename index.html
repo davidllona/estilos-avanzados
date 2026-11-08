@@ -4,122 +4,119 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hora azul, cuaderno de color y movimiento</title>
-<meta name="description" content="Cuaderno de estudio interactivo para pasar de CSS normal a webs con paletas cuidadas, composición editorial y animaciones de scroll cinematográficas.">
+<meta name="description" content="Cuaderno de estudio interactivo: catorce lecciones, cada una diseñada como una web distinta, para pasar de CSS normal a webs con paletas cuidadas, composición editorial y scroll cinematográfico.">
 <meta name="theme-color" content="#15132b">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/css/base.css">
 <style>
-  /* ---------- Portada ---------- */
-  .home-hero { max-width: var(--wide); margin: 0 auto; padding: clamp(3rem, 8vw, 6.5rem) var(--gutter) clamp(3rem, 7vw, 5rem); display: grid; grid-template-columns: 1.25fr 0.75fr; gap: clamp(2rem, 6vw, 5rem); align-items: end; }
-  .home-hero h1 { font-size: clamp(4rem, 2rem + 10vw, 10.5rem); font-weight: 560; letter-spacing: -0.05em; line-height: 0.82; }
-  .home-hero .lede { font-size: var(--step-1); line-height: 1.45; color: var(--muted); max-width: 34ch; margin: 1.8rem 0 2rem; }
-  .home-hero .actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+  :root { --f-body: "Inter Tight", system-ui, sans-serif; }
 
-  /* La torre del temario: cada planta es una lección, cada lección hecha enciende sus ventanas */
-  .tower-wrap { display: grid; justify-items: center; gap: 0.8rem; }
-  .tower { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: 4px; width: min(100%, 240px); }
-  .tower li { position: relative; }
-  .tower a { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; padding: 5px 7px; border-radius: 6px; background: oklch(30% 0.05 285); text-decoration: none; transition: background-color .25s, transform .35s var(--ease-out); }
-  .tower a:hover, .tower a:focus-visible { background: oklch(38% 0.07 285); transform: translateX(-6px); }
-  .tower a i { height: 9px; border-radius: 1.5px; background: oklch(22% 0.04 285); transition: background-color .4s; }
-  .tower li.done a i { background: var(--window); box-shadow: 0 0 8px oklch(83% 0.14 75 / .6); }
-  .tower li.done a i:nth-child(3n) { background: var(--window-2); }
-  .tower .tip { position: absolute; right: calc(100% + 12px); top: 50%; translate: 0 -50%; white-space: nowrap; font: 500 var(--step--1)/1 var(--f-display); color: var(--text); background: var(--night-3); padding: 0.45rem 0.7rem; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity .2s; }
-  .tower a:hover + .tip, .tower a:focus-visible + .tip { opacity: 1; }
-  .tower-roof { width: min(70%, 170px); height: 10px; border-radius: 6px 6px 0 0; background: oklch(80% 0.1 200 / .8); box-shadow: 0 0 18px oklch(80% 0.1 200 / .5); }
-  .tower-base { width: min(110%, 270px); height: 6px; border-radius: 3px; background: var(--line-2); }
-  .tower-note { font: 400 var(--step--1)/1.4 var(--f-display); color: var(--muted); text-align: center; margin: 0; }
-  .tower-note b { color: var(--window); font-weight: 600; font-variant-numeric: tabular-nums; }
+  /* ---------- Portada: a la izquierda la presentación, a la derecha la torre de lecciones ---------- */
+  .home { display: grid; grid-template-columns: minmax(20rem, 0.85fr) 1.15fr; min-height: 100svh; }
+  .intro { position: sticky; top: 0; height: 100svh; display: grid; align-content: space-between; padding: 6rem var(--gutter) 2.4rem; }
+  .intro h1 { font-size: clamp(4.2rem, 2rem + 8vw, 10rem); font-weight: 560; letter-spacing: -0.055em; line-height: .8; font-stretch: 85%; }
+  .intro .lede { font-size: var(--step-1); line-height: 1.4; color: var(--muted); max-width: 30ch; margin: 1.6rem 0 2rem; }
+  .intro .actions { display: flex; flex-wrap: wrap; gap: .7rem; }
+  .intro .progress { font: 500 var(--step--1)/1.4 var(--f-ui); color: var(--muted); display: grid; gap: .6rem; }
+  .intro .progress .bar { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .intro .progress .bar i { display: block; height: 100%; width: calc(var(--done, 0) * 100%); background: var(--accent); transition: width 1s var(--ease-out); }
+  .intro .progress b { color: var(--fg); font-variant-numeric: tabular-nums; }
 
-  /* ---------- Temario ---------- */
-  .syllabus { max-width: var(--wide); margin: 0 auto; padding: 2rem var(--gutter) 5rem; }
-  .syllabus > h2 { font-size: var(--step-3); margin-bottom: 0.6rem; }
-  .syllabus > p { color: var(--muted); max-width: 52ch; margin: 0 0 2.6rem; }
-  .block { display: grid; grid-template-columns: 220px 1fr; gap: 0 2rem; border-top: 1px solid var(--line); padding: 1.6rem 0 1.2rem; }
-  .block h3 { font-size: var(--step-1); font-weight: 560; color: var(--muted); }
-  .block ol { list-style: none; margin: 0; padding: 0; }
-  .row { display: grid; grid-template-columns: 3.2rem 1fr auto; gap: 0.2rem 1rem; align-items: baseline; padding: 0.9rem 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--text); transition: padding .35s var(--ease-out); }
-  .block li:last-child .row { border-bottom: 0; }
-  .row:hover { padding-left: 0.6rem; }
-  .row .n { font: 600 var(--step-0)/1 var(--f-display); color: var(--window); font-variant-numeric: tabular-nums; }
-  .row .t { font: 560 var(--step-1)/1.15 var(--f-display); letter-spacing: -0.01em; }
-  .row .m { font: 400 var(--step--1)/1 var(--f-display); color: var(--faint); white-space: nowrap; }
-  .row .s { grid-column: 2; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
-  .row.done .m::before { content: "Hecha"; color: var(--leaf); margin-right: 0.6rem; }
-
-  .extras { max-width: var(--wide); margin: 0 auto; padding: 0 var(--gutter) 6rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-  .extras a { display: grid; gap: 0.4rem; align-content: start; padding: 1.4rem; border-radius: var(--radius-m); border: 1px solid var(--line); text-decoration: none; color: var(--text); transition: border-color .2s, background-color .2s; }
-  .extras a:hover { border-color: var(--window); background: var(--night-2); }
-  .extras b { font: 600 var(--step-1)/1.15 var(--f-display); letter-spacing: -0.01em; }
-  .extras span { color: var(--muted); font-size: var(--step--1); line-height: 1.5; }
-  .extras .landing { background: linear-gradient(160deg, oklch(35% 0.1 300), oklch(25% 0.07 285) 60%); border-color: transparent; }
-
-  .how { max-width: var(--wide); margin: 0 auto; padding: 0 var(--gutter) 5rem; display: grid; grid-template-columns: 220px 1fr; gap: 0 2rem; border-top: 1px solid var(--line); padding-top: 1.6rem; }
-  .how h2 { font-size: var(--step-1); font-weight: 560; color: var(--muted); }
-  .how ul { margin: 0; padding-left: 1.1rem; max-width: 60ch; }
-  .how li { margin-bottom: 0.6rem; }
-  .how li::marker { color: var(--window); }
-
-  @media (max-width: 860px) {
-    .home-hero { grid-template-columns: 1fr; }
-    .tower-wrap { grid-template-columns: auto 1fr; justify-items: start; align-items: end; column-gap: 1.4rem; }
-    .tower { width: 150px; }
-    .tower a i { height: 6px; }
-    .tower .tip { display: none; }
-    .tower-roof, .tower-base { grid-column: 1; justify-self: center; }
-    .tower-note { grid-column: 2; grid-row: 1 / span 3; align-self: center; text-align: left; }
-    .block, .how { grid-template-columns: 1fr; }
-    .block h3, .how h2 { margin-bottom: 0.4rem; }
-    .extras { grid-template-columns: 1fr; }
+  /* Cada planta es una lección con su propia identidad (datos en cuaderno.js) */
+  #temario { padding-top: 3.6rem; }
+  .tower { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .floor a {
+    --pad: clamp(1.1rem, 2.4vw, 1.8rem);
+    position: relative; display: grid; grid-template-columns: 3rem 1fr auto; align-items: end; gap: .3rem 1rem;
+    min-height: clamp(7.5rem, 17vh, 10.5rem); padding: var(--pad) var(--pad) var(--pad) calc(var(--pad) + .2rem);
+    background: var(--tbg); color: var(--tfg); text-decoration: none; overflow: hidden;
+    transition: min-height .6s var(--ease-out);
   }
-  @media (max-width: 480px) { .row { grid-template-columns: 2.4rem 1fr; } .row .m { grid-column: 2; } }
+  .floor a::before { /* línea de acento que crece al pasar */
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--tac); transform: scaleY(0); transform-origin: bottom; transition: transform .5s var(--ease-out);
+  }
+  .floor a:hover, .floor a:focus-visible { min-height: clamp(10rem, 24vh, 14rem); }
+  .floor a:hover::before, .floor a:focus-visible::before { transform: scaleY(1); }
+  .floor a:focus-visible { outline: 3px solid var(--tac); outline-offset: -3px; }
+  .floor .n { font: 600 .82rem/1 var(--f-ui); opacity: .7; font-variant-numeric: tabular-nums; align-self: start; padding-top: .3rem; }
+  .floor .t { font-family: var(--tf); font-weight: var(--tw); font-style: var(--ti, normal); font-stretch: var(--ts, 100%); font-size: clamp(1.7rem, 1rem + 2.4vw, 3.3rem); line-height: .98; letter-spacing: -0.025em; text-wrap: balance; }
+  .floor .s { grid-column: 2; font: 400 var(--step--1)/1.45 var(--f-ui); opacity: .78; max-width: 46ch; max-height: 0; overflow: hidden; transition: max-height .6s var(--ease-out), opacity .4s; }
+  .floor a:hover .s, .floor a:focus-visible .s { max-height: 4.5em; }
+  .floor .m { grid-row: 1; grid-column: 3; align-self: start; font: 500 .8rem/1 var(--f-ui); opacity: .75; white-space: nowrap; display: flex; align-items: center; gap: .5rem; }
+  .floor .m i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; }
+  .floor.done .m i { background: var(--tac); border-color: var(--tac); box-shadow: 0 0 10px var(--tac); }
+
+  /* ---------- Extras y uso ---------- */
+  .more-wrap { max-width: var(--wide); margin: 0 auto; padding: clamp(4rem, 9vw, 7rem) var(--gutter) 5rem; }
+  .more-wrap h2 { font-size: var(--step-4); max-width: 14ch; margin-bottom: 2.4rem; }
+  .extras { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 1rem; }
+  .extras a { display: grid; gap: .5rem; align-content: end; min-height: 15rem; padding: 1.5rem; border-radius: var(--radius-m); text-decoration: none; border: 1px solid var(--line-2); transition: border-color .2s; position: relative; overflow: hidden; }
+  .extras a:hover { border-color: var(--accent); }
+  .extras b { font: 600 var(--step-2)/1.05 var(--f-display); letter-spacing: -0.02em; }
+  .extras span { color: var(--muted); font: 400 var(--step--1)/1.5 var(--f-ui); max-width: 34ch; }
+  .extras .landing { border: 0; background: center / cover no-repeat url("landing/media/torre-plantas.webp"); }
+  .extras .landing::before { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, oklch(15% 0.05 292 / .92), oklch(15% 0.05 292 / .1) 70%); }
+  .extras .landing > * { position: relative; }
+  .extras .landing span { color: oklch(90% 0.02 290); }
+  .how { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+  .how h3 { font: 600 var(--step-0)/1.2 var(--f-display); margin-bottom: .5rem; }
+  .how p { margin: 0; color: var(--muted); font-size: var(--step--1); line-height: 1.55; }
+
+  @media (max-width: 900px) {
+    .home { grid-template-columns: 1fr; }
+    #temario { padding-top: 0; }
+    .intro { position: relative; height: auto; min-height: 88svh; padding-top: 5.5rem; gap: 2.5rem; }
+    .floor a { grid-template-columns: 2.2rem 1fr; min-height: 7rem; }
+    .floor .m { grid-row: auto; grid-column: 2; }
+    .floor .s { max-height: none; }           /* en móvil no hay hover: la descripción siempre visible */
+    .floor a:hover, .floor a:focus-visible { min-height: 7rem; }
+    .extras { grid-template-columns: 1fr; }
+    .extras a { min-height: 11rem; }
+    .how { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 520px) { .how { grid-template-columns: 1fr; } }
 </style>
 <script src="assets/js/cuaderno.js" defer></script>
 </head>
 <body>
 <main id="main">
-  <header class="home-hero">
-    <div>
-      <h1>Hora azul</h1>
-      <p class="lede">Cuaderno de color y movimiento para pasar de CSS correcto a webs como la de la torre: paletas con criterio, composición sin cards y scroll cinematográfico.</p>
-      <div class="actions">
-        <a class="btn primary" href="lecciones/00-criterio.html" data-continue>Empezar</a>
-        <a class="btn" href="landing/index.html">Ver el proyecto final</a>
+  <div class="home">
+    <section class="intro" aria-labelledby="t">
+      <div>
+        <h1 id="t">Hora azul</h1>
+        <p class="lede">Catorce lecciones de color y movimiento. Cada una está diseñada como una web distinta, con la técnica que enseña funcionando en su portada.</p>
+        <div class="actions">
+          <a class="btn primary" href="lecciones/00-criterio.html" data-continue>Empezar</a>
+          <a class="btn" href="landing/index.html">Ver el proyecto final</a>
+        </div>
       </div>
-    </div>
-    <div class="tower-wrap" aria-label="Progreso del cuaderno">
-      <span class="tower-roof" aria-hidden="true"></span>
+      <div class="progress" aria-live="polite">
+        <span>Has terminado <b data-done>0</b> de <b data-total>14</b>. Cada lección hecha enciende su planta.</span>
+        <span class="bar"><i></i></span>
+      </div>
+    </section>
+    <nav aria-label="Temario" id="temario">
       <ol class="tower" data-tower></ol>
-      <span class="tower-base" aria-hidden="true"></span>
-      <p class="tower-note">Cada lección terminada enciende una planta. <b data-done>0</b> de <b data-total>14</b> encendidas.</p>
-    </div>
-  </header>
-
-  <section class="syllabus" id="temario" aria-labelledby="temario-t">
-    <h2 id="temario-t">Temario</h2>
-    <p>En orden: cada lección usa lo de la anterior. Todas tienen demos que puedes editar, un botón para verlas como en el móvil y un apartado de qué funciona en el teléfono y qué no.</p>
-    <div data-syllabus></div>
-  </section>
-
-  <div class="extras">
-    <a class="landing" href="landing/index.html"><b>Vésper</b><span>La landing final con todas las técnicas: llegada por scroll, plantas interactivas y la residencia en 3D.</span></a>
-    <a href="radar.html"><b>Radar</b><span>Lo nuevo en CSS y animación, con el soporte real de cada navegador. Se actualiza cada mes.</span></a>
-    <a href="chuleta.html"><b>Chuleta</b><span>Todos los fragmentos de código del cuaderno en una página, con buscador.</span></a>
+    </nav>
   </div>
 
-  <section class="how" aria-labelledby="how-t">
-    <h2 id="how-t">Cómo usarlo</h2>
-    <ul>
-      <li>En cada demo, <strong>Editar</strong> convierte el código en un editor: cambias un valor y la demo se actualiza sola. <strong>Deshacer cambios</strong> lo deja como estaba.</li>
-      <li><strong>Ver en móvil</strong> muestra la misma demo a 390 px de ancho, como en un teléfono.</li>
-      <li>Los recuadros <strong>Criterio</strong> son decisiones de diseño; los de <strong>En el móvil</strong>, qué cambiar para el teléfono.</li>
-      <li>Tu progreso se guarda en este navegador. Si lo abres en el móvil, empieza de cero allí.</li>
-    </ul>
-  </section>
+  <div class="more-wrap">
+    <h2>Para cuando quieras ir más allá</h2>
+    <div class="extras">
+      <a class="landing" href="landing/index.html"><b>Vésper</b><span>La landing final: llegada a la torre con el scroll, plantas que se iluminan y la residencia en 3D.</span></a>
+      <a href="radar.html"><b>Radar</b><span>Lo nuevo en CSS y animación con el soporte real de cada navegador.</span></a>
+      <a href="chuleta.html"><b>Chuleta</b><span>Todos los fragmentos de código del cuaderno en una página, con buscador.</span></a>
+    </div>
+    <div class="how">
+      <div><h3>Edita las demos</h3><p>«Editar» convierte el código en un editor: cambias un valor y la demo se actualiza. «Deshacer cambios» la deja como estaba.</p></div>
+      <div><h3>Mira cómo queda en el móvil</h3><p>«Ver en móvil» muestra la demo a 390 px. Los recuadros «En el móvil» dicen qué cambiar para el teléfono.</p></div>
+      <div><h3>Criterio, no solo código</h3><p>Los recuadros «Criterio» explican las decisiones de diseño que separan una web cara de una plantilla.</p></div>
+      <div><h3>Tu progreso</h3><p>Se guarda en este navegador. Si abres el cuaderno en el móvil, allí empieza de cero.</p></div>
+    </div>
+  </div>
 </main>
 
 <script>
-  // La portada se construye desde el temario de cuaderno.js
   addEventListener('DOMContentLoaded', () => {
     const { LESSONS, done } = window.HORA_AZUL;
     const hechas = new Set(done());
@@ -131,7 +128,7 @@
       tipografia: 'Escalas fluidas, titulares con tensión y números tabulares.',
       composicion: 'Retícula editorial, capas, sticky, índices y tiras horizontales.',
       movimiento: 'Easing, duraciones, @starting-style y un único momento orquestado.',
-      'scroll-css': 'animation-timeline, view(), rangos y la torre solo con CSS.',
+      'scroll-css': 'animation-timeline, view(), rangos y parallax solo con CSS.',
       'view-transitions': 'Morphs entre vistas, tipos de transición y revelado circular.',
       gsap: 'Timelines, ScrollTrigger con pin y scrub, SplitText y Lenis.',
       secuencias: 'Fotogramas en canvas y vídeo controlados por el scroll.',
@@ -140,19 +137,19 @@
       rendimiento: 'Composición, memoria, Core Web Vitals y movimiento reducido.',
       proyecto: 'Desmontaje de la landing Vésper y tu propia versión.',
     };
-    // Torre: planta 00 abajo
-    document.querySelector('[data-tower]').innerHTML = LESSONS.map((l, i) =>
-      `<li class="${hechas.has(l.id) ? 'done' : ''}"><a href="lecciones/${l.file}" aria-label="Lección ${pad(i)}: ${l.title}">${'<i></i>'.repeat(8)}</a><span class="tip" aria-hidden="true">${pad(i)} ${l.title}</span></li>`).join('');
-    document.querySelector('[data-done]').textContent = LESSONS.filter((l) => hechas.has(l.id)).length;
+    document.querySelector('[data-tower]').innerHTML = LESSONS.map((l, i) => {
+      const t = l.t;
+      const vars = `--tbg:${t.bg};--tfg:${t.fg};--tac:${t.ac};--tf:${t.f.replace(/"/g, "'")};--tw:${t.w};${t.i ? '--ti:italic;' : ''}${t.s ? `--ts:${t.s};` : ''}`;
+      const h = hechas.has(l.id);
+      return `<li class="floor ${h ? 'done' : ''}" style="${vars}"><a href="lecciones/${l.file}">
+        <span class="n">${pad(i)}</span><span class="t">${l.title}</span>
+        <span class="m"><i aria-hidden="true"></i>${h ? 'Hecha' : l.min + ' min'}</span>
+        <span class="s">${SUB[l.id] || ''}</span></a></li>`;
+    }).join('');
+    const n = LESSONS.filter((l) => hechas.has(l.id)).length;
+    document.querySelector('[data-done]').textContent = n;
     document.querySelector('[data-total]').textContent = LESSONS.length;
-    // Temario agrupado por bloque
-    const blocks = [...new Set(LESSONS.map((l) => l.block))];
-    document.querySelector('[data-syllabus]').innerHTML = blocks.map((b) => `
-      <div class="block"><h3>${b}</h3><ol>${LESSONS.map((l, i) => l.block !== b ? '' : `
-        <li><a class="row ${hechas.has(l.id) ? 'done' : ''}" href="lecciones/${l.file}">
-          <span class="n">${pad(i)}</span><span class="t">${l.title}</span><span class="m">${l.min} min</span>
-          <span class="s">${SUB[l.id] || ''}</span></a></li>`).join('')}</ol></div>`).join('');
-    // «Empezar» pasa a «Seguir» con la primera lección pendiente
+    document.querySelector('.progress').style.setProperty('--done', n / LESSONS.length);
     const next = LESSONS.find((l) => !hechas.has(l.id));
     const btn = document.querySelector('[data-continue]');
     if (hechas.size && next) { btn.textContent = 'Seguir: ' + next.title; btn.href = 'lecciones/' + next.file; }

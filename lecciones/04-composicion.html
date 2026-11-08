@@ -6,20 +6,211 @@
 <title>Más allá de las cards | Hora azul</title>
 <meta name="description" content="Composición editorial en CSS: retícula de 12 columnas con líneas con nombre, capas, sticky, tiras con scroll-snap, índices, subgrid y container queries. Y cómo se pliega todo en el móvil.">
 <link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: plano de obra.
+     Hormigón claro, tinta casi negra y un único amarillo de obra. Big Shoulders + Inter Tight. */
+  :root {
+    --bg: oklch(86% 0.012 80);
+    --bg-2: oklch(90.5% 0.01 80);
+    --bg-3: oklch(81% 0.014 80);
+    --fg: oklch(16% 0.005 80);
+    --muted: oklch(40% 0.012 80);
+    --faint: oklch(50% 0.012 80);
+    --accent: oklch(86% 0.17 95);
+    --on-accent: oklch(16% 0.005 80);
+    --code-bg: oklch(19% 0.006 80);
+    --scheme: light;
+    --f-display: "Big Shoulders", "Arial Narrow", sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 800;
+    --display-tracking: -0.005em;
+    --ink-line: color-mix(in oklab, var(--fg) 17%, transparent);
+  }
+  body { font-size: clamp(1rem, 0.96rem + 0.2vw, 1.12rem); line-height: 1.62; }
+  a { text-decoration-color: var(--fg); }
+  /* Titulares de cartel de obra: mayúscula condensada, interlineado muy cerrado */
+  .prose h2 { text-transform: uppercase; font-size: clamp(3rem, 1.9rem + 4.2vw, 5.8rem); line-height: .88; max-width: 13ch; }
+  .prose h2 .n { display: block; width: fit-content; padding: .32rem .5rem .28rem; margin-bottom: 1.1rem; background: var(--accent); color: var(--on-accent); font: 600 .78rem/1 var(--f-code); }
+  .prose h3 { text-transform: uppercase; font-size: clamp(1.7rem, 1.4rem + 1vw, 2.3rem); letter-spacing: .005em; }
+  .prose li::marker { color: var(--fg); }
+  .callout.criterio { --c: var(--fg); background: color-mix(in oklab, var(--accent) 42%, var(--bg-2)); }
+  .callout.criterio .t { color: var(--fg); }
+  .quiz .q { font: 650 var(--step-1)/1.3 var(--f-body); letter-spacing: -0.012em; }
+  .reto { border-color: var(--fg); }
+  .recap h2 { text-transform: uppercase; }
+
+  /* ---- Portada: la composición se monta al hacer scroll ---- */
+  .hero.obra { height: 260vh; height: 260svh; min-height: 0; background: var(--bg); color: var(--fg); }
+  .obra-stage { position: sticky; top: 0; overflow: clip; height: 100vh; height: 100svh; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+  .board { --g: clamp(.7rem, 1.6vw, 1.5rem); --rows: 8; position: relative; margin: 5.4rem var(--gutter) 1.4rem;
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), minmax(0, 1fr)); column-gap: var(--g); }
+  /* Filas: líneas finas cada 1/8 de la altura */
+  .board::before { content: ""; grid-area: 1 / 1 / -1 / -1; pointer-events: none; border-bottom: 1px solid var(--ink-line);
+    background: linear-gradient(var(--ink-line) 1px, transparent 1px) 0 0 / 100% calc(100% / var(--rows)); margin-inline: calc(var(--g) / -2); transition: opacity .4s; }
+  .col { grid-row: 1 / -1; position: relative; border-inline: 1px solid var(--ink-line); background: color-mix(in oklab, var(--fg) 3.5%, transparent); transition: background-color .35s, opacity .5s; }
+  .col::before { content: attr(data-n); position: absolute; top: -1.45rem; left: 0; font: 500 .68rem/1 var(--f-code); color: var(--muted); }
+  .col.hot { background: color-mix(in oklab, var(--accent) 45%, transparent); }
+  .obra.done .col:not(.hot) { background: transparent; }
+
+  /* Huecos de destino: rectángulo discontinuo con su cota */
+  .ghost { position: relative; z-index: 1; border: 1.5px dashed color-mix(in oklab, var(--fg) 70%, transparent); opacity: .45; transition: opacity .3s; pointer-events: none; }
+  .ghost[data-s="move"] { opacity: 1; border-color: var(--fg); }
+  .ghost[data-s="set"] { opacity: 0; }
+  .ghost span { position: absolute; left: -1.5px; top: -1.5px; padding: .2rem .4rem; background: var(--fg); color: var(--bg); font: 500 .66rem/1.2 var(--f-code); white-space: nowrap; }
+
+  /* Las piezas: --e va de 0 (fuera) a 1 (encajada); cada una llega desde su lado */
+  .pz { position: relative; z-index: 2; min-width: 0; min-height: 0;
+    translate: calc(var(--dx, 0px) * (1 - var(--e, 1))) calc(var(--dy, 0px) * (1 - var(--e, 1)));
+    rotate: calc(var(--r, 0deg) * (1 - var(--e, 1))); }
+  .pz::after { content: attr(data-span); position: absolute; right: 0; bottom: 0; translate: 0 100%; padding: .2rem .4rem; background: var(--accent); color: var(--on-accent); font: 500 .66rem/1.2 var(--f-code); opacity: 0; transition: opacity .3s; white-space: nowrap; }
+  .obra:not(.no-grid) .pz[data-set]::after { opacity: 1; }
+
+  [data-a="title"] { grid-area: 1 / 1 / 5 / 8; } .pz-title { z-index: 4; align-self: start; animation: obra-in 1.1s var(--ease-out) both; }
+  .pz-title::after { display: none; }
+  @keyframes obra-in { from { translate: -24vw 0; rotate: -4deg; opacity: 0; } }
+  .pz-title [data-kicker] { margin: 0 0 1.5rem; font: 600 var(--step--1)/1 var(--f-ui); }
+  .hero h1 { margin: 0; padding-top: .12em; font-size: clamp(4.2rem, 0.6rem + 8.6vw, 10.6rem); line-height: .8; letter-spacing: -0.01em; text-transform: uppercase; max-width: 9ch; }
+  [data-a="photo"] { grid-area: 1 / 6 / 7 / 13; } .pz-photo { margin: 0; z-index: 2; --dx: 60vw; --dy: -8vh; --r: 7deg; }
+  .pz-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: grayscale(1) contrast(1.12) brightness(1.06); }
+  [data-a="panel"] { grid-area: 3 / 9 / 9 / 13; } [data-a="panel"] { margin-right: calc(-1 * var(--gutter)); } .pz-panel { z-index: 1; background: var(--accent); --dx: 18vw; --dy: 38vh; --r: -6deg; }
+  .pz-panel::after { right: auto; left: 0; bottom: auto; top: 0; translate: 0 -100%; }
+  [data-a="fig"] { grid-area: 6 / 5 / 9 / 8; } .pz-fig { z-index: 3; display: grid; align-content: space-between; padding: clamp(.8rem, 1.4vw, 1.2rem); background: var(--fg); color: var(--bg); --dx: -10vw; --dy: 18vh; --r: -10deg; }
+  .pz-fig b { font: 800 clamp(5rem, 2rem + 6.5vw, 9.5rem)/.78 var(--f-display); color: var(--accent); letter-spacing: -0.02em; }
+  .pz-fig b .m { display: none; }
+  .pz-fig > span { font: 500 var(--step--1)/1.3 var(--f-ui); max-width: 18ch; }
+  [data-a="lede"] { grid-area: 6 / 1 / 9 / 5; } .pz-lede { align-self: end; margin: 0; font: 450 var(--step-1)/1.35 var(--f-ui); letter-spacing: -0.01em; max-width: 26ch; --dx: 0px; --dy: 30vh; --r: 0deg; }
+  [data-a="note"] { grid-area: 7 / 9 / 9 / 13; } .pz-note { z-index: 3; align-self: end; margin: 0 0 clamp(.6rem, 1.2vw, 1rem); padding-inline: clamp(.6rem, 1.2vw, 1rem); font: 500 .74rem/1.55 var(--f-code); --dx: 8vw; --dy: 40vh; --r: 8deg; }
+  .pz-note b { display: block; font: 800 1.6rem/1 var(--f-display); text-transform: uppercase; margin-bottom: .4rem; }
+
+  .obra-bar { position: relative; z-index: 6; background: var(--bg); display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 1.4rem; padding: .9rem var(--gutter) 1.1rem; border-top: 1px solid var(--fg); font: 500 var(--step--1)/1.25 var(--f-ui); }
+  .obra-bar .btn { background: var(--fg); color: var(--bg); border-color: var(--fg); min-height: 44px; }
+  .obra-bar .btn[aria-pressed="false"] { background: transparent; color: var(--fg); }
+  .obra-bar [data-count] { font: 600 .8rem/1 var(--f-code); padding: .45rem .6rem; background: var(--accent); }
+  .obra-bar .hint { color: var(--muted); }
+  .obra-bar .chip { margin-left: auto; }
+
+  /* Retícula oculta */
+  .obra.no-grid .col, .obra.no-grid .board::before, .obra.no-grid .ghost { opacity: 0; }
+
+  @media (max-width: 760px) {
+    .board { --rows: 11; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 4.9rem; margin-bottom: 1rem; }
+    .col:nth-child(n+5) { display: none; }
+    [data-a="title"] { grid-area: 1 / 1 / 4 / 5; } .pz-title { }
+    .hero h1 { font-size: clamp(3.4rem, 1rem + 12vw, 5rem); max-width: none; }
+    [data-a="lede"] { grid-area: 10 / 1 / 12 / 5; } .pz-lede { align-self: end; font-size: .98rem; line-height: 1.38; max-width: none; }
+    [data-a="photo"] { grid-area: 4 / 2 / 8 / 5; } [data-a="photo"] { margin-right: calc(-1 * var(--gutter)); }
+    [data-a="panel"] { grid-area: 5 / 3 / 10 / 5; } .pz-panel { --dy: 22vh; }
+    [data-a="fig"] { grid-area: 6 / 1 / 9 / 3; } .pz-fig { }
+    .pz-fig b .d { display: none; } .pz-fig b .m { display: inline; }
+    .pz-fig > span { font-size: .78rem; }
+    [data-a="note"] { grid-area: 8 / 3 / 10 / 5; } .pz-note { --dx: 40vw; --dy: 10vh; padding-inline: .5rem; font-size: .66rem; line-height: 1.45; }
+    .pz-note b { font-size: 1.25rem; }
+    .obra-bar { gap: .55rem .8rem; padding-block: .7rem .9rem; }
+    .obra-bar .hint { flex-basis: 100%; order: 3; font-size: .8rem; }
+  }
+  /* Movimiento reducido: la composición ya está montada y la portada no se fija */
+  .obra.static { height: auto; }
+  .obra.static .obra-stage { position: relative; }
+  .obra.static .ghost { display: none; }
+
+  /* ---- Banda de afirmación: cartel negro con cinta de obra ---- */
+  .band.sign { --band-bg: var(--fg); --band-fg: var(--bg); position: relative; }
+  .band.sign::before { content: ""; position: absolute; inset: 0 0 auto; height: 12px; background: repeating-linear-gradient(-45deg, var(--accent) 0 14px, var(--fg) 14px 28px); }
+  .band.sign p { margin: 0; font: 800 clamp(3rem, 1.4rem + 6vw, 7.4rem)/.86 var(--f-display); text-transform: uppercase; color: var(--accent); max-width: 15ch; }
+
+  /* ---- 12 → 4: la retícula plegada ---- */
+  .fold { display: grid; grid-template-columns: 2fr 1fr; gap: clamp(1rem, 3vw, 2.5rem); margin-block: 3rem; }
+  .fold figure { margin: 0; display: grid; grid-template-rows: auto 1fr auto; gap: .8rem; }
+  .fold b { font: 800 clamp(4.5rem, 2rem + 7vw, 9rem)/.8 var(--f-display); }
+  .fold .cols-demo { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: var(--gp); height: clamp(9rem, 18vw, 13rem); padding-inline: var(--mg); background: var(--bg-2); border: 1px solid var(--fg); }
+  .fold .cols-demo i { background: color-mix(in oklab, var(--accent) 70%, transparent); border-inline: 1px solid color-mix(in oklab, var(--fg) 30%, transparent); }
+  .fold figcaption { font: 500 .8rem/1.45 var(--f-code); color: var(--muted); }
+  @media (max-width: 640px) { .fold { grid-template-columns: 1fr; } }
+
+  /* ---- Capas en explosión axonométrica ---- */
+  .split.capas { align-items: start; }
+  .axo { position: relative; height: 26rem; perspective: 1600px; overflow: clip; display: grid; place-items: center; }
+  .axo .stack { position: relative; width: min(19rem, 70%); aspect-ratio: 1; transform-style: preserve-3d; transform: rotateX(56deg) rotateZ(-38deg); }
+  .axo .lyr { position: absolute; transform-style: preserve-3d; }
+  /* Las etiquetas van dibujadas sobre cada plano, como en un plano de verdad */
+  .axo .lyr span { position: absolute; left: 6%; top: 6%; white-space: nowrap; font: 600 .78rem/1.2 var(--f-code); background: var(--fg); color: var(--bg); padding: .25rem .45rem; }
+  .axo .l0 span { left: auto; top: auto; right: 6%; bottom: 8%; }
+  .axo .l0 { inset: 22% 0 0 22%; background: var(--accent); transform: translateZ(0); }
+  .axo .l1 { inset: 0 22% 22% 0; transform: translateZ(80px); background: url("../landing/media/balcones.webp") center / cover; filter: grayscale(1) contrast(1.1); box-shadow: 0 0 0 1px var(--fg); }
+  .axo .l2 { inset: 52% 4% 4% 32%; transform: translateZ(160px); background: var(--bg-2); box-shadow: 0 0 0 1px var(--fg); }
+  .axo .l2::before { content: ""; position: absolute; inset: 42% 14% auto; height: 10%; background: var(--fg); box-shadow: 0 1.6em 0 -.1em var(--faint), 0 2.8em 0 -.1em var(--faint); }
+  .axo .floor { position: absolute; inset: -8%; border: 1px dashed var(--ink-line); background: linear-gradient(90deg, var(--ink-line) 1px, transparent 1px) 0 0 / 10% 10%, linear-gradient(var(--ink-line) 1px, transparent 1px) 0 0 / 10% 10%; transform: translateZ(-30px); }
+  .axo figcaption { position: absolute; bottom: 0; left: 0; font: 500 .78rem/1.4 var(--f-code); color: var(--muted); max-width: 30ch; }
+  @media (max-width: 760px) { .axo { height: 22rem; } }
+
+  /* ---- Catálogo de plantas: seis composiciones en miniatura ---- */
+  .plans { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; margin-block: 2.6rem 1rem; background: var(--fg); border: 1px solid var(--fg); list-style: none; padding: 0 !important; }
+  .plans li { margin: 0; padding: .9rem .9rem 1rem; background: var(--bg-2); display: grid; gap: .7rem; }
+  .plans .mini { aspect-ratio: 4 / 3; display: grid; gap: 4px; }
+  .plans .mini i { background: var(--fg); }
+  .plans .mini i.a { background: var(--accent); outline: 1px solid var(--fg); outline-offset: -1px; }
+  .plans small { font: 600 .72rem/1 var(--f-code); color: var(--muted); }
+  .plans b { font: 800 1.35rem/1 var(--f-display); text-transform: uppercase; }
+  .m-cards { grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr; } .m-cards i { height: 60%; align-self: center; border-radius: 3px; }
+  .m-lista { grid-template-rows: repeat(4, 1fr); } .m-lista i { height: 2px; align-self: end; } .m-lista i.a { height: 30%; align-self: center; outline: 0; }
+  .m-split { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); } .m-split i:first-child { grid-row: 1 / 3; } .m-split i:not(:first-child) { height: 40%; }
+  .m-offset { grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(6, 1fr); } .m-offset i:nth-child(1) { grid-area: 1 / 1 / 4 / 8; } .m-offset i:nth-child(2) { grid-area: 2 / 9 / 6 / 13; } .m-offset i:nth-child(3) { grid-area: 4 / 2 / 7 / 6; } .m-offset i:nth-child(4) { grid-area: 5 / 7 / 7 / 9; }
+  .m-tira { grid-template-columns: repeat(4, 42%); grid-template-rows: 1fr; overflow: hidden; } .m-tira i { height: 80%; align-self: center; }
+  .m-frase { grid-template-rows: repeat(3, 1fr); align-content: center; } .m-frase i { height: 40%; align-self: center; } .m-frase i:nth-child(2) { width: 80%; } .m-frase i:nth-child(3) { width: 55%; }
+  @media (max-width: 900px) {
+    .plans { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 46%; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+    .plans li { scroll-snap-align: start; }
+  }
+
+  /* ---- Banda técnica para la tabla de plegado ---- */
+  .band.plano { --band-bg: var(--bg-2); background-image: linear-gradient(90deg, var(--ink-line) 1px, transparent 1px), linear-gradient(var(--ink-line) 1px, transparent 1px); background-size: 24px 24px; border-block: 1px solid var(--fg); }
+  .band.plano .table-wrap { margin: 0; border-color: var(--fg); background: var(--bg); }
+  .band.plano th { background: var(--fg); color: var(--bg); }
+</style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="composicion">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Más allá de las cards</h1>
-    <p class="lede">Retículas editoriales, capas que se solapan, recorridos con sticky, índices y tiras horizontales: las estructuras que hacen que una web parezca diseñada y no montada con piezas.</p>
+  <header class="hero obra" aria-labelledby="t">
+    <div class="obra-stage">
+      <div class="board">
+        <i class="col" style="grid-column:1" data-n="01" aria-hidden="true"></i><i class="col" style="grid-column:2" data-n="02" aria-hidden="true"></i><i class="col" style="grid-column:3" data-n="03" aria-hidden="true"></i><i class="col" style="grid-column:4" data-n="04" aria-hidden="true"></i>
+        <i class="col" style="grid-column:5" data-n="05" aria-hidden="true"></i><i class="col" style="grid-column:6" data-n="06" aria-hidden="true"></i><i class="col" style="grid-column:7" data-n="07" aria-hidden="true"></i><i class="col" style="grid-column:8" data-n="08" aria-hidden="true"></i>
+        <i class="col" style="grid-column:9" data-n="09" aria-hidden="true"></i><i class="col" style="grid-column:10" data-n="10" aria-hidden="true"></i><i class="col" style="grid-column:11" data-n="11" aria-hidden="true"></i><i class="col" style="grid-column:12" data-n="12" aria-hidden="true"></i>
+
+        <i class="ghost" data-a="photo" aria-hidden="true"><span></span></i>
+        <i class="ghost" data-a="panel" aria-hidden="true"><span></span></i>
+        <i class="ghost" data-a="fig" aria-hidden="true"><span></span></i>
+        <i class="ghost" data-a="lede" aria-hidden="true"><span></span></i>
+        <i class="ghost" data-a="note" aria-hidden="true"><span></span></i>
+
+        <div class="pz pz-title" data-a="title">
+          <p data-kicker>Lección 04</p>
+          <h1 id="t">Más allá de las cards</h1>
+        </div>
+        <figure class="pz pz-photo" data-a="photo" data-win="-.2 .3"><img src="../landing/frames/desk/0050.webp" alt="La torre sobre el agua, en blanco y negro" width="1280" height="720"></figure>
+        <div class="pz pz-panel" data-a="panel" data-win="0 .4" aria-hidden="true"></div>
+        <div class="pz pz-fig" data-a="fig" data-win=".22 .58"><b><span class="d">12</span><span class="m">4</span></b><span>columnas para ordenar y una sola ruptura para crear tensión</span></div>
+        <p class="pz pz-lede lede" data-a="lede" data-win=".4 .7">Retículas editoriales, capas que se solapan, recorridos con sticky, índices y tiras horizontales: las estructuras que hacen que una web parezca diseñada y no montada con piezas.</p>
+        <p class="pz pz-note" data-a="note" data-win=".55 .85"><b>Lámina 04</b>Placa amarilla a sangre por la derecha. Foto sobre la placa, cifra sobre la foto: tres capas, una retícula.</p>
+      </div>
+      <div class="obra-bar">
+        <button class="btn grid-btn" type="button" aria-pressed="true">Ocultar retícula</button>
+        <span data-count aria-live="polite">0 de 5 piezas</span>
+        <span class="hint" data-hint>Desliza para montar la composición</span>
+        <span class="chip" data-meta>20 min</span>
+      </div>
+    </div>
   </header>
 
   <div class="lesson">
     <article class="prose">
 
-      <p>Cuando todo es una card, nada es importante. La caja con sombra, radio de 12 px y padding de 24 px es la respuesta por defecto de Bootstrap, de Tailwind UI y de cualquier plantilla de WordPress. No está mal: es neutra. Y lo neutro es justo lo contrario de lo que transmiten la landing de «mesa» o la web de la torre.</p>
+      <div class="band sign"><div class="inner"><p>Cuando todo es una card, nada es importante.</p></div></div>
+
+      <p>La caja con sombra, radio de 12 px y padding de 24 px es la respuesta por defecto de Bootstrap, de Tailwind UI y de cualquier plantilla de WordPress. No está mal: es neutra. Y lo neutro es justo lo contrario de lo que transmiten la landing de «mesa» o la web de la torre.</p>
       <p>Esas webs no tienen más efectos, tienen más <strong>composición</strong>: una retícula clara, elementos que rompen esa retícula a propósito, cambios bruscos de escala y piezas que se apoyan unas sobre otras. En esta lección aprendes esas estructuras en CSS puro y, para cada una, en qué se convierte en el móvil.</p>
 
       <h2>La retícula editorial de 12 columnas</h2>
@@ -133,6 +324,19 @@
         <p class="why">Si una línea con nombre no existe, Grid inventa líneas implícitas con ese nombre al final de la retícula. El resultado típico es un scroll horizontal fantasma en el móvil. Cada vez que cambies el número de columnas, revisa todos los <code>col N</code>.</p>
       </div>
 
+      <div class="fold wide" role="img" aria-label="La misma retícula: doce columnas en escritorio y cuatro en el móvil">
+        <figure>
+          <b>12</b>
+          <div class="cols-demo" style="--n:12; --gp:6px; --mg:18px"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <figcaption>Escritorio: columnas de 64 px como máximo, medianil de 24 px y márgenes elásticos que se comen el sobrante.</figcaption>
+        </figure>
+        <figure>
+          <b>4</b>
+          <div class="cols-demo" style="--n:4; --gp:6px; --mg:8px"><i></i><i></i><i></i><i></i></div>
+          <figcaption>Móvil: cuatro columnas fluidas y márgenes fijos de 16 a 20 px.</figcaption>
+        </figure>
+      </div>
+
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>Doce columnas en 360 px son columnas de 14 px: inútiles. Baja a <strong>4 columnas con márgenes fijos de 16–20 px</strong> y convierte casi todos los <code>span</code> en <code>content</code>. Conserva una sola ruptura (una imagen que llega al borde por un lado): es lo que hace que el móvil no parezca una columna de Word.</p>
       </div>
@@ -220,10 +424,23 @@
         <figcaption>Las tres capas viven en la misma retícula de 10×10: la foto ocupa de la celda 1 a la 8, el panel de la 3 a la 10 y la tarjeta se ancla abajo a la derecha. El solape sale de que las áreas se pisan; el orden lo decide <code>z-index</code>, que en Grid funciona sin <code>position</code>.</figcaption>
       </figure>
 
-      <p>¿Por qué no usar <code>position: absolute</code>? Porque con Grid las capas <strong>siguen ocupando espacio</strong>. El contenedor mide lo que mide su contenido, la tarjeta no tapa el texto de debajo si crece y el conjunto responde a la anchura sin números mágicos. Con <code>absolute</code> tendrías que reservar altura a mano y parchear cada breakpoint.</p>
-
-      <div class="callout criterio"><span class="t">Criterio</span>
-        <p>El desplazamiento tiene que ser <strong>claramente intencionado</strong>: entre un 15 y un 25 % del tamaño de la foto. Un panel desplazado 8 px parece un error de maquetación; uno desplazado medio ancho parece otro elemento. Y una sola capa de color: si además la tarjeta es naranja, el truco se pierde.</p>
+      <div class="split capas">
+        <div>
+          <p>¿Por qué no usar <code>position: absolute</code>? Porque con Grid las capas <strong>siguen ocupando espacio</strong>. El contenedor mide lo que mide su contenido, la tarjeta no tapa el texto de debajo si crece y el conjunto responde a la anchura sin números mágicos. Con <code>absolute</code> tendrías que reservar altura a mano y parchear cada breakpoint.</p>
+          <p>Mira el hero desmontado: tres planos apilados sobre la misma retícula de 10 × 10. Cada uno ocupa sus celdas, y el orden de apilado lo decide solo <code>z-index</code>.</p>
+          <div class="callout criterio"><span class="t">Criterio</span>
+            <p>El desplazamiento tiene que ser <strong>claramente intencionado</strong>: entre un 15 y un 25 % del tamaño de la foto. Un panel desplazado 8 px parece un error de maquetación; uno desplazado medio ancho parece otro elemento. Y una sola capa de color: si además la tarjeta es naranja, el truco se pierde.</p>
+          </div>
+        </div>
+        <figure class="stick axo" aria-label="Las tres capas del hero separadas en altura: panel, foto y tarjeta">
+          <div class="stack">
+            <div class="floor"></div>
+            <div class="lyr l0"><span>panel, z 0</span></div>
+            <div class="lyr l1"><span>foto, z 1</span></div>
+            <div class="lyr l2"><span>tarjeta, z 2</span></div>
+          </div>
+          <figcaption>Misma retícula, celdas que se pisan. Sin <code>position: absolute</code>.</figcaption>
+        </figure>
       </div>
 
       <div class="callout movil"><span class="t">En el móvil</span>
@@ -306,6 +523,8 @@
       <div class="callout ojo"><span class="t">Ojo</span>
         <p>Si sticky «no funciona», casi siempre es por una de estas tres cosas: un antepasado con <code>overflow: hidden</code> o <code>auto</code> (crea otro contenedor de scroll), olvidar <code>top</code>, o que el elemento mida lo mismo que su contenedor y no tenga recorrido. En Grid, además, la columna se estira: por eso aquí la altura la marca el propio <code>.media</code>.</p>
       </div>
+
+      <p class="statement">Una frase enorme y nada más funciona como un silencio en una canción.</p>
 
       <p>Entre capítulos, las webs premium meten <strong>secciones de declaración</strong>: una frase enorme, tres cifras gigantes y nada más. Funcionan como un silencio en una canción. Detrás, una <strong>tira horizontal</strong> con <code>scroll-snap</code> para lo que sí es una colección.</p>
 
@@ -472,6 +691,15 @@
 
       <h2>El mismo contenido, seis composiciones</h2>
       <p>Esta es la demo más importante de la lección. Cuatro servicios de la torre, exactamente el mismo HTML, y seis maneras de componerlos. Cambia entre ellas, mira qué transmite cada una y lee debajo de los botones en qué se convierte en el móvil.</p>
+
+      <ol class="plans wide" aria-label="Las seis composiciones en planta">
+        <li><div class="mini m-cards" aria-hidden="true"><i></i><i></i><i></i><i></i></div><small>01</small><b>Cards</b></li>
+        <li><div class="mini m-lista" aria-hidden="true"><i></i><i class="a"></i><i></i><i></i></div><small>02</small><b>Lista editorial</b></li>
+        <li><div class="mini m-split" aria-hidden="true"><i class="a"></i><i></i><i></i></div><small>03</small><b>Split sticky</b></li>
+        <li><div class="mini m-offset" aria-hidden="true"><i class="a"></i><i></i><i></i><i></i></div><small>04</small><b>Retícula desplazada</b></li>
+        <li><div class="mini m-tira" aria-hidden="true"><i class="a"></i><i></i><i></i><i></i></div><small>05</small><b>Tira horizontal</b></li>
+        <li><div class="mini m-frase" aria-hidden="true"><i></i><i></i><i></i></div><small>06</small><b>Declaración</b></li>
+      </ol>
 
       <figure class="lab" data-title="Seis composiciones, un solo HTML" data-hint="Cambia de composición" data-height="560" data-height-mobile="680" data-stage="dark">
         <script type="text/x-demo" data-lang="html">
@@ -673,6 +901,7 @@
       <h2>Cómo se pliega cada estructura en el móvil</h2>
       <p>Diseñar en móvil no es «poner todo en una columna». Cada estructura tiene su versión plegada y hay que decidirla, no dejar que la decida el navegador.</p>
 
+      <div class="band plano"><div class="inner">
       <div class="table-wrap">
         <table>
           <thead><tr><th>Estructura</th><th>En el móvil</th><th>Trampa típica</th></tr></thead>
@@ -686,6 +915,7 @@
           </tbody>
         </table>
       </div>
+      </div></div>
 
       <h3>Orden de apilado: el HTML manda</h3>
       <p>En el móvil se lee en el orden del HTML. Escribe el HTML en el orden en que quieres que se lea en el móvil y recoloca en escritorio con <code>grid-template-areas</code>. No uses <code>order</code> para mover contenido importante: el lector de pantalla y el tabulador siguen el HTML, no lo que ves.</p>
@@ -754,5 +984,69 @@
     </article>
   </div>
 </main>
+<script>
+  // Portada: cada pieza tiene su tramo de scroll (data-win) y llega desde fuera hasta su celda.
+  (() => {
+    const hero = document.querySelector('.hero.obra');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pieces = [...hero.querySelectorAll('.pz[data-win]')];
+    const cols = [...hero.querySelectorAll('.col')];
+    const ghosts = Object.fromEntries([...hero.querySelectorAll('.ghost')].map((g) => [g.dataset.a, g]));
+    const count = hero.querySelector('[data-count]'), hint = hero.querySelector('[data-hint]');
+    const btn = hero.querySelector('.grid-btn');
+    let spans = [];
+
+    btn.addEventListener('click', () => {
+      const hidden = hero.classList.toggle('no-grid');
+      btn.setAttribute('aria-pressed', String(!hidden));
+      btn.textContent = hidden ? 'Ver retícula' : 'Ocultar retícula';
+    });
+
+    // Cotas: se leen de la propia retícula, así cambian solas entre 12 y 4 columnas
+    function measure() {
+      spans = pieces.map((el) => {
+        const cs = getComputedStyle(el), a = +cs.gridColumnStart, b = +cs.gridColumnEnd - 1;
+        const ra = +cs.gridRowStart, rb = +cs.gridRowEnd - 1;
+        const label = `col ${a}–${b}`;
+        el.dataset.span = label;
+        ghosts[el.dataset.a].firstElementChild.textContent = `${label}, fila ${ra}–${rb}`;
+        return [a, b];
+      });
+    }
+
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    let ticking = false, last = '';
+    function update() {
+      ticking = false;
+      const r = hero.getBoundingClientRect();
+      const p = reduce ? 1 : Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+      let done = 0; const hot = new Set();
+      pieces.forEach((el, i) => {
+        const [a, b] = el.dataset.win.split(' ').map(Number);
+        const t = Math.min(1, Math.max(0, (p - a) / (b - a)));
+        el.style.setProperty('--e', ease(t).toFixed(4));
+        const s = t >= 1 ? 'set' : t > 0 ? 'move' : 'wait';
+        ghosts[el.dataset.a].dataset.s = s;
+        el.toggleAttribute('data-set', s === 'set');
+        if (s === 'move') for (let c = spans[i][0]; c <= spans[i][1]; c++) hot.add(c);
+        if (s === 'set') done++;
+      });
+      cols.forEach((c, i) => c.classList.toggle('hot', hot.has(i + 1)));
+      hero.classList.toggle('done', done === pieces.length);
+      const txt = `${done} de ${pieces.length} piezas`;
+      if (txt !== last) {
+        last = txt; count.textContent = txt;
+        hint.textContent = done === pieces.length ? 'Composición montada. Oculta la retícula: el orden se sigue notando.'
+          : done ? 'Cada pieza encaja en las columnas que se iluminan.' : 'Desliza para montar la composición';
+      }
+    }
+    const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+
+    if (reduce) hero.classList.add('static');
+    measure(); update();
+    addEventListener('resize', () => { measure(); req(); });
+    if (!reduce) addEventListener('scroll', req, { passive: true });
+  })();
+</script>
 </body>
 </html>

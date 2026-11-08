@@ -10,7 +10,7 @@ items = []
 for f in sorted((root / 'lecciones').glob('*.html')):
     src = f.read_text(encoding='utf-8')
     lesson = re.search(r'data-lesson="([^"]+)"', src).group(1)
-    title = html.unescape(re.search(r'<h1>(.*?)</h1>', src, re.S).group(1)).strip()
+    title = html.unescape(re.search(r'<title>(.*?)</title>', src, re.S).group(1)).split('|')[0].strip()
     # sección (h2) en la que está cada bloque
     for m in re.finditer(r'<script type="text/x-code"([^>]*)>(.*?)</script>', src, re.S):
         attrs, code = m.group(1), m.group(2)

@@ -9,50 +9,98 @@
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 <style>
-  /* Vista previa de la landing en escritorio y en teléfono */
-  .preview { display: grid; grid-template-columns: 1fr 250px; gap: 1.2rem; align-items: end; margin: 2.4rem 0; }
-  .preview .desk, .preview .phone { position: relative; border-radius: 14px; overflow: hidden; background: var(--deep); box-shadow: 0 0 0 1px var(--line-2), 0 30px 60px -30px oklch(5% 0.03 285 / .9); }
-  .preview .desk { aspect-ratio: 16 / 10; }
-  .preview .phone { aspect-ratio: 9 / 19.5; border-radius: 28px; box-shadow: 0 0 0 7px var(--night-3), 0 30px 60px -30px oklch(5% 0.03 285 / .9); }
-  .preview iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; }
-  .preview .desk iframe { width: 1440px; height: 900px; }
-  .preview .phone iframe { width: 390px; height: 845px; }
-  .preview figcaption { grid-column: 1 / -1; font-family: var(--f-display); font-size: var(--step--1); color: var(--muted); display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; }
-  @media (max-width: 760px) { .preview { grid-template-columns: 1fr; } .preview .desk { display: none; } .preview .phone { width: min(300px, 100%); justify-self: center; } }
+  /* Identidad: la de Vésper, la landing que se desmonta aquí */
+  :root {
+    --bg: oklch(17% 0.05 292);
+    --bg-2: oklch(22% 0.055 294);
+    --bg-3: oklch(27% 0.06 295);
+    --fg: oklch(95% 0.016 78);
+    --muted: oklch(80% 0.025 78);
+    --faint: oklch(66% 0.03 78);
+    --accent: oklch(80% 0.13 68);
+    --on-accent: oklch(17% 0.05 292);
+    --code-bg: oklch(13% 0.035 292);
+    --scheme: dark;
+    --f-display: "Instrument Serif", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 400;
+    --display-tracking: -0.015em;
+  }
+  .prose h2 { font-size: var(--step-5); line-height: .92; }
+
+  /* ---- Portada: la landing funcionando, en escritorio y en teléfono, sobre la torre ---- */
+  .hero { display: grid; grid-template-columns: 0.9fr 1.1fr; align-items: center; gap: clamp(1.5rem, 4vw, 4rem); padding: 6rem var(--gutter) 3rem;
+    background: linear-gradient(90deg, var(--bg) 25%, oklch(17% 0.05 292 / .55) 60%, oklch(17% 0.05 292 / .2)), center right / cover no-repeat url("../landing/media/torre-plantas.webp"); }
+  .hero [data-kicker] { font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); margin: 0 0 1.2rem; }
+  .hero h1 { font-size: clamp(3.6rem, 1.6rem + 7vw, 8.6rem); line-height: .86; font-weight: 400; letter-spacing: -0.02em; }
+  .hero h1 em { color: var(--accent); }
+  .hero .lede { font-size: var(--step-1); line-height: 1.4; color: var(--muted); max-width: 32ch; margin: 1.6rem 0 1.8rem; }
+  .hero .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; }
+  .devices { position: relative; height: min(72vh, 640px); }
+  .devices .desk, .devices .phone { position: absolute; overflow: hidden; background: #000; }
+  .devices .desk { left: 0; top: 6%; width: 86%; aspect-ratio: 16 / 10; border-radius: 12px; box-shadow: 0 0 0 1px oklch(100% 0 0 / .14), 0 40px 80px -30px oklch(5% 0.03 285); }
+  .devices .phone { right: 0; bottom: 0; width: 26%; aspect-ratio: 9 / 19.5; border-radius: 26px; box-shadow: 0 0 0 6px oklch(12% 0.03 290), 0 0 0 7px oklch(100% 0 0 / .18), 0 40px 70px -20px oklch(5% 0.03 285); }
+  .devices iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; max-width: none; }
+  .devices .desk iframe { width: 1440px; height: 900px; }
+  .devices .phone iframe { width: 390px; height: 845px; }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding-top: 5.5rem; background: linear-gradient(180deg, var(--bg) 30%, oklch(17% 0.05 292 / .5)), center / cover no-repeat url("../landing/media/torre-plantas-mob.webp"); }
+    .devices { height: auto; display: grid; justify-items: center; }
+    .devices .desk { display: none; }
+    .devices .phone { position: relative; width: min(62vw, 260px); right: auto; }
+  }
+
+  /* ---- Mapa de la web como índice editorial ---- */
+  .map { list-style: none; margin: 2rem 0; padding: 0; border-top: 1px solid var(--fg); }
+  .map li { display: grid; grid-template-columns: 12rem 1fr 7rem; gap: .4rem 1.5rem; padding: 1.3rem 0; border-bottom: 1px solid var(--line-2); align-items: baseline; }
+  .map b { font: 400 var(--step-2)/1.05 var(--f-display); }
+  .map p { margin: 0; color: var(--muted); font-size: var(--step--1); }
+  .map p strong { color: var(--fg); font-weight: 600; }
+  .map .l { font: 500 var(--step--1)/1.4 var(--f-ui); text-align: right; }
+  @media (max-width: 760px) { .map li { grid-template-columns: 1fr; } .map .l { text-align: left; } }
+
+  /* ---- Banda de móvil ---- */
+  .band.mobile { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.mobile .table-wrap { border-color: oklch(17% 0.05 292 / .2); }
+  .band.mobile th { background: oklch(17% 0.05 292 / .06); color: oklch(17% 0.05 292 / .7); }
+  .band.mobile td, .band.mobile th { border-color: oklch(17% 0.05 292 / .14); }
+  .band.mobile h2 { margin-top: 0 !important; }
+  .band.mobile p { max-width: var(--measure); }
+  .band.mobile .callout { background: oklch(17% 0.05 292 / .06); }
+  .band.mobile .callout .t { color: oklch(40% 0.08 200); }
 </style>
 </head>
 <body data-lesson="proyecto">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Proyecto final: la torre</h1>
-    <p class="lede">Vésper es la landing que junta todo el cuaderno. Aquí la desmontas sección a sección: qué técnica hay, dónde está el código y qué decisiones cambian en el móvil.</p>
+  <header class="hero" aria-labelledby="t">
+    <div>
+      <p data-kicker>Lección 13</p>
+      <h1 id="t">Proyecto final: <em>la torre</em></h1>
+      <p class="lede">Vésper junta todo el cuaderno. Aquí la tienes funcionando en escritorio y en teléfono; abajo, desmontada pieza a pieza.</p>
+      <div class="actions"><a class="btn primary" href="../landing/index.html">Abrir la landing</a><span class="chip" data-meta>30 min</span></div>
+    </div>
+    <div class="devices" aria-label="Vista previa de la landing">
+      <div class="desk"><iframe src="../landing/index.html" title="Landing Vésper en escritorio" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="phone"><iframe src="../landing/index.html" title="Landing Vésper en móvil" loading="lazy" tabindex="-1"></iframe></div>
+    </div>
   </header>
 
   <div class="lesson">
     <article class="prose">
 
-      <figure class="preview">
-        <div class="desk"><iframe src="../landing/index.html" title="Landing Vésper en escritorio" loading="lazy" tabindex="-1"></iframe></div>
-        <div class="phone"><iframe src="../landing/index.html" title="Landing Vésper en móvil" loading="lazy" tabindex="-1"></iframe></div>
-        <figcaption><a class="btn primary" href="../landing/index.html">Abrir la landing a pantalla completa</a> Las dos vistas previas son la misma página a 1440 y a 390 px de ancho. Puedes hacer scroll dentro.</figcaption>
-      </figure>
+
 
       <p>Vésper es una torre ficticia de treinta plantas frente al mar. La web tiene seis secciones y cada una usa técnicas de una o varias lecciones. Ninguna es complicada por separado: lo difícil, y lo que la hace parecer cara, es que todas comparten paleta, tipografía y ritmo.</p>
 
       <h2>Mapa de la web</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Sección</th><th>Qué hace</th><th>Técnicas</th><th>Lecciones</th></tr></thead>
-          <tbody>
-            <tr><td>Llegada</td><td>La cámara vuela del agua a la planta 18 al hacer scroll</td><td>Secuencia de 120 fotogramas en canvas, <code>sticky</code>, timeline de GSAP con <code>scrub</code>, SplitText, Lenis</td><td><a href="09-secuencias.html">09</a>, <a href="08-gsap.html">08</a>, <a href="03-tipografia.html">03</a></td></tr>
-            <tr><td>Elige tu planta</td><td>Pasas por la torre y se ilumina cada planta con su contador</td><td>SVG <code>viewBox="0 0 1 1"</code> sobre <code>&lt;picture&gt;</code>, números tabulares, teclado</td><td><a href="10-interaccion.html">10</a>, <a href="03-tipografia.html">03</a></td></tr>
-            <tr><td>La residencia</td><td>Maqueta 3D: tocas una estancia y la cámara se acerca</td><td>Three.js cargado bajo demanda, View Transition al llegar desde una planta</td><td><a href="10-interaccion.html">10</a>, <a href="07-view-transitions.html">07</a></td></tr>
-            <tr><td>Vida en Vésper</td><td>La imagen fija cambia según el texto que lees</td><td>Split con <code>sticky</code>, IntersectionObserver, fundidos</td><td><a href="04-composicion.html">04</a>, <a href="05-movimiento.html">05</a></td></tr>
-            <tr><td>Manifiesto</td><td>La frase se «enciende» en ámbar al bajar</td><td><code>animation-timeline: view()</code> con <code>background-clip: text</code></td><td><a href="06-scroll-css.html">06</a></td></tr>
-            <tr><td>Visita privada</td><td>Formulario de una columna</td><td>Campos de 16 px, mensajes de error útiles</td><td><a href="12-rendimiento.html">12</a></td></tr>
-          </tbody>
-        </table>
-      </div>
+      <ol class="map">
+        <li><b>Llegada</b><p><strong>La cámara vuela del agua a la planta 18.</strong> Secuencia de 120 fotogramas en canvas, <code>sticky</code>, timeline de GSAP con <code>scrub</code>, SplitText y Lenis.</p><span class="l"><a href="09-secuencias.html">09</a>, <a href="08-gsap.html">08</a>, <a href="03-tipografia.html">03</a></span></li>
+        <li><b>Elige tu planta</b><p><strong>Pasas por la torre y se ilumina cada planta.</strong> SVG con <code>viewBox="0 0 1 1"</code> sobre <code>&lt;picture&gt;</code>, contador con cifras tabulares y teclado.</p><span class="l"><a href="10-interaccion.html">10</a>, <a href="03-tipografia.html">03</a></span></li>
+        <li><b>La residencia</b><p><strong>Maqueta 3D: tocas una estancia y la cámara se acerca.</strong> Three.js cargado bajo demanda y View Transition al llegar desde una planta.</p><span class="l"><a href="10-interaccion.html">10</a>, <a href="07-view-transitions.html">07</a></span></li>
+        <li><b>Vida en Vésper</b><p><strong>La imagen fija cambia según el texto que lees.</strong> Split con <code>sticky</code>, IntersectionObserver y fundidos.</p><span class="l"><a href="04-composicion.html">04</a>, <a href="05-movimiento.html">05</a></span></li>
+        <li><b>Manifiesto</b><p><strong>La frase se enciende en ámbar al bajar.</strong> <code>animation-timeline: view()</code> con <code>background-clip: text</code>.</p><span class="l"><a href="06-scroll-css.html">06</a></span></li>
+        <li><b>Visita privada</b><p><strong>Formulario de una columna.</strong> Campos de 16 px y mensajes de error útiles.</p><span class="l"><a href="12-rendimiento.html">12</a></span></li>
+      </ol>
 
       <script type="text/x-code" data-lang="txt" data-label="Archivos de la landing">
         landing/
@@ -186,6 +234,7 @@
         <p class="why">La regla que resume las lecciones 09 y 10: pre-renderiza lo que solo se mira y deja en tiempo real lo que se toca.</p>
       </div>
 
+      <section class="band mobile"><div class="inner">
       <h2>Qué cambia en el móvil</h2>
       <p>Esta tabla es la parte más importante del proyecto. Una web de scroll cinematográfico que simplemente «se encoge» en el móvil se siente rota; una que toma decisiones distintas se siente hecha para el teléfono.</p>
 
@@ -207,6 +256,8 @@
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>Prueba la landing en tu teléfono de verdad, no solo en el simulador de DevTools. Fíjate en tres cosas: si la imagen salta al aparecer o desaparecer la barra del navegador, si el pulgar llega cómodo a los botones principales (mitad inferior de la pantalla) y si el scroll de la llegada se hace largo. Si se hace largo, baja la altura de la sección antes de quitar fotogramas.</p>
       </div>
+
+      </div></section>
 
       <h2>Tu versión, paso a paso</h2>
       <ol>
@@ -239,7 +290,7 @@
 <script>
   // Escala las vistas previas para que la página de 1440 o 390 px quepa en su marco
   function fit() {
-    document.querySelectorAll('.preview .desk, .preview .phone').forEach((box) => {
+    document.querySelectorAll('.devices .desk, .devices .phone').forEach((box) => {
       const f = box.querySelector('iframe');
       const s = box.clientWidth / parseFloat(getComputedStyle(f).width);
       f.style.transform = `scale(${s})`;

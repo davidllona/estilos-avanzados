@@ -7,28 +7,232 @@
 <meta name="description" content="Cómo hacer que una web de scroll cinematográfico vaya fluida en un móvil de gama media y respete a quien no puede con el movimiento: pipeline de render, memoria, imágenes, medición, reduced motion, foco y contraste.">
 <link rel="stylesheet" href="../assets/css/base.css">
 <style>
+  /* Identidad de la lección: telemetría.
+     Blanco clínico, grafito y un verde señal. El rojo solo aparece cuando algo va mal.
+     Inter Tight 850 muy apretada para titulares, JetBrains Mono para los datos. */
+  :root {
+    --bg: oklch(98.5% 0.003 250);
+    --bg-2: oklch(96% 0.005 250);
+    --bg-3: oklch(92.5% 0.007 250);
+    --fg: oklch(22% 0.01 250);
+    --muted: oklch(44% 0.012 250);
+    --faint: oklch(52% 0.012 250);
+    --accent: oklch(62% 0.17 150);
+    --on-accent: oklch(22% 0.01 250);
+    --code-bg: oklch(21% 0.012 250);
+    --scheme: light;
+    --f-display: "Inter Tight", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --f-data: "JetBrains Mono", ui-monospace, monospace;
+    --display-weight: 850;
+    --display-tracking: -0.055em;
+    --signal-ink: oklch(48% 0.14 150);
+    --alert: oklch(60% 0.2 25);
+    --alert-ink: oklch(52% 0.2 25);
+  }
+  body { font-size: clamp(1.02rem, 0.98rem + 0.2vw, 1.12rem); line-height: 1.62; }
+  .prose h2 { font-size: clamp(2.4rem, 1.4rem + 3.6vw, 4.8rem); line-height: .9; letter-spacing: -0.06em; max-width: 14ch; }
+  .prose h2 .n { font-family: var(--f-data); font-weight: 500; letter-spacing: 0; color: var(--signal-ink); }
+  .prose h2 .n::after { content: " / 07"; color: var(--faint); }
+  .prose h3 { font-weight: 800; letter-spacing: -0.045em; }
+  .prose li::marker { color: var(--signal-ink); }
+  .callout.criterio { --c: var(--signal-ink); }
+  .quiz .q { font-weight: 750; letter-spacing: -0.035em; }
   /* Bloques de texto plano: se parten en líneas en vez de desbordar */
   .prose .code pre:not(:has(.token)) { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  /* ---------- Portada: panel de telemetría en vivo ---------- */
+  .hero { display: grid; grid-template-columns: 1.08fr .92fr; grid-template-rows: 1fr auto; column-gap: clamp(1.5rem, 4vw, 4rem);
+    min-height: max(640px, 100svh); padding: 5.2rem var(--gutter) 0; background: var(--bg); color: var(--fg); }
+  .hero-copy { align-self: center; padding-bottom: 1.6rem; }
+  .hero-copy [data-kicker] { margin: 0 0 1.4rem; font: 500 var(--step--1)/1 var(--f-data); color: var(--signal-ink); }
+  .hero h1 { font-size: clamp(2.7rem, 0.6rem + 5.6vw, 6.3rem); font-weight: 850; line-height: .86; letter-spacing: -0.052em; margin: 0 0 1.5rem; }
+  .hero h1 span { display: block; }
+  .hero .lede { margin: 0 0 1.6rem; font-size: var(--step-1); line-height: 1.4; color: var(--muted); max-width: 32ch; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+  .load { font: 700 var(--step-0)/1 var(--f-ui); letter-spacing: -0.02em; padding: .95rem 1.5rem; min-height: 52px; border-radius: 999px; border: 0; cursor: pointer;
+    background: var(--fg); color: var(--bg); transition: background-color .2s, transform .2s; }
+  .load:hover { background: var(--signal-ink); }
+  .load:active { transform: scale(.97); }
+  .load[aria-busy="true"] { background: var(--alert); color: #fff; cursor: progress; }
+  .actions .chip { font-family: var(--f-data); }
+
+  .panel { align-self: center; padding-bottom: 1.6rem; display: grid; gap: 1.2rem; font-family: var(--f-data); }
+  .fps { display: flex; align-items: flex-end; gap: 1.2rem; border-bottom: 2px solid var(--fg); padding-bottom: .8rem; }
+  .fps b { font: 700 clamp(5.4rem, 3rem + 7vw, 10.5rem)/.8 var(--f-data); letter-spacing: -0.07em; color: var(--signal-ink); font-variant-numeric: tabular-nums; min-width: 2.1ch; transition: color .3s; }
+  .fps span { display: grid; gap: .3rem; padding-bottom: .3rem; }
+  .fps i { font: 700 var(--step-1)/1 var(--f-ui); font-style: normal; letter-spacing: -0.03em; color: var(--fg); }
+  .fps small { font-size: 12px; line-height: 1.35; color: var(--muted); max-width: 22ch; }
+  .bad .fps b { color: var(--alert-ink); }
+  .bad .fps i { color: var(--alert-ink); }
+  .budget-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: .45rem; }
+  .budget-head b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .budget-bar { position: relative; height: 18px; background: var(--bg-3); }
+  .budget-bar i { position: absolute; inset: 0 auto 0 0; width: var(--w, 33%); background: var(--accent); }
+  .budget-bar.over i { background: linear-gradient(90deg, var(--accent) 0 var(--ok, 100%), var(--alert) var(--ok, 100%)); }
+  .budget-bar s { position: absolute; top: -5px; bottom: -5px; left: 33.4%; width: 2px; background: var(--fg); }
+  .budget-bar em { position: absolute; left: 33.4%; top: calc(100% + 6px); translate: -50% 0; font: 500 11px/1 var(--f-data); font-style: normal; color: var(--muted); }
+  .stats { margin: .6rem 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--line-2); }
+  .stats div { padding: .7rem .8rem .2rem 0; }
+  .stats div + div { padding-left: .8rem; border-left: 1px solid var(--line-2); }
+  .stats dt { font-size: 11px; line-height: 1.3; color: var(--muted); }
+  .stats dd { margin: .3rem 0 0; font: 600 var(--step-2)/1 var(--f-data); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .stats dd.alert { color: var(--alert-ink); }
+  .lanes { display: grid; gap: .5rem; }
+  .lane { display: grid; grid-template-columns: 11.5rem 1fr; align-items: center; gap: .8rem; font-size: 11.5px; color: var(--muted); }
+  .rail { position: relative; height: 22px; border-bottom: 1px solid var(--line-2); container-type: inline-size; }
+  .dot { position: absolute; left: 0; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--fg); }
+  .dot.css { background: var(--accent); animation: slide 1.2s ease-in-out infinite alternate; }
+  @keyframes slide { to { transform: translateX(calc(100cqw - 14px)); } }
+
+  .scope { grid-column: 1 / -1; position: relative; margin: 0 calc(-1 * var(--gutter)); border-top: 1px solid var(--fg); background: var(--bg-2); }
+  .scope canvas { width: 100%; height: clamp(120px, 19vh, 190px); }
+  .scope .tick { position: absolute; right: var(--gutter); font: 500 11px/1 var(--f-data); color: var(--muted); background: var(--bg-2); padding: 2px 4px; translate: 0 -50%; }
+  .scope .log { position: absolute; left: var(--gutter); top: .7rem; margin: 0; font: 500 12px/1.3 var(--f-data); color: var(--fg); background: var(--bg-2); padding: 2px 6px 2px 0; }
+  .scope .log.alert { color: var(--alert-ink); }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto 1fr auto; padding-top: 4.6rem; min-height: 0; height: 100svh; min-height: 680px; }
+    .hero-copy { align-self: start; padding-bottom: .4rem; display: contents; }
+    .hero-copy [data-kicker] { margin-bottom: .8rem; }
+    .hero h1 { font-size: clamp(2.5rem, 12vw, 3.4rem); margin-bottom: .7rem; }
+    .hero .lede { font-size: .98rem; margin-bottom: .9rem; max-width: 40ch; }
+    .actions { order: 10; grid-row: 6; padding: .9rem 0 max(1rem, env(safe-area-inset-bottom)); }
+    .load { flex: 1; }
+    .panel { align-self: start; gap: .8rem; padding-bottom: .8rem; }
+    .fps { gap: .8rem; padding-bottom: .5rem; }
+    .fps b { font-size: 4.6rem; }
+    .fps i { font-size: 1.1rem; }
+    .stats dd { font-size: 1.3rem; }
+    .lane { grid-template-columns: 8.6rem 1fr; font-size: 10.5px; }
+    .scope { grid-row: 5; align-self: end; }
+    .scope canvas { height: 96px; }
+    .scope .log { font-size: 11px; }
+  }
+
+  /* ---------- Banda oscura ---------- */
+  .band.claim { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.claim p { margin: 0; font: 850 clamp(2rem, 1rem + 3.8vw, 4.6rem)/.92 var(--f-display); letter-spacing: -0.06em; max-width: 19ch; }
+  .band.claim p em { font-style: normal; color: var(--accent); }
+  .band.claim small { display: block; margin-top: 1.8rem; font: 500 var(--step--1)/1.5 var(--f-data); color: oklch(78% 0.01 250); max-width: 60ch; }
+
+  /* ---------- Hoja de cifras ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--fg); margin: 3rem 0; }
+  .kpis div { padding: 1.1rem 1rem 1.3rem 0; border-bottom: 1px solid var(--line-2); }
+  .kpis div:not(:nth-child(4n + 1)) { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+  .kpis b { display: block; font: 850 clamp(2.4rem, 1.4rem + 3vw, 4.4rem)/.9 var(--f-display); letter-spacing: -0.065em; font-variant-numeric: tabular-nums; }
+  .kpis b small { font: 500 .3em/1 var(--f-data); letter-spacing: 0; margin-left: .2em; color: var(--muted); }
+  .kpis span { display: block; margin-top: .6rem; font: 500 12px/1.35 var(--f-data); color: var(--muted); }
+  .kpis div:first-child b { color: var(--signal-ink); }
+  @media (max-width: 760px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .kpis div:not(:nth-child(4n + 1)) { padding-left: 0; border-left: 0; }
+    .kpis div:nth-child(even) { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+  }
+
+  /* ---------- Cadena de un fotograma ---------- */
+  .pipe { margin: 2.6rem 0 1rem; display: grid; grid-template-columns: minmax(10rem, 1.1fr) repeat(4, 1fr); font-family: var(--f-data); font-size: 12px; }
+  .pipe > * { padding: .7rem .7rem; border-bottom: 1px solid var(--line-2); }
+  .pipe .h { font-weight: 600; color: var(--muted); border-bottom: 2px solid var(--fg); }
+  .pipe .p { font-size: 13px; line-height: 1.35; }
+  .pipe .p code { font-size: 12px; }
+  .pipe .c { display: grid; align-content: center; gap: .35rem; color: var(--faint); }
+  .pipe .c::before { content: ""; height: 26px; background: var(--bg-3); }
+  .pipe .c.on { color: var(--fg); }
+  .pipe .c.on::before { background: var(--fg); }
+  .pipe .c.go { color: var(--signal-ink); }
+  .pipe .c.go::before { background: var(--accent); }
+  .pipe-note { font: 500 12px/1.5 var(--f-data); color: var(--muted); margin: 0 0 2rem; }
+  @media (max-width: 640px) {
+    .pipe { grid-template-columns: repeat(4, 1fr); }
+    .pipe .h:first-child { display: none; }
+    .pipe .p { grid-column: 1 / -1; border-bottom: 0; padding: 1rem 0 .3rem; }
+    .pipe > * { padding-inline: .3rem; }
+    .pipe .c { font-size: 10.5px; }
+  }
+
+  /* ---------- Constantes vitales de esta página, en vivo ---------- */
+  .vitals { margin: 0; display: grid; gap: 0; border-top: 2px solid var(--fg); }
+  .vital { padding: 1rem 0 1.1rem; border-bottom: 1px solid var(--line-2); }
+  .vital header { display: flex; justify-content: space-between; align-items: baseline; font: 600 12px/1.2 var(--f-data); color: var(--muted); }
+  .vital header b { color: var(--fg); font-size: 13px; }
+  .vital output { display: block; margin: .3rem 0 .6rem; font: 850 clamp(2.6rem, 1.8rem + 2vw, 3.6rem)/1 var(--f-display); letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
+  .vital output.good { color: var(--signal-ink); } .vital output.poor { color: var(--alert-ink); }
+  .vital output.na { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; color: var(--faint); }
+  .vital .scale { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; height: 6px; }
+  .vital .scale i { background: var(--bg-3); } .vital .scale i:first-child { background: var(--accent); } .vital .scale i:last-child { background: color-mix(in oklab, var(--alert) 45%, var(--bg-3)); }
+  .vital .scale s { position: absolute; top: -5px; width: 3px; height: 16px; left: var(--x, 0%); background: var(--fg); transition: left .4s var(--ease-out); }
+  .vital .scale s[hidden] { display: none; }
+  .vital p { margin: .6rem 0 0; font: 500 11.5px/1.45 var(--f-data); color: var(--muted); }
+  .vitals figcaption { padding-top: .9rem; font: 500 12px/1.5 var(--f-data); color: var(--muted); }
+  .split > div > :first-child { margin-top: 0; }
+
+  .statement { font-size: clamp(2rem, 1.2rem + 3vw, 4rem); letter-spacing: -0.06em; line-height: .95; }
+  .statement em { font-style: normal; color: var(--signal-ink); }
 </style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="rendimiento">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Rendimiento y accesibilidad del movimiento</h1>
-    <p class="lede">Una web espectacular que va a tirones en un Android de 250 euros, o que marea a quien tiene activado «reducir movimiento», no es espectacular: está rota. Aquí aprendes a medirlo y a arreglarlo.</p>
+  <header class="hero" aria-labelledby="t" data-tele>
+    <div class="hero-copy">
+      <p data-kicker>Lección 12</p>
+      <h1 id="t"><span>Rendimiento</span> <span>y accesibilidad</span> <span>del movimiento</span></h1>
+      <p class="lede">Este panel mide tu navegador ahora mismo. Pulsa «Cargar la página» y mira qué le pasa a cada fotograma cuando el hilo principal se atasca.</p>
+      <div class="actions"><button class="load" type="button" data-load>Cargar la página</button><span class="chip" data-meta>15 min</span></div>
+    </div>
+    <div class="panel" role="group" aria-label="Telemetría de esta pestaña, en vivo">
+      <div class="fps"><b data-fps>60</b><span><i data-state>Fluido</i><small>fotogramas por segundo, medidos en tu navegador</small></span></div>
+      <div class="budget">
+        <div class="budget-head"><span>Último fotograma frente al presupuesto</span><b data-ms>16,7 ms</b></div>
+        <div class="budget-bar" data-bar><i></i><s></s><em>16,7 ms</em></div>
+      </div>
+      <dl class="stats">
+        <div><dt>Peor fotograma</dt><dd data-worst>0 ms</dd></div>
+        <div><dt>Fotogramas perdidos</dt><dd data-dropped>0</dd></div>
+        <div><dt>Tareas largas</dt><dd data-long>0</dd></div>
+      </dl>
+      <div class="lanes" aria-hidden="true">
+        <div class="lane"><span>compositor: transform</span><div class="rail"><i class="dot css"></i></div></div>
+        <div class="lane"><span>hilo principal: left</span><div class="rail"><i class="dot" data-jsdot></i></div></div>
+      </div>
+    </div>
+    <div class="scope">
+      <canvas data-graph aria-hidden="true"></canvas>
+      <span class="tick" data-tick="16.7">16,7 ms</span><span class="tick" data-tick="33.3">33,3 ms</span>
+      <p class="log" data-log aria-live="polite">Una barra por fotograma desde que abriste la página.</p>
+    </div>
   </header>
 
   <div class="lesson">
     <article class="prose">
 
       <p>En tu portátil todo va a 60 fps. El problema es que la mayoría de la gente verá la web de la torre en un móvil con un procesador cuatro o seis veces más lento, por datos móviles y con una mano. Y una parte de esa gente tiene trastornos vestibulares: un zoom de cámara enorme les provoca mareo de verdad.</p>
-      <p>Las dos cosas se resuelven con el mismo hábito: saber qué le cuesta cada efecto al navegador y al usuario, y tener siempre una versión más ligera.</p>
+      <p>Las dos cosas se resuelven con el mismo hábito: saber qué le cuesta cada efecto al navegador y al usuario, y tener siempre una versión más ligera. Estas son las cifras que vas a manejar en toda la lección:</p>
+
+      <div class="kpis wide">
+        <div><b>16,7<small>ms</small></b><span>por fotograma a 60 Hz</span></div>
+        <div><b>8,3<small>ms</small></b><span>a 120 Hz</span></div>
+        <div><b>×4<small>bytes</small></b><span>por píxel decodificado</span></div>
+        <div><b>44<small>px</small></b><span>objetivo táctil mínimo</span></div>
+        <div><b>2,5<small>s</small></b><span>LCP bueno</span></div>
+        <div><b>200<small>ms</small></b><span>INP bueno</span></div>
+        <div><b>0,1</b><span>CLS bueno</span></div>
+        <div><b>4,5<small>:1</small></b><span>contraste del texto normal</span></div>
+      </div>
 
       <h2>El camino de un fotograma</h2>
       <p>Para pintar cada fotograma, el navegador recorre una cadena: <strong>estilo</strong> (qué reglas aplican), <strong>layout</strong> (dónde va cada caja y cuánto mide), <strong>paint</strong> (rellenar píxeles) y <strong>composite</strong> (la GPU junta las capas ya pintadas). A 60 Hz tienes 16,7 ms para todo; en pantallas de 120 Hz, la mitad.</p>
       <p>La clave: si animas <code>top</code>, <code>left</code> o <code>width</code>, cada fotograma repite layout y paint en el hilo principal. Si animas <code>transform</code> u <code>opacity</code> de un elemento en su propia capa, el navegador solo recompone, y eso lo puede hacer el compositor aunque el hilo principal esté ocupado.</p>
+
+      <figure class="pipe wide" aria-label="Qué pasos de la cadena repite el navegador según la propiedad que animas">
+        <span class="h">Animas</span><span class="h">Estilo</span><span class="h">Layout</span><span class="h">Paint</span><span class="h">Composite</span>
+        <span class="p"><code>top</code>, <code>left</code>, <code>width</code></span><span class="c on">recalcula</span><span class="c on">recoloca</span><span class="c on">repinta</span><span class="c on">junta capas</span>
+        <span class="p"><code>transform</code>, <code>opacity</code></span><span class="c">no</span><span class="c">no</span><span class="c">no</span><span class="c go">junta capas</span>
+      </figure>
+      <p class="pipe-note">Con el elemento ya en su propia capa. El compositor puede hacer el último paso aunque el hilo principal esté ocupado: por eso en la portada el punto verde no se inmuta cuando cargas la página.</p>
 
       <figure class="lab" data-title="Mismo movimiento, distinto coste" data-hint="Activa la página pesada" data-height="440" data-stage="dark">
         <script type="text/x-demo" data-lang="html">
@@ -112,6 +316,8 @@
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>Los móviles tienen menos memoria de GPU y pantallas con mucha densidad: una capa de pantalla completa pesa más que en el portátil. Evita <code>backdrop-filter: blur()</code> grandes encima de un canvas que cambia en cada fotograma: obliga a recalcular el desenfoque continuamente. En <code>@media (pointer: coarse)</code>, sustitúyelo por un fondo semiopaco.</p>
       </div>
+
+      <div class="band claim"><div class="inner"><p>Una web que va a tirones <em>no es espectacular:</em> está rota.</p><small>Una web espectacular que va a tirones en un Android de 250 euros, o que marea a quien tiene activado «reducir movimiento», no es espectacular: está rota. Aquí aprendes a medirlo y a arreglarlo.</small></div></div>
 
       <h2>Menos trabajo: contain y content-visibility</h2>
       <p><code>contain</code> le promete al navegador que lo que pasa dentro de un elemento no afecta al resto: si cambia, solo hace falta recalcular esa caja. <code>content-visibility: auto</code> va más allá: las secciones fuera de pantalla no se maquetan ni se pintan hasta que te acercas a ellas.</p>
@@ -377,19 +583,29 @@
       </div>
 
       <h2>Medir en un móvil de verdad</h2>
-      <p>Lo que no mides, lo adivinas. El flujo básico con Chrome DevTools:</p>
-      <ol>
-        <li>Abre la web en una ventana de incógnito (sin extensiones que ensucien la medición).</li>
-        <li>Panel <strong>Performance</strong>. En la rueda de ajustes, <strong>CPU: 4x o 6x slowdown</strong>. Las versiones recientes de DevTools también permiten calibrar presets de móvil de gama baja y media en Ajustes, Throttling.</li>
-        <li>Pulsa grabar, haz scroll por el vuelo y la planta, toca un hotspot y para.</li>
-        <li>Busca fotogramas rojos en la fila <em>Frames</em>, tareas largas (con esquina roja) y bloques morados de <em>Layout</em> o verdes de <em>Paint</em> durante el scroll.</li>
-        <li>En la pestaña <strong>Rendering</strong> activa <em>Paint flashing</em> (resalta lo que se repinta) y <em>Layer borders</em> (muestra las capas).</li>
-      </ol>
-      <p>El throttling es una aproximación. Para la verdad, conecta el teléfono:</p>
-      <ul>
-        <li><strong>Android</strong>: activa las opciones de desarrollador y la depuración USB, conecta el móvil al ordenador y abre <code>chrome://inspect#devices</code> en Chrome de escritorio. Verás las pestañas del móvil e inspeccionas con DevTools completas, incluido Performance.</li>
-        <li><strong>iPhone</strong>: en el teléfono, Ajustes, Safari (en iOS 18 o posterior, Ajustes, Apps, Safari), Avanzado, activa <em>Inspector web</em>. En el Mac, Safari, Ajustes, Avanzado, «Mostrar funciones para desarrolladores web». Conecta el iPhone y, en el menú Desarrollo, elige el teléfono y la pestaña.</li>
-      </ul>
+      <div class="split">
+        <div>
+        <p>Lo que no mides, lo adivinas. El flujo básico con Chrome DevTools:</p>
+        <ol>
+          <li>Abre la web en una ventana de incógnito (sin extensiones que ensucien la medición).</li>
+          <li>Panel <strong>Performance</strong>. En la rueda de ajustes, <strong>CPU: 4x o 6x slowdown</strong>. Las versiones recientes de DevTools también permiten calibrar presets de móvil de gama baja y media en Ajustes, Throttling.</li>
+          <li>Pulsa grabar, haz scroll por el vuelo y la planta, toca un hotspot y para.</li>
+          <li>Busca fotogramas rojos en la fila <em>Frames</em>, tareas largas (con esquina roja) y bloques morados de <em>Layout</em> o verdes de <em>Paint</em> durante el scroll.</li>
+          <li>En la pestaña <strong>Rendering</strong> activa <em>Paint flashing</em> (resalta lo que se repinta) y <em>Layer borders</em> (muestra las capas).</li>
+        </ol>
+        <p>El throttling es una aproximación. Para la verdad, conecta el teléfono:</p>
+        <ul>
+          <li><strong>Android</strong>: activa las opciones de desarrollador y la depuración USB, conecta el móvil al ordenador y abre <code>chrome://inspect#devices</code> en Chrome de escritorio. Verás las pestañas del móvil e inspeccionas con DevTools completas, incluido Performance.</li>
+          <li><strong>iPhone</strong>: en el teléfono, Ajustes, Safari (en iOS 18 o posterior, Ajustes, Apps, Safari), Avanzado, activa <em>Inspector web</em>. En el Mac, Safari, Ajustes, Avanzado, «Mostrar funciones para desarrolladores web». Conecta el iPhone y, en el menú Desarrollo, elige el teléfono y la pestaña.</li>
+        </ul>
+        </div>
+        <figure class="stick vitals" data-vitals aria-label="Core Web Vitals de esta página, medidas en tu navegador">
+          <div class="vital" data-v="lcp"><header><b>LCP</b><span>bien ≤ 2,5 s</span></header><output>…</output><div class="scale"><i></i><i></i><i></i><s hidden></s></div><p>Lo más grande de la primera pantalla: aquí, el titular.</p></div>
+          <div class="vital" data-v="inp"><header><b>INP</b><span>bien ≤ 200 ms</span></header><output>…</output><div class="scale"><i></i><i></i><i></i><s hidden></s></div><p>Toca cualquier botón de la página. Prueba «Cargar la página» arriba y vuelve.</p></div>
+          <div class="vital" data-v="cls"><header><b>CLS</b><span>bien ≤ 0,1</span></header><output>…</output><div class="scale"><i></i><i></i><i></i><s hidden></s></div><p>Suma de saltos de maquetación desde que abriste la página.</p></div>
+          <figcaption>Esta misma página, medida ahora con <code>PerformanceObserver</code>. Es un dato de laboratorio de una sola visita, no el percentil 75 de campo.</figcaption>
+        </figure>
+      </div>
 
       <h3>Core Web Vitals en una web animada</h3>
       <div class="table-wrap"><table>
@@ -408,6 +624,8 @@
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>Graba siempre con CPU 6x para simular un Android de gama media y repite la grabación en un teléfono real por <code>chrome://inspect</code>. En el iPhone, el Inspector web de Safari tiene su propia línea de tiempo (pestaña Timelines): compara que el scroll del pin no dispare Layout en cada fotograma.</p>
       </div>
+
+      <p class="statement">Reducir movimiento no es quitar la experiencia. <em>Es cambiar el viaje por un fundido.</em></p>
 
       <h2>Movimiento que respeta al usuario</h2>
       <p>Hay personas a las que el movimiento de pantalla grande (zooms, parallax, giros de cámara) les provoca mareo, náuseas o migraña: son los trastornos vestibulares. Para ellas existe el ajuste del sistema «reducir movimiento», que la web lee con <code>prefers-reduced-motion</code>. Respetarlo bien no es quitar la experiencia: es <strong>cambiar el movimiento espacial por fundidos</strong>.</p>
@@ -693,5 +911,140 @@
     </article>
   </div>
 </main>
+<script>
+  // Portada: telemetría real de esta pestaña. requestAnimationFrame mide cuánto dura cada fotograma;
+  // «Cargar la página» bloquea el hilo principal unos segundos, como harían la decodificación y el JS.
+  (() => {
+    const hero = document.querySelector('[data-tele]');
+    const $ = (s) => hero.querySelector(s);
+    const fpsEl = $('[data-fps]'), stateEl = $('[data-state]'), msEl = $('[data-ms]'), bar = $('[data-bar]');
+    const worstEl = $('[data-worst]'), dropEl = $('[data-dropped]'), longEl = $('[data-long]');
+    const logEl = $('[data-log]'), btn = $('[data-load]'), jsdot = $('[data-jsdot]'), cv = $('[data-graph]'), ctx = cv.getContext('2d');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fmt = (v, d = 1) => v.toFixed(d).replace('.', ',');
+    const times = [];                  // duración de los últimos fotogramas
+    let last = 0, acc = 0, n = 0, worst = 0, dropped = 0, longs = 0, running = false, visible = true, lastPaint = 0;
+    let load = null;                   // { start, phase }
+    const PHASES = [
+      { until: 900,  block: [55, 95],  msg: 'Decodificando 120 WebP en el hilo principal' },
+      { until: 1900, block: [110, 160], msg: 'Hidratando el JavaScript de la página' },
+      { until: 2700, block: [38, 52],  msg: 'ScrollTrigger.refresh(): layout forzado' },
+      { until: 3500, block: [22, 30],  msg: 'Pintando 600 filas de golpe' },
+    ];
+
+    function size() {
+      const d = Math.min(devicePixelRatio || 1, 2);
+      cv.width = Math.round(cv.clientWidth * d); cv.height = Math.round(cv.clientHeight * d);
+      ctx.setTransform(d, 0, 0, d, 0, 0);
+      hero.querySelectorAll('[data-tick]').forEach((t) => (t.style.top = cv.offsetTop + cv.clientHeight * (1 - +t.dataset.tick / 60) + 'px'));
+      draw();
+    }
+    const css = (v) => getComputedStyle(hero).getPropertyValue(v).trim();
+    function draw() {
+      const w = cv.clientWidth, h = cv.clientHeight, bw = w > 700 ? 3 : 2, max = Math.floor(w / bw);
+      ctx.clearRect(0, 0, w, h);
+      // Guías del presupuesto: 16,7 ms (60 Hz) y 33,3 ms (30 Hz)
+      ctx.fillStyle = css('--fg');
+      [16.7, 33.3].forEach((ms) => { const y = Math.round(h * (1 - ms / 60)) + 0.5; for (let x = 0; x < w; x += 6) ctx.fillRect(x, y, 3, 1); });
+      const ok = css('--accent'), bad = css('--alert');
+      const list = times.slice(-max);
+      list.forEach((t, i) => {
+        const bh = Math.max(2, Math.min(h, (t / 60) * h));
+        ctx.fillStyle = t > 18 ? bad : ok;
+        ctx.fillRect(w - (list.length - i) * bw, h - bh, bw - 1, bh);
+      });
+    }
+
+    function frame(now) {
+      if (!running) return;
+      const dt = last ? now - last : 16.7;
+      last = now;
+      // La «carga»: trabajo síncrono que no deja respirar al navegador
+      if (load) {
+        const t = now - load.start, ph = PHASES.find((p) => t < p.until);
+        if (ph) {
+          if (ph !== load.phase) { load.phase = ph; logEl.textContent = ph.msg; logEl.classList.add('alert'); }
+          const end = performance.now() + ph.block[0] + Math.random() * (ph.block[1] - ph.block[0]);
+          while (performance.now() < end) {}
+        } else {
+          load = null; btn.removeAttribute('aria-busy'); btn.textContent = 'Cargar otra vez';
+          logEl.textContent = 'Listo. Cada barra roja fue un tirón que el usuario notó.'; logEl.classList.remove('alert');
+        }
+      }
+      if (dt < 1000) {
+        times.push(dt); if (times.length > 600) times.shift();
+        if (dt > 18) dropped += Math.max(1, Math.round(dt / 16.7) - 1);
+        if (dt > worst) worst = dt;
+        if (!('PerformanceObserver' in window) && dt > 50) longs++;
+      }
+      acc += dt; n++;
+      if (acc >= 500) {
+        const fps = Math.min(240, Math.round((1000 * n) / acc));
+        fpsEl.textContent = fps;
+        const bad = fps < 45;
+        hero.classList.toggle('bad', bad);
+        stateEl.textContent = fps >= 55 ? 'Fluido' : bad ? 'Tirones' : 'Justo';
+        acc = 0; n = 0;
+      }
+      // Barra del presupuesto: la escala llega a 50 ms; 16,7 ms está al 33,4 %
+      msEl.textContent = fmt(dt) + ' ms';
+      bar.style.setProperty('--w', Math.min(100, (dt / 50) * 100) + '%');
+      bar.style.setProperty('--ok', Math.min(100, (16.7 / dt) * 100) + '%');
+      bar.classList.toggle('over', dt > 17.5);
+      worstEl.textContent = Math.round(worst) + ' ms'; worstEl.classList.toggle('alert', worst > 50);
+      dropEl.textContent = dropped; dropEl.classList.toggle('alert', dropped > 30);
+      longEl.textContent = longs; longEl.classList.toggle('alert', longs > 0);
+      // El punto del hilo principal: se mueve con JS, así que solo avanza cuando hay fotograma
+      if (!reduce) {
+        const rail = jsdot.parentElement.clientWidth - 14, ph = (now % 2400) / 1200, k = ph < 1 ? ph : 2 - ph;
+        jsdot.style.transform = `translateX(${((1 - Math.cos(Math.PI * k)) / 2) * rail}px)`;
+      }
+      // Con movimiento reducido el gráfico se redibuja cuatro veces por segundo, sin fluir
+      if (!reduce || now - lastPaint > 250) { draw(); lastPaint = now; }
+      requestAnimationFrame(frame);
+    }
+    function start() { if (running || !visible) return; running = true; last = 0; requestAnimationFrame(frame); }
+    function stop() { running = false; }
+
+    if ('PerformanceObserver' in window && PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
+      new PerformanceObserver((l) => { longs += l.getEntries().length; }).observe({ type: 'longtask' });
+    }
+    btn.addEventListener('click', () => {
+      if (load) return;
+      worst = 0; dropped = 0; longs = 0;
+      btn.setAttribute('aria-busy', 'true'); btn.textContent = 'Cargando…';
+      // Dejamos pintar el estado del botón antes de bloquear
+      requestAnimationFrame(() => setTimeout(() => { load = { start: performance.now(), phase: null }; }, 30));
+    });
+    // Solo medimos mientras la portada está a la vista: no gastamos batería por debajo
+    new IntersectionObserver((e) => { visible = e[0].isIntersecting; visible ? start() : stop(); }).observe(hero);
+    addEventListener('resize', size);
+    size(); start();
+  })();
+
+  // Core Web Vitals de esta página, medidas en vivo
+  (() => {
+    const box = document.querySelector('[data-vitals]');
+    if (!box || !('PerformanceObserver' in window)) return;
+    const types = PerformanceObserver.supportedEntryTypes || [];
+    const LIM = { lcp: [2500, 4000, 6000], inp: [200, 500, 800], cls: [0.1, 0.25, 0.4] };
+    function show(k, v) {
+      const el = box.querySelector(`[data-v="${k}"]`), out = el.querySelector('output'), s = el.querySelector('s');
+      const [good, poor, max] = LIM[k];
+      out.textContent = k === 'lcp' ? (v / 1000).toFixed(2).replace('.', ',') + ' s' : k === 'inp' ? Math.round(v) + ' ms' : v.toFixed(3).replace('.', ',');
+      out.className = v <= good ? 'good' : v > poor ? 'poor' : '';
+      // Tres tramos iguales: bien, mejorable, mal
+      const x = v <= good ? (v / good) / 3 : v <= poor ? 1 / 3 + ((v - good) / (poor - good)) / 3 : 2 / 3 + Math.min(1, (v - poor) / (max - poor)) / 3;
+      s.hidden = false; s.style.setProperty('--x', `calc(${(x * 100).toFixed(1)}% - 1.5px)`);
+    }
+    function na(k, msg) { const o = box.querySelector(`[data-v="${k}"] output`); o.textContent = msg; o.className = 'na'; }
+    if (types.includes('largest-contentful-paint')) new PerformanceObserver((l) => { const e = l.getEntries().at(-1); if (e) show('lcp', e.startTime); }).observe({ type: 'largest-contentful-paint', buffered: true });
+    else na('lcp', 'No disponible en este navegador');
+    if (types.includes('layout-shift')) { let cls = 0; show('cls', 0); new PerformanceObserver((l) => { l.getEntries().forEach((e) => { if (!e.hadRecentInput) cls += e.value; }); show('cls', cls); }).observe({ type: 'layout-shift', buffered: true }); }
+    else na('cls', 'No disponible en este navegador');
+    if (types.includes('event')) { let inp = 0; na('inp', 'Toca algo de la página'); new PerformanceObserver((l) => { l.getEntries().forEach((e) => { if (e.interactionId && e.duration > inp) { inp = e.duration; show('inp', inp); } }); }).observe({ type: 'event', buffered: true, durationThreshold: 16 }); }
+    else na('inp', 'No disponible en este navegador');
+  })();
+</script>
 </body>
 </html>

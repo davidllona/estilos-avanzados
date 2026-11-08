@@ -4,13 +4,10 @@
    --f-serif   Instrument Serif (serif editorial para titulares)
    --f-grotesk Bricolage        (grotesca con carácter)
    --f-read    Newsreader       (serif de lectura)
-   --f-mono    JetBrains Mono */
-@font-face { font-family: "Inter Tight"; src: url("../fonts/inter-tight.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
-@font-face { font-family: "Instrument Serif"; src: url("../fonts/instrument-serif.woff2") format("woff2"); font-display: swap; }
-@font-face { font-family: "Instrument Serif"; src: url("../fonts/instrument-serif-italic.woff2") format("woff2"); font-style: italic; font-display: swap; }
-@font-face { font-family: "Bricolage"; src: url("../fonts/bricolage.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
-@font-face { font-family: "Newsreader"; src: url("../fonts/newsreader.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
-@font-face { font-family: "JetBrains Mono"; src: url("../fonts/jetbrains-mono.woff2") format("woff2"); font-weight: 100 800; font-display: swap; }
+   --f-mono    JetBrains Mono
+   y además --f-fraunces, --f-syne, --f-bodoni, --f-shoulders, --f-unbounded, --f-archivo, --f-cormorant */
+
+@import url("fonts.css");
 
 :root {
   --f-sans: "Inter Tight", system-ui, sans-serif;
@@ -18,6 +15,13 @@
   --f-grotesk: "Bricolage", system-ui, sans-serif;
   --f-read: "Newsreader", Georgia, serif;
   --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  --f-fraunces: "Fraunces", Georgia, serif;
+  --f-syne: "Syne", system-ui, sans-serif;
+  --f-bodoni: "Bodoni Moda", Didot, serif;
+  --f-shoulders: "Big Shoulders", Impact, sans-serif;
+  --f-unbounded: "Unbounded", system-ui, sans-serif;
+  --f-archivo: "Archivo", system-ui, sans-serif;
+  --f-cormorant: "Cormorant", Georgia, serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }

@@ -7,23 +7,293 @@
 <meta name="description" content="El mapa de criterio del cuaderno: contención, jerarquía, ritmo, una sola nota de color, detalle, coherencia y cómo se adapta una página premium al móvil.">
 <link rel="stylesheet" href="../assets/css/base.css">
 <style>
-  /* Altura propia de cada demo en pantallas estrechas (data-height-mobile + --hm) */
+  /* Identidad de la lección: «Galería».
+     Pared blanca rota, tinta negra y un único rojo señal. Archivo muy ancha para titular, Newsreader para leer. */
+  :root {
+    --bg: oklch(94% 0.006 90);
+    --bg-2: oklch(90.5% 0.007 90);
+    --bg-3: oklch(86% 0.008 90);
+    --fg: oklch(17% 0 0);
+    --muted: oklch(42% 0.005 90);
+    --faint: oklch(52% 0.005 90);
+    --accent: oklch(58% 0.21 28);
+    --on-accent: oklch(98% 0.005 90);
+    --code-bg: oklch(18% 0.004 90);
+    --scheme: light;
+    --f-display: "Archivo", "Inter Tight", system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 800;
+    --display-tracking: -0.035em;
+    --red: var(--accent);
+  }
+  /* Archivo muy ancha: el ancho se pide con font-stretch (la @font-face declara 62–125 %) */
+  h1, h2, h3, .statement, .pager b { font-stretch: 125%; }
+  .quiz .q { font-stretch: 112%; font-weight: 750; letter-spacing: -0.02em; }
+  .prose h2 { font-size: clamp(2.1rem, 1.3rem + 3vw, 3.9rem); line-height: .98; max-width: 16ch; }
+  .prose h3 { font-size: var(--step-1); font-weight: 750; letter-spacing: -0.02em; }
+  .prose h2 .n { font-stretch: 100%; color: var(--red); }
+  body { font-size: clamp(1.06rem, 1rem + 0.25vw, 1.2rem); }
+  /* Las demos con altura propia en móvil (data-height-mobile + --hm) */
   @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+
+  /* =========================================================
+     Portada: una landing barata que se limpia sola al bajar.
+     La portada mide 340vh; dentro, .stage se queda fija (sticky) y el
+     JS añade las clases .s1 … .s7 según el avance. Cada clase quita
+     una capa de ruido. Con el botón o el teclado se recorre igual.
+     ========================================================= */
+  .hero { height: 340vh; height: 340svh; overflow: visible; }
+  .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip; display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-rows: 1fr auto; gap: 0 clamp(1.5rem, 4vw, 4rem);
+    padding: 5.6rem var(--gutter) 0; isolation: isolate; color: var(--ink, #fff);
+    --t: .7s var(--ease-out); }
+  /* El fondo barato es una capa encima de la pared: se apaga con opacidad (los degradados no se animan) */
+  .wall { position: absolute; inset: 0; z-index: -2; background: var(--bg); }
+  .wall::before { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, #7b5cff, #38c6f4 60%, #5ef2c2); transition: opacity var(--t); }
+  .hcopy { align-self: center; text-align: center; position: relative; z-index: 2; }
+  .hcopy [data-kicker] { margin: 0 0 1rem; font: 800 .82rem/1.2 var(--f-ui); letter-spacing: .2em; text-transform: uppercase; color: #ffe14d; transition: color var(--t), letter-spacing var(--t); }
+  .stars { margin: 0 0 .7rem; font: 700 1rem/1 var(--f-ui); color: #ffe14d; }
+  .stars span { color: #fff; font-weight: 500; }
+  .hero h1 { margin: 0 0 1.2rem; font: 700 clamp(2.1rem, 1.2rem + 2.6vw, 3.6rem)/1.08 var(--f-display); font-stretch: 100%;
+    letter-spacing: 0; color: #fff; text-wrap: balance;
+    text-shadow: 0 4px 10px rgb(20 0 60 / .45);
+    transition: font-size .9s var(--ease-out), font-stretch .9s var(--ease-out), font-weight .9s var(--ease-out), letter-spacing .9s var(--ease-out), line-height .9s var(--ease-out), color var(--t), text-shadow var(--t); }
+  .hero h1 .cara { color: #ffe14d; transition: color var(--t); }
+  .hero .lede { margin: 0 auto 1.6rem; max-width: 40ch; font: 400 var(--step-0)/1.5 var(--f-ui); color: #fff; opacity: .92; transition: color var(--t), opacity var(--t); }
+  .ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: .7rem; }
+  .b { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 1.3rem; border-radius: 10px; overflow: hidden; white-space: nowrap;
+    font: 800 .95rem/1 var(--f-ui); text-transform: uppercase; letter-spacing: .04em; color: #fff; text-decoration: none; position: relative; isolation: isolate;
+    box-shadow: 0 8px 18px rgb(0 0 0 / .35);
+    transition: max-width var(--t), padding var(--t), margin var(--t), opacity .4s, scale var(--t), box-shadow var(--t), background-color var(--t), color var(--t), border-radius var(--t), letter-spacing var(--t); max-width: 16rem; }
+  .b1 { background: oklch(17% 0 0); }
+  .b1::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(#ff9a3d, #ff4f22); transition: opacity var(--t); }
+  .b2 { background: #22c06b; } .b3 { background: #1e7bff; }
+  .perks { display: flex; justify-content: center; gap: 1.4rem; list-style: none; margin: 1.6rem 0 0; padding: 0; font: 700 .9rem/1 var(--f-ui); max-height: 3rem; transition: max-height var(--t), margin var(--t), opacity .4s; }
+  .perks li { display: flex; align-items: center; gap: .5rem; }
+  .perks i { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #ffb347, #ff3d81); box-shadow: 0 4px 10px rgb(0 0 0 / .3); }
+  .perks li:nth-child(2) i { background: linear-gradient(135deg, #5ef2c2, #1e7bff); }
+  .perks li:nth-child(3) i { background: linear-gradient(135deg, #ffe14d, #22c06b); }
+
+  /* La obra: el único elemento con color al final */
+  .art { position: relative; align-self: center; justify-self: center; width: min(100%, 31rem); z-index: 1; }
+  .frame { position: relative; aspect-ratio: 4 / 5; border: 12px solid #fff; border-radius: 26px; overflow: hidden; background: #f2efe8;
+    box-shadow: 0 24px 50px rgb(20 0 60 / .5); transition: border-width var(--t), border-radius var(--t), box-shadow var(--t); }
+  .frame::before { content: ""; position: absolute; inset: 0; z-index: 2; background: conic-gradient(from 30deg, #ff3d81, #ffe14d, #22c06b, #1e7bff, #7b5cff, #ff3d81); transition: opacity var(--t); }
+  .linen { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgb(0 0 0 / .018) 0 1px, transparent 1px 3px), repeating-linear-gradient(rgb(0 0 0 / .015) 0 1px, transparent 1px 4px), oklch(95.5% 0.01 85); }
+  .disc { position: absolute; width: 74%; aspect-ratio: 1; right: -16%; bottom: 12%; border-radius: 50%; background: var(--red); }
+  .bar-v { position: absolute; left: 22%; top: 9%; width: 3.2%; height: 62%; background: oklch(17% 0 0); }
+  .cartela { margin: 1rem 0 0; font: 400 .82rem/1.45 var(--f-ui); color: var(--muted); opacity: 0; translate: 0 6px; transition: opacity var(--t), translate var(--t); }
+  .cartela b { display: block; color: var(--fg); font-weight: 650; }
+  .burst { position: absolute; z-index: 3; left: -2.2rem; top: -1.6rem; width: 8.4rem; aspect-ratio: 1; display: grid; place-items: center; rotate: -14deg;
+    background: #ffe14d; color: #e0123e; font: 900 1.2rem/1 var(--f-ui); filter: drop-shadow(0 8px 10px rgb(0 0 0 / .35));
+    clip-path: polygon(50% 0, 61% 18%, 82% 9%, 80% 31%, 100% 38%, 85% 54%, 97% 73%, 75% 76%, 71% 98%, 52% 85%, 33% 100%, 27% 78%, 4% 79%, 15% 59%, 0 41%, 19% 31%, 15% 9%, 38% 18%); }
+  .sale { position: absolute; z-index: 3; right: -1.2rem; bottom: 18%; width: 5.6rem; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+    background: #e0123e; color: #fff; font: 900 1.25rem/1 var(--f-ui); box-shadow: 0 8px 16px rgb(0 0 0 / .4); rotate: 10deg; }
+  .countdown { position: absolute; z-index: 3; left: 50%; bottom: -1.3rem; translate: -50% 0; white-space: nowrap; padding: .55rem .9rem; border-radius: 8px;
+    background: #111; color: #ffe14d; font: 700 .85rem/1 var(--f-code); box-shadow: 0 8px 16px rgb(0 0 0 / .4); }
+  .ticker { position: absolute; z-index: 3; left: 0; right: 0; top: 4rem; overflow: hidden; background: #ffe14d; color: #111; font: 900 .85rem/1 var(--f-ui); letter-spacing: .08em; white-space: nowrap;
+    transition: opacity .4s, translate var(--t); }
+  .ticker span { display: inline-block; padding: .55rem 0; animation: tick 22s linear infinite; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+  .chat { position: absolute; z-index: 4; right: var(--gutter); bottom: 7.5rem; display: flex; align-items: center; gap: .6rem; padding: .8rem 1.1rem .8rem .8rem; border-radius: 999px;
+    background: #22c06b; color: #fff; font: 700 .9rem/1 var(--f-ui); box-shadow: 0 10px 24px rgb(0 0 0 / .35); transition: opacity .4s, translate var(--t), scale var(--t); }
+  .chat i { width: 28px; height: 28px; border-radius: 50%; background: #fff radial-gradient(circle at 50% 50%, #22c06b 0 22%, transparent 24%); }
+
+  /* Panel de control: la parte «nuestra», ya limpia desde el principio */
+  .panel { grid-column: 1 / -1; position: relative; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.6rem;
+    margin: 0 calc(var(--gutter) * -1); padding: 1rem var(--gutter) 1.2rem; background: var(--bg); color: var(--fg); border-top: 1px solid var(--fg); }
+  .count { display: flex; align-items: baseline; gap: .6rem; margin: 0; font: 400 var(--step--1)/1.2 var(--f-ui); color: var(--muted); }
+  .count b { min-width: 1.1ch; font: 800 2.6rem/.8 var(--f-display); font-stretch: 125%; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .said { flex: 1; min-width: 14rem; margin: 0; font: 400 var(--step-0)/1.35 var(--f-body); }
+  .said em { color: var(--red); font-style: normal; }
+  .steps { display: flex; gap: 4px; }
+  .steps i { width: 18px; height: 4px; background: var(--line-2); transition: background-color .3s; }
+  .steps i.on { background: var(--fg); }
+  .panel .btn { min-height: 44px; }
+  .panel .btn.primary { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+
+  /* ---------- Las capas de ruido se van, una por paso ---------- */
+  .gone { opacity: 0 !important; pointer-events: none; }
+  .s1 .ticker { opacity: 0; translate: 0 -120%; }
+  .s1 .countdown { opacity: 0; scale: .6; transition: opacity .4s, scale var(--t); }
+  .burst, .sale, .stars { transition: opacity .4s, scale var(--t), rotate var(--t), max-height var(--t), margin var(--t); }
+  .stars { max-height: 2rem; overflow: hidden; }
+  .s2 .burst { opacity: 0; scale: .2; rotate: -90deg; }
+  .s2 .sale { opacity: 0; scale: .2; rotate: 90deg; }
+  .s2 .stars { opacity: 0; max-height: 0; margin: 0; }
+  .s3 .b2, .s3 .b3 { opacity: 0; max-width: 0; padding-inline: 0; margin-inline: -.35rem; scale: .7; }
+  .s4 .perks { opacity: 0; max-height: 0; margin-top: 0; }
+  .s4 .chat { opacity: 0; translate: 0 2rem; scale: .7; }
+  .s5 .b, .s5 .frame, .s5 .perks i { box-shadow: none; }
+  .s5 h1 { text-shadow: none; }
+  .s6 .wall::before, .s6 .b1::before, .s6 .frame::before { opacity: 0; }
+  .s6 { --ink: var(--fg); }
+  .s6 h1, .s6 .lede { color: var(--fg); }
+  .s6 h1 .cara { color: inherit; }
+  .s6 .hcopy [data-kicker] { color: var(--muted); }
+  .s6 .b1 { color: var(--bg); }
+  /* Paso 7: jerarquía. El titular se ensancha y crece; todo se alinea a la izquierda */
+  .s7 .hcopy { text-align: left; animation: settle .7s var(--ease-out); }
+  @keyframes settle { from { opacity: .2; translate: -1rem 0; } }
+  .s7 .hcopy [data-kicker] { text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .s7 h1 { font-size: clamp(2.7rem, 0.9rem + 5.6vw, 6.6rem); font-stretch: 125%; font-weight: 800; letter-spacing: -0.045em; line-height: .9; }
+  .s7 h1 .cara { color: var(--red); }
+  .s7 .lede { margin-left: 0; color: var(--muted); max-width: 44ch; }
+  .s7 .ctas { justify-content: flex-start; }
+  .s7 .b { border-radius: 0; letter-spacing: 0; text-transform: none; font-weight: 600; }
+  .s7 .frame { border-width: 0; border-radius: 0; box-shadow: 0 1px 1px oklch(30% .01 90 / .08), 24px 30px 50px -30px oklch(30% .01 90 / .45); }
+  .s7 .cartela { opacity: 1; translate: 0 0; }
+
+  @media (max-width: 860px) {
+    .hero { height: 280vh; height: 280svh; }
+    .stage { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; padding-top: 4.4rem; }
+    .hcopy { align-self: start; padding-top: 1.6rem; }
+    .hcopy [data-kicker] { margin-bottom: .7rem; }
+    .hero h1 { font-size: clamp(1.9rem, 1.2rem + 3vw, 2.6rem); margin-bottom: .9rem; }
+    .s7 h1 { font-size: clamp(2.35rem, 1rem + 6.6vw, 3.6rem); }
+    .hero .lede { font-size: 1rem; margin-bottom: 1.1rem; }
+    .art { width: auto; height: 100%; min-height: 0; align-self: stretch; justify-self: end; display: flex; flex-direction: column; justify-content: center; padding: 1rem 0 1.4rem; }
+    .frame { height: 100%; max-height: 17rem; aspect-ratio: 4 / 5; border-width: 8px; border-radius: 18px; }
+    .cartela { position: absolute; right: calc(100% + 1rem); bottom: 1.6rem; width: 9.5rem; text-align: right; font-size: .76rem; }
+    .ticker { top: 3.5rem; }
+    .perks { gap: .9rem; font-size: .78rem; margin-top: 1.1rem; }
+    .perks i { width: 22px; height: 22px; }
+    .burst { width: 5.6rem; left: -1.6rem; top: -.4rem; font-size: .9rem; }
+    .sale { width: 4.2rem; font-size: 1rem; right: -.8rem; }
+    .chat { bottom: 12.5rem; left: var(--gutter); right: auto; padding: .6rem .9rem .6rem .6rem; font-size: .8rem; }
+    .b { min-height: 44px; padding: 0 .9rem; font-size: .8rem; }
+    .panel { gap: .6rem 1rem; padding-top: .8rem; padding-bottom: 1rem; }
+    .count b { font-size: 2rem; }
+    .said { order: 3; flex-basis: 100%; font-size: .98rem; }
+    .panel .spacer { flex: 1; }
+  }
+  @media (max-width: 860px) and (max-height: 700px) { .frame { max-height: 11rem; } .hero .lede { display: none; } }
+
+  /* Sin movimiento: sin pista de scroll; se recorre con el botón, sin animaciones */
+  @media (prefers-reduced-motion: reduce) {
+    .hero { height: auto; }
+    .stage { position: relative; min-height: 100vh; min-height: 100svh; height: auto; }
+    .ticker span { animation: none; }
+  }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  /* Plano de sala: los seis principios como un índice de galería */
+  .rooms { display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; padding: 0 !important; margin: 2.4rem 0 3rem; border-top: 1px solid var(--fg); counter-reset: sala; }
+  .rooms li { margin: 0; padding: 1.2rem 1.4rem 1.6rem 0; border-bottom: 1px solid var(--line-2); counter-increment: sala; }
+  .rooms li:not(:nth-child(3n + 1)) { padding-left: 1.4rem; border-left: 1px solid var(--line-2); }
+  .rooms li::before { content: "0" counter(sala); display: block; margin-bottom: 1.4rem; font: 800 clamp(2.6rem, 1.6rem + 3vw, 4.4rem)/.8 var(--f-display); font-stretch: 125%; letter-spacing: -0.05em; }
+  .rooms li:nth-child(4)::before { color: var(--red); }
+  .rooms b { display: block; margin-bottom: .3rem; font: 750 var(--step-1)/1.1 var(--f-display); font-stretch: 112%; letter-spacing: -0.02em; }
+  .rooms span { display: block; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  @media (max-width: 760px) {
+    .rooms { grid-template-columns: 1fr 1fr; }
+    .rooms li:not(:nth-child(3n + 1)) { padding-left: 0; border-left: 0; }
+    .rooms li:nth-child(even) { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+    .rooms li { padding-right: 1rem; }
+  }
+
+  /* Jerarquía visible: dos tamaños y su relación */
+  .ratio { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 0 clamp(1rem, 3vw, 2.4rem); margin: 2.4rem 0 3rem; padding: 1.6rem 0 1.2rem; border-block: 1px solid var(--fg); }
+  .ratio .big { font: 800 clamp(4.6rem, 2rem + 9vw, 9.5rem)/.78 var(--f-display); font-stretch: 125%; letter-spacing: -0.06em; }
+  .ratio .small { align-self: end; font: 400 15px/1.45 var(--f-ui); color: var(--muted); max-width: 30ch; padding-bottom: .4rem; }
+  .ratio .x { text-align: right; font: 400 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .ratio .x b { display: block; font: 800 clamp(2rem, 1.4rem + 2vw, 3.2rem)/1 var(--f-display); font-stretch: 125%; color: var(--red); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  @media (max-width: 600px) { .ratio { grid-template-columns: auto 1fr; } .ratio .x { grid-column: 1 / -1; text-align: left; margin-top: 1rem; display: flex; align-items: baseline; gap: .8rem; } }
+
+  /* Banda en negativo: la nota de color */
+  .band.ink { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.ink .inner { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(2rem, 5vw, 5rem); align-items: end; }
+  .band.ink h3 { margin: 0 0 1.2rem; font-size: clamp(2rem, 1.2rem + 3vw, 3.6rem); line-height: .95; letter-spacing: -0.04em; }
+  .band.ink h3 em { font-style: normal; color: var(--red); }
+  .band.ink p { margin: 0 0 1rem; max-width: 46ch; color: oklch(80% 0.005 90); }
+  .band.ink .swatches { margin: 0; gap: 0; flex-wrap: nowrap; }
+  .band.ink .swatch { flex: 6; width: auto; border: 0; border-radius: 0; background: none; }
+  .band.ink .swatch:nth-child(2) { flex: 3; } .band.ink .swatch:nth-child(3) { flex: 1.6; }
+  .band.ink .swatch i { height: clamp(9rem, 18vw, 14rem); box-shadow: inset 0 0 0 1px oklch(100% 0 0 / .14); }
+  .band.ink .swatch span { padding: .7rem 0 0; color: var(--bg); }
+  .band.ink .swatch small { color: oklch(72% 0.005 90); }
+  @media (max-width: 760px) { .band.ink .inner { grid-template-columns: 1fr; } }
+
+  /* Frase grande */
+  .statement { font-size: clamp(2.2rem, 1.2rem + 4vw, 4.8rem); line-height: .95; letter-spacing: -0.045em; max-width: 15ch !important; }
+  .statement em { font-style: normal; color: var(--red); }
+
+  /* Detalle: diagrama de radios concéntricos, fijo junto al texto */
+  .split.detail { align-items: start; }
+  .split.detail > div > :first-child { margin-top: 0; }
+  .radii { position: relative; aspect-ratio: 1; display: grid; place-items: center; background: var(--bg-2); }
+  .radii .o { position: relative; width: 74%; aspect-ratio: 1.15; padding: 8%; border-radius: 22px; background: #fff; box-shadow: 0 1px 1px oklch(30% .01 90 / .06), 0 8px 16px -6px oklch(30% .01 90 / .12), 0 28px 48px -20px oklch(30% .01 90 / .24); }
+  .radii .i { height: 100%; border-radius: 14px; background: var(--red); }
+  .radii .lbl { position: absolute; font: 500 .78rem/1.2 var(--f-code); color: var(--fg); }
+  .radii .lbl b { color: var(--red); font-weight: 600; }
+  .radii .l1 { top: 7%; left: 7%; } .radii .l2 { bottom: 7%; right: 7%; text-align: right; } .radii .l3 { top: 50%; right: 3%; translate: 0 -50%; writing-mode: vertical-rl; }
+  .radii-cap { margin: .9rem 0 0; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+
+  /* Lista de señales: índice editorial numerado */
+  .signals { list-style: none; padding: 0 !important; counter-reset: s; columns: 2; column-gap: clamp(2rem, 4vw, 3.5rem); border-top: 1px solid var(--fg); padding-top: .4rem !important; }
+  .prose > .signals { max-width: none; width: min(var(--wide), calc(100vw - 2 * var(--gutter))); margin-left: calc(50% - min(var(--wide), calc(100vw - 2 * var(--gutter))) / 2); }
+  .signals li { position: relative; break-inside: avoid; margin: 0; padding: 1rem 0 1rem 3.6rem; border-bottom: 1px solid var(--line-2); counter-increment: s; }
+  .signals li::before { content: counter(s, decimal-leading-zero); position: absolute; left: 0; top: 1.05rem; font: 800 1.5rem/1 var(--f-display); font-stretch: 125%; letter-spacing: -0.04em; color: var(--faint); }
+  .signals li strong { font: 700 var(--step-0)/1.25 var(--f-ui); }
+  .signals li:nth-child(5)::before { color: var(--red); }
+  @media (max-width: 760px) { .signals { columns: 1; } }
+
+  .band.red { --band-bg: var(--red); --band-fg: var(--on-accent); }
+  .band.red p { margin: 0; max-width: 20ch; font: 800 clamp(2rem, 1rem + 4vw, 4.6rem)/.95 var(--f-display); font-stretch: 125%; letter-spacing: -0.045em; text-wrap: balance; }
 </style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="criterio">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Qué hace que una web parezca cara</h1>
-    <p class="lede">Antes de tocar una sola propiedad nueva: el criterio. Seis principios que separan una landing de plantilla de una que parece hecha por un estudio, y cómo se sostienen en una pantalla de 390 píxeles.</p>
+  <header class="hero" aria-labelledby="t">
+    <div class="stage" id="stage">
+      <div class="wall" aria-hidden="true"></div>
+      <div class="ticker" aria-hidden="true"><span>OFERTA POR TIEMPO LIMITADO ★ ENVÍO GRATIS ★ SOLO HOY ★ NO TE LO PIERDAS ★ OFERTA POR TIEMPO LIMITADO ★ ENVÍO GRATIS ★ SOLO HOY ★ NO TE LO PIERDAS ★ </span></div>
+
+      <div class="hcopy">
+        <p data-kicker>Lección 00</p>
+        <p class="stars" aria-hidden="true">★★★★★ <span>4,9 (2.318 opiniones)</span></p>
+        <h1 id="t">Qué hace que una web parezca <span class="cara">cara</span></h1>
+        <p class="lede">Antes de tocar una sola propiedad nueva: el criterio. Seis principios que separan una landing de plantilla de una que parece hecha por un estudio, y cómo se sostienen en una pantalla de 390 píxeles.</p>
+        <div class="ctas">
+          <a class="b b1" href="#leer">Empezar a mirar</a>
+          <span class="b b2" aria-hidden="true">Más info</span>
+          <span class="b b3" aria-hidden="true">Suscríbete</span>
+        </div>
+        <ul class="perks" aria-hidden="true"><li><i></i>Envío gratis</li><li><i></i>Calidad</li><li><i></i>Garantía</li></ul>
+      </div>
+
+      <figure class="art" aria-label="Obra: un disco rojo y una barra negra sobre lino">
+        <div class="frame">
+          <div class="linen"></div><i class="bar-v"></i><i class="disc"></i>
+        </div>
+        <figcaption class="cartela"><b>Sin título (señal), 2026</b>Óleo sobre lino, 150 × 120 cm. El único color de esta página.</figcaption>
+        <span class="burst" aria-hidden="true">¡NUEVO!</span>
+        <span class="sale" aria-hidden="true">-30 %</span>
+        <span class="countdown" aria-hidden="true">Termina en 02:14:59</span>
+      </figure>
+
+      <span class="chat" aria-hidden="true"><i></i>¿Te ayudamos?</span>
+
+      <div class="panel">
+        <p class="count"><b data-count>7</b><span>elementos<br>sobran</span></p>
+        <span class="steps" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <p class="said" aria-live="polite" data-said>Esta portada empieza barata a propósito. Baja o pulsa «Quitar ruido».</p>
+        <span class="spacer"></span>
+        <button class="btn primary" type="button" data-next>Quitar ruido</button>
+        <span class="chip" data-meta>12 min</span>
+      </div>
+    </div>
   </header>
 
   <div class="lesson">
     <article class="prose">
 
-      <p>Las tres webs que te gustaron (la de <em>mesa</em>, la de <em>tab</em> y la de la torre) no son caras por usar técnicas raras. Lo son porque cada decisión está tomada: qué se ve primero, qué se calla, cuánto aire hay, qué color manda. La técnica viene después y sirve a eso.</p>
+      <p id="leer">Las tres webs que te gustaron (la de <em>mesa</em>, la de <em>tab</em> y la de la torre) no son caras por usar técnicas raras. Lo son porque cada decisión está tomada: qué se ve primero, qué se calla, cuánto aire hay, qué color manda. La técnica viene después y sirve a eso.</p>
       <p>Esta lección es el mapa del cuaderno. Aquí no aprendes una propiedad: aprendes a mirar. Todo lo que viene después (OKLCH, tipografía fluida, scroll animado, la torre) cuelga de uno de estos principios.</p>
 
       <h2>Dos segundos para decidir</h2>
@@ -123,18 +393,20 @@
       </figure>
 
       <p>Ninguna diferencia es una técnica avanzada. Son seis decisiones que se repiten en cualquier web premium y que vas a ver una y otra vez en el cuaderno:</p>
-      <ol>
-        <li><strong>Contención</strong>: una sola cosa memorable y alrededor, calma.</li>
-        <li><strong>Jerarquía</strong>: una escala tipográfica dramática, sin tamaños intermedios que dudan.</li>
-        <li><strong>Ritmo y espacio</strong>: el aire agrupa y separa; no es hueco sobrante.</li>
-        <li><strong>Una sola nota de color</strong>: neutros con intención y un acento que se gana su sitio.</li>
-        <li><strong>Detalle</strong>: bordes finos, sombras que parecen luz, estados que responden.</li>
-        <li><strong>Coherencia</strong>: los mismos radios, pesos y distancias en toda la página.</li>
+      <ol class="rooms wide">
+        <li><b>Contención</b><span>Una sola cosa memorable y alrededor, calma.</span></li>
+        <li><b>Jerarquía</b><span>Una escala tipográfica dramática, sin tamaños intermedios que dudan.</span></li>
+        <li><b>Ritmo y espacio</b><span>El aire agrupa y separa; no es hueco sobrante.</span></li>
+        <li><b>Una sola nota de color</b><span>Neutros con intención y un acento que se gana su sitio.</span></li>
+        <li><b>Detalle</b><span>Bordes finos, sombras que parecen luz, estados que responden.</span></li>
+        <li><b>Coherencia</b><span>Los mismos radios, pesos y distancias en toda la página.</span></li>
       </ol>
 
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>Pulsa «Ver en móvil» en la demo. La versión barata se apelotona; la cara pierde los enlaces del menú, pone la foto a sangre de borde a borde y deja el titular como protagonista. En el móvil el criterio no cambia: se vuelve más estricto, porque solo cabe una idea por pantalla.</p>
       </div>
+
+      <p class="statement">Una sola cosa memorable. <em>Alrededor, calma.</em></p>
 
       <h2>Contención y jerarquía</h2>
       <p>La contención es la decisión más difícil porque consiste en <strong>quitar</strong>. Cada elemento que añades compite por la atención: una insignia de oferta, un segundo botón, iconos, otro color. Por separado parecen útiles; juntos anulan el titular. Prueba a quitar ruido hasta que la página diga una sola cosa.</p>
@@ -207,7 +479,13 @@
       </figure>
 
       <h3>Jerarquía: tamaños que no dudan</h3>
-      <p>Las webs baratas usan tamaños tímidos: el titular a 34&nbsp;px, el subtítulo a 22, el texto a 16. Todo parece igual de importante. Las caras usan saltos grandes: un titular de 80&nbsp;px junto a un texto de 15. El ojo sabe qué leer primero sin pensar. La regla práctica: entre el titular del hero y el texto que lo acompaña, una relación de <strong>4 a 6 veces</strong>. Con menos de 3 la página parece un documento.</p>
+      <p>Las webs baratas usan tamaños tímidos: el titular a 34&nbsp;px, el subtítulo a 22, el texto a 16. Todo parece igual de importante. Las caras usan saltos grandes: un titular de 80&nbsp;px junto a un texto de 15. El ojo sabe qué leer primero sin pensar.</p>
+      <div class="ratio wide" aria-label="Un titular de 80 píxeles junto a un texto de 15: relación de 5,3 veces">
+        <span class="big" aria-hidden="true">Aa</span>
+        <span class="small">Este texto mide 15&nbsp;px. El «Aa» de al lado, unos 80 en escritorio. Nadie duda de qué se lee primero.</span>
+        <span class="x"><b>5,3×</b>relación titular / texto</span>
+      </div>
+      <p>La regla práctica: entre el titular del hero y el texto que lo acompaña, una relación de <strong>4 a 6 veces</strong>. Con menos de 3 la página parece un documento.</p>
 
       <div class="callout criterio"><span class="t">Criterio</span>
         <p>Pregúntate qué recordará alguien de tu página al cerrarla. Si la respuesta es «un poco de todo», no recordará nada. En la torre es la foto al atardecer; en <em>mesa</em>, la frase en cursiva; en <em>tab</em>, el móvil con la burbuja rosa. Elige una y deja que el resto trabaje para ella.</p>
@@ -230,13 +508,20 @@
         .hero + .seccion { margin-top: var(--s-7); } /* cambio de tema: aire de verdad */
       </script>
 
-      <p>Con el color pasa lo mismo. Una web cara suele tener una base (el fondo), una tinta (el texto) y <strong>un</strong> acento. El acento solo aparece donde quieres que vaya el ojo: el botón principal, una palabra del titular, un subrayado. Si aparece en todas partes, deja de ser acento.</p>
-      <div class="swatches">
-        <div class="swatch" style="--s:#F3EEE3"><i></i><span><b>Base</b><small>#F3EEE3</small></span></div>
-        <div class="swatch" style="--s:#111111"><i></i><span><b>Tinta</b><small>#111111</small></span></div>
-        <div class="swatch" style="--s:#D9541E"><i></i><span><b>Acento</b><small>#D9541E</small></span></div>
+      <div class="band ink">
+        <div class="inner">
+          <div>
+            <h3>Una base, una tinta y <em>un</em> acento</h3>
+            <p>Con el color pasa lo mismo que con el espacio. Una web cara suele tener una base (el fondo), una tinta (el texto) y <strong>un</strong> acento. El acento solo aparece donde quieres que vaya el ojo: el botón principal, una palabra del titular, un subrayado. Si aparece en todas partes, deja de ser acento.</p>
+            <p>A la derecha, la paleta de <em>mesa</em>, con cada color en la proporción en que aparece. En la lección 02 verás por qué funciona y cómo construir las tuyas.</p>
+          </div>
+          <div class="swatches">
+            <div class="swatch" style="--s:#F3EEE3"><i></i><span><b>Base</b><small>#F3EEE3</small></span></div>
+            <div class="swatch" style="--s:#111111"><i></i><span><b>Tinta</b><small>#111111</small></span></div>
+            <div class="swatch" style="--s:#D9541E"><i></i><span><b>Acento</b><small>#D9541E</small></span></div>
+          </div>
+        </div>
       </div>
-      <p>Esa es la paleta de <em>mesa</em>. En la lección 02 verás por qué funciona y cómo construir las tuyas.</p>
 
       <div class="quiz" data-answer="3">
         <p class="q">En un hero tienes eyebrow, titular, subtítulo y botones. ¿Qué reparto de márgenes da mejor ritmo?</p>
@@ -314,14 +599,27 @@
         <figcaption>Ningún cambio por sí solo es espectacular: radios concéntricos (22 fuera, 14 dentro, 8 de padding), bordes finos con transparencia, tres sombras suaves teñidas del marrón del fondo, un hover sutil, un foco visible con el color de marca y cifras tabulares. Juntos son la diferencia entre plantilla y producto.</figcaption>
       </figure>
 
-      <p>La <strong>coherencia</strong> es el detalle repetido. Si los botones tienen radio de 14&nbsp;px, las tarjetas no pueden tener 6 y las imágenes 24. Si el peso de los titulares es 400 en serif, no aparece de repente un titular en sans 800. Decide un sistema pequeño (dos fuentes, tres pesos, tres radios, una escala de espacio, una curva de animación) y no lo rompas sin motivo.</p>
+      <div class="split detail">
+        <div>
+          <p>La <strong>coherencia</strong> es el detalle repetido. Si los botones tienen radio de 14&nbsp;px, las tarjetas no pueden tener 6 y las imágenes 24. Si el peso de los titulares es 400 en serif, no aparece de repente un titular en sans 800. Decide un sistema pequeño (dos fuentes, tres pesos, tres radios, una escala de espacio, una curva de animación) y no lo rompas sin motivo.</p>
 
-      <div class="callout criterio"><span class="t">Criterio</span>
-        <p>Regla del radio concéntrico: si un elemento redondeado tiene otro dentro, el radio interior es el exterior menos el padding. Con 22&nbsp;px de radio y 8 de padding, el interior va a 14. Si pones el mismo radio dentro y fuera, las esquinas parecen torcidas aunque no sepas decir por qué.</p>
-      </div>
+          <div class="callout criterio"><span class="t">Criterio</span>
+            <p>Regla del radio concéntrico: si un elemento redondeado tiene otro dentro, el radio interior es el exterior menos el padding. Con 22&nbsp;px de radio y 8 de padding, el interior va a 14. Si pones el mismo radio dentro y fuera, las esquinas parecen torcidas aunque no sepas decir por qué.</p>
+          </div>
 
-      <div class="callout movil"><span class="t">En el móvil</span>
-        <p>El hover no existe en una pantalla táctil: lo que comunicabas con él tiene que estar ya en reposo (subrayados visibles, bordes claros) o pasar a <code>:active</code>. Las sombras grandes y difusas también cuestan más de pintar al hacer scroll; en el móvil reduce el desenfoque o usa una sola capa. Envuelve los efectos de ratón en <code>@media (hover: hover)</code> para que no se queden «pegados» tras un toque.</p>
+          <div class="callout movil"><span class="t">En el móvil</span>
+            <p>El hover no existe en una pantalla táctil: lo que comunicabas con él tiene que estar ya en reposo (subrayados visibles, bordes claros) o pasar a <code>:active</code>. Las sombras grandes y difusas también cuestan más de pintar al hacer scroll; en el móvil reduce el desenfoque o usa una sola capa. Envuelve los efectos de ratón en <code>@media (hover: hover)</code> para que no se queden «pegados» tras un toque.</p>
+          </div>
+        </div>
+        <figure class="stick" style="margin:0">
+          <div class="radii" aria-hidden="true">
+            <div class="o"><div class="i"></div></div>
+            <span class="lbl l1">exterior <b>22px</b></span>
+            <span class="lbl l2">interior <b>14px</b></span>
+            <span class="lbl l3">padding 8px</span>
+          </div>
+          <figcaption class="radii-cap">22 menos 8 da 14. La tarjeta lleva tres sombras teñidas del gris de la pared, no una negra.</figcaption>
+        </figure>
       </div>
 
       <script type="text/x-code" data-lang="css" data-label="Hover solo donde hay ratón; feedback táctil en todas partes">
@@ -668,7 +966,7 @@
 
       <h3>La lista de señales</h3>
       <p>Repásala antes de enseñar una web a un cliente. Cada punto, por separado, se puede justificar. Tres o más juntos gritan «plantilla».</p>
-      <ul>
+      <ul class="signals">
         <li><strong>Cards iguales en todas partes.</strong> Tres cajas blancas redondeadas con icono, título y dos líneas. Alterna formatos: una lista con filetes, un bloque grande y dos pequeños, una tabla, una cita.</li>
         <li><strong>Degradados de lavado.</strong> Fondos violeta-rosa o azul-cian sin motivo, y texto con degradado. Si usas un degradado, que represente algo (un cielo, una luz), como en la torre.</li>
         <li><strong>Antetítulos en mayúsculas sobre cada titular.</strong> Uno en el hero puede tener sentido; en cada sección es un tic.</li>
@@ -682,8 +980,10 @@
       </ul>
 
       <div class="callout criterio"><span class="t">Criterio</span>
-        <p>El antídoto contra la plantilla es la especificidad. Una web de una bodega debería poder ser solo de esa bodega: sus palabras, su color, sus fotos, su forma de ordenar la información. Si puedes cambiar el logo por el de la competencia y la web sigue funcionando, todavía no has diseñado nada.</p>
+        <p>El antídoto contra la plantilla es la especificidad. Una web de una bodega debería poder ser solo de esa bodega: sus palabras, su color, sus fotos, su forma de ordenar la información.</p>
       </div>
+
+      <div class="band red"><div class="inner"><p>Si puedes cambiar el logo por el de la competencia y la web sigue funcionando, todavía no has diseñado nada.</p></div></div>
 
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>En el móvil las señales de plantilla se multiplican: tres cards iguales apiladas son tres pantallas idénticas de scroll. Una lista editorial con filetes ocupa un tercio y se lee de un vistazo. Si tienes que apilar, varía: la primera grande con imagen, las otras compactas.</p>
@@ -733,5 +1033,53 @@
     </article>
   </div>
 </main>
+<script>
+  // Portada: la landing barata se limpia por pasos. El paso sale del scroll dentro de la portada
+  // (340vh con el escenario fijo). El botón avanza un paso desplazando la página hasta ese punto,
+  // así scroll, botón y teclado cuentan la misma historia. Sin movimiento: sin pista, pasos directos.
+  (() => {
+    const hero = document.querySelector('.hero'), stage = document.getElementById('stage');
+    const count = hero.querySelector('[data-count]'), said = hero.querySelector('[data-said]');
+    const next = hero.querySelector('[data-next]'), dots = [...hero.querySelectorAll('.steps i')];
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const N = 7, intro = said.innerHTML;
+    const msgs = [
+      'Fuera <em>el banner de oferta</em> y la cuenta atrás. Urgencia falsa.',
+      'Fuera <em>las insignias</em> y las estrellas. Gritan, no informan.',
+      'Fuera <em>dos de los tres botones</em>. Una sola acción.',
+      'Fuera <em>los iconos en círculo</em> y el chat. No decían nada.',
+      'Fuera <em>las sombras negras</em>. Ahora las cosas apoyan en la pared.',
+      'Fuera <em>los colores que compiten</em>. Queda un único rojo: el de la obra.',
+      'Fuera <em>el centrado y los tamaños tímidos</em>. Queda lo caro: un titular, una obra, un acento.'
+    ];
+    let step = -1;
+    function set(s) {
+      s = Math.max(0, Math.min(N, s));
+      if (s === step) return;
+      step = s;
+      for (let i = 1; i <= N; i++) stage.classList.toggle('s' + i, i <= s);
+      dots.forEach((d, i) => d.classList.toggle('on', i < s));
+      count.textContent = N - s;
+      said.innerHTML = s ? msgs[s - 1] : intro;
+      next.textContent = s < N ? 'Quitar ruido' : 'Volver a empezar';
+    }
+    const track = () => hero.offsetHeight - innerHeight;
+    const fromScroll = () => {
+      const p = (scrollY - hero.offsetTop) / Math.max(1, track());
+      return Math.floor(Math.max(0, Math.min(.999, p)) * (N + 1));
+    };
+    next.addEventListener('click', () => {
+      const target = step < N ? step + 1 : 0;
+      if (reduce || track() < 10) return set(target);
+      // Centro del tramo de ese paso dentro de la pista
+      scrollTo({ top: hero.offsetTop + (target + .5) / (N + 1) * track(), behavior: 'smooth' });
+    });
+    if (reduce) { set(N); return; }            // versión estática: la portada ya limpia
+    let ticking = false;
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; set(fromScroll()); }); } }, { passive: true });
+    addEventListener('resize', () => set(fromScroll()));
+    set(fromScroll());
+  })();
+</script>
 </body>
 </html>

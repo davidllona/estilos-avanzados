@@ -7,17 +7,224 @@
 <meta name="description" content="Cómo se producen y preparan las imágenes y vídeos de una web de scroll cinematográfico: dirección de arte, lista de planos, prompts repetibles, imagen a vídeo, ffmpeg, versiones 16:9 y 9:16, peso y derechos.">
 <link rel="stylesheet" href="../assets/css/base.css">
 <style>
+  /* Identidad de la lección: storyboard.
+     Papel kraft, grafito y lápiz azul. Newsreader fina con eje óptico alto para titulares,
+     JetBrains Mono para las anotaciones de rodaje, Newsreader para leer. */
+  :root {
+    --bg: oklch(90% 0.03 78);
+    --bg-2: oklch(86.5% 0.035 76);
+    --bg-3: oklch(82% 0.04 75);
+    --fg: oklch(27% 0.01 60);
+    --muted: oklch(40% 0.02 60);
+    --faint: oklch(49% 0.02 60);
+    --accent: oklch(52% 0.13 245);
+    --on-accent: oklch(97% 0.01 80);
+    --code-bg: oklch(24% 0.012 60);
+    --scheme: light;
+    --f-display: "Newsreader", Georgia, serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "JetBrains Mono", ui-monospace, monospace;
+    --display-weight: 300;
+    --display-tracking: -0.03em;
+    --pencil: oklch(45% 0.13 245);
+    --paper: oklch(97% 0.012 85);
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .18 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  }
+  body { background-color: var(--bg); background-image: var(--grain); font-size: clamp(1.08rem, 1.02rem + 0.25vw, 1.22rem); line-height: 1.6; }
   /* Bloques de texto plano (prompts y comandos): se parten en líneas en vez de desbordar */
   .prose .code pre:not(:has(.token)) { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .prose h2 { font-size: clamp(2.6rem, 1.6rem + 3.6vw, 5.2rem); font-variation-settings: "opsz" 72; line-height: .98; letter-spacing: -0.035em; }
+  .prose h2 .n { font-family: var(--f-ui); font-weight: 500; letter-spacing: 0; color: var(--pencil); }
+  .prose h2 .n::before { content: "Plano "; }
+  .prose h3 { font-weight: 400; font-variation-settings: "opsz" 72; }
+  .quiz .q { font-weight: 400; font-size: var(--step-1); letter-spacing: -0.015em; font-variation-settings: "opsz" 36; }
+  .callout .t { font-weight: 600; }
+
+  /* ---------- Portada: el storyboard se desliza ---------- */
+  .hero { color: var(--fg); background: transparent; min-height: 0; }
+  .sb-pin { position: relative; height: 100vh; height: 100svh; min-height: 600px; overflow: hidden; display: grid; grid-template-rows: 1fr auto; grid-template-columns: minmax(0, 1fr); }
+  .sb-reel { display: flex; align-items: center; gap: clamp(2rem, 4vw, 4rem); padding: 0 var(--gutter); width: max-content; will-change: transform; }
+  .sb-cover { width: min(40rem, 44vw); flex: none; padding-top: 3rem; }
+  .sb-cover [data-kicker] { margin: 0 0 1.6rem; font: 500 var(--step--1)/1 var(--f-ui); color: var(--pencil); }
+  .hero h1 { font-size: clamp(3.4rem, 1rem + 6.6vw, 8rem); font-weight: 300; font-variation-settings: "opsz" 72; line-height: .9; letter-spacing: -0.045em; margin: 0 0 1.6rem; }
+  .hero h1 em { font-style: italic; font-weight: 300; }
+  .hero .lede { margin: 0 0 1.6rem; font-size: var(--step-1); line-height: 1.4; color: var(--muted); max-width: 30ch; }
+  .sb-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.2rem; font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .sb-hint { display: inline-flex; align-items: center; gap: .6rem; font: italic 400 var(--step-0)/1 var(--f-body); color: var(--pencil); }
+  .sb-hint svg { width: 64px; height: 22px; }
+
+  .sb-track { display: flex; gap: clamp(2rem, 4vw, 4rem); align-items: center; }
+  .shot { position: relative; flex: none; width: calc(min(56vh, 36rem) * 16 / 9); margin: 0; }
+  .shot-head { display: flex; align-items: baseline; gap: .9rem; margin-bottom: .55rem; font: 500 12px/1.2 var(--f-ui); color: var(--muted); }
+  .shot-head b { font: 600 13px/1 var(--f-ui); color: var(--fg); }
+  .shot-head .dur { margin-left: auto; color: var(--pencil); }
+  .frame { position: relative; aspect-ratio: 16 / 9; border: 2px solid var(--fg); background: var(--fg); overflow: hidden; }
+  .frame img { width: 100%; height: 100%; object-fit: cover; }
+  .frame.iso img { object-fit: contain; background: oklch(22% 0.05 292); }
+  /* Marcas de zona segura en las esquinas, como en una plantilla de storyboard */
+  .frame::after { content: ""; position: absolute; inset: 7%; pointer-events: none;
+    background: linear-gradient(var(--paper), var(--paper)) top left / 14px 1px no-repeat, linear-gradient(var(--paper), var(--paper)) top left / 1px 14px no-repeat,
+      linear-gradient(var(--paper), var(--paper)) top right / 14px 1px no-repeat, linear-gradient(var(--paper), var(--paper)) top right / 1px 14px no-repeat,
+      linear-gradient(var(--paper), var(--paper)) bottom left / 14px 1px no-repeat, linear-gradient(var(--paper), var(--paper)) bottom left / 1px 14px no-repeat,
+      linear-gradient(var(--paper), var(--paper)) bottom right / 14px 1px no-repeat, linear-gradient(var(--paper), var(--paper)) bottom right / 1px 14px no-repeat; opacity: .7; }
+  .cam { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .cam path, .cam rect, .cam circle { fill: none; stroke: var(--paper); stroke-width: .6; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.1s var(--ease-out) .15s; filter: drop-shadow(0 1px 1px oklch(20% 0.05 260 / .6)); }
+  .cam .dash { stroke-dasharray: .022 .016; stroke-dashoffset: 0; opacity: 0; transition: opacity .8s .2s; }
+  .shot.on .cam .dash { opacity: 1; }
+  .cam text { fill: var(--paper); font: italic 400 3.9px var(--f-body); opacity: 0; transition: opacity .6s .6s; }
+  .shot.on .cam path, .shot.on .cam rect, .shot.on .cam circle { stroke-dashoffset: 0; }
+  .shot.on .cam text { opacity: 1; }
+  .note { margin: .8rem 0 0; display: flex; gap: 1rem; align-items: start; }
+  .note p { margin: 0; font: italic 400 clamp(1rem, .9rem + .35vw, 1.25rem)/1.3 var(--f-body); color: var(--pencil); rotate: -1deg; transform-origin: left; max-width: 34ch; }
+  .note small { margin-left: auto; flex: none; font: 500 11px/1.4 var(--f-ui); color: var(--muted); text-align: right; }
+
+  .sb-bar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1.4rem; padding: .9rem var(--gutter) 1.2rem; border-top: 1px solid var(--line-2); font: 500 12px/1.2 var(--f-ui); color: var(--muted); }
+  .sb-line { position: relative; height: 24px; }
+  .sb-line::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--line-2); }
+  .sb-line i { position: absolute; top: 50%; width: 1px; height: 9px; translate: 0 -50%; background: var(--faint); }
+  .sb-line b { position: absolute; top: 50%; left: 0; height: 2px; width: calc(var(--p, 0) * 100%); translate: 0 -50%; background: var(--pencil); }
+  .sb-line s { position: absolute; top: 50%; left: calc(var(--p, 0) * 100%); width: 11px; height: 11px; border-radius: 50%; translate: -50% -50%; background: var(--pencil); }
+  .sb-tc { font-variant-numeric: tabular-nums; color: var(--fg); }
+
+  /* Escritorio con movimiento: la portada mide 360vh y el storyboard queda fijo mientras se desliza */
+  .hero.scrub { height: 360vh; overflow: visible; }
+  .hero.scrub .sb-pin { position: sticky; top: 0; }
+  /* Sin scrub (móvil o movimiento reducido): tira horizontal nativa con scroll-snap */
+  .hero:not(.scrub) .sb-reel { width: auto; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-block: 1rem; }
+  .hero:not(.scrub) .sb-reel::-webkit-scrollbar { display: none; }
+  .hero:not(.scrub) .sb-reel > * { scroll-snap-align: start; scroll-margin-left: var(--gutter); }
+  .hero:not(.scrub) .sb-track { padding-right: var(--gutter); }
+
+  @media (max-width: 760px) {
+    .sb-pin { grid-template-rows: auto 1fr auto; min-height: 620px; }
+    .hero .sb-reel { display: contents; }
+    .sb-cover { width: auto; padding: 4.8rem var(--gutter) 0; }
+    .sb-cover [data-kicker] { margin-bottom: .9rem; }
+    .hero h1 { font-size: clamp(2.8rem, 13vw, 3.6rem); margin-bottom: .8rem; }
+    .hero .lede { font-size: 1.02rem; margin-bottom: .8rem; }
+    .sb-hint { display: none; }
+    .hero:not(.scrub) .sb-track { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 0 var(--gutter); gap: 1.1rem; align-self: center; }
+    .sb-track::-webkit-scrollbar { display: none; }
+    .shot { width: 80vw; scroll-snap-align: center; }
+    .note p { font-size: 1rem; }
+    .note small { font-size: 10px; }
+    .cam text { display: none; }
+    .sb-bar { grid-template-columns: 1fr auto; gap: .5rem 1rem; padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    .sb-bar .sb-name { display: none; }
+    .sb-line { grid-column: 1 / -1; grid-row: 1; }
+  }
+
+  /* ---------- Cadena de producción: índice de la lección ---------- */
+  .chain { list-style: none; margin: 3rem 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); border-top: 2px solid var(--fg); counter-reset: st; }
+  .chain li { position: relative; margin: 0; padding: 1rem .9rem 0 0; counter-increment: st; }
+  .chain li::before { content: counter(st, decimal-leading-zero); display: block; font: 500 12px/1 var(--f-ui); color: var(--pencil); margin-bottom: .6rem; }
+  .chain li::after { content: ""; position: absolute; left: 0; top: -7px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--fg); }
+  .chain a { display: block; text-decoration: none; font: 400 clamp(1.05rem, .9rem + .5vw, 1.4rem)/1.1 var(--f-display); letter-spacing: -0.02em; font-variation-settings: "opsz" 36; }
+  .chain a:hover { color: var(--pencil); }
+  .chain small { display: block; margin-top: .4rem; font: 500 11px/1.35 var(--f-ui); color: var(--muted); }
+  @media (max-width: 900px) {
+    .chain { grid-template-columns: 1fr; border-top: 0; border-left: 2px solid var(--fg); margin-left: 6px; }
+    .chain li { padding: 0 0 1.1rem 1.4rem; display: grid; grid-template-columns: 2.2rem 1fr; align-items: baseline; }
+    .chain li::before { margin: 0; }
+    .chain li::after { left: -7px; top: 4px; }
+    .chain small { grid-column: 2; }
+  }
+
+  /* ---------- Banda en grafito ---------- */
+  .band.claim { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.claim p { margin: 0; font: 300 clamp(2.4rem, 1.2rem + 4.6vw, 6rem)/.95 var(--f-display); font-variation-settings: "opsz" 72; letter-spacing: -0.04em; max-width: 16ch; }
+  .band.claim p em { color: oklch(78% 0.08 245); }
+  .band.claim small { display: block; margin-top: 1.8rem; font: 500 var(--step--1)/1.5 var(--f-ui); color: oklch(80% 0.025 78); max-width: 56ch; }
+
+  /* ---------- Hoja de contactos de la secuencia ---------- */
+  .contact { margin-block: 2.6rem 3rem; padding: 2rem var(--gutter) 1.6rem; background: var(--fg); color: var(--bg); }
+  .contact-head { max-width: var(--wide); margin: 0 auto 1.2rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1.2rem; font: 500 12px/1.4 var(--f-ui); color: oklch(80% 0.025 78); }
+  .contact-head b { color: var(--bg); font-weight: 600; }
+  .contact ol { list-style: none; margin: 0 auto; padding: 0 0 .6rem; max-width: var(--wide); display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .contact li { margin: 0; }
+  .contact img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; outline: 1px solid oklch(100% 0 0 / .14); }
+  .contact span { display: block; margin-top: 4px; font: 500 10.5px/1.2 var(--f-ui); color: oklch(78% 0.025 78); }
+  @media (max-width: 760px) {
+    .contact ol { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 42%; overflow-x: auto; scroll-snap-type: x mandatory; }
+    .contact li { scroll-snap-align: start; }
+  }
+
+  /* ---------- Frase grande ---------- */
+  .statement { font-size: clamp(2.2rem, 1.3rem + 3.4vw, 4.4rem); font-variation-settings: "opsz" 72; letter-spacing: -0.04em; line-height: .98; }
+  .statement em { color: var(--pencil); }
+  .split .stick .code { margin-top: 0; }
+  .split > div > :first-child { margin-top: 0; }
+  .swatch { background: var(--paper); }
 </style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="recursos">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Recursos visuales con IA</h1>
-    <p class="lede">La web de la torre no empieza en el editor de código: empieza en un brief de luz y una lista de planos. Aquí tienes la cadena completa, del moodboard a los fotogramas WebP que pinta el canvas.</p>
+  <header class="hero" aria-labelledby="t" data-sb>
+    <div class="sb-pin">
+      <div class="sb-reel" data-reel>
+        <div class="sb-cover">
+          <p data-kicker>Lección 11</p>
+          <h1 id="t">Recursos visuales <em>con IA</em></h1>
+          <p class="lede">La web de la torre no empieza en el editor: empieza en un brief de luz y una lista de planos. Este es su storyboard, plano a plano.</p>
+          <div class="sb-meta">
+            <span class="chip" data-meta>15 min</span>
+            <span class="sb-hint"><svg viewBox="0 0 64 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 13c14-6 30-7 54-2M50 4l7 7-8 6"/></svg>Baja para rodar</span>
+          </div>
+        </div>
+        <div class="sb-track" data-track>
+          <figure class="shot">
+            <figcaption class="shot-head"><b>P01</b><span>Exterior</span><span class="dur">fijo, 0–100 vh</span></figcaption>
+            <div class="frame"><img src="../landing/frames/desk/0001.webp" alt="Plano general: la torre al anochecer desde el agua" width="1280" height="720" fetchpriority="high">
+              <svg class="cam" viewBox="0 0 160 90" aria-hidden="true"><rect pathLength="1" x="76" y="8" width="40" height="22.5" class="dash"/><path pathLength="1" d="M62 39c5-8 8-13 13-17M68 21l7 1-1 7"/><text x="40" y="44">encuadre de P02</text></svg></div>
+            <div class="note"><p>Plano general desde el agua. 35 mm, cámara a 1,6 m. Hora azul, +15 min.</p><small>0001.webp<br>1280 × 720</small></div>
+          </figure>
+          <figure class="shot">
+            <figcaption class="shot-head"><b>P02</b><span>Aproximación</span><span class="dur">40 fotogramas</span></figcaption>
+            <div class="frame"><img src="../landing/frames/desk/0040.webp" alt="La cámara avanza hacia la torre" width="1280" height="720" loading="lazy">
+              <svg class="cam" viewBox="0 0 160 90" aria-hidden="true"><path pathLength="1" d="M14 12l26 14M40 26l-9 1M40 26l-3-8"/><path pathLength="1" d="M146 12l-26 14M120 26l9 1M120 26l3-8"/><path pathLength="1" d="M14 80l26-14M40 66l-9-1M40 66l-3 8"/><path pathLength="1" d="M146 80l-26-14M120 66l9-1M120 66l3 8"/><text x="58" y="86">dolly in, recto</text></svg></div>
+            <div class="note"><p>Avance lento y continuo. Un solo movimiento por clip: nada de giros.</p><small>0040.webp<br>de 120</small></div>
+          </figure>
+          <figure class="shot">
+            <figcaption class="shot-head"><b>P03</b><span>Vuelo</span><span class="dur">scrub, 300 vh</span></figcaption>
+            <div class="frame"><img src="../landing/frames/desk/0080.webp" alt="Plano medio de la fachada mientras la cámara sube" width="1280" height="720" loading="lazy">
+              <svg class="cam" viewBox="0 0 160 90" aria-hidden="true"><path pathLength="1" d="M128 78c10-18 11-40 2-62M124 24l6-9 7 8"/><text x="96" y="86">sube mientras avanza</text></svg></div>
+            <div class="note"><p>La cámara sube hacia la planta 32. Revisar fotograma a fotograma: cero deriva.</p><small>0080.webp<br>de 120</small></div>
+          </figure>
+          <figure class="shot">
+            <figcaption class="shot-head"><b>P04</b><span>Llegada</span><span class="dur">último fotograma</span></figcaption>
+            <div class="frame"><img src="../landing/frames/desk/0120.webp" alt="Primer plano de la planta 32" width="1280" height="720" loading="lazy">
+              <svg class="cam" viewBox="0 0 160 90" aria-hidden="true"><rect pathLength="1" x="8" y="34" width="144" height="18" class="dash"/><text x="10" y="30">planta 32</text></svg></div>
+            <div class="note"><p>Este fotograma es el primero del plano siguiente: así el scroll parece una sola toma.</p><small>0120.webp<br>de 120</small></div>
+          </figure>
+          <figure class="shot">
+            <figcaption class="shot-head"><b>P05</b><span>Balcones</span><span class="dur">clip de 5 s</span></figcaption>
+            <div class="frame"><img src="../landing/media/balcones.webp" alt="Contrapicado de los balcones curvos" width="1600" height="1000" loading="lazy">
+              <svg class="cam" viewBox="0 0 160 90" aria-hidden="true"><path pathLength="1" d="M28 76C22 52 26 30 42 14M35 17l8-4 1 9"/><text x="14" y="86">contrapicado</text></svg></div>
+            <div class="note"><p>Detalle de lamas desde abajo. Se carga solo al tocar, con póster.</p><small>balcones.webp<br>1600 × 1000</small></div>
+          </figure>
+          <figure class="shot">
+            <figcaption class="shot-head"><b>P06</b><span>Azotea</span><span class="dur">imagen fija</span></figcaption>
+            <div class="frame"><img src="../landing/media/azotea.webp" alt="La coronación de la torre sobre el agua" width="1600" height="1000" loading="lazy">
+              <svg class="cam" viewBox="0 0 160 90" aria-hidden="true"><path pathLength="1" d="M22 18c34-7 72-7 112 0M126 12l9 6-9 6"/><text x="56" y="12">paneo lento</text></svg></div>
+            <div class="note"><p>Azotea y club. Mismo cielo que P01: la luz no puede cambiar entre planos.</p><small>azotea.webp<br>1600 × 1000</small></div>
+          </figure>
+          <figure class="shot">
+            <figcaption class="shot-head"><b>P07</b><span>Planta</span><span class="dur">imagen + hotspots</span></figcaption>
+            <div class="frame iso"><img src="../landing/media/residencia.webp" alt="Planta isométrica de la residencia" width="1600" height="1000" loading="lazy">
+              <svg class="cam" viewBox="0 0 160 90" aria-hidden="true"><circle pathLength="1" cx="57" cy="37" r="5"/><circle pathLength="1" cx="83" cy="49" r="5"/><circle pathLength="1" cx="117" cy="51" r="5"/><text x="8" y="86">tres estancias, puntos de 44 px</text></svg></div>
+            <div class="note"><p>Fin del recorrido: la planta que se toca. En vertical, girada.</p><small>residencia.webp<br>1600 × 1000</small></div>
+          </figure>
+        </div>
+      </div>
+      <div class="sb-bar" aria-hidden="true">
+        <span class="sb-name">Torre Alameda, storyboard rev. 3</span>
+        <span class="sb-line" data-line><i style="left:0"></i><i style="left:16.66%"></i><i style="left:33.33%"></i><i style="left:50%"></i><i style="left:66.66%"></i><i style="left:83.33%"></i><i style="left:100%"></i><b></b><s></s></span>
+        <span><span class="sb-tc" data-tc>TC 00:00</span>, <span data-p>P01</span> de 07</span>
+      </div>
+    </div>
   </header>
 
   <div class="lesson">
@@ -26,7 +233,19 @@
       <p>Cuando ves la torre al atardecer y la cámara vuela hasta una planta, lo que parece magia es una cadena de producción bastante prosaica: unas pocas imágenes muy bien dirigidas, varios clips de vídeo generados entre esas imágenes y un montón de fotogramas exportados con <code>ffmpeg</code>. El creador del vídeo usaba Higgsfield, una plataforma que agrupa varios modelos de imagen y vídeo; pero la herramienta cambia cada pocos meses y el método no.</p>
       <p>Esta lección es ese método. Si lo sigues, puedes cambiar de generador sin rehacer el proyecto.</p>
 
-      <h2>Dirección de arte antes que prompts</h2>
+      <p class="statement">La herramienta cambia cada pocos meses. <em>El método no.</em></p>
+
+      <ol class="chain wide" aria-label="La cadena de producción, en el orden de esta lección">
+        <li><a href="#arte">Brief de luz</a><small>hora, lente, paleta</small></li>
+        <li><a href="#planos">Lista de planos</a><small>16:9 y 9:16</small></li>
+        <li><a href="#prompts">Prompts</a><small>esqueleto fijo</small></li>
+        <li><a href="#video">Clips</a><small>primer y último fotograma</small></li>
+        <li><a href="#ffmpeg">Fotogramas</a><small>ffmpeg a WebP</small></li>
+        <li><a href="#peso">Peso</a><small>scrub, pósters, pasadas</small></li>
+        <li><a href="#derechos">Derechos</a><small>licencias y avisos</small></li>
+      </ol>
+
+      <h2 id="arte">Dirección de arte antes que prompts</h2>
       <p>El error típico es abrir el generador y escribir «torre de lujo al atardecer». Sale algo bonito, y el siguiente plano sale bonito también, pero con otro cielo, otra fachada y otra hora. Antes de generar nada, decide tres cosas por escrito: la <strong>hora exacta</strong>, la <strong>lente</strong> y la <strong>paleta</strong>.</p>
 
       <figure class="lab" data-title="Brief de luz" data-hint="Mueve la hora y cambia de lente" data-height="520" data-stage="dark" data-open="js">
@@ -154,7 +373,7 @@
         <p>En una pantalla de 6 pulgadas los degradados sutiles del cielo se pierden y las ventanas se convierten en puntitos. Pide la versión vertical con la torre más grande en el encuadre y un contraste de luz algo mayor entre ventanas y fachada: es lo que se lee a un brazo de distancia.</p>
       </div>
 
-      <h2>La lista de planos de una web de scroll</h2>
+      <h2 id="planos">La lista de planos de una web de scroll</h2>
       <p>Una web cinematográfica se planifica como un anuncio: cada plano tiene una función, un formato y un sitio en el recorrido de scroll. Esta es la lista de la torre. Cambia el formato para ver qué pasa con cada encuadre en vertical.</p>
 
       <figure class="lab" data-title="Storyboard de la torre" data-hint="Alterna 16:9 y 9:16" data-height="500" data-stage="dark">
@@ -238,19 +457,34 @@
         <p>Planifica desde el principio cada plano en 16:9 <em>y</em> en 9:16. Un vertical no es un recorte de última hora: el exterior necesita aire arriba para el titular, y la planta isométrica suele tener que girarse para que las estancias quepan a lo alto.</p>
       </div>
 
-      <h2>Prompts repetibles y consistencia</h2>
+      <div class="band claim"><div class="inner"><p>Cinco planos coherentes. <em>Una sola toma.</em></p><small>Cada plano termina donde empieza el siguiente y todos comparten la misma hora, la misma lente y la misma paleta. Así el scroll se siente como un único movimiento de cámara.</small></div></div>
+
+      <h2 id="prompts">Prompts repetibles y consistencia</h2>
       <p>La consistencia entre planos no se consigue con un prompt mágico, sino con un <strong>esqueleto fijo</strong> en el que solo cambia una parte. Escríbelo en lenguaje llano y por bloques. El orden te obliga a no olvidar nada y te deja comparar resultados.</p>
 
-      <script type="text/x-code" data-lang="txt" data-label="Esqueleto de prompt: solo cambia [PLANO]">
-        [PLANO]    Plano general frontal desde el agua. Cámara a 1,6 m, lente 35 mm, torre centrada con aire arriba.
-        [SUJETO]   Torre residencial de 40 plantas, fachada de vidrio con lamas verticales de piedra crema, coronación escalonada.
-        [LUZ]      Hora azul, 15 minutos después de la puesta de sol. Cielo violeta profundo arriba, rosa suave en el horizonte.
-                   Ventanas en luz cálida 2700 K, encendidas de forma irregular, alrededor del 60 %.
-        [ENTORNO]  Paseo marítimo, agua en calma con reflejos, palmeras a contraluz.
-        [ESTILO]   Fotografía de arquitectura realista, colores contenidos, sin HDR, grano fino.
-        [EVITAR]   Texto, logotipos, personas en primer plano, fachada deformada, cielo saturado.
-        [FORMATO]  16:9. (La versión 9:16 se genera aparte, con la torre más grande y aire arriba.)
-      </script>
+      <div class="split">
+        <div>
+        <p>Además del esqueleto, casi todos los generadores ofrecen alguna de estas palancas. Los nombres cambian de una herramienta a otra, pero las ideas son las mismas:</p>
+        <ul>
+          <li><strong>Imagen de referencia</strong>: subes la imagen buena (el exterior aprobado) y generas el resto a partir de ella. Es la palanca más potente para mantener fachada, color y luz.</li>
+          <li><strong>Semilla</strong> (<em>seed</em>): si la herramienta la muestra, la misma semilla con el mismo prompt da composiciones parecidas. Sirve para iterar un detalle sin perder el resto.</li>
+          <li><strong>Referencia de estilo o de personaje</strong>: fija un aspecto visual o un elemento recurrente entre generaciones.</li>
+          <li><strong>Edición por zonas</strong>: en vez de regenerar todo, corriges solo una parte (un reflejo raro, una ventana fundida).</li>
+        </ul>
+        </div>
+        <div class="stick">
+        <script type="text/x-code" data-lang="txt" data-label="Esqueleto de prompt: solo cambia [PLANO]">
+          [PLANO]    Plano general frontal desde el agua. Cámara a 1,6 m, lente 35 mm, torre centrada con aire arriba.
+          [SUJETO]   Torre residencial de 40 plantas, fachada de vidrio con lamas verticales de piedra crema, coronación escalonada.
+          [LUZ]      Hora azul, 15 minutos después de la puesta de sol. Cielo violeta profundo arriba, rosa suave en el horizonte.
+                     Ventanas en luz cálida 2700 K, encendidas de forma irregular, alrededor del 60 %.
+          [ENTORNO]  Paseo marítimo, agua en calma con reflejos, palmeras a contraluz.
+          [ESTILO]   Fotografía de arquitectura realista, colores contenidos, sin HDR, grano fino.
+          [EVITAR]   Texto, logotipos, personas en primer plano, fachada deformada, cielo saturado.
+          [FORMATO]  16:9. (La versión 9:16 se genera aparte, con la torre más grande y aire arriba.)
+        </script>
+        </div>
+      </div>
 
       <script type="text/x-code" data-lang="txt" data-label="Dos planos más con el mismo esqueleto">
         [PLANO]    Plano medio de la planta 32, cámara frente a la fachada a la misma altura, lente 50 mm.
@@ -262,14 +496,6 @@
         (Mismos bloques; en ENTORNO: «Por la ventana, el mismo cielo y el mar del plano general».)
       </script>
 
-      <p>Además del esqueleto, casi todos los generadores ofrecen alguna de estas palancas. Los nombres cambian de una herramienta a otra, pero las ideas son las mismas:</p>
-      <ul>
-        <li><strong>Imagen de referencia</strong>: subes la imagen buena (el exterior aprobado) y generas el resto a partir de ella. Es la palanca más potente para mantener fachada, color y luz.</li>
-        <li><strong>Semilla</strong> (<em>seed</em>): si la herramienta la muestra, la misma semilla con el mismo prompt da composiciones parecidas. Sirve para iterar un detalle sin perder el resto.</li>
-        <li><strong>Referencia de estilo o de personaje</strong>: fija un aspecto visual o un elemento recurrente entre generaciones.</li>
-        <li><strong>Edición por zonas</strong>: en vez de regenerar todo, corriges solo una parte (un reflejo raro, una ventana fundida).</li>
-      </ul>
-
       <div class="callout idea"><span class="t">Idea</span>
         <p>Guarda cada imagen aprobada con su prompt completo, la herramienta, el modelo y la semilla en un archivo de texto junto a ella (<code>01-exterior-169.png</code> + <code>01-exterior-169.txt</code>). Dentro de dos semanas, cuando el cliente pida «lo mismo pero con la terraza más grande», te salvará la tarde.</p>
       </div>
@@ -280,7 +506,7 @@
         <p>Genera la versión vertical a partir de la imagen horizontal aprobada como referencia, no desde cero con el prompt. Si no, el 9:16 acaba siendo otra torre y quien abre la web en el portátil después de verla en el móvil lo nota.</p>
       </div>
 
-      <h2>De imagen a vídeo entre dos fotogramas</h2>
+      <h2 id="video">De imagen a vídeo entre dos fotogramas</h2>
       <p>El vuelo hacia la planta 32 se genera con la técnica de <strong>primer y último fotograma</strong>: le das al generador de vídeo la imagen del exterior y la imagen cercana de la planta, y él inventa el movimiento entre las dos. Higgsfield, por ejemplo, lo llama «Start &amp; End Frames». Lo difícil no es generar el clip, sino elegir uno sin <em>deriva</em>.</p>
 
       <figure class="lab" data-title="Del primer al último fotograma" data-hint="Arrastra y activa la deriva" data-height="480" data-stage="dark">
@@ -375,7 +601,7 @@
         <p>Genera el vuelo vertical como clip propio, con su primer y último fotograma en 9:16. En vertical, avanzar hacia una planta pide menos recorrido lateral y más subida: el «zoom» hacia la planta 32 se lee mejor si la cámara también asciende un poco.</p>
       </div>
 
-      <h2>Fotogramas con ffmpeg</h2>
+      <h2 id="ffmpeg">Fotogramas con ffmpeg</h2>
       <p>Del clip aprobado sacas una secuencia de imágenes numeradas para el canvas. <code>ffmpeg</code> lo hace en una línea; lo importante es decidir <strong>cuántos fotogramas</strong>, a qué <strong>tamaño</strong> y con qué <strong>calidad</strong>.</p>
 
       <script type="text/x-code" data-lang="txt" data-label="Secuencia de escritorio: 24 fps, 1600 px de ancho, WebP calidad 72">
@@ -384,6 +610,11 @@
           -c:v libwebp -quality 72 -compression_level 6 frames/desk/%04d.webp
         # resultado: frames/desk/0001.webp, 0002.webp ... (cuatro cifras: se ordenan bien)
       </script>
+      <figure class="contact bleed" aria-label="Doce de los 120 fotogramas de la secuencia de la torre">
+        <figcaption class="contact-head"><span><b>frames/desk/</b>, la secuencia real de este cuaderno</span><span>12 de 120 fotogramas, 1280 × 720, unos 28 KB cada uno</span></figcaption>
+        <ol><li><img src="../landing/frames/desk/0001.webp" alt="" loading="lazy" width="1280" height="720"><span>0001.webp</span></li><li><img src="../landing/frames/desk/0012.webp" alt="" loading="lazy" width="1280" height="720"><span>0012.webp</span></li><li><img src="../landing/frames/desk/0023.webp" alt="" loading="lazy" width="1280" height="720"><span>0023.webp</span></li><li><img src="../landing/frames/desk/0034.webp" alt="" loading="lazy" width="1280" height="720"><span>0034.webp</span></li><li><img src="../landing/frames/desk/0045.webp" alt="" loading="lazy" width="1280" height="720"><span>0045.webp</span></li><li><img src="../landing/frames/desk/0056.webp" alt="" loading="lazy" width="1280" height="720"><span>0056.webp</span></li><li><img src="../landing/frames/desk/0067.webp" alt="" loading="lazy" width="1280" height="720"><span>0067.webp</span></li><li><img src="../landing/frames/desk/0078.webp" alt="" loading="lazy" width="1280" height="720"><span>0078.webp</span></li><li><img src="../landing/frames/desk/0089.webp" alt="" loading="lazy" width="1280" height="720"><span>0089.webp</span></li><li><img src="../landing/frames/desk/0100.webp" alt="" loading="lazy" width="1280" height="720"><span>0100.webp</span></li><li><img src="../landing/frames/desk/0111.webp" alt="" loading="lazy" width="1280" height="720"><span>0111.webp</span></li><li><img src="../landing/frames/desk/0120.webp" alt="" loading="lazy" width="1280" height="720"><span>0120.webp</span></li></ol>
+      </figure>
+
       <script type="text/x-code" data-lang="txt" data-label="Secuencia de móvil, desde su propio clip 9:16, y versión AVIF">
         mkdir -p frames/movil frames/avif
         ffmpeg -i 02-vuelo-916.mp4 -vf "fps=24,scale=720:-2:flags=lanczos" \
@@ -548,7 +779,7 @@
         <p>Elige la secuencia en JS con la orientación real, no con el ancho: <code>matchMedia('(orientation: portrait)')</code> o <code>(max-aspect-ratio: 3/4)</code>. Una tablet en vertical también quiere la 9:16, y un móvil en horizontal la 16:9. Decide una sola vez al cargar; cambiar de secuencia a mitad de scroll obliga a descargar otra vez.</p>
       </div>
 
-      <h2>Vídeo para scrub, pósters y peso</h2>
+      <h2 id="peso">Vídeo para scrub, pósters y peso</h2>
       <p>La alternativa a la secuencia es un solo vídeo cuyo <code>currentTime</code> mueves con el scroll. Pesa menos, pero un MP4 normal solo tiene un fotograma completo (<em>keyframe</em>) cada pocos segundos, y saltar a un punto intermedio obliga al navegador a reconstruir desde el último keyframe. Resultado: tirones. La solución es codificar con keyframes muy frecuentes.</p>
 
       <script type="text/x-code" data-lang="txt" data-label="Vídeos preparados para scrub">
@@ -697,7 +928,7 @@
         <p class="why">Ir hacia atrás obliga a reconstruir desde el keyframe anterior. Con un keyframe en cada fotograma (o cada pocos), cada salto es inmediato. El bitrate no cambia eso, y MP4 permite buscar en ambas direcciones.</p>
       </div>
 
-      <h2>Licencias y derechos de uso</h2>
+      <h2 id="derechos">Licencias y derechos de uso</h2>
       <p>Que puedas generar una imagen no significa que puedas usarla para lo que quieras. Antes de entregar una web hecha con recursos de IA, revisa cuatro cosas:</p>
       <ol>
         <li><strong>Las condiciones de la herramienta y del plan</strong> con el que generaste. Muchas ligan el uso comercial al plan de pago, y las condiciones cambian. Guarda una copia o captura de los términos vigentes cuando generaste.</li>
@@ -740,5 +971,65 @@
     </article>
   </div>
 </main>
+<script>
+  // Portada: en escritorio el scroll vertical desliza la tira de planos (portada fija de 360vh).
+  // En móvil, o con movimiento reducido, la tira es un carrusel nativo con scroll-snap.
+  (() => {
+    const hero = document.querySelector('[data-sb]');
+    const reel = hero.querySelector('[data-reel]'), track = hero.querySelector('[data-track]');
+    const shots = [...hero.querySelectorAll('.shot')];
+    const line = hero.querySelector('[data-line]'), tc = hero.querySelector('[data-tc]'), pOut = hero.querySelector('[data-p]');
+    const hint = hero.querySelector('.sb-hint');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const mq = matchMedia('(max-width: 760px)');
+    const TOTAL = 14;                               // segundos de la secuencia completa
+    let scrub = false, ticking = false;
+
+    function mode() {
+      scrub = !reduce && !mq.matches;
+      hero.classList.toggle('scrub', scrub);
+      reel.style.transform = '';
+      if (hint) hint.lastChild.textContent = scrub ? 'Baja para rodar' : 'Desliza los planos';
+      update();
+    }
+    function readout(p) {
+      line.style.setProperty('--p', p.toFixed(4));
+      const s = p * TOTAL;
+      tc.textContent = `TC 00:${String(Math.floor(s)).padStart(2, '0')}:${String(Math.floor((s % 1) * 24)).padStart(2, '0')}`;
+      // Plano activo: el más cercano al centro de la pantalla
+      const mid = innerWidth * (mq.matches ? 0.5 : 0.55);
+      let best = 0, dist = Infinity;
+      shots.forEach((s, i) => { const r = s.getBoundingClientRect(); const d = Math.abs(r.left + r.width / 2 - mid); if (d < dist) { dist = d; best = i; } });
+      // Cada plano se «dibuja» al llegar a él y se queda dibujado
+      shots.forEach((s, i) => { if (reduce || i <= best) s.classList.add('on'); });
+      pOut.textContent = 'P0' + (best + 1);
+    }
+    function update() {
+      ticking = false;
+      if (scrub) {
+        const r = hero.getBoundingClientRect();
+        const p = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+        const dist = reel.scrollWidth - innerWidth;
+        reel.style.transform = `translate3d(${(-p * dist).toFixed(1)}px, 0, 0)`;
+        readout(p);
+      } else {
+        const sc = mq.matches ? track : reel;
+        const max = sc.scrollWidth - sc.clientWidth;
+        readout(max > 0 ? sc.scrollLeft / max : 0);
+      }
+    }
+    const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    addEventListener('scroll', req, { passive: true });
+    reel.addEventListener('scroll', req, { passive: true });
+    track.addEventListener('scroll', req, { passive: true });
+    addEventListener('resize', mode);
+    mode();
+    // Teclado en el carrusel: las flechas pasan de plano
+    [reel, track].forEach((sc) => sc.addEventListener('keydown', (e) => {
+      if (scrub || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
+      sc.scrollBy({ left: (e.key === 'ArrowRight' ? 1 : -1) * shots[0].offsetWidth, behavior: reduce ? 'auto' : 'smooth' });
+    }));
+  })();
+</script>
 </body>
 </html>

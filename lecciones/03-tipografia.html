@@ -7,21 +7,171 @@
 <meta name="description" content="Escala fluida con clamp(), titulares con tracking negativo, sans con serif cursiva y cuándo es cliché, medida, text-wrap, fuentes variables, cifras tabulares y tipografía en el móvil.">
 <link rel="stylesheet" href="../assets/css/base.css">
 <style>
-  /* Altura propia de cada demo en pantallas estrechas (data-height-mobile + --hm) */
+  /* Identidad de la lección: «Imprenta».
+     Papel casi blanco, tinta negra y un único azul ultramar. Bodoni Moda con tamaño óptico alto
+     para titulares, Inter Tight para leer. Filetes, cifras y notas al margen como en un pliego. */
+  :root {
+    --bg: oklch(97.5% 0.004 90);
+    --bg-2: oklch(94.5% 0.005 90);
+    --bg-3: oklch(90.5% 0.006 90);
+    --fg: oklch(14% 0 0);
+    --muted: oklch(44% 0.008 90);
+    --faint: oklch(56% 0.008 90);
+    --accent: oklch(52% 0.22 265);
+    --on-accent: oklch(98% 0.003 265);
+    --code-bg: oklch(17% 0.012 265);
+    --scheme: light;
+    --f-display: "Bodoni Moda", "Didot", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 500;
+    --display-tracking: -0.02em;
+  }
+  body { font-size: clamp(1.04rem, 0.98rem + 0.25vw, 1.16rem); line-height: 1.62; }
+  h1, h2, .statement { font-variation-settings: "opsz" 96; }
+  /* En tamaños medios, el tamaño óptico automático: con opsz 96 a 24 px los filetes desaparecen */
+  .prose h3, .quiz .q, .pager b, .recap h2, .reto h3 { font-variation-settings: normal; font-weight: 600; letter-spacing: -0.01em; }
+  .prose h2 { font-size: clamp(2.4rem, 1.4rem + 3.6vw, 4.6rem); line-height: .94; letter-spacing: -0.03em; }
+  .prose h2 .n { font: italic 500 1.1rem/1 var(--f-display); color: var(--accent); }
+  .prose h3 { font-weight: 600; }
   @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+
+  /* =========================================================
+     Portada: tipografía cinética. Cada letra del título cambia su peso (400–900)
+     y su eje óptico (opsz 6–96) según la distancia a una «lente» que sigue al
+     puntero, al dedo o a la inclinación del móvil; al bajar, todo el título engorda.
+     ========================================================= */
+  .hero { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bg); color: var(--fg); padding: 4.6rem var(--gutter) 1.4rem; }
+  /* Marcas de corte del pliego */
+  .cm { position: absolute; width: 22px; height: 22px; pointer-events: none; }
+  .cm::before, .cm::after { content: ""; position: absolute; background: var(--fg); }
+  .cm::before { width: 100%; height: 1px; } .cm::after { width: 1px; height: 100%; }
+  .cm.tl { top: 4rem; left: calc(var(--gutter) * .45); } .cm.tl::before { top: 0; } .cm.tl::after { left: 0; }
+  .cm.tr { top: 4rem; right: calc(var(--gutter) * .45); } .cm.tr::before { top: 0; } .cm.tr::after { right: 0; }
+  .cm.bl { bottom: .6rem; left: calc(var(--gutter) * .45); } .cm.bl::before { bottom: 0; } .cm.bl::after { left: 0; }
+  .cm.br { bottom: .6rem; right: calc(var(--gutter) * .45); } .cm.br::before { bottom: 0; } .cm.br::after { right: 0; }
+
+  .head-row { display: flex; align-items: baseline; gap: 1rem; padding: .9rem 0 .7rem; border-bottom: 3px double var(--fg); font: 500 var(--step--1)/1.2 var(--f-ui); }
+  .head-row [data-kicker] { margin: 0; }
+  .head-row .folio { margin-left: auto; font: italic 500 1.05rem/1 var(--f-display); color: var(--muted); }
+  .kin { position: relative; align-self: center; margin: 0; touch-action: pan-y; cursor: crosshair; user-select: none; -webkit-user-select: none; }
+  .kin-lines { display: block; font-family: var(--f-display); font-weight: 500; line-height: .8; letter-spacing: -0.025em; font-size: clamp(4rem, 17vw, 16rem); padding: .06em 0 .1em; }
+  .kin-lines .ln { display: block; width: max-content; max-width: none; white-space: nowrap; }
+  .kin-lines .ln + .ln { margin-top: .02em; }
+  .kin-lines .it { font-style: italic; color: var(--accent); }
+  .kin-lines .hy { color: var(--accent); }
+
+  .foot-row { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto; gap: 1rem clamp(1.5rem, 4vw, 4rem); align-items: end; padding-top: 1rem; border-top: 1px solid var(--fg); }
+  .hero .lede { margin: 0; max-width: 46ch; font-size: var(--step-0); line-height: 1.5; color: var(--muted); }
+  .hero .lede sup, .note sup { font: 600 .72em/0 var(--f-ui); color: var(--accent); }
+  .note { margin: 0; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); max-width: 40ch; }
+  .read { display: flex; gap: 1.6rem; margin: .7rem 0 0; }
+  .read div { display: grid; }
+  .read dt { font: 500 .74rem/1.2 var(--f-ui); color: var(--faint); }
+  .read dd { margin: 0; font: 600 1.5rem/1 var(--f-ui); color: var(--fg); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .meta-col { display: grid; justify-items: end; gap: .6rem; }
+  .tilt { min-height: 44px; }
+  .tilt[hidden] { display: none; }
+  /* Tipómetro: regla del eje óptico, de 6 a 96 */
+  .tipometro { position: relative; grid-column: 1 / -1; height: 30px; margin-top: .2rem;
+    background: repeating-linear-gradient(90deg, var(--fg) 0 1px, transparent 1px calc(100% / 18)) 0 0 / 100% 7px no-repeat,
+                repeating-linear-gradient(90deg, var(--fg) 0 1px, transparent 1px calc(100% / 90)) 0 0 / 100% 4px no-repeat; }
+  .tipometro span { position: absolute; top: 10px; translate: -50% 0; font: 500 .68rem/1 var(--f-ui); color: var(--faint); font-variant-numeric: tabular-nums; }
+  .tipometro span:first-child { translate: 0 0; } .tipometro span:last-of-type { translate: -100% 0; }
+  .tipometro b { position: absolute; top: -4px; width: 2px; height: 26px; background: var(--accent); left: calc((var(--o, 96) - 6) / 90 * 100%); translate: -1px 0; }
+  .tipometro b::after { content: "opsz"; position: absolute; left: 4px; top: 13px; padding: 0 4px 0 2px; background: var(--bg); font: 600 .68rem/1 var(--f-ui); color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .hero { padding-top: 4.2rem; padding-bottom: 1rem; }
+    .cm.tl, .cm.tr { top: 3.7rem; }
+    .head-row .folio { display: none; }
+    .kin-lines { line-height: .78; }
+    .foot-row { grid-template-columns: 1fr auto; gap: .8rem 1rem; }
+    .hero .lede { grid-column: 1 / -1; font-size: 1rem; }
+    .note { font-size: .82rem; }
+    .read dd { font-size: 1.25rem; }
+  }
+  @media (max-width: 760px) and (max-height: 760px) { .hero .lede { display: none; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  /* Cascada: la escala fluida real de esta página, con su tamaño en vivo */
+  .cascada { list-style: none; padding: 0 !important; margin: 2.6rem 0 3rem; border-top: 3px double var(--fg); }
+  .cascada li { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); align-items: baseline; gap: 1rem; margin: 0; padding: .7rem 0 .8rem; border-bottom: 1px solid var(--line-2); }
+  .cascada small { font: 500 .74rem/1.35 var(--f-ui); color: var(--faint); font-variant-numeric: tabular-nums; }
+  .cascada small b { display: block; color: var(--fg); font-weight: 600; font-size: .82rem; }
+  .cascada p { margin: 0; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cascada .d { font-family: var(--f-display); font-weight: 500; letter-spacing: -0.025em; font-variation-settings: "opsz" 96; }
+  .cascada .t { font-family: var(--f-ui); line-height: 1.4; }
+  @media (max-width: 640px) { .cascada li { grid-template-columns: 1fr; gap: .2rem; } .cascada small b { display: inline; margin-right: .5rem; } .cascada p { white-space: normal; line-height: 1.02; text-wrap: balance; } .cascada .t { line-height: 1.35; } }
+
+  .statement { font-size: clamp(2.3rem, 1.2rem + 4.4vw, 5.4rem); font-weight: 400; line-height: .98; letter-spacing: -0.03em; max-width: 16ch !important; text-wrap: balance; }
+  .statement em { color: var(--accent); }
+
+  /* Pliego fijo junto a las reglas de emparejar */
+  .split.pairing > div > :first-child { margin-top: 0; }
+  .pliego { display: grid; grid-template-columns: 1fr 1fr; border-block: 3px double var(--fg); }
+  .pliego div { padding: 1.4rem 1rem 1.2rem 0; }
+  .pliego div + div { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+  .pliego b { display: block; font-size: clamp(4.4rem, 3rem + 4vw, 7rem); line-height: .9; font-weight: 500; }
+  .pliego .s b { font-family: var(--f-display); font-variation-settings: "opsz" 96; letter-spacing: -0.03em; }
+  .pliego .s b i { color: var(--accent); }
+  .pliego .r b { font-family: var(--f-ui); font-weight: 600; letter-spacing: -0.04em; }
+  .pliego span { display: block; margin-top: .8rem; font: 500 .8rem/1.4 var(--f-ui); color: var(--muted); }
+  .pliego p { grid-column: 1 / -1; margin: 0; padding: .9rem 0; border-top: 1px solid var(--line-2); font-size: var(--step--1); line-height: 1.5; }
+  .pliego p .s-txt { display: inline; margin: 0; font: italic 500 1.2em/1 var(--f-display); color: var(--accent); }
+
+  /* Banda en negativo: cifras que bailan y cifras que no */
+  .band.ink { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.ink .inner > p { max-width: 46ch; color: oklch(80% 0.006 90); margin: 0 0 2rem; }
+  .band.ink h3 { margin: 0 0 1rem; font-size: clamp(2rem, 1.2rem + 3vw, 3.6rem); font-weight: 400; letter-spacing: -0.03em; }
+  .cifras { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 4rem); }
+  .cifras figure { margin: 0; }
+  .cifras figcaption { margin-bottom: .6rem; font: 600 var(--step--1)/1.2 var(--f-ui); color: oklch(78% 0.006 90); }
+  .cifras ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid oklch(100% 0 0 / .25); }
+  .cifras li { display: flex; justify-content: flex-end; padding: .25rem 0; border-bottom: 1px solid oklch(100% 0 0 / .12); font: 400 clamp(1.9rem, 1rem + 3vw, 3.6rem)/1.05 var(--f-display); }
+  .cifras .p li { font-variant-numeric: proportional-nums; }
+  .cifras .t li { font-variant-numeric: tabular-nums; }
+  .cifras li:nth-child(2) { color: oklch(72% 0.16 265); }
+  .cifras li i { margin-left: .25em; font: 400 .5em/1 var(--f-ui); align-self: center; opacity: .7; }
+  @media (max-width: 640px) { .cifras { grid-template-columns: 1fr; } }
+
+  .band.ultra { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.ultra p { margin: 0; max-width: 17ch; font: italic 400 clamp(2.2rem, 1rem + 4.6vw, 5.4rem)/1 var(--f-display); letter-spacing: -0.025em; font-variation-settings: "opsz" 96; text-wrap: balance; }
 </style>
 <script src="../vendor/prism/prism.min.js" defer></script>
 <script src="../assets/js/cuaderno.js" defer></script>
 </head>
 <body data-lesson="tipografia">
 <main id="main">
-  <header class="lesson-hero">
-    <h1>Tipografía que manda</h1>
-    <p class="lede">En una web cara, la tipografía hace la mitad del diseño. Escalas que se adaptan solas, titulares apretados que pesan, mezclas con intención y números que no bailan, desde 1440 hasta 360 píxeles.</p>
+  <header class="hero" aria-labelledby="t">
+    <i class="cm tl" aria-hidden="true"></i><i class="cm tr" aria-hidden="true"></i><i class="cm bl" aria-hidden="true"></i><i class="cm br" aria-hidden="true"></i>
+    <div class="head-row">
+      <p data-kicker>Lección 03</p>
+      <span class="folio" aria-hidden="true">Pliego tercero, Bodoni Moda</span>
+    </div>
+
+    <h1 id="t" class="kin"><span class="vh">Tipografía que manda</span><span class="kin-lines" aria-hidden="true"><span class="ln">Tipografía</span><span class="ln"><span class="it">que</span> manda</span></span></h1>
+
+    <div class="foot-row">
+      <p class="lede">En una web cara, la tipografía hace la mitad del diseño. Escalas que se adaptan solas, titulares apretados que pesan, mezclas con intención y números que no bailan, desde 1440 hasta 360 píxeles.<sup>1</sup></p>
+      <aside class="note" aria-label="Nota sobre la portada">
+        <sup>1</sup> El título es una sola fuente variable. Mueve el puntero, arrastra el dedo sobre él o baja la página: cada letra cambia de peso y de tamaño óptico en vivo.
+        <dl class="read" aria-hidden="true"><div><dt>Peso</dt><dd data-w>500</dd></div><div><dt>Óptico</dt><dd data-o>96</dd></div></dl>
+      </aside>
+      <div class="meta-col">
+        <button class="btn tilt" type="button" hidden>Usar la inclinación</button>
+        <span class="chip" data-meta>18 min</span>
+      </div>
+      <div class="tipometro" aria-hidden="true"><span style="left:0">6</span><span style="left:6.67%">12</span><span style="left:20%">24</span><span style="left:33.3%">36</span><span style="left:46.7%">48</span><span style="left:73.3%">72</span><span style="left:100%">96</span><b></b></div>
+    </div>
   </header>
 
   <div class="lesson">
     <article class="prose">
+
+      <p class="statement">Quita las fotos: lo que queda <em>sigue pareciendo caro.</em></p>
 
       <p>Quita las fotos de las tres webs de referencia y seguirían pareciendo caras. El titular de <em>mesa</em> en sans muy apretada con la cursiva, la serif fina de la torre, el contraste brutal entre el titular y el texto: todo eso es tipografía. Y casi todo se controla con cinco o seis propiedades.</p>
 
@@ -90,6 +240,17 @@
           font-size: clamp(2.064rem, 1.188rem + 3.89vw, 4.684rem);
         }
       </script>
+
+      <p>Esta misma página usa una escala así. Cada fila de la cascada está escrita con su variable real; el tamaño en píxeles es el que tiene ahora, en tu pantalla. Cambia el ancho de la ventana y mira cómo los pasos altos se mueven mucho y los bajos casi nada.</p>
+      <ol class="cascada wide" aria-label="Escala tipográfica fluida de esta página">
+        <li><small><b>--step-5</b><span data-px></span></small><p class="d" style="font-size:var(--step-5)">Torre Alba</p></li>
+        <li><small><b>--step-4</b><span data-px></span></small><p class="d" style="font-size:var(--step-4)">Residencias en el cielo</p></li>
+        <li><small><b>--step-3</b><span data-px></span></small><p class="d" style="font-size:var(--step-3)">La planta 31, esquina sureste</p></li>
+        <li><small><b>--step-2</b><span data-px></span></small><p class="d" style="font-size:var(--step-2)">Tres dormitorios y terraza de 41 m²</p></li>
+        <li><small><b>--step-1</b><span data-px></span></small><p class="t" style="font-size:var(--step-1)">Entrega de llaves en la primavera de 2027</p></li>
+        <li><small><b>--step-0</b><span data-px></span></small><p class="t" style="font-size:var(--step-0)">Texto de lectura para la ficha de cada residencia, con su medida.</p></li>
+        <li><small><b>--step--1</b><span data-px></span></small><p class="t" style="font-size:var(--step--1)">Pies de foto, notas legales y etiquetas de la interfaz.</p></li>
+      </ol>
 
       <div class="callout ojo"><span class="t">Ojo</span>
         <p>No uses solo <code>vw</code> (<code>font-size: 5vw</code>): si el usuario hace zoom, el texto no crece, porque depende del ancho de la ventana y no de su preferencia. La parte en <code>rem</code> del valor preferido es la que respeta el zoom. Por eso la fórmula siempre lleva las dos.</p>
@@ -249,12 +410,21 @@
       </figure>
 
       <h3>Reglas para emparejar</h3>
-      <ul>
-        <li><strong>Contraste claro o ninguno.</strong> Dos sans parecidas (Inter y Roboto) se ven como un error. Mezcla familias de estructura distinta (sans geométrica y serif de contraste) o usa una sola familia con varios pesos y anchos.</li>
-        <li><strong>Un papel por fuente.</strong> La serif para titulares y la sans para texto e interfaz, o al revés, pero sin intercambiarlas a mitad de página.</li>
-        <li><strong>Máximo dos familias</strong> (tres si una es monoespaciada para datos). Cada familia extra es otra voz y otro archivo que descargar.</li>
-        <li><strong>La cursiva, como un acento de color</strong>: escasa, en las palabras con carga y, si quieres, con el color de acento.</li>
-      </ul>
+      <div class="split pairing">
+        <div>
+          <ul>
+            <li><strong>Contraste claro o ninguno.</strong> Dos sans parecidas (Inter y Roboto) se ven como un error. Mezcla familias de estructura distinta (sans geométrica y serif de contraste) o usa una sola familia con varios pesos y anchos.</li>
+            <li><strong>Un papel por fuente.</strong> La serif para titulares y la sans para texto e interfaz, o al revés, pero sin intercambiarlas a mitad de página.</li>
+            <li><strong>Máximo dos familias</strong> (tres si una es monoespaciada para datos). Cada familia extra es otra voz y otro archivo que descargar.</li>
+            <li><strong>La cursiva, como un acento de color</strong>: escasa, en las palabras con carga y, si quieres, con el color de acento.</li>
+          </ul>
+        </div>
+        <figure class="stick pliego" style="margin:0" aria-label="La pareja de esta lección: Bodoni Moda e Inter Tight">
+          <div class="s"><b>A<i>a</i></b><span>Bodoni Moda, 500<br>Titulares, opsz 96</span></div>
+          <div class="r"><b>Aa</b><span>Inter Tight, 400 a 600<br>Texto e interfaz</span></div>
+          <p>La pareja de esta página: una didona de contraste extremo para mandar y una grotesca neutra para leer. <span class="s-txt">La cursiva</span>, solo en azul y solo donde pesa.</p>
+        </figure>
+      </div>
 
       <div class="quiz" data-kind="Predice" data-answer="3">
         <p class="q">Tu landing tiene seis secciones y en todos los titulares pones la última palabra en serif cursiva naranja. ¿Qué percibe el visitante?</p>
@@ -269,6 +439,8 @@
       <div class="callout movil"><span class="t">En el móvil</span>
         <p>La mezcla sans + cursiva tiene una trampa en el móvil: si la palabra en cursiva queda sola en una línea, pierde la conexión con la frase. Une con <code>&amp;nbsp;</code> las palabras de la cursiva («y&amp;nbsp;el&amp;nbsp;mar», como en la demo) o <code>text-wrap: balance</code> para que el corte caiga en un sitio que tenga sentido.</p>
       </div>
+
+      <div class="band ultra"><div class="inner"><p>La cursiva es un acento: si está en todas partes, ya no dice nada.</p></div></div>
 
       <h2>Medida, balance y pretty</h2>
       <p>La <strong>medida</strong> es la longitud de la línea. Para lectura cómoda, entre 45 y 75 caracteres; 66 es el clásico. En CSS se controla con <code>max-width</code> en unidades <code>ch</code> (el ancho del «0» de la fuente: unos 60–65 <code>ch</code> dan esos 66 caracteres). Y hay dos valores de <code>text-wrap</code> que arreglan lo que antes se hacía a mano con <code>&lt;br&gt;</code>:</p>
@@ -412,6 +584,17 @@
       <h2>Números que no bailan</h2>
       <p>La mayoría de fuentes tienen cifras <strong>proporcionales</strong> por defecto: el «1» es más estrecho que el «8». En un texto corrido queda mejor, pero en un contador que cambia, en una tabla de precios o en un reloj, los números «bailan»: el ancho cambia con cada cifra. La solución es <code>font-variant-numeric: tabular-nums</code>, que activa cifras de ancho fijo... si la fuente las tiene.</p>
 
+      <div class="band ink">
+        <div class="inner">
+          <h3>Las mismas cifras, dos anchos</h3>
+          <p>Bodoni Moda trae las dos versiones. A la izquierda, sus cifras proporcionales: el «1» es estrecho y las columnas no cuadran. A la derecha, las tabulares: cada cifra ocupa lo mismo y los millares caen unos debajo de otros.</p>
+          <div class="cifras">
+            <figure class="p"><figcaption>proportional-nums</figcaption><ol><li>1.111.111<i>€</i></li><li>1.240.000<i>€</i></li><li>8.808.080<i>€</i></li><li>711.000<i>€</i></li></ol></figure>
+            <figure class="t"><figcaption>tabular-nums</figcaption><ol><li>1.111.111<i>€</i></li><li>1.240.000<i>€</i></li><li>8.808.080<i>€</i></li><li>711.000<i>€</i></li></ol></figure>
+          </div>
+        </div>
+      </div>
+
       <figure class="lab" data-title="El contador de plantas" data-hint="Pulsa reproducir y mira los bordes" data-height="500" data-height-mobile="820" data-stage="dark" style="--hm:820px">
         <script type="text/x-demo" data-lang="html">
           <div class="counters">
@@ -536,5 +719,119 @@
     </article>
   </div>
 </main>
+<script>
+  // Portada cinética. Cada letra es un <span> con su propio peso (font-weight 400–900)
+  // y su tamaño óptico (font-variation-settings "opsz" 6–96). Una «lente» invisible
+  // recorre el título: cuanto más cerca está una letra, más gruesa y más robusta.
+  // La lente la mueven el puntero, el dedo (arrastrando en horizontal) o la inclinación;
+  // si nadie toca, pasea sola. Al bajar la página, todo el título engorda.
+  (() => {
+    const hero = document.querySelector('.hero'), h1 = hero.querySelector('.kin'), box = h1.querySelector('.kin-lines');
+    const outW = hero.querySelector('[data-w]'), outO = hero.querySelector('[data-o]'), ruler = hero.querySelector('.tipometro');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const narrow = matchMedia('(max-width: 760px)');
+    let chars = [], centers = [];
+    // En vertical, el título se parte en cuatro líneas con un guion de imprenta
+    function build() {
+      const lines = narrow.matches ? [['Tipo', '-'], ['grafía'], ['que*'], ['manda']] : [['Tipografía'], ['que*', ' manda']];
+      box.innerHTML = lines.map((parts) => '<span class="ln">' + parts.map((p) => {
+        const it = p.endsWith('*'), txt = it ? p.slice(0, -1) : p;
+        if (txt === '-') return '<span class="ch hy">-</span>';
+        return [...txt].map((c) => c === ' ' ? ' ' : `<span class="ch${it ? ' it' : ''}">${c}</span>`).join('');
+      }).join('') + '</span>').join('');
+      chars = [...box.querySelectorAll('.ch')];
+      fit();
+    }
+    // Tamaño: el mayor posible sin que ninguna línea, en su versión más ancha, se salga ni en ancho ni en alto
+    function fit() {
+      chars.forEach((c) => { c.style.fontWeight = 900; c.style.fontVariationSettings = '"opsz" 6'; });
+      box.style.fontSize = '100px';
+      const lines = [...box.querySelectorAll('.ln')];
+      const widest = Math.max(...lines.map((l) => l.scrollWidth));
+      const head = hero.querySelector('.head-row'), foot = hero.querySelector('.foot-row');
+      const cs = getComputedStyle(hero);
+      const availH = hero.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - head.offsetHeight - foot.offsetHeight - 24;
+      const byW = (h1.clientWidth / widest) * 100 * 0.97;
+      const byH = availH / (lines.length * 0.82 + 0.16);
+      box.style.fontSize = Math.max(40, Math.min(byW, byH, 300)) + 'px';
+      measure();
+      paint(true);
+    }
+    function measure() {
+      const r = h1.getBoundingClientRect();
+      centers = chars.map((c) => { const b = c.getBoundingClientRect(); return [(b.left + b.width / 2 - r.left) / r.width, (b.top + b.height / 2 - r.top) / r.height]; });
+    }
+    // Estado: posición de la lente (0–1 en ancho y alto del título), su anchura y el avance del scroll
+    const lens = { x: .72, y: .7, tx: .72, ty: .7, k: 1 };
+    let scrollP = 0, idleSince = 0, lastW = -1;
+    function paint(force) {
+      const sigma = .11 + lens.y * .16;                 // abajo, la lente se abre
+      const base = 430 + 470 * scrollP;
+      let best = 0, bestG = -1;
+      chars.forEach((c, i) => {
+        const dx = centers[i] ? centers[i][0] - lens.x : 1, dy = centers[i] ? (centers[i][1] - lens.y) * .35 : 0;
+        const g = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma)) * lens.k;
+        const w = Math.round(base + (900 - base) * g), o = Math.round(96 - 84 * g * (1 - scrollP * .5));
+        c.style.fontWeight = w; c.style.fontVariationSettings = `"opsz" ${o}`;
+        if (g > bestG) { bestG = g; best = i; c._w = w; c._o = o; chars._b = c; }
+      });
+      const b = chars._b;
+      if (b && (force || b._w !== lastW)) { lastW = b._w; outW.textContent = b._w; outO.textContent = b._o; ruler.style.setProperty('--o', b._o); }
+    }
+    function setFromPoint(x, y) {
+      const r = h1.getBoundingClientRect();
+      lens.tx = Math.min(1.05, Math.max(-.05, (x - r.left) / r.width));
+      lens.ty = Math.min(1, Math.max(0, (y - r.top) / r.height));
+      idleSince = performance.now();
+      if (reduce) { lens.x = lens.tx; lens.y = lens.ty; paint(); }
+    }
+    hero.addEventListener('pointermove', (e) => setFromPoint(e.clientX, e.clientY));
+    hero.addEventListener('pointerdown', (e) => setFromPoint(e.clientX, e.clientY));
+
+    // Inclinación del móvil: gamma (izquierda/derecha) mueve la lente; beta la abre o la cierra
+    const tiltBtn = hero.querySelector('.tilt');
+    function onTilt(e) {
+      if (e.gamma == null) return;
+      lens.tx = .5 + Math.max(-1, Math.min(1, e.gamma / 30)) * .55;
+      lens.ty = Math.max(0, Math.min(1, (e.beta - 20) / 50));
+      idleSince = performance.now();
+      if (reduce) { lens.x = lens.tx; lens.y = lens.ty; paint(); }
+    }
+    if ('DeviceOrientationEvent' in window && matchMedia('(pointer: coarse)').matches) {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS pide permiso con un gesto del usuario
+        tiltBtn.hidden = false;
+        tiltBtn.addEventListener('click', () => DeviceOrientationEvent.requestPermission().then((st) => {
+          if (st === 'granted') { addEventListener('deviceorientation', onTilt); tiltBtn.hidden = true; }
+        }).catch(() => (tiltBtn.hidden = true)));
+      } else addEventListener('deviceorientation', onTilt);
+    }
+
+    const onScroll = () => { scrollP = Math.min(1, Math.max(0, scrollY / (hero.offsetHeight * .8))); if (reduce) paint(); };
+    if (!reduce) addEventListener('scroll', onScroll, { passive: true });
+    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(build, 150); });
+
+    function loop(now) {
+      if (now - idleSince > 2600) {                    // nadie toca: la lente pasea sola
+        lens.tx = .5 + Math.sin(now / 1900) * .48;
+        lens.ty = .55 + Math.sin(now / 2700) * .35;
+      }
+      lens.x += (lens.tx - lens.x) * .09; lens.y += (lens.ty - lens.y) * .09;
+      if (hero.getBoundingClientRect().bottom > 0) paint();
+      requestAnimationFrame(loop);
+    }
+    (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+      build();
+      if (!reduce) requestAnimationFrame(loop);
+    });
+  })();
+
+  // Cascada: muestra el tamaño real en píxeles de cada paso de la escala
+  (() => {
+    const rows = [...document.querySelectorAll('.cascada li')];
+    const upd = () => rows.forEach((li) => { li.querySelector('[data-px]').textContent = Math.round(parseFloat(getComputedStyle(li.querySelector('p')).fontSize)) + ' px ahora'; });
+    upd(); addEventListener('resize', upd);
+  })();
+</script>
 </body>
 </html>
