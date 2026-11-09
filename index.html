@@ -3,170 +3,746 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hora azul, cuaderno de color y movimiento</title>
-<meta name="description" content="Cuaderno de estudio interactivo: catorce lecciones, cada una diseñada como una web distinta, para pasar de CSS normal a webs con paletas cuidadas, composición editorial y scroll cinematográfico.">
-<meta name="theme-color" content="#15132b">
+<title>Hora azul, cuaderno de color y diseño web</title>
+<meta name="description" content="Por qué unos colores combinan y otros no, qué transmite cada paleta, en qué webs funciona y qué separa una web cara de una barata. Con laboratorio interactivo.">
+<meta name="theme-color" content="#F3EEE3">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/css/base.css">
 <style>
-  :root { --f-body: "Inter Tight", system-ui, sans-serif; }
+  /* =========================================================
+     La paleta de esta web: la del vídeo de «mesa».
+     Crema #F3EEE3 · Tinta #111111 · Naranja quemado #D9541E
+     ========================================================= */
+  :root {
+    --crema: #F3EEE3;
+    --tinta: #111111;
+    --naranja: #D9541E;
+    --naranja-texto: #B5441A;   /* naranja oscurecido para texto pequeño (4,6:1 sobre crema) */
 
-  /* ---------- Portada: a la izquierda la presentación, a la derecha la torre de lecciones ---------- */
-  .home { display: grid; grid-template-columns: minmax(20rem, 0.85fr) 1.15fr; min-height: 100svh; }
-  .intro { position: sticky; top: 0; height: 100svh; display: grid; align-content: space-between; padding: 6rem var(--gutter) 2.4rem; }
-  .intro h1 { font-size: clamp(4.2rem, 2rem + 8vw, 10rem); font-weight: 560; letter-spacing: -0.055em; line-height: .8; font-stretch: 85%; }
-  .intro .lede { font-size: var(--step-1); line-height: 1.4; color: var(--muted); max-width: 30ch; margin: 1.6rem 0 2rem; }
-  .intro .actions { display: flex; flex-wrap: wrap; gap: .7rem; }
-  .intro .progress { font: 500 var(--step--1)/1.4 var(--f-ui); color: var(--muted); display: grid; gap: .6rem; }
-  .intro .progress .bar { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
-  .intro .progress .bar i { display: block; height: 100%; width: calc(var(--done, 0) * 100%); background: var(--accent); transition: width 1s var(--ease-out); }
-  .intro .progress b { color: var(--fg); font-variant-numeric: tabular-nums; }
-
-  /* Cada planta es una lección con su propia identidad (datos en cuaderno.js) */
-  #temario { padding-top: 3.6rem; }
-  .tower { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-  .block-label { padding: 2.6rem clamp(1.1rem, 2.4vw, 1.8rem) 1.2rem; }
-  .block-label h2 { font-size: var(--step-3); font-weight: 560; letter-spacing: -0.03em; }
-  .block-label p { margin: .4rem 0 0; color: var(--muted); font: 400 var(--step--1)/1.5 var(--f-ui); max-width: 52ch; }
-  .floor a {
-    --pad: clamp(1.1rem, 2.4vw, 1.8rem);
-    position: relative; display: grid; grid-template-columns: 3rem 1fr auto; align-items: end; gap: .3rem 1rem;
-    min-height: clamp(7.5rem, 17vh, 10.5rem); padding: var(--pad) var(--pad) var(--pad) calc(var(--pad) + .2rem);
-    background: var(--tbg); color: var(--tfg); text-decoration: none; overflow: hidden;
-    transition: min-height .6s var(--ease-out);
+    --bg: var(--crema);
+    --bg-2: #EAE3D5;
+    --bg-3: #DFD6C5;
+    --fg: var(--tinta);
+    --muted: #57524A;
+    --faint: #7A746A;
+    --accent: var(--naranja);
+    --on-accent: #FFFFFF;
+    --code-bg: #1A1918;
+    --scheme: light;
+    --f-display: "Inter Tight", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --display-weight: 650;
+    --display-tracking: -0.045em;
+    --wrap: 1180px;
   }
-  .floor a::before { /* línea de acento que crece al pasar */
-    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--tac); transform: scaleY(0); transform-origin: bottom; transition: transform .5s var(--ease-out);
-  }
-  .floor a:hover, .floor a:focus-visible { min-height: clamp(10rem, 24vh, 14rem); }
-  .floor a:hover::before, .floor a:focus-visible::before { transform: scaleY(1); }
-  .floor a:focus-visible { outline: 3px solid var(--tac); outline-offset: -3px; }
-  .floor .n { font: 600 .82rem/1 var(--f-ui); opacity: .7; font-variant-numeric: tabular-nums; align-self: start; padding-top: .3rem; }
-  .floor .t { font-family: var(--tf); font-weight: var(--tw); font-style: var(--ti, normal); font-stretch: var(--ts, 100%); font-size: clamp(1.7rem, 1rem + 2.4vw, 3.3rem); line-height: .98; letter-spacing: -0.025em; text-wrap: balance; }
-  .floor .s { grid-column: 2; font: 400 var(--step--1)/1.45 var(--f-ui); opacity: .78; max-width: 46ch; max-height: 0; overflow: hidden; transition: max-height .6s var(--ease-out), opacity .4s; }
-  .floor a:hover .s, .floor a:focus-visible .s { max-height: 4.5em; }
-  .floor .m { grid-row: 1; grid-column: 3; align-self: start; font: 500 .8rem/1 var(--f-ui); opacity: .75; white-space: nowrap; display: flex; align-items: center; gap: .5rem; }
-  .floor .m i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; }
-  .floor.done .m i { background: var(--tac); border-color: var(--tac); box-shadow: 0 0 10px var(--tac); }
+  body { font-size: clamp(1rem, 0.96rem + 0.2vw, 1.1rem); line-height: 1.6; }
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
+  .sec { padding: clamp(4.5rem, 10vw, 8rem) 0; }
+  .sec + .sec { border-top: 1px solid var(--line); }
+  .kick { font: 600 var(--step--1)/1 var(--f-ui); color: var(--naranja-texto); margin: 0 0 1rem; }
+  .h2 { font-size: clamp(2.3rem, 1.4rem + 3.6vw, 4.6rem); line-height: .95; letter-spacing: -0.05em; max-width: 16ch; }
+  .h2 em, .hero h1 em { font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: -0.01em; }
+  .lead { font-size: var(--step-1); line-height: 1.45; color: var(--muted); max-width: 44ch; margin: 1.2rem 0 0; }
+  .btn.dark { background: var(--tinta); color: var(--crema); border-color: var(--tinta); }
+  .btn.orange { background: var(--naranja); color: #fff; border-color: var(--naranja); }
+  .tag { display: inline-block; font: 600 .78rem/1 var(--f-ui); padding: .35rem .6rem; border-radius: 99px; }
+  .ok { --c: #2E7D4F; } .meh { --c: #A0700E; } .ko { --c: #B3261E; }
 
-  /* ---------- Extras y uso ---------- */
-  .more-wrap { max-width: var(--wide); margin: 0 auto; padding: clamp(4rem, 9vw, 7rem) var(--gutter) 5rem; }
-  .more-wrap h2 { font-size: var(--step-4); max-width: 14ch; margin-bottom: 2.4rem; }
-  .extras { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 1rem; }
-  .extras a { display: grid; gap: .5rem; align-content: end; min-height: 15rem; padding: 1.5rem; border-radius: var(--radius-m); text-decoration: none; border: 1px solid var(--line-2); transition: border-color .2s; position: relative; overflow: hidden; }
-  .extras a:hover { border-color: var(--accent); }
-  .extras b { font: 600 var(--step-2)/1.05 var(--f-display); letter-spacing: -0.02em; }
-  .extras span { color: var(--muted); font: 400 var(--step--1)/1.5 var(--f-ui); max-width: 34ch; }
-  .extras .landing { border: 0; background: center / cover no-repeat url("landing/media/torre-plantas.webp"); }
-  .extras .landing::before { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, oklch(15% 0.05 292 / .92), oklch(15% 0.05 292 / .1) 70%); }
-  .extras .landing > * { position: relative; }
-  .extras .landing span { color: oklch(90% 0.02 290); }
-  .how { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--line); }
-  .how h3 { font: 600 var(--step-0)/1.2 var(--f-display); margin-bottom: .5rem; }
-  .how p { margin: 0; color: var(--muted); font-size: var(--step--1); line-height: 1.55; }
+  /* ---------- 1. Portada ---------- */
+  .hero { min-height: 100svh; display: grid; align-items: center; padding: 6rem 0 3rem; }
+  .hero .wrap { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+  .hero h1 { font-size: clamp(3.2rem, 1.6rem + 6.4vw, 7.4rem); line-height: .9; letter-spacing: -0.055em; max-width: 11ch; }
+  .hero h1 em { position: relative; white-space: nowrap; }
+  .hero h1 em::after { content: ""; position: absolute; left: 0; right: .1em; bottom: -.02em; height: .07em; background: var(--naranja); border-radius: 99px; transform-origin: left; animation: line 1.2s .4s var(--ease-out) both; }
+  @keyframes line { from { transform: scaleX(0); } }
+  .hero .actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 2rem; }
+  .cards { display: grid; gap: .9rem; }
+  .card { position: relative; border-radius: 18px; padding: 1.2rem 1.3rem; min-height: 9.5rem; display: grid; align-content: end; gap: .2rem; box-shadow: 0 1px 0 rgb(0 0 0 / .04), 0 18px 36px -24px rgb(60 40 20 / .45); animation: rise .9s var(--ease-out) both; }
+  .card:nth-child(2) { animation-delay: .12s; } .card:nth-child(3) { animation-delay: .24s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
+  .card b { font: 600 1.4rem/1.05 var(--f-ui); letter-spacing: -0.02em; }
+  .card small { font: 500 .82rem/1.3 var(--f-code); opacity: .8; }
+  .card .role { position: absolute; top: 1.1rem; right: 1.2rem; font: 600 .78rem/1 var(--f-ui); opacity: .75; }
+  .card.c1 { background: var(--crema); color: var(--tinta); border: 1px solid var(--line-2); }
+  .card.c2 { background: var(--tinta); color: var(--crema); }
+  .card.c3 { background: var(--naranja); color: #fff; }
+  .prop { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin-top: .4rem; border: 1px solid var(--line); }
+  .prop i:nth-child(1) { flex: 60; background: var(--crema); } .prop i:nth-child(2) { flex: 30; background: var(--tinta); } .prop i:nth-child(3) { flex: 10; background: var(--naranja); }
+  .prop-label { font: 500 .8rem/1.4 var(--f-ui); color: var(--muted); display: flex; justify-content: space-between; margin-top: .4rem; }
+
+  /* ---------- 2. Por qué estos tres ---------- */
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 3rem; border-top: 2px solid var(--tinta); }
+  .three > div { padding: 1.6rem 1.6rem 1.8rem 0; }
+  .three > div + div { padding-left: 1.6rem; border-left: 1px solid var(--line-2); }
+  .chipc { width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 1px solid var(--line-2); margin-bottom: 1rem; }
+  .three h3 { font-size: var(--step-2); letter-spacing: -0.03em; margin-bottom: .2rem; }
+  .three .hex { font: 500 .85rem/1 var(--f-code); color: var(--muted); }
+  .three p { font-size: .98rem; color: var(--muted); margin: .8rem 0 0; }
+  .three p strong { color: var(--fg); }
+  .why { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(1.5rem, 4vw, 3rem) clamp(2rem, 5vw, 4rem); margin-top: 3.5rem; }
+  .why h3 { font-size: var(--step-1); letter-spacing: -0.02em; display: flex; gap: .6rem; align-items: baseline; }
+  .why h3 span { font: 600 .9rem/1 var(--f-ui); color: var(--naranja-texto); }
+  .why p { color: var(--muted); margin: .5rem 0 1rem; }
+  .viz { height: 7.5rem; border-radius: 14px; overflow: hidden; display: flex; border: 1px solid var(--line); }
+  .viz-light { background: var(--crema); align-items: center; justify-content: space-around; font: 700 2.6rem/1 var(--f-ui); }
+  .viz-light span:last-child { background: var(--tinta); color: var(--crema); align-self: stretch; display: grid; place-items: center; flex: 1; }
+  .viz-light span:first-child { flex: 1; display: grid; place-items: center; }
+  .viz-sat { background: var(--crema); display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; padding: 14px; }
+  .viz-sat i { border-radius: 6px; background: #D8D0C1; } .viz-sat i:nth-child(1) { background: #111; } .viz-sat i:nth-child(6) { background: var(--naranja); }
+  .viz-temp { background: linear-gradient(90deg, #F3EEE3 0 50%, #E6DCC6 50% 70%, #D9541E 70% 85%, #8A3A1B 85%); }
+  .viz-prop { flex-direction: column; } .viz-prop i:nth-child(1) { flex: 60; background: var(--crema); } .viz-prop i:nth-child(2) { flex: 30; background: var(--tinta); } .viz-prop i:nth-child(3) { flex: 10; background: var(--naranja); }
+  .intent { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 5vw, 4rem); margin-top: 4rem; }
+  .intent h3 { font-size: var(--step-2); letter-spacing: -0.03em; margin-bottom: 1rem; }
+  .words { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1rem; }
+  .words span { font: 400 1.5rem/1 var(--serif); font-style: italic; padding: .4rem .8rem; border: 1px solid var(--line-2); border-radius: 99px; }
+  .fit { list-style: none; margin: 0; padding: 0; }
+  .fit li { display: grid; grid-template-columns: 1.6rem 1fr; gap: .4rem; padding: .7rem 0; border-bottom: 1px solid var(--line); font-size: .98rem; color: var(--muted); }
+  .fit li b { color: var(--fg); font-weight: 650; }
+  .fit li::before { content: "✓"; color: #2E7D4F; font-weight: 700; }
+  .fit.no li::before { content: "✕"; color: #B3261E; }
+
+  /* ---------- 3. Laboratorio ---------- */
+  .lab-grid > * { min-width: 0; }
+  .lab-grid { display: grid; grid-template-columns: minmax(300px, .9fr) 1.1fr; gap: clamp(1.5rem, 3vw, 2.5rem); margin-top: 3rem; align-items: start; }
+  .panel { background: #fff; border: 1px solid var(--line-2); border-radius: 18px; padding: 1.1rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  .pick button { display: grid; gap: .35rem; text-align: left; padding: .6rem; border-radius: 12px; border: 1.5px solid var(--line-2); background: var(--crema); cursor: pointer; font: 600 .82rem/1.1 var(--f-ui); color: var(--tinta); min-height: 44px; }
+  .pick button i { height: 2.2rem; border-radius: 8px; border: 1px solid rgb(0 0 0 / .08); background: var(--sw); }
+  .pick button small { font: 500 .72rem/1 var(--f-code); color: var(--muted); }
+  .pick button[aria-pressed="true"] { border-color: var(--tinta); box-shadow: 0 0 0 2px var(--tinta); }
+  .pad-wrap { position: relative; touch-action: none; }
+  .pad { width: 100%; height: 190px; border-radius: 12px; display: block; cursor: crosshair; }
+  .knob { position: absolute; width: 26px; height: 26px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px rgb(0 0 0 / .5), 0 4px 10px rgb(0 0 0 / .3); translate: -50% -50%; pointer-events: none; background: var(--kc); }
+  .pad-axes { display: flex; justify-content: space-between; font: 500 .74rem/1 var(--f-ui); color: var(--muted); margin-top: .35rem; }
+  .row { display: grid; grid-template-columns: 6.2rem 1fr 3rem; gap: .6rem; align-items: center; font: 600 .82rem/1 var(--f-ui); }
+  .row input { width: 100%; accent-color: var(--tinta); height: 28px; }
+  .row output { font: 500 .78rem/1 var(--f-code); color: var(--muted); text-align: right; }
+  .ring-title { font: 600 .85rem/1.3 var(--f-ui); margin: 0; }
+  .ring-title span { font-weight: 400; color: var(--muted); }
+  .ring { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+  .ring button { position: relative; aspect-ratio: 1 / 1.35; border-radius: 8px; border: 0; cursor: pointer; background: var(--sw); }
+  .ring button::after { content: attr(data-mark); position: absolute; inset: auto 0 -1.25rem; font: 700 .8rem/1 var(--f-ui); color: var(--mc); }
+  .ring button[aria-current="true"] { outline: 2.5px solid var(--tinta); outline-offset: 2px; }
+  .ring-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font: 500 .76rem/1.3 var(--f-ui); color: var(--muted); margin-top: 1.4rem; }
+  .ring-legend b { font-weight: 700; }
+  .presets { display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; }
+  .presets button { flex: none; display: flex; gap: 0; border: 1px solid var(--line-2); border-radius: 99px; overflow: hidden; cursor: pointer; background: #fff; padding: 0 .7rem 0 0; align-items: center; font: 600 .78rem/1 var(--f-ui); min-height: 38px; color: var(--tinta); }
+  .presets button i { width: 14px; align-self: stretch; }
+  .presets button i:nth-child(3) { margin-right: .5rem; }
+
+  .out { display: grid; gap: 1rem; position: sticky; top: 5rem; }
+  .preview { border-radius: 16px; overflow: hidden; border: 1px solid var(--line-2); box-shadow: 0 30px 60px -40px rgb(40 20 0 / .5); background: var(--pb); color: var(--pt); transition: background-color .3s, color .3s; }
+  .pv-nav { display: flex; align-items: center; gap: 1rem; padding: .8rem 1.1rem; font: 600 .78rem/1 var(--f-ui); }
+  .pv-nav .logo { font-weight: 800; letter-spacing: -0.02em; font-size: .95rem; display: flex; align-items: center; gap: .4rem; }
+  .pv-nav .logo i { width: 18px; height: 18px; border-radius: 5px; background: var(--pt); }
+  .pv-nav .links { display: flex; gap: .9rem; opacity: .7; margin-left: .5rem; }
+  .pv-nav .cta { margin-left: auto; background: var(--pt); color: var(--pb); padding: .5rem .8rem; border-radius: 99px; }
+  .pv-hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 1.2rem; padding: 1.4rem 1.1rem 1.6rem; align-items: center; }
+  .pv-hero h3 { font: 700 clamp(1.6rem, 1rem + 2vw, 2.4rem)/.95 var(--f-ui); letter-spacing: -0.05em; margin: 0; }
+  .pv-hero h3 em { font: 400 1.08em/1 var(--serif); font-style: italic; letter-spacing: -0.01em; position: relative; white-space: nowrap; }
+  .pv-hero h3 em::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.05em; height: .08em; background: var(--pa); border-radius: 9px; }
+  .pv-hero p { font-size: .82rem; line-height: 1.5; opacity: .75; margin: .8rem 0 1rem; max-width: 34ch; }
+  .pv-btns { display: flex; align-items: center; gap: .8rem; font: 600 .78rem/1 var(--f-ui); }
+  .pv-btns .b1 { background: var(--pa); color: var(--pat); padding: .65rem 1rem; border-radius: 99px; }
+  .pv-photo { position: relative; aspect-ratio: 4 / 4.4; }
+  .pv-photo .back { position: absolute; inset: 10% -6% -6% 10%; background: var(--pa); border-radius: 10px; }
+  .pv-photo .img { position: absolute; inset: 0 8% 8% 0; border-radius: 10px; background: #888 url("landing/frames/desk/0050.webp") center / cover; filter: grayscale(1) contrast(1.05); }
+  .pv-photo .note { position: absolute; left: -12%; bottom: 6%; background: var(--pb); color: var(--pt); border-radius: 10px; padding: .55rem .7rem; font: 600 .66rem/1.35 var(--f-ui); box-shadow: 0 10px 24px -10px rgb(0 0 0 / .4); }
+  .pv-photo .note b { display: block; font-size: 1rem; }
+  .pv-logos { display: flex; justify-content: space-between; gap: .8rem; padding: .9rem 1.1rem; border-top: 1px solid color-mix(in srgb, var(--pt) 14%, transparent); font: 600 .74rem/1 var(--f-ui); opacity: .55; }
+
+  .verdict { background: #fff; border: 1px solid var(--line-2); border-radius: 16px; padding: 1.1rem 1.2rem; }
+  .verdict .big { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; margin: 0 0 .3rem; }
+  .verdict .big b { font: 700 1.9rem/1 var(--f-ui); letter-spacing: -0.04em; color: var(--c); }
+  .verdict .big span { color: var(--muted); font-size: .95rem; }
+  .checks { list-style: none; margin: .8rem 0 0; padding: 0; display: grid; gap: .1rem; }
+  .checks li { display: grid; grid-template-columns: 1.4rem 1fr; gap: .5rem; padding: .55rem 0; border-top: 1px solid var(--line); font-size: .92rem; line-height: 1.45; }
+  .checks li::before { content: "●"; color: var(--c); font-size: .8rem; padding-top: .2rem; }
+  .checks li b { font-weight: 650; }
+  .mood { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--line-2); font-size: .9rem; }
+  .mood h4 { font: 600 .8rem/1 var(--f-ui); color: var(--muted); margin: 0 0 .4rem; letter-spacing: 0; }
+  .mood p { margin: 0; }
+  .mood .w { font: 400 1.25rem/1.2 var(--serif); font-style: italic; }
+  .vals { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font: 500 .76rem/1.4 var(--f-code); color: var(--muted); }
+
+  /* ---------- 4. Cara o barata ---------- */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 3rem; }
+  .vs figure { margin: 0; }
+  .vs figcaption { display: flex; align-items: center; gap: .6rem; font: 650 1.05rem/1 var(--f-ui); margin-bottom: .7rem; }
+  .vs .shot { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line-2); height: 440px; }
+  .num { position: absolute; z-index: 5; width: 26px; height: 26px; border-radius: 50%; background: var(--c, #B3261E); color: #fff; font: 700 .8rem/26px var(--f-ui); text-align: center; box-shadow: 0 0 0 3px #fff; opacity: 0; scale: .5; transition: opacity .3s, scale .4s var(--ease-out); }
+  .show-nums .num { opacity: 1; scale: 1; }
+  .cheap .num { --c: #B3261E; } .pricey .num { --c: #2E7D4F; }
+  /* Versión barata, a propósito */
+  .cheap .shot { background: linear-gradient(135deg, #6a5cff, #26c6f9 60%, #7cf29b); font-family: Arial, Helvetica, sans-serif; color: #000; text-align: center; }
+  .ch-nav { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 8px 12px; box-shadow: 0 4px 10px rgb(0 0 0 / .45); font-size: 12px; }
+  .ch-nav b { color: #e91e63; font-size: 16px; }
+  .ch-nav span { display: flex; gap: 8px; } .ch-nav span a { color: #1565c0; text-decoration: underline; }
+  .ch-badge { display: inline-block; margin: 14px 0 4px; background: #ffeb3b; color: #d50000; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 11px; transform: rotate(-3deg); }
+  .ch-h { font-size: 26px; font-weight: bold; color: #fff; text-shadow: 2px 2px 4px #000; margin: 4px 10px; line-height: 1.1; }
+  .ch-p { font-size: 12px; color: #fff; margin: 6px 16px; }
+  .ch-btns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 10px; }
+  .ch-btns a { padding: 8px 10px; border-radius: 6px; color: #fff; font-weight: bold; font-size: 12px; box-shadow: 0 4px 8px rgb(0 0 0 / .5); text-decoration: none; }
+  .ch-btns a:nth-child(1) { background: #ff5722; } .ch-btns a:nth-child(2) { background: #4caf50; } .ch-btns a:nth-child(3) { background: #9c27b0; }
+  .ch-icons { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+  .ch-icons i { width: 54px; height: 54px; border-radius: 50%; background: #fff; box-shadow: 0 4px 10px rgb(0 0 0 / .4); display: grid; place-items: center; font-style: normal; font-size: 22px; }
+  .ch-foot { position: absolute; left: 0; right: 0; bottom: 0; background: #212121; color: #ff0; font-size: 11px; padding: 8px; }
+  /* Versión cara */
+  .pricey .shot { background: var(--crema); color: var(--tinta); }
+  .pr-nav { display: flex; align-items: center; gap: 1rem; padding: 14px 18px; font: 600 12px/1 var(--f-ui); }
+  .pr-nav b { font-weight: 800; letter-spacing: -0.02em; font-size: 15px; }
+  .pr-nav span { opacity: .6; display: flex; gap: 12px; }
+  .pr-nav a { margin-left: auto; background: var(--tinta); color: var(--crema); padding: 7px 12px; border-radius: 99px; text-decoration: none; }
+  .pr-body { padding: 26px 18px 0; display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; }
+  .pr-h { font: 700 34px/.92 var(--f-ui); letter-spacing: -0.055em; margin: 0; }
+  .pr-h em { font: 400 1.06em/1 var(--serif); font-style: italic; letter-spacing: -0.01em; border-bottom: 3px solid var(--naranja); }
+  .pr-p { font-size: 12px; line-height: 1.55; color: #57524A; margin: 12px 0 16px; max-width: 30ch; }
+  .pr-btn { display: inline-block; background: var(--naranja); color: #fff; font: 600 12px/1 var(--f-ui); padding: 10px 14px; border-radius: 99px; text-decoration: none; }
+  .pr-img { position: relative; }
+  .pr-img i { position: absolute; inset: 0 10% 18% 0; border-radius: 6px; background: #777 url("landing/frames/desk/0050.webp") center / cover; filter: grayscale(1); }
+  .pr-img s { position: absolute; inset: 14% 0 6% 16%; border-radius: 6px; background: var(--naranja); z-index: -1; }
+  .pr-img { isolation: isolate; height: 200px; }
+  .pr-logos { position: absolute; left: 18px; right: 18px; bottom: 14px; display: flex; justify-content: space-between; font: 600 11px/1 var(--f-ui); color: #8A847A; border-top: 1px solid rgb(0 0 0 / .1); padding-top: 12px; }
+  .vs-tools { display: flex; justify-content: center; margin-top: 1.4rem; }
+  .diffs { counter-reset: d; list-style: none; margin: 3rem 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 clamp(2rem, 5vw, 4rem); }
+  .diffs li { counter-increment: d; display: grid; grid-template-columns: 2.2rem 1fr; gap: .4rem .8rem; padding: 1.1rem 0; border-top: 1px solid var(--line-2); }
+  .diffs li::before { content: counter(d); width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--tinta); color: var(--crema); display: grid; place-items: center; font: 700 .8rem/1 var(--f-ui); }
+  .diffs h3 { font-size: 1.12rem; letter-spacing: -0.02em; margin: .15rem 0 .3rem; }
+  .diffs p { margin: 0; color: var(--muted); font-size: .95rem; grid-column: 2; }
+  .diffs p b { color: #B3261E; font-weight: 600; } .diffs p strong { color: #2E7D4F; font-weight: 600; }
+
+  /* ---------- 5. Paletas ---------- */
+  .pal-list { list-style: none; margin: 3rem 0 0; padding: 0; }
+  .pal { display: grid; grid-template-columns: 15rem 1fr auto; gap: 1rem 2rem; padding: 1.6rem 0; border-top: 1px solid var(--line-2); align-items: start; }
+  .pal .sw { display: flex; height: 6.5rem; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+  .pal .sw i { display: grid; align-content: end; padding: .45rem; font: 500 .66rem/1.2 var(--f-code); font-style: normal; }
+  .pal .sw i:nth-child(1) { flex: 6; } .pal .sw i:nth-child(2) { flex: 3; } .pal .sw i:nth-child(3) { flex: 1.6; }
+  .pal h3 { font-size: var(--step-1); letter-spacing: -0.03em; }
+  .pal h3 small { font: 400 1.1rem/1 var(--serif); font-style: italic; color: var(--muted); letter-spacing: 0; margin-left: .4rem; }
+  .pal dl { display: grid; grid-template-columns: 7.5rem 1fr; gap: .35rem 1rem; margin: .7rem 0 0; font-size: .94rem; }
+  .pal dt { font-weight: 650; }
+  .pal dd { margin: 0; color: var(--muted); }
+  .pal .try { align-self: center; }
+
+  /* ---------- 6. Temario ---------- */
+  .syl { display: grid; grid-template-columns: 1fr 1fr; gap: 0 clamp(2rem, 5vw, 4rem); margin-top: 3rem; }
+  .syl section { margin-bottom: 2rem; }
+  .syl h3 { font-size: var(--step-1); letter-spacing: -0.03em; margin-bottom: .2rem; }
+  .syl > section > p { margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
+  .syl ol { list-style: none; margin: 0; padding: 0; }
+  .syl a { display: grid; grid-template-columns: 2rem 1fr auto; gap: .6rem; padding: .7rem 0; border-top: 1px solid var(--line); text-decoration: none; align-items: baseline; transition: padding .3s var(--ease-out); }
+  .syl a:hover { padding-left: .4rem; }
+  .syl a span:first-child { font: 600 .8rem/1 var(--f-ui); color: var(--naranja-texto); font-variant-numeric: tabular-nums; }
+  .syl a span:nth-child(2) { font-weight: 600; letter-spacing: -0.01em; }
+  .syl a span:last-child { font-size: .8rem; color: var(--faint); }
+  .syl a.done span:last-child::before { content: "Hecha · "; color: #2E7D4F; }
+  .syl .main-block h3::after { content: "Empieza aquí"; margin-left: .6rem; font: 600 .72rem/1 var(--f-ui); color: #fff; background: var(--naranja-texto); padding: .25rem .5rem; border-radius: 99px; vertical-align: middle; letter-spacing: 0; }
 
   @media (max-width: 900px) {
-    .home { grid-template-columns: 1fr; }
-    #temario { padding-top: 0; }
-    .intro { position: relative; height: auto; min-height: 88svh; padding-top: 5.5rem; gap: 2.5rem; }
-    .floor a { grid-template-columns: 2.2rem 1fr; min-height: 7rem; }
-    .floor .m { grid-row: auto; grid-column: 2; }
-    .floor .s { max-height: none; }           /* en móvil no hay hover: la descripción siempre visible */
-    .floor a:hover, .floor a:focus-visible { min-height: 7rem; }
-    .extras { grid-template-columns: 1fr; }
-    .extras a { min-height: 11rem; }
-    .how { grid-template-columns: 1fr 1fr; }
+    .hero .wrap, .lab-grid, .intent, .vs, .syl { grid-template-columns: minmax(0, 1fr); }
+    .hero { padding-top: 5rem; min-height: auto; }
+    .cards { grid-template-columns: repeat(3, 1fr); }
+    .card { min-height: 7.5rem; padding: .9rem; border-radius: 14px; }
+    .card b { font-size: 1rem; } .card .role { position: static; order: -1; margin-bottom: auto; }
+    .three { grid-template-columns: 1fr; }
+    .three > div, .three > div + div { padding: 1.4rem 0; border-left: 0; border-bottom: 1px solid var(--line-2); display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 1rem; }
+    .three .chipc { grid-row: span 3; }
+    .three p { grid-column: 1 / -1; }
+    .why { grid-template-columns: 1fr; }
+    /* En el móvil la web de ejemplo se queda pegada arriba mientras mueves los colores */
+    .out { display: contents; }
+    .preview { order: -1; position: sticky; top: 3.4rem; z-index: 3; }
+    .verdict, .vals { order: 2; }
+    .pv-logos { display: none; }
+    .pv-hero { padding: 1rem 1.1rem 1.1rem; }
+    .vs .shot { height: 400px; }
+    .diffs { grid-template-columns: 1fr; }
+    .pal { grid-template-columns: 1fr; }
+    .pal .try { justify-self: start; }
   }
-  @media (max-width: 520px) { .how { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) {
+    .pv-hero { grid-template-columns: 1fr; } .pv-photo { display: none; }
+    .pv-nav .links { display: none; }
+    .ring { grid-template-columns: repeat(6, 1fr); row-gap: 1.6rem; }
+    .mood { grid-template-columns: 1fr; }
+    .pal dl { grid-template-columns: 1fr; gap: .1rem; } .pal dd { margin-bottom: .5rem; }
+  }
 </style>
 <script src="assets/js/cuaderno.js" defer></script>
 </head>
 <body>
 <main id="main">
-  <div class="home">
-    <section class="intro" aria-labelledby="t">
+
+  <!-- 1. Portada: la paleta de esta web -->
+  <header class="hero">
+    <div class="wrap">
       <div>
-        <h1 id="t">Hora azul</h1>
-        <p class="lede">Color, tipografía y diseño web explicados con su porqué: qué transmite cada decisión y por qué funciona. Al final, la técnica para llevarlo a webs de scroll cinematográfico.</p>
+        <p class="kick">Cuaderno de color y diseño web</p>
+        <h1>Tres colores, <em>bien elegidos.</em></h1>
+        <p class="lead">Esta web está hecha con la paleta de la landing de <em>mesa</em>: crema, tinta y naranja quemado. Aquí entiendes por qué funciona, cómo moverla sin romperla y qué separa una web cara de una barata.</p>
         <div class="actions">
-          <a class="btn primary" href="lecciones/00-criterio.html" data-continue>Empezar</a>
-          <a class="btn" href="landing/index.html">Ver el proyecto final</a>
+          <a class="btn orange" href="#laboratorio">Mueve los colores</a>
+          <a class="btn" href="#cara-barata">Web cara o barata</a>
         </div>
       </div>
-      <div class="progress" aria-live="polite">
-        <span>Has terminado <b data-done>0</b> de <b data-total>26</b> lecciones.</span>
-        <span class="bar"><i></i></span>
+      <div>
+        <div class="cards" aria-label="La paleta de esta web">
+          <div class="card c1"><span class="role">Fondo, 60 %</span><b>Crema</b><small>#F3EEE3</small></div>
+          <div class="card c2"><span class="role">Texto, 30 %</span><b>Tinta</b><small>#111111</small></div>
+          <div class="card c3"><span class="role">Acento, 10 %</span><b>Naranja quemado</b><small>#D9541E</small></div>
+        </div>
+        <div class="prop" aria-hidden="true"><i></i><i></i><i></i></div>
+        <p class="prop-label"><span>60 crema</span><span>30 tinta</span><span>10 naranja</span></p>
       </div>
-    </section>
-    <nav aria-label="Temario" id="temario">
-      <ol class="tower" data-tower></ol>
-    </nav>
-  </div>
+    </div>
+  </header>
 
-  <div class="more-wrap">
-    <h2>Para cuando quieras ir más allá</h2>
-    <div class="extras">
-      <a class="landing" href="landing/index.html"><b>Vésper</b><span>La landing final: llegada a la torre con el scroll, plantas que se iluminan y la residencia en 3D.</span></a>
-      <a href="radar.html"><b>Radar</b><span>Lo nuevo en CSS y animación con el soporte real de cada navegador.</span></a>
-      <a href="chuleta.html"><b>Chuleta</b><span>Todos los fragmentos de código del cuaderno en una página, con buscador.</span></a>
+  <!-- 2. Por qué estos tres colores -->
+  <section class="sec" id="por-que" aria-labelledby="pq-t">
+    <div class="wrap">
+      <p class="kick">La paleta, explicada</p>
+      <h2 class="h2" id="pq-t">Por qué estos tres <em>y no otros</em></h2>
+      <p class="lead">Ninguno de los tres es el color «obvio». Cada uno sustituye a uno más básico y ese cambio pequeño es lo que hace que la web parezca cuidada.</p>
+
+      <div class="three">
+        <div>
+          <i class="chipc" style="background:#F3EEE3"></i>
+          <h3>Crema</h3><span class="hex">#F3EEE3 en lugar de #FFFFFF</span>
+          <p>El blanco puro es el color de la pantalla vacía: frío, de oficina. El crema tiene un punto amarillento, como el papel. <strong>Transmite calidez, calma y algo artesanal</strong>, y cansa menos la vista en textos largos. Es el 60 %: el fondo sobre el que todo respira.</p>
+        </div>
+        <div>
+          <i class="chipc" style="background:#111"></i>
+          <h3>Tinta</h3><span class="hex">#111111 en lugar de #000000</span>
+          <p>El negro puro sobre crema crea un contraste duro que vibra. Un negro un poco levantado, como la tinta de imprenta, <strong>se lee perfecto (17:1) y es más elegante</strong>. Es el 30 %: textos, botón secundario, logotipo.</p>
+        </div>
+        <div>
+          <i class="chipc" style="background:#D9541E"></i>
+          <h3>Naranja quemado</h3><span class="hex">#D9541E en lugar de #FF6600</span>
+          <p>Un naranja chillón grita «oferta». El quemado, más oscuro y terroso, <strong>da energía sin perder seriedad</strong>: suena a arcilla, a otoño, a algo humano. Es el 10 %: solo el botón principal, el subrayado del titular y el panel detrás de la foto.</p>
+        </div>
+      </div>
+
+      <div class="why">
+        <div>
+          <h3><span>1</span>Contraste de luz: la estructura</h3>
+          <p>Crema (muy claro) frente a tinta (muy oscuro). Esa distancia de luz es lo que hace que todo se lea y que la página tenga orden. Si quitas el color, sigue funcionando: es la prueba de que la base es buena.</p>
+          <div class="viz viz-light" aria-hidden="true"><span>Aa</span><span>Aa</span></div>
+        </div>
+        <div>
+          <h3><span>2</span>Una sola nota de color</h3>
+          <p>Crema y tinta son casi neutros. Solo el naranja tiene saturación, así que el ojo va directo a él. Por eso el botón «se ve solo» sin necesidad de sombras ni flechas: es lo único con color en la pantalla.</p>
+          <div class="viz viz-sat" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div>
+          <h3><span>3</span>Todo es cálido</h3>
+          <p>El crema tira a amarillo y el naranja es cálido: comparten temperatura, así que nada choca. La tinta, neutra, hace de puente. Una paleta que comparte algo (aquí, la calidez) se siente coherente aunque tenga colores muy distintos.</p>
+          <div class="viz viz-temp" aria-hidden="true"></div>
+        </div>
+        <div>
+          <h3><span>4</span>Proporción 60 · 30 · 10</h3>
+          <p>Mucho de lo tranquilo, bastante de lo legible y muy poco de lo intenso. Si el naranja ocupara el 40 %, dejaría de ser un acento y pasaría a ser ruido. La proporción importa tanto como los colores.</p>
+          <div class="viz viz-prop" aria-hidden="true"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+
+      <div class="intent">
+        <div>
+          <h3>Qué intención tiene</h3>
+          <div class="words"><span>cercana</span><span>seria</span><span>humana</span><span>cuidada</span></div>
+          <p class="muted" style="color:var(--muted)">Es la paleta de alguien que quiere parecer profesional sin parecer un banco. El crema y la tinta dan la seriedad, el naranja pone la persona. Por eso la usan tanto las empresas tecnológicas que quieren sonar humanas.</p>
+        </div>
+        <div>
+          <h3>En qué webs queda bien</h3>
+          <ul class="fit">
+            <li><span><b>Software y apps «humanas»</b>: productividad, herramientas para pequeños negocios (como <em>mesa</em>).</span></li>
+            <li><span><b>Estudios de diseño, arquitectura y fotografía</b>: el crema da aire de revista.</span></li>
+            <li><span><b>Cafeterías de especialidad, panaderías, cerámica</b>: el naranja suena a horno y barro.</span></li>
+            <li><span><b>Editoriales, revistas, newsletters</b>: crema y tinta son literalmente papel y tinta.</span></li>
+          </ul>
+          <ul class="fit no" style="margin-top:1rem">
+            <li><span><b>Clínicas y salud</b>: el naranja transmite urgencia; ahí se busca calma fría.</span></li>
+            <li><span><b>Bancos y seguros</b>: piden azules y mucha estabilidad.</span></li>
+            <li><span><b>Infantil</b>: se queda sobria; los niños piden colores más vivos y redondos.</span></li>
+          </ul>
+        </div>
+      </div>
     </div>
-    <div class="how">
-      <div><h3>Edita las demos</h3><p>«Editar» convierte el código en un editor: cambias un valor y la demo se actualiza. «Deshacer cambios» la deja como estaba.</p></div>
-      <div><h3>Mira cómo queda en el móvil</h3><p>«Ver en móvil» muestra la demo a 390 px. Los recuadros «En el móvil» dicen qué cambiar para el teléfono.</p></div>
-      <div><h3>Criterio, no solo código</h3><p>Los recuadros «Criterio» explican las decisiones de diseño que separan una web cara de una plantilla.</p></div>
-      <div><h3>Tu progreso</h3><p>Se guarda en este navegador. Si abres el cuaderno en el móvil, allí empieza de cero.</p></div>
+  </section>
+
+  <!-- 3. Laboratorio -->
+  <section class="sec" id="laboratorio" aria-labelledby="lab-t">
+    <div class="wrap">
+      <p class="kick">Laboratorio</p>
+      <h2 class="h2" id="lab-t">Mueve los colores <em>y mira qué pasa</em></h2>
+      <p class="lead">Elige qué color quieres mover, arrastra el dedo por el cuadro y la web de ejemplo cambia al momento. Debajo te digo si la combinación es increíble, si funciona o si choca, y por qué.</p>
+
+      <div class="lab-grid">
+        <div class="panel">
+          <div class="pick" role="group" aria-label="Color que mueves">
+            <button type="button" data-k="fondo" aria-pressed="true"><i></i>Fondo<small data-hex></small></button>
+            <button type="button" data-k="tinta" aria-pressed="false"><i></i>Texto<small data-hex></small></button>
+            <button type="button" data-k="acento" aria-pressed="false"><i></i>Acento<small data-hex></small></button>
+          </div>
+          <div>
+            <div class="pad-wrap">
+              <canvas class="pad" aria-label="Arrastra: horizontal cambia el tono, vertical la luz" role="slider" tabindex="0"></canvas>
+              <span class="knob" aria-hidden="true"></span>
+            </div>
+            <div class="pad-axes"><span>← tono →</span><span>↑ claro · oscuro ↓</span></div>
+          </div>
+          <label class="row">Saturación <input type="range" min="0" max="0.32" step="0.005" data-c><output data-cv></output></label>
+          <div>
+            <p class="ring-title">Otros acentos con este fondo y este texto <span>(toca uno)</span></p>
+            <div class="ring" data-ring></div>
+            <p class="ring-legend"><span><b style="color:#2E7D4F">★</b> increíble</span><span><b style="color:#A0700E">●</b> funciona</span><span><b style="color:#B3261E">✕</b> choca</span></p>
+          </div>
+          <div>
+            <p class="ring-title">Empieza desde una paleta</p>
+            <div class="presets" data-presets></div>
+          </div>
+        </div>
+
+        <div class="out">
+          <div class="preview" aria-label="Web de ejemplo con tus colores">
+            <div class="pv-nav"><span class="logo"><i></i>mesa</span><span class="links"><span>Producto</span><span>Precios</span><span>Clientes</span></span><span class="cta">Empezar</span></div>
+            <div class="pv-hero">
+              <div>
+                <h3>El equipo que <em>nunca duerme.</em></h3>
+                <p>Lee tu correo y tu calendario y te despiertas con la lista de tareas hecha.</p>
+                <div class="pv-btns"><span class="b1">Pruébalo gratis</span><span>Ver demo</span></div>
+              </div>
+              <div class="pv-photo"><span class="back"></span><span class="img"></span><span class="note">Esta semana<b>11,5 h</b>ahorradas</span></div>
+            </div>
+            <div class="pv-logos"><span>Halcyon</span><span>Stratus</span><span>Parcel</span><span>Lumen</span></div>
+          </div>
+          <div class="verdict" aria-live="polite">
+            <p class="big"><b data-label>Increíble</b><span data-head></span></p>
+            <ul class="checks" data-checks></ul>
+            <div class="mood">
+              <div><h4>Qué transmite</h4><p class="w" data-words></p></div>
+              <div><h4>En qué webs encaja</h4><p data-webs></p></div>
+            </div>
+          </div>
+          <p class="vals" data-vals></p>
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- 4. Web cara o barata -->
+  <section class="sec" id="cara-barata" aria-labelledby="cb-t">
+    <div class="wrap">
+      <p class="kick">Criterio</p>
+      <h2 class="h2" id="cb-t">La misma web, <em>barata y cara</em></h2>
+      <p class="lead">Mismo texto, misma foto, mismo objetivo. Lo que cambia son diez decisiones. Pulsa «Señalar las diferencias» y busca cada número en las dos.</p>
+      <div class="vs" data-vs>
+        <figure class="cheap">
+          <figcaption><span class="tag" style="background:#FDE4E1;color:#B3261E">Barata</span> parece una plantilla</figcaption>
+          <div class="shot">
+            <div class="ch-nav"><b>★ MESA ★</b><span><a>Inicio</a><a>Producto</a><a>Precios</a><a>Contacto</a></span></div>
+            <span class="num" style="top:6px;left:6px">1</span>
+            <span class="ch-badge">¡¡NUEVO!! 50% DTO</span><span class="num" style="top:46px;left:40%">8</span>
+            <p class="ch-h">EL EQUIPO QUE NUNCA DUERME</p><span class="num" style="top:84px;left:10px">3</span>
+            <p class="ch-p">Mesa lee tu correo, tu calendario y tus mensajes y hace las tareas por la noche para que tú no tengas que hacerlas!!! Pruébalo hoy mismo!!!</p><span class="num" style="top:140px;right:10px">10</span>
+            <div class="ch-btns"><a>EMPEZAR YA</a><a>VER DEMO</a><a>PRECIOS</a></div><span class="num" style="top:190px;left:14px">6</span>
+            <div class="ch-icons"><i>⚡</i><i>⭐</i><i>🚀</i></div><span class="num" style="top:240px;right:30%">7</span>
+            <span class="num" style="top:250px;left:20px">5</span>
+            <span class="num" style="top:300px;right:10px">2</span><span class="num" style="top:330px;left:30%">4</span><span class="num" style="bottom:40px;left:10px">9</span>
+            <div class="ch-foot">© 2026 Mesa. Todos los derechos reservados. ★★★★★</div>
+          </div>
+        </figure>
+        <figure class="pricey">
+          <figcaption><span class="tag" style="background:#DDEFE3;color:#2E7D4F">Cara</span> cada cosa está decidida</figcaption>
+          <div class="shot">
+            <div class="pr-nav"><b>mesa</b><span><span>Producto</span><span>Precios</span></span><a>Empezar</a></div>
+            <span class="num" style="top:8px;left:8px">1</span>
+            <div class="pr-body">
+              <div>
+                <p class="pr-h">El equipo que <em>nunca duerme.</em></p>
+                <p class="pr-p">Lee tu correo y tu calendario y te despiertas con la lista de tareas hecha.</p>
+                <a class="pr-btn">Pruébalo gratis</a>
+              </div>
+              <div class="pr-img"><i></i><s></s></div>
+            </div>
+            <span class="num" style="top:64px;left:60px">3</span><span class="num" style="top:150px;left:14px">10</span><span class="num" style="top:206px;left:14px">6</span>
+            <span class="num" style="top:90px;right:14px">7</span><span class="num" style="top:250px;right:40%">4</span><span class="num" style="top:300px;left:50%">5</span>
+            <span class="num" style="top:40px;right:40%">2</span><span class="num" style="top:350px;left:20px">8</span><span class="num" style="bottom:40px;right:14px">9</span>
+            <div class="pr-logos"><span>Halcyon</span><span>Stratus</span><span>Parcel</span><span>Lumen</span></div>
+          </div>
+        </figure>
+      </div>
+      <div class="vs-tools"><button class="btn dark" type="button" data-nums aria-pressed="false">Señalar las diferencias</button></div>
+
+      <ol class="diffs">
+        <li><h3>Colores: muchos frente a tres</h3><p><b>Barata:</b> violeta, azul, verde, rosa, amarillo y tres colores de botón. <strong>Cara:</strong> crema, tinta y un naranja. Menos colores es más control: cada uno tiene un trabajo.</p></li>
+        <li><h3>Fondo: degradado arcoíris frente a color plano</h3><p><b>Barata:</b> el degradado no representa nada y le quita protagonismo al contenido. <strong>Cara:</strong> un fondo tranquilo deja hablar a la foto y al titular.</p></li>
+        <li><h3>Tipografía: gritar frente a decir</h3><p><b>Barata:</b> Arial en mayúsculas con sombra. <strong>Cara:</strong> una sans apretada con una palabra en serif cursiva. La jerarquía se consigue con tamaño y contraste de estilo, no con mayúsculas.</p></li>
+        <li><h3>Composición: todo centrado frente a asimétrico</h3><p><b>Barata:</b> todo centrado y apilado, sin tensión. <strong>Cara:</strong> texto a la izquierda e imagen a la derecha con un panel desplazado: el ojo tiene un recorrido.</p></li>
+        <li><h3>Sombras: negras y duras frente a ninguna</h3><p><b>Barata:</b> sombras grises en todo, que ensucian. <strong>Cara:</strong> la profundidad la dan las capas (el panel naranja detrás de la foto), no las sombras.</p></li>
+        <li><h3>Botones: tres colores frente a uno</h3><p><b>Barata:</b> tres botones del mismo peso compiten. <strong>Cara:</strong> un botón principal naranja y un enlace secundario. El usuario sabe qué hacer.</p></li>
+        <li><h3>Imagen: iconos genéricos frente a una foto con intención</h3><p><b>Barata:</b> emojis en círculos blancos, que no dicen nada del producto. <strong>Cara:</strong> una foto en blanco y negro con un dato real encima.</p></li>
+        <li><h3>Ruido: badges y ofertas frente a calma</h3><p><b>Barata:</b> «¡¡NUEVO!! 50 % DTO» girado. <strong>Cara:</strong> nada que distraiga del mensaje principal. La urgencia falsa abarata.</p></li>
+        <li><h3>Detalles: pie con estrellas frente a fila de clientes</h3><p><b>Barata:</b> texto amarillo sobre negro y estrellas decorativas. <strong>Cara:</strong> logos de clientes en gris, discretos: prueba social sin gritar.</p></li>
+        <li><h3>Texto: relleno frente a concreto</h3><p><b>Barata:</b> frases largas con exclamaciones. <strong>Cara:</strong> una frase corta que dice el beneficio. El buen copy es diseño.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 5. Más paletas que funcionan -->
+  <section class="sec" id="paletas" aria-labelledby="pal-t">
+    <div class="wrap">
+      <p class="kick">Paletas que funcionan</p>
+      <h2 class="h2" id="pal-t">Diez paletas <em>y su porqué</em></h2>
+      <p class="lead">Cada una con su intención, por qué combinan y en qué webs suele quedar bien. «Probar» la carga en el laboratorio para que la muevas.</p>
+      <ol class="pal-list" data-pals></ol>
+    </div>
+  </section>
+
+  <!-- 6. El cuaderno completo -->
+  <section class="sec" id="temario" aria-labelledby="tem-t">
+    <div class="wrap">
+      <p class="kick">El cuaderno completo</p>
+      <h2 class="h2" id="tem-t">Para entenderlo <em>a fondo</em></h2>
+      <p class="lead">Si quieres profundizar, aquí está todo, ordenado. Empieza por el bloque de color.</p>
+      <div class="syl" data-syl></div>
+    </div>
+  </section>
 </main>
 
 <script>
-  addEventListener('DOMContentLoaded', () => {
-    const { LESSONS, done } = window.HORA_AZUL;
-    const hechas = new Set(done());
-    const pad = (i) => String(i).padStart(2, '0');
-    const SUB = {
-      criterio: 'Contención, jerarquía, ritmo y una sola nota de color.',
-      oklch: 'OKLCH, escalas desde un color y color-mix() sin ensuciar.',
-      paletas: 'Base, tinta y acento; paletas de atardecer; contraste y modo oscuro.',
-      tipografia: 'Escalas fluidas, titulares con tensión y números tabulares.',
-      composicion: 'Retícula editorial, capas, sticky, índices y tiras horizontales.',
-      movimiento: 'Easing, duraciones, @starting-style y un único momento orquestado.',
-      'scroll-css': 'animation-timeline, view(), rangos y parallax solo con CSS.',
-      'view-transitions': 'Morphs entre vistas, tipos de transición y revelado circular.',
-      gsap: 'Timelines, ScrollTrigger con pin y scrub, SplitText y Lenis.',
-      secuencias: 'Fotogramas en canvas y vídeo controlados por el scroll.',
-      interaccion: 'Plantas en SVG sobre una foto, hotspots y contadores.',
-      recursos: 'Dirección de arte, prompts y preparación con ffmpeg.',
-      rendimiento: 'Composición, memoria, Core Web Vitals y movimiento reducido.',
-      proyecto: 'Desmontaje de la landing Vésper y tu propia versión.',
-    };
-    const INTRO = {
-      'Antes de empezar': 'La mirada: qué separa una web cara de una plantilla.',
-      'Color': 'El bloque principal: qué transmite cada color, por qué unos pegan con otros y cómo construir paletas.',
-      'Tipografía': 'Qué dice cada familia, cómo combinarlas y con qué fondo.',
-      'Diseño web': 'Cómo se piensa una web según el negocio, sector a sector.',
-      'Técnica (el extra)': 'CSS moderno, animación, scroll cinematográfico y el proyecto de la torre.',
-    };
-    let lastBlock = '';
-    document.querySelector('[data-tower]').innerHTML = LESSONS.map((l, i) => {
-      const t = l.t;
-      const head = l.block !== lastBlock ? `<li class="block-label"><h2>${l.block}</h2><p>${INTRO[l.block] || ''}</p></li>` : '';
-      lastBlock = l.block;
-      const vars = `--tbg:${t.bg};--tfg:${t.fg};--tac:${t.ac};--tf:${t.f.replace(/"/g, "'")};--tw:${t.w};${t.i ? '--ti:italic;' : ''}${t.s ? `--ts:${t.s};` : ''}`;
-      const h = hechas.has(l.id);
-      return head + `<li class="floor ${h ? 'done' : ''}" style="${vars}"><a href="lecciones/${l.file}">
-        <span class="n">${pad(i)}</span><span class="t">${l.title}</span>
-        <span class="m"><i aria-hidden="true"></i>${h ? 'Hecha' : l.min + ' min'}</span>
-        <span class="s">${SUB[l.id] || ''}</span></a></li>`;
+(() => {
+  /* ===================== Conversión de color (OKLCH ⇄ sRGB) ===================== */
+  const toLin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const toGam = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
+  function oklchToLin(L, C, H) {
+    const a = C * Math.cos(H * Math.PI / 180), b = C * Math.sin(H * Math.PI / 180);
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+    const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+    const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+  }
+  const inGamut = (rgb) => rgb.every((v) => v >= -0.0005 && v <= 1.0005);
+  // Si el color no cabe en pantalla, bajamos la saturación hasta que quepa
+  function fit(L, C, H) {
+    if (inGamut(oklchToLin(L, C, H))) return C;
+    let lo = 0, hi = C;
+    for (let i = 0; i < 18; i++) { const m = (lo + hi) / 2; inGamut(oklchToLin(L, m, H)) ? (lo = m) : (hi = m); }
+    return lo;
+  }
+  function hex(col) {
+    const lin = oklchToLin(col.l, fit(col.l, col.c, col.h), col.h).map((v) => Math.min(1, Math.max(0, v)));
+    return '#' + lin.map((v) => Math.round(toGam(v) * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
+  function lum(col) { const [r, g, b] = oklchToLin(col.l, fit(col.l, col.c, col.h), col.h).map((v) => Math.min(1, Math.max(0, v))); return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+  const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  function fromHex(h) {
+    const n = parseInt(h.slice(1), 16), [r, g, b] = [n >> 16 & 255, n >> 8 & 255, n & 255].map((v) => toLin(v / 255));
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+    let H = Math.atan2(B, A) * 180 / Math.PI; if (H < 0) H += 360;
+    return { l: L, c: Math.hypot(A, B), h: H };
+  }
+  const css = (col) => hex(col);
+  const WHITE = { l: 1, c: 0, h: 0 };
+
+  /* ===================== Qué transmite cada familia de acento ===================== */
+  const FAM = [
+    { to: 15, n: 'rosa frambuesa', w: 'atrevida, juvenil, con carácter', webs: 'moda, belleza, apps sociales, eventos' },
+    { to: 35, n: 'rojo', w: 'pasión, urgencia, apetito', webs: 'restaurantes, comida rápida, deporte, ofertas' },
+    { to: 72, n: 'naranja', w: 'energía cercana, creatividad, calidez', webs: 'software humano, comida, agencias, educación' },
+    { to: 112, n: 'amarillo o mostaza', w: 'optimismo, retro, atención', webs: 'cafeterías, educación, librerías, marcas jóvenes' },
+    { to: 140, n: 'lima', w: 'frescura, energía, tecnología', webs: 'startups, apps de deporte, eco-tecnología' },
+    { to: 172, n: 'verde', w: 'naturaleza, salud, crecimiento', webs: 'ecológico, salud, finanzas sostenibles, jardinería' },
+    { to: 212, n: 'turquesa', w: 'frescura, limpieza, calma moderna', webs: 'salud, bienestar, turismo de costa, apps' },
+    { to: 272, n: 'azul', w: 'confianza, calma, tecnología', webs: 'banca, seguros, clínicas, software para empresas' },
+    { to: 318, n: 'violeta', w: 'creatividad, misterio, lujo', webs: 'cosmética, música, tecnología creativa' },
+    { to: 361, n: 'rosa o magenta', w: 'atrevida, divertida, moderna', webs: 'moda, apps para jóvenes, eventos, belleza' },
+  ];
+  const family = (h) => FAM.find((f) => h < f.to) || FAM[0];
+  const temp = (col) => {
+    if (col.c < 0.012) return 'neutro';
+    const h = col.h;
+    if (h >= 20 && h < 115) return 'cálido';
+    if (h >= 150 && h < 300) return 'frío';
+    if (h >= 330 || h < 20) return 'cálido';
+    return 'templado';
+  };
+  const hueDist = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+  const btnText = (acc, ink) => (ratio(acc, WHITE) >= ratio(acc, ink) ? WHITE : ink);
+
+  /* ===================== El juez: por qué funciona o no ===================== */
+  function judge(f, t, a) {
+    const checks = [];
+    const add = (s, txt) => checks.push({ s, txt });
+    // 1. Lectura
+    const r1 = ratio(f, t);
+    if (r1 >= 7) add('ok', `<b>Se lee perfecto (${r1.toFixed(1)}:1).</b> Mucha distancia de luz entre texto y fondo: es la estructura de la paleta.`);
+    else if (r1 >= 4.5) add('ok', `<b>Se lee bien (${r1.toFixed(1)}:1).</b> Cumple para texto normal, aunque con menos fuerza que una tinta más oscura.`);
+    else if (r1 >= 3) add('ko', `<b>Cuesta leer (${r1.toFixed(1)}:1).</b> Solo valdría para titulares grandes. Separa más la luz del texto y del fondo.`);
+    else add('ko', `<b>No se lee (${r1.toFixed(1)}:1).</b> Texto y fondo tienen una luz demasiado parecida.`);
+    // 2. Botón
+    const bt = btnText(a, t), r2 = ratio(a, bt);
+    if (r2 >= 4.5) add('ok', `<b>El botón se lee (${r2.toFixed(1)}:1)</b> con texto ${bt === WHITE ? 'blanco' : 'oscuro'}.`);
+    else if (r2 >= 3) add('meh', `<b>Botón justo (${r2.toFixed(1)}:1).</b> Vale con texto grande y en negrita. Oscurece un poco el acento si quieres cumplir del todo (como hace esta web con #B5441A en textos pequeños).`);
+    else add('ko', `<b>El texto del botón no se lee (${r2.toFixed(1)}:1).</b> El acento tiene una luz intermedia: ni el blanco ni el oscuro contrastan.`);
+    // 3. ¿El acento destaca?
+    const r3 = ratio(a, f);
+    if (a.c < 0.07) add('ko', `<b>El acento no tiene color.</b> Con tan poca saturación es otro neutro: el ojo no sabe dónde mirar.`);
+    else if (r3 < 1.6 && Math.abs(a.l - f.l) < 0.12) add('meh', `<b>El acento se confunde con el fondo.</b> Tiene color, pero una luz muy parecida: separa su luz o súbele la saturación.`);
+    else add('ok', `<b>El acento salta a la vista.</b> Es lo único con color fuerte y se separa del fondo: el botón se ve solo.`);
+    // 4. Temperatura
+    const tf = temp(f), ta = temp(a);
+    if (tf === 'neutro') add('ok', `<b>Fondo neutro:</b> el carácter lo pone el acento. Cualquier color manda sobre él.`);
+    else if (tf === 'cálido' && ta === 'cálido') add('ok', `<b>Todo cálido:</b> fondo y acento comparten temperatura, así que nada choca. Armonía acogedora, como esta web.`);
+    else if (tf === 'frío' && ta === 'cálido') add('ok', `<b>Contraste de temperatura:</b> un acento cálido sobre un fondo frío salta y da vida. Muy eficaz para llamar a la acción.`);
+    else if (tf === 'cálido' && ta === 'frío') add('meh', `<b>Acento frío sobre fondo cálido:</b> se ve fresco, pero menos natural. Funciona si el acento es intenso y el fondo muy claro.`);
+    else if (tf === 'frío' && ta === 'frío') add('meh', `<b>Todo frío:</b> sereno y técnico, pero puede quedar distante. Bien para salud o tecnología; mal si quieres cercanía.`);
+    else add('meh', `<b>Temperatura ambigua:</b> fondo o acento en tonos intermedios. Decide si quieres que la web se sienta cálida o fría.`);
+    // 5. Fondo
+    if (f.c > 0.08 && f.l > 0.3 && f.l < 0.9) add('ko', `<b>Fondo demasiado vivo.</b> Un fondo saturado cansa, compite con el acento y hace que todo parezca un cartel.`);
+    else if (f.l >= 0.35 && f.l <= 0.82) add('meh', `<b>Fondo de luz media.</b> Ni claro ni oscuro: el texto pierde fuerza y la web se ve apagada.`);
+    else if (f.l > 0.82) add('ok', `<b>Fondo claro y tranquilo:</b> ${f.c > 0.008 && temp(f) === 'cálido' ? 'con un punto cálido, como papel' : f.c > 0.008 ? 'con un punto frío, limpio' : 'blanco neutro, limpio'}.`);
+    else add('ok', `<b>Fondo oscuro:</b> transmite algo premium y nocturno. Cuida que el acento brille sin deslumbrar.`);
+    // 6. Tinta
+    if (t.c > 0.1) add('meh', `<b>Texto muy saturado.</b> Bien para un titular, cansa en párrafos largos.`);
+    else if (t.l < 0.06 && f.l > 0.8) add('meh', `<b>Negro puro.</b> Funciona, pero un negro levantado (#111) o con un toque de color es más elegante y menos duro.`);
+    // 7. Vibración
+    if (hueDist(a.h, f.h) > 140 && a.c > 0.1 && f.c > 0.1 && Math.abs(a.l - f.l) < 0.12) add('ko', `<b>Vibran:</b> colores opuestos con el mismo brillo. Los bordes parecen parpadear y cansan la vista.`);
+    // Veredicto
+    const ko = checks.filter((c) => c.s === 'ko').length, meh = checks.filter((c) => c.s === 'meh').length;
+    let label, cls;
+    if (ko) { label = 'Choca'; cls = 'ko'; } else if (!meh) { label = 'Increíble'; cls = 'ok'; } else if (meh <= 2) { label = 'Funciona'; cls = 'meh'; } else { label = 'Floja'; cls = 'meh'; }
+    const head = ko ? checks.find((c) => c.s === 'ko').txt.replace(/<[^>]+>/g, '').split('.')[0] + '.' : !meh ? 'Contraste, color y temperatura en su sitio.' : 'Se puede usar, mejorando lo marcado.';
+    return { checks, label, cls, head };
+  }
+
+  /* ===================== Estado ===================== */
+  const S = { fondo: fromHex('#F3EEE3'), tinta: fromHex('#111111'), acento: fromHex('#D9541E') };
+  let cur = 'fondo';
+  const $ = (q, r = document) => r.querySelector(q), $$ = (q, r = document) => [...r.querySelectorAll(q)];
+  const pad = $('.pad'), knob = $('.knob'), cIn = $('[data-c]'), cOut = $('[data-cv]');
+  const ctx = pad.getContext('2d');
+
+  function drawPad() {
+    const W = 120, H = 60, img = ctx.createImageData(W, H), col = S[cur];
+    pad.width = W; pad.height = H;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const L = 1 - y / (H - 1) * 0.97, h = x / (W - 1) * 360;
+      const lin = oklchToLin(L, fit(L, col.c, h), h).map((v) => Math.min(1, Math.max(0, v)));
+      const i = (y * W + x) * 4;
+      img.data[i] = toGam(lin[0]) * 255; img.data[i + 1] = toGam(lin[1]) * 255; img.data[i + 2] = toGam(lin[2]) * 255; img.data[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  function placeKnob() {
+    const col = S[cur];
+    knob.style.left = (col.h / 360 * 100) + '%';
+    knob.style.top = ((1 - col.l) / 0.97 * 100) + '%';
+    knob.style.setProperty('--kc', css(col));
+  }
+  function render() {
+    const f = S.fondo, t = S.tinta, a = S.acento, root = document.documentElement.style;
+    const pv = $('.preview');
+    pv.style.setProperty('--pb', css(f)); pv.style.setProperty('--pt', css(t)); pv.style.setProperty('--pa', css(a));
+    pv.style.setProperty('--pat', css(btnText(a, t)));
+    $$('.pick button').forEach((b) => { const col = S[b.dataset.k]; b.style.setProperty('--sw', css(col)); $('[data-hex]', b).textContent = hex(col); });
+    cIn.value = S[cur].c; cOut.textContent = S[cur].c.toFixed(2);
+    placeKnob();
+    // Veredicto
+    const v = judge(f, t, a);
+    const vb = $('.verdict'); vb.className = 'verdict ' + v.cls;
+    $('[data-label]').textContent = v.label; $('[data-head]').textContent = v.head;
+    $('[data-checks]').innerHTML = v.checks.map((c) => `<li class="${c.s}"><span>${c.txt}</span></li>`).join('');
+    const fam = family(a.h);
+    const base = f.l > 0.9 ? (temp(f) === 'cálido' ? 'cálida y editorial' : 'limpia y luminosa') : f.l < 0.3 ? 'premium y nocturna' : 'muy marcada';
+    $('[data-words]').textContent = a.c < 0.07 ? `sobria, ${base}, sin un punto de atención claro` : `${fam.w}; base ${base}`;
+    $('[data-webs]').textContent = a.c < 0.07 ? 'Necesita un acento con color para tener intención.' : `Acento ${fam.n}: ${fam.webs}.`;
+    $('[data-vals]').textContent = ['fondo', 'tinta', 'acento'].map((k) => `${k} ${hex(S[k])} · oklch(${(S[k].l * 100).toFixed(1)}% ${S[k].c.toFixed(3)} ${Math.round(S[k].h)})`).join('   ');
+    // Anillo de acentos alternativos
+    $('[data-ring]').innerHTML = Array.from({ length: 12 }, (_, i) => {
+      const h = i * 30 + 10, cand = { l: a.l, c: Math.max(a.c, 0.12), h };
+      const j = judge(f, t, cand);
+      const mark = j.cls === 'ok' ? '★' : j.cls === 'meh' ? '●' : '✕';
+      const mc = j.cls === 'ok' ? '#2E7D4F' : j.cls === 'meh' ? '#A0700E' : '#B3261E';
+      const near = hueDist(h, a.h) < 15;
+      return `<button type="button" data-h="${h}" style="--sw:${css(cand)};--mc:${mc}" data-mark="${mark}" aria-label="${family(h).n}: ${j.label}" ${near ? 'aria-current="true"' : ''}></button>`;
     }).join('');
-    const n = LESSONS.filter((l) => hechas.has(l.id)).length;
-    document.querySelector('[data-done]').textContent = n;
-    document.querySelector('[data-total]').textContent = LESSONS.length;
-    document.querySelector('.progress').style.setProperty('--done', n / LESSONS.length);
-    const next = LESSONS.find((l) => !hechas.has(l.id));
-    const btn = document.querySelector('[data-continue]');
-    if (hechas.size && next) { btn.textContent = 'Seguir: ' + next.title; btn.href = 'lecciones/' + next.file; }
+  }
+  function select(k) {
+    cur = k;
+    $$('.pick button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.k === k)));
+    drawPad(); render();
+  }
+  $$('.pick button').forEach((b) => b.addEventListener('click', () => select(b.dataset.k)));
+
+  // Arrastrar en el cuadro: tono en horizontal, luz en vertical
+  let drag = false, raf = 0;
+  function fromPointer(e) {
+    const r = pad.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    S[cur] = { ...S[cur], h: x * 360, l: 1 - y * 0.97 };
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(render);
+  }
+  pad.addEventListener('pointerdown', (e) => { drag = true; pad.setPointerCapture(e.pointerId); fromPointer(e); });
+  pad.addEventListener('pointermove', (e) => { if (drag) fromPointer(e); });
+  pad.addEventListener('pointerup', () => (drag = false));
+  pad.addEventListener('keydown', (e) => {
+    const c = S[cur], step = e.shiftKey ? 10 : 2;
+    if (e.key === 'ArrowLeft') c.h = (c.h - step + 360) % 360; else if (e.key === 'ArrowRight') c.h = (c.h + step) % 360;
+    else if (e.key === 'ArrowUp') c.l = Math.min(1, c.l + step / 100); else if (e.key === 'ArrowDown') c.l = Math.max(0.03, c.l - step / 100); else return;
+    e.preventDefault(); render();
   });
+  cIn.addEventListener('input', () => { S[cur] = { ...S[cur], c: +cIn.value }; drawPad(); render(); });
+  $('[data-ring]').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-h]'); if (!b) return;
+    S.acento = { l: S.acento.l, c: Math.max(S.acento.c, 0.12), h: +b.dataset.h };
+    if (cur === 'acento') drawPad(); render();
+  });
+
+  /* ===================== Paletas ===================== */
+  const PALS = [
+    { n: 'Mesa', s: 'la de esta web', c: ['#F3EEE3', '#111111', '#D9541E'], i: 'Cercana pero seria: el crema y la tinta ponen la seriedad, el naranja la persona.', p: 'Contraste de luz máximo entre fondo y texto, una sola nota de color y todo en temperatura cálida.', w: 'Software para pequeños negocios, estudios de diseño, cafeterías de especialidad, editoriales.' },
+    { n: 'Tab', s: 'la del segundo vídeo', c: ['#0F1B3D', '#FFFFFF', '#FF3D8B'], i: 'Fiable pero divertida: el marino da la confianza de un banco y el rosa le quita años.', p: 'El marino oscuro hace que el blanco y el rosa brillen; rosa (cálido) sobre marino (frío) es contraste de temperatura.', w: 'Apps de finanzas para jóvenes, eventos, música, apps sociales.' },
+    { n: 'Hora azul', s: 'la de la torre', c: ['#1A1430', '#F3EEE3', '#E8B04A'], i: 'Premium y nocturna: el cielo justo después del atardecer y la luz de las ventanas.', p: 'Violeta muy oscuro y ámbar son casi complementarios: el ámbar parece luz. El crema suaviza el texto.', w: 'Inmobiliaria de lujo, hoteles, coctelerías, eventos de noche.' },
+    { n: 'Olivar', s: 'mediterránea', c: ['#F1EFE4', '#2F3A26', '#B4532A'], i: 'Natural y de la tierra, con oficio.', p: 'Verde oliva oscuro como texto en lugar de negro y terracota de acento: colores que conviven en el campo, todos apagados y terrosos.', w: 'Aceite, bodegas, restaurantes de producto, alojamientos rurales.' },
+    { n: 'Consulta', s: 'salud', c: ['#F5F8FB', '#13283F', '#1A9E8F'], i: 'Limpia, tranquila, que no asusta.', p: 'Todo frío y claro transmite higiene y calma; el turquesa es más amable que el azul puro y se asocia al cuidado.', w: 'Clínicas dentales, fisioterapia, psicología, farmacias.' },
+    { n: 'Grafito y lima', s: 'tecnológica', c: ['#121314', '#EDEDED', '#C6F432'], i: 'Energía y tecnología, sin miedo.', p: 'Sobre un fondo casi negro la lima parece encendida, como una pantalla; el gris claro evita el blanco puro, que deslumbra en oscuro.', w: 'Startups, apps de deporte, herramientas para desarrolladores.' },
+    { n: 'Arena y cobalto', s: 'editorial', c: ['#EFE8DC', '#1B1B1B', '#2347D6'], i: 'Culta y creativa, con seguridad.', p: 'Azul cobalto (frío e intenso) sobre arena (cálida): contraste de temperatura que da aire de galería y revista.', w: 'Galerías, revistas, agencias creativas, editoriales.' },
+    { n: 'Rosa empolvado', s: 'sofisticada', c: ['#F6E9E6', '#2B1E1E', '#7A1F2B'], i: 'Delicada pero adulta.', p: 'El rosa casi blanco y el burdeos son el mismo tono a distinta luz (monocromática): elegante y sin estridencias.', w: 'Cosmética, floristerías, bodas, moda femenina.' },
+    { n: 'Mostaza retro', s: 'nostálgica', c: ['#F4EBD9', '#23302B', '#E0A526'], i: 'Cálida, con historia, sin pretensiones.', p: 'Mostaza y verde muy oscuro recuerdan a los años setenta; el crema amarillento los une.', w: 'Cafeterías, barberías, librerías, marcas de producto local.' },
+    { n: 'Negro y oro viejo', s: 'lujo', c: ['#0E0D0C', '#EDE6D6', '#B89A5B'], i: 'Exclusiva, silenciosa, cara.', p: 'Un oro apagado (no amarillo brillante) sobre negro cálido: poco contraste de color y mucho de luz. El lujo no grita.', w: 'Joyería, vinos premium, restaurantes de autor, relojería.' },
+  ];
+  $('[data-pals]').innerHTML = PALS.map((p, i) => {
+    const cols = p.c.map(fromHex), fg = (col) => (ratio(col, WHITE) >= ratio(col, fromHex('#111111')) ? '#fff' : '#111');
+    return `<li class="pal"><div class="sw">${cols.map((c, k) => `<i style="background:${p.c[k]};color:${fg(c)}">${p.c[k]}</i>`).join('')}</div>
+      <div><h3>${p.n}<small>${p.s}</small></h3><dl><dt>Intención</dt><dd>${p.i}</dd><dt>Por qué combinan</dt><dd>${p.p}</dd><dt>Dónde funciona</dt><dd>${p.w}</dd></dl></div>
+      <button class="btn try" type="button" data-try="${i}">Probar</button></li>`;
+  }).join('');
+  const loadPal = (i) => { const p = PALS[i]; S.fondo = fromHex(p.c[0]); S.tinta = fromHex(p.c[1]); S.acento = fromHex(p.c[2]); drawPad(); render(); };
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-try]'); if (!b) return;
+    loadPal(+b.dataset.try); document.querySelector('#laboratorio').scrollIntoView({ behavior: 'smooth' });
+  });
+  $('[data-presets]').innerHTML = PALS.map((p, i) => `<button type="button" data-preset="${i}">${p.c.map((c) => `<i style="background:${c}"></i>`).join('')}${p.n}</button>`).join('');
+  $('[data-presets]').addEventListener('click', (e) => { const b = e.target.closest('[data-preset]'); if (b) loadPal(+b.dataset.preset); });
+
+  /* ===================== Cara o barata ===================== */
+  const nb = $('[data-nums]');
+  nb.addEventListener('click', () => { const on = $('[data-vs]').classList.toggle('show-nums'); nb.setAttribute('aria-pressed', String(on)); nb.textContent = on ? 'Ocultar las diferencias' : 'Señalar las diferencias'; });
+
+  /* ===================== Temario ===================== */
+  addEventListener('DOMContentLoaded', () => {
+    const { LESSONS, done } = window.HORA_AZUL, hechas = new Set(done());
+    const INTRO = { 'Antes de empezar': 'La mirada.', 'Color': 'Qué transmite cada color, por qué combinan y cómo construir paletas.', 'Tipografía': 'Qué dice cada letra y con qué fondo va.', 'Diseño web': 'Cómo pensar una web según el negocio.', 'Técnica (el extra)': 'CSS, animación, scroll y el proyecto de la torre.' };
+    const blocks = [...new Set(LESSONS.map((l) => l.block))];
+    let n = 0;
+    $('[data-syl]').innerHTML = blocks.map((b) => `<section class="${b === 'Color' ? 'main-block' : ''}"><h3>${b}</h3><p>${INTRO[b] || ''}</p><ol>${LESSONS.filter((l) => l.block === b).map((l) => `<li><a class="${hechas.has(l.id) ? 'done' : ''}" href="lecciones/${l.file}"><span>${String(LESSONS.indexOf(l)).padStart(2, '0')}</span><span>${l.title}</span><span>${l.min} min</span></a></li>`).join('')}</ol></section>`).join('');
+  });
+
+  drawPad(); render();
+})();
 </script>
 </body>
 </html>

@@ -273,7 +273,7 @@
 
       function render() {
         const libTags = libs.map((k) => LIBS[k] ? `<script src="${ROOT.href + LIBS[k]}"><\/script>` : '').join('');
-        frame.srcdoc = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="${new URL('.', location.href).href}"><link rel="stylesheet" href="${ROOT.href}assets/css/demo.css"><style>${parts.css || ''}</style></head><body>${parts.html || ''}${libTags}<script>${(parts.js || '').replace(/<\/script/gi, '<\\/script')}<\/script></body></html>`;
+        frame.srcdoc = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="${new URL('.', location.href).href}"><script>/* En las demos los enlaces no navegan: un href=\"#\" con <base> llevaría a una página que no existe */document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href]');if(!a)return;var h=a.getAttribute('href')||'';e.preventDefault();if(h.length>1&&h.charAt(0)==='#'){var t=document.getElementById(h.slice(1));if(t)t.scrollIntoView({behavior:'smooth'});}},true);document.addEventListener('submit',function(e){e.preventDefault();},true);<\/script><link rel="stylesheet" href="${ROOT.href}assets/css/demo.css"><style>${parts.css || ''}</style></head><body>${parts.html || ''}${libTags}<script>${(parts.js || '').replace(/<\/script/gi, '<\\/script')}<\/script></body></html>`;
       }
       restart.addEventListener('click', render);
       phoneBtn.addEventListener('click', () => {

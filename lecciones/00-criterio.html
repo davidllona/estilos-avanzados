@@ -314,7 +314,7 @@
                 <p class="sub">42 plantas, 96 residencias y la luz del Mediterráneo entrando en cada estancia.</p>
                 <div class="ctas"><a class="btn" href="#">Ver residencias</a><a class="btn2" href="#">Descargar dossier</a></div>
               </div>
-              <div class="foto"><i class="torre"></i></div>
+              <div class="foto" role="img" aria-label="La torre al atardecer"></div>
             </section>
             <ul class="stats"><li><b>42</b>plantas</li><li><b>96</b>residencias</li><li><b>2027</b>entrega de llaves</li></ul>
           </div>
@@ -329,11 +329,9 @@
           nav, .ctas, .stats { display: flex; align-items: center; }
           .stats { list-style: none; margin: 0; padding: 0; }
           a { color: inherit; text-decoration: none; }
-          .foto { position: relative; overflow: hidden; background: linear-gradient(oklch(30% .08 290), oklch(56% .14 335) 50%, oklch(80% .11 55) 66%, oklch(26% .06 280) 66.4%, oklch(17% .04 280)); }
-          .torre { position: absolute; left: 44%; bottom: 33.6%; width: 16%; height: 58%; clip-path: polygon(14% 0, 86% 2%, 100% 100%, 0 100%);
-            background: repeating-linear-gradient(90deg, #1b1830 0 2px, transparent 2px 20%), repeating-linear-gradient(#1b1830 0 2px, transparent 2px 7px),
-              linear-gradient(transparent 18%, #f3c47a 18% 22%, transparent 22% 40%, #f3c47a 40% 46%, transparent 46% 63%, #f3c47a 63% 66%, transparent 66%),
-              linear-gradient(100deg, oklch(46% .11 320), oklch(26% .06 285) 60%); }
+          /* La foto real de la torre (render del proyecto final) */
+          .foto { position: relative; overflow: hidden; background: #1b1830 url('../landing/media/torre-plantas.webp') 78% 60% / cover no-repeat; }
+          .torre { display: none; }
 
           /* ---------- Versión barata ---------- */
           .barata { background: linear-gradient(135deg, #7b5cff, #38c6f4); color: #fff; font-family: Arial, sans-serif; text-align: center; }
