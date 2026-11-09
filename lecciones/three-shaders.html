@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shaders para webs | Hora azul</title>
+<meta name="description" content="Shaders explicados para diseñadores: uv, color y tiempo; degradados vivos con los colores de la marca, ruido y grano, imágenes que se deforman, fresnel, rendimiento en el móvil y criterio para que sumen.">
+<meta name="theme-color" content="#090511">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Tinta eléctrica».
+     Noche violeta casi negra, texto lila muy claro y un único magenta.
+     Unbounded 800 para titulares (ancha, de cartel de club), Inter Tight para leer. */
+  :root {
+    --bg: oklch(13% 0.03 300);
+    --bg-2: oklch(17% 0.04 300);
+    --bg-3: oklch(22% 0.05 300);
+    --fg: oklch(95% 0.02 300);
+    --muted: oklch(78% 0.04 300);
+    --faint: oklch(66% 0.05 300);
+    --accent: oklch(74% 0.2 330);
+    --on-accent: oklch(13% 0.03 300);
+    --code-bg: oklch(10% 0.025 300);
+    --scheme: dark;
+    --f-display: "Unbounded", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 800;
+    --display-tracking: -0.04em;
+    --peach: oklch(86% 0.11 55);
+    --plum: oklch(30% 0.12 300);
+  }
+  body { font-size: clamp(1.04rem, 1rem + 0.2vw, 1.16rem); line-height: 1.64; }
+  .prose h2 { font-size: clamp(2rem, 1.25rem + 2.7vw, 3.7rem); line-height: .98; letter-spacing: -0.045em; max-width: 15ch; }
+  .prose h3 { font-weight: 700; font-size: clamp(1.25rem, 1.1rem + .6vw, 1.6rem); letter-spacing: -0.03em; }
+  .quiz .q { font-weight: 700; font-size: clamp(1.1rem, 1rem + .45vw, 1.35rem); letter-spacing: -0.025em; line-height: 1.3; }
+  .recap h2 { font-weight: 800; }
+
+  /* =========================================================
+     Portada: el fondo ES el shader
+     ========================================================= */
+  .hero {
+    --h-acc: var(--accent);
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem); grid-template-rows: 1fr auto;
+    column-gap: 3rem; background: var(--bg); color: var(--fg);
+  }
+  /* Respaldo: mientras carga, sin WebGL o con el contexto dormido se ve este degradado CSS */
+  .h-gl { position: absolute; inset: 0; z-index: -2; background:
+      radial-gradient(48% 60% at 74% 34%, oklch(70% 0.21 338 / .75), transparent 70%),
+      radial-gradient(30% 36% at 86% 18%, oklch(86% 0.11 55 / .5), transparent 70%),
+      radial-gradient(70% 80% at 60% 60%, oklch(30% 0.12 300), transparent 75%),
+      var(--bg); }
+  .h-gl canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; opacity: 0; transition: opacity 1s var(--ease-out); }
+  .h-gl.on canvas { opacity: 1; }
+  .hero::after { content: ""; position: absolute; inset: auto 0 0 0; height: 46%; z-index: -1; pointer-events: none;
+    background: linear-gradient(to top, oklch(13% 0.03 300 / .82), transparent); }
+
+  .h-copy { grid-column: 1; grid-row: 1; align-self: end; padding: 7rem 0 2.2rem var(--gutter); min-width: 0; }
+  .hero [data-kicker] { margin: 0; font: 600 var(--step--1)/1.2 var(--f-ui); color: var(--muted); }
+  .hero h1 { margin: 1.4rem 0 1.6rem; font-size: clamp(3.3rem, .4rem + 12.6vw, 13rem); line-height: .8; letter-spacing: -0.06em; }
+  .hero h1 span { display: block; margin: .4em 0 0 .05em; font-size: .3em; font-weight: 400; letter-spacing: -0.03em; line-height: 1; }
+  .hero .lede { margin: 0; max-width: 40ch; font-size: var(--step-0); line-height: 1.5; color: var(--muted); }
+  .hero .lede b { color: var(--fg); font-weight: 600; }
+
+  /* Lo que calcula ahora cada píxel */
+  .h-frag { grid-column: 2; grid-row: 1; align-self: end; margin: 0 var(--gutter) 2.4rem 0; padding: 1rem 1.1rem 1.1rem;
+    border-radius: 12px; background: oklch(9% 0.03 300 / .74); box-shadow: 0 0 0 1px oklch(100% 0 0 / .1); }
+  .h-frag p { margin: 0 0 .7rem; font: 600 .78rem/1.3 var(--f-ui); color: var(--muted); }
+  .h-frag pre { margin: 0; font: 400 .8rem/1.6 var(--f-code); white-space: pre-wrap; color: var(--fg); min-height: 4.8em; }
+  .h-frag pre i { font-style: normal; color: var(--faint); }
+  .h-frag pre b { font-weight: 500; color: var(--h-acc); transition: color .6s; }
+  .h-frag .why { margin: .8rem 0 0; font: 400 .84rem/1.45 var(--f-ui); color: var(--muted); min-height: 3.6em; }
+
+  /* Consola inferior: sin backdrop-filter a propósito (encima de un canvas animado se recalcularía en cada fotograma) */
+  .h-console { grid-column: 1 / -1; grid-row: 2; display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.6rem;
+    padding: .9rem var(--gutter) 1.1rem; border-top: 1px solid oklch(100% 0 0 / .14); background: oklch(10% 0.03 300 / .8);
+    font: 500 var(--step--1)/1.2 var(--f-ui); }
+  .seg { display: inline-flex; padding: 3px; border-radius: 99px; box-shadow: inset 0 0 0 1px oklch(100% 0 0 / .18); }
+  .seg button, .pals button { font: inherit; color: var(--muted); background: none; border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .seg button { min-height: 40px; padding: 0 1rem; border-radius: 99px; transition: background-color .3s, color .3s; }
+  .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  .pals { display: inline-flex; gap: .3rem; }
+  .pals button { display: inline-flex; align-items: center; gap: .5rem; min-height: 40px; padding: 0 .7rem 0 .45rem; border-radius: 99px; }
+  .pals i { width: 1.3rem; height: 1.3rem; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px oklch(10% 0.03 300), 0 0 0 3px transparent; transition: box-shadow .3s; }
+  .pals button[aria-pressed="true"] { color: var(--fg); }
+  .pals button[aria-pressed="true"] i { box-shadow: 0 0 0 2px oklch(10% 0.03 300), 0 0 0 3.5px var(--fg); }
+  .readout { display: inline-flex; gap: 1.1rem; margin-left: auto; font: 400 .8rem/1 var(--f-code); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .readout b { font-weight: 500; color: var(--fg); }
+  .h-console .chip { color: var(--fg); }
+  .hero.no-gl .readout { display: none; }
+
+  @media (max-width: 1100px) {
+    .hero { grid-template-columns: minmax(0, 1fr); }
+    .h-frag { grid-column: 1; grid-row: 2; margin: 0 var(--gutter) 1.2rem; max-width: 34rem; }
+    .h-console { grid-row: 3; }
+    .hero { grid-template-rows: 1fr auto auto; }
+  }
+  @media (max-width: 760px) {
+    .h-copy { padding: 5.6rem var(--gutter) 1.2rem; }
+    .hero h1 { margin: 1rem 0 1.1rem; font-size: clamp(3rem, 15.6vw, 4.8rem); }
+    .hero h1 span { font-size: .4em; }
+    .hero .lede { font-size: .98rem; }
+    .h-frag { padding: .8rem .9rem; margin-bottom: 1rem; }
+    .h-frag p:first-child { display: none; }
+    .h-frag pre { font-size: .72rem; min-height: 4.8em; }
+    .h-frag .why { font-size: .8rem; min-height: 4.4em; margin-top: .5rem; }
+    .h-console { gap: .7rem 1rem; padding-top: .8rem; }
+    .seg { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; }
+    .seg button { padding: 0 .3rem; min-height: 44px; }
+    .pals { width: 100%; justify-content: space-between; }
+    .pals button { min-height: 44px; padding: 0 .5rem 0 .3rem; }
+    .readout { margin-left: 0; gap: .8rem; font-size: .74rem; }
+    .h-console .chip { margin-left: auto; }
+  }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  .intro { font-size: var(--step-1); line-height: 1.45; color: var(--fg); }
+  .band.claim { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.claim p { margin: 0; max-width: 22ch; font: 800 clamp(1.7rem, 1rem + 2.9vw, 3.7rem)/1.02 var(--f-display); letter-spacing: -0.045em; }
+  .band.claim p span { font-weight: 300; }
+
+  /* Anatomía: uv, color, tiempo */
+  .anat { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--fg); margin-top: 2.4rem; }
+  .anat > div { padding: 1.4rem 1.4rem 1.6rem 0; border-right: 1px solid var(--line-2); }
+  .anat > div + div { padding-left: 1.4rem; }
+  .anat > div:last-child { border-right: 0; }
+  .anat .vis { height: 150px; border-radius: 10px; margin-bottom: 1.1rem; position: relative; overflow: hidden; }
+  .anat b.big { display: block; font: 800 clamp(2.6rem, 1.6rem + 2.6vw, 4rem)/.9 var(--f-display); letter-spacing: -0.05em; color: var(--accent); }
+  .anat h3 { margin: .7rem 0 .35rem; font-size: var(--step-1); }
+  .anat p { margin: 0; font-size: var(--step--1); color: var(--muted); }
+  .vis.uv { background: linear-gradient(to top, #000, #0f0), linear-gradient(to right, #000, #f00); background-blend-mode: screen; }
+  .vis.uv span { position: absolute; font: 500 .72rem/1 var(--f-code); color: #fff; text-shadow: 0 1px 2px #000; }
+  .vis.rgb { display: grid; grid-template-columns: 1fr 1fr 1fr 1.3fr; gap: 6px; align-items: end; padding: 12px; background: var(--bg-2); }
+  .vis.rgb i { display: block; border-radius: 4px 4px 0 0; height: calc(var(--v) * 100%); background: var(--c); position: relative; }
+  .vis.rgb i::after { content: attr(data-v); position: absolute; top: -1.3em; left: 0; right: 0; text-align: center; font: 500 .68rem/1 var(--f-code); color: var(--muted); }
+  .vis.rgb em { height: 100%; border-radius: 6px; background: oklch(70% 0.21 338); }
+  .vis.time { background: var(--bg-2); }
+  .vis.time svg { width: 100%; height: 100%; }
+  @media (max-width: 760px) {
+    .anat { grid-template-columns: 1fr; }
+    .anat > div, .anat > div + div { padding: 1.2rem 0; border-right: 0; border-bottom: 1px solid var(--line-2); display: grid; grid-template-columns: 7.2rem 1fr; gap: 0 1rem; align-items: start; }
+    .anat .vis { height: 7.2rem; grid-row: span 3; margin: 0; }
+    .anat b.big { font-size: 2.2rem; }
+    .anat h3 { margin-top: .3rem; }
+  }
+
+  /* Diccionario: seis funciones que hacen casi todo */
+  .dicc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem 1.6rem; margin: 2.2rem 0 1rem; }
+  .dicc div i { display: block; height: 52px; border-radius: 8px; margin-bottom: .8rem; background: var(--g); }
+  .dicc code { background: none; padding: 0; font-size: .9rem; color: var(--fg); }
+  .dicc p { margin: .3rem 0 0; font-size: var(--step--1); line-height: 1.45; color: var(--muted); }
+  @media (max-width: 760px) { .dicc { grid-template-columns: 1fr 1fr; gap: 1.5rem 1rem; } .dicc div i { height: 40px; } }
+
+  /* La receta de la portada: capas despiezadas en 3D (CSS puro) */
+  .receta { align-items: center; }
+  .stack { height: 560px; perspective: 1700px; display: grid; place-items: center; }
+  .stack-in { position: relative; width: min(82%, 380px); aspect-ratio: 16 / 10; transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-36deg); }
+  .ly { position: absolute; inset: 0; border-radius: 10px; transform: translateZ(calc(var(--i) * var(--gap, 52px) - 130px)); box-shadow: 0 0 0 1px oklch(100% 0 0 / .16); background-size: cover; }
+  .ly::after { content: attr(data-n); position: absolute; right: -2.2rem; top: 50%; translate: 0 -50%; font: 700 .9rem/1 var(--f-ui); color: var(--accent); }
+  .ly.pal { background: linear-gradient(90deg, oklch(12% .035 300) 0 25%, oklch(30% .12 300) 25% 50%, oklch(70% .21 338) 50% 75%, oklch(86% .11 55) 75%); }
+  .ly.ruido { background-color: #777; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 200' preserveAspectRatio='none'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.011' numOctaves='3' seed='7' result='n'/%3E%3CfeDisplacementMap in='n' in2='n' scale='90' xChannelSelector='R' yChannelSelector='G'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.2' intercept='-.55'/%3E%3CfeFuncG type='linear' slope='2.2' intercept='-.55'/%3E%3CfeFuncB type='linear' slope='2.2' intercept='-.55'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='320' height='200' filter='url(%23f)'/%3E%3C/svg%3E"); }
+  .ly.color { background:
+      radial-gradient(40% 55% at 70% 32%, oklch(70% 0.21 338), transparent 70%),
+      radial-gradient(24% 30% at 82% 22%, oklch(86% 0.11 55 / .9), transparent 70%),
+      radial-gradient(60% 70% at 40% 70%, oklch(30% 0.12 300), transparent 75%), oklch(12% .035 300); }
+  .ly.vin { background: radial-gradient(110% 90% at 80% 25%, transparent 25%, oklch(10% .03 300 / .92) 80%); }
+  .ly.grano { background-color: oklch(100% 0 0 / .03); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='.38'/%3E%3C/svg%3E"); background-size: 140px; }
+  .ly.texto { background: oklch(100% 0 0 / .03); display: grid; align-content: end; padding: 8% 9%; color: var(--fg); font: 800 clamp(1.5rem, 1rem + 2vw, 2.4rem)/.8 var(--f-display); letter-spacing: -0.06em; }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .ly { animation: despiece linear both; animation-timeline: view(); animation-range: entry 10% cover 45%; }
+      @keyframes despiece { from { --gap: 8px; } }
+    }
+  }
+  @property --gap { syntax: '<length>'; inherits: true; initial-value: 52px; }
+  .capas { list-style: none; padding: 0 !important; margin: 0; counter-reset: c; }
+  .capas li { counter-increment: c; display: grid; grid-template-columns: 2rem 1fr; gap: 0 .6rem; padding: .9rem 0; border-bottom: 1px solid var(--line); margin: 0; }
+  .capas li::before { content: counter(c); font: 700 .9rem/1.5 var(--f-ui); color: var(--accent); }
+  .capas b { display: block; font: 700 1rem/1.3 var(--f-display); letter-spacing: -0.02em; margin-bottom: .2rem; }
+  .capas span { grid-column: 2; font-size: var(--step--1); color: var(--muted); line-height: 1.5; }
+  @media (max-width: 760px) {
+    .stack { height: 400px; }
+    .stack-in { width: 66%; }
+    .ly { --gap: 40px; transform: translateZ(calc(var(--i) * var(--gap, 40px) - 100px)); }
+    .ly::after { right: -1.7rem; }
+  }
+
+  /* Números gigantes */
+  .band.nums { --band-bg: var(--bg-2); }
+  .nums .inner { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .nums .n4 { padding: 0 1.4rem 0 0; border-right: 1px solid var(--line-2); }
+  .nums .n4 + .n4 { padding-left: 1.4rem; }
+  .nums .n4:nth-child(4) { border-right: 0; }
+  .nums b { display: block; font: 800 clamp(2.4rem, 1.4rem + 3.2vw, 4.8rem)/.9 var(--f-display); letter-spacing: -0.06em; white-space: nowrap; }
+  .nums .n4:nth-child(4) b { color: var(--accent); }
+  .nums span { display: block; margin-top: .9rem; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); max-width: 22ch; }
+  .nums .foot { grid-column: 1 / -1; margin: 2.6rem 0 0; padding-top: 1.2rem; border-top: 1px solid var(--line); font: 400 var(--step--1)/1.5 var(--f-ui); color: var(--muted); max-width: 70ch; }
+  @media (max-width: 860px) {
+    .nums .inner { grid-template-columns: 1fr 1fr; gap: 2rem 0; }
+    .nums .n4:nth-child(2) { border-right: 0; }
+    .nums .n4:nth-child(3) { padding-left: 0; }
+  }
+
+  /* Frase de la sección de criterio: ligera para no competir con el h2 */
+  .prose .statement { margin: 2.2rem 0 2.4rem; font-weight: 300; font-size: clamp(1.6rem, 1.1rem + 2vw, 2.8rem); line-height: 1.08; letter-spacing: -0.04em; color: var(--accent); max-width: 22ch !important; }
+  .table-wrap table { min-width: 640px; }
+
+  /* Así suma / así cansa */
+  .versus { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--fg); margin: 2.4rem 0; }
+  .versus > p { margin: 0; padding: .9rem 0; font: 700 var(--step--1)/1.2 var(--f-ui); }
+  .versus > p:nth-child(1) { color: var(--accent); }
+  .versus > p:nth-child(2) { color: var(--faint); padding-left: 1.6rem; }
+  .versus > div { padding: 1.1rem 1.6rem 1.2rem 0; border-top: 1px solid var(--line-2); font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .versus > div:nth-of-type(even) { padding: 1.1rem 0 1.2rem 1.6rem; border-left: 1px solid var(--line-2); }
+  .versus > div b { display: block; margin-bottom: .3rem; font: 700 1rem/1.3 var(--f-display); letter-spacing: -0.02em; color: var(--fg); }
+  .versus > div:nth-of-type(even) b { color: color-mix(in oklab, var(--fg) 70%, var(--bg)); text-decoration: line-through; text-decoration-color: oklch(64% 0.17 20); text-decoration-thickness: 2px; }
+  @media (max-width: 640px) {
+    .versus { grid-template-columns: 1fr; }
+    .versus > p:nth-child(2) { display: none; }
+    .versus > div:nth-of-type(even) { padding: .2rem 0 1.4rem 1rem; border-left: 2px solid oklch(64% 0.17 20 / .6); border-top: 0; margin-bottom: .4rem; }
+    .versus > div:nth-of-type(even)::before { content: "Así cansa"; display: block; font: 700 .75rem/1 var(--f-ui); color: var(--faint); margin-bottom: .5rem; }
+  }
+</style>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="three-shaders">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="h-gl" aria-hidden="true"></div>
+    <div class="h-copy">
+      <p data-kicker>Lección</p>
+      <h1 id="t">Shaders <span>para webs</span></h1>
+      <p class="lede">Este fondo no es un vídeo ni una imagen: es un programa que la tarjeta gráfica ejecuta <b>para cada píxel, sesenta veces por segundo</b>. Mueve el ratón o toca para removerlo.</p>
+    </div>
+    <aside class="h-frag" aria-live="polite">
+      <p>Lo que calcula ahora cada píxel</p>
+      <pre data-code></pre>
+      <p class="why" data-why></p>
+    </aside>
+    <div class="h-console">
+      <div class="seg" role="group" aria-label="Capa del shader que se ve">
+        <button type="button" data-view="0" aria-pressed="true">Final</button>
+        <button type="button" data-view="1" aria-pressed="false">uv</button>
+        <button type="button" data-view="2" aria-pressed="false">Ruido</button>
+        <button type="button" data-view="3" aria-pressed="false">Grano</button>
+      </div>
+      <div class="pals" role="group" aria-label="Paleta">
+        <button type="button" data-pal="medianoche" aria-pressed="true" style="--c: oklch(70% 0.21 338)"><i></i>Medianoche</button>
+        <button type="button" data-pal="aurora" aria-pressed="false" style="--c: oklch(78% 0.16 165)"><i></i>Aurora</button>
+        <button type="button" data-pal="brasa" aria-pressed="false" style="--c: oklch(70% 0.2 40)"><i></i>Brasa</button>
+      </div>
+      <span class="readout" aria-hidden="true"><span>uTime <b data-ro="t">0.0</b></span><span>fps <b data-ro="fps">--</b></span><span>res <b data-ro="res">--</b></span></span>
+      <span class="chip" data-meta>30 min</span>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p class="intro">Ya has trasteado con shaders en tus repos de galaxias. Aquí el objetivo es otro: usarlos en webs de clientes con criterio, para que el shader trabaje para la marca (sus colores, su tipografía, su ritmo) y no al revés.</p>
+      <p>Un fondo como el de esta portada pesa menos que un icono, nunca se pixela en una pantalla 4K, cambia de paleta en un segundo y reacciona a quien lo toca. Bien usado, es la diferencia entre una web que parece una plantilla y una que parece hecha a medida. Mal usado, es un salvapantallas que se come la batería del móvil. Esta lección va de saber distinguirlo.</p>
+
+      <h2>Qué es un shader, explicado para diseñadores</h2>
+      <p>Olvida por un momento las matemáticas. Un shader es una función que responde a una sola pregunta: <strong>¿de qué color es este píxel?</strong> La tarjeta gráfica la ejecuta a la vez para todos los píxeles de la pantalla, y cada ejecución solo sabe tres cosas: dónde está, qué hora es y los valores que le mandas desde JavaScript.</p>
+
+      <div class="anat wide">
+        <div>
+          <div class="vis uv" aria-hidden="true"><span style="left:8px;bottom:8px">(0, 0)</span><span style="right:8px;top:8px">(1, 1)</span><span style="right:8px;bottom:8px">(1, 0)</span><span style="left:8px;top:8px">(0, 1)</span></div>
+          <b class="big">uv</b><h3>Dónde estoy</h3>
+          <p>Dos números de 0 a 1: <code>x</code> de izquierda a derecha y <code>y</code> de abajo arriba. Si pintas <code>x</code> en rojo e <code>y</code> en verde sale este cuadrado. Es el lienzo del shader.</p>
+        </div>
+        <div>
+          <div class="vis rgb" aria-hidden="true"><i data-v="0.95" style="--v:.95; --c:#e8456b"></i><i data-v="0.31" style="--v:.31; --c:#3fbf7f"></i><i data-v="0.72" style="--v:.72; --c:#4f7cff"></i><em></em></div>
+          <b class="big">rgb</b><h3>Qué devuelvo</h3>
+          <p>Tres números de 0 a 1 (rojo, verde y azul) y la opacidad. Todo el shader es una receta para llegar a ese <code>vec3</code>, la salida que se pinta.</p>
+        </div>
+        <div>
+          <div class="vis time" aria-hidden="true"><svg viewBox="0 0 300 150" preserveAspectRatio="none"><path d="M0 75 C 25 20, 50 20, 75 75 S 125 130, 150 75 S 200 20, 225 75 S 275 130, 300 75" fill="none" stroke="oklch(74% 0.2 330)" stroke-width="3"/><line x1="0" y1="75" x2="300" y2="75" stroke="oklch(100% 0 0 / .15)"/><circle cx="187" cy="34" r="7" fill="oklch(86% 0.11 55)"/></svg></div>
+          <b class="big">t</b><h3>Cuándo</h3>
+          <p>Un número que crece en cada fotograma, el <code>uTime</code>. Mételo dentro de un <code>sin()</code> y todo respira, porque el seno va y vuelve entre -1 y 1 sin parar.</p>
+        </div>
+      </div>
+
+      <p>Hay dos shaders en juego. El <strong>de vértices</strong> coloca los puntos de la geometría y el <strong>de fragmentos</strong> pinta lo que queda dentro. Para un fondo, el de vértices solo estira un rectángulo a toda la pantalla; todo lo interesante pasa en el de fragmentos, y en él se centra esta lección.</p>
+      <p>Lo que mandas desde JavaScript se llama <strong>uniform</strong>: el tiempo, la posición del ratón, los colores de la marca. Son los mandos del shader y la frontera entre tu web y la tarjeta gráfica. Por eso, para un diseñador, <em>el diseño vive en los uniforms</em>: el shader es la máquina, los uniforms son las decisiones.</p>
+
+      <h3>Las seis funciones que hacen casi todo</h3>
+      <p>Con estas seis, más sumar y multiplicar, se escribe la mayoría de los fondos que ves en webs premiadas. Mira el dibujo antes que la definición.</p>
+      <div class="dicc wide">
+        <div><i style="--g: linear-gradient(90deg, var(--plum), var(--accent))"></i><code>mix(a, b, t)</code><p>Mezcla dos valores. Con <code>t</code> de 0 a 1 es un degradado.</p></div>
+        <div><i style="--g: linear-gradient(90deg, var(--plum) 50%, var(--accent) 50%)"></i><code>step(borde, x)</code><p>0 o 1 según pases el borde. Un corte seco.</p></div>
+        <div><i style="--g: linear-gradient(90deg, var(--plum) 32%, var(--accent) 68%)"></i><code>smoothstep(a, b, x)</code><p>El mismo corte con transición suave. El borde elegante.</p></div>
+        <div><i style="--g: repeating-linear-gradient(90deg, var(--plum), var(--accent) 12.5%, var(--plum) 25%)"></i><code>sin(x)</code><p>Va y viene. Ondas, bandas y respiración.</p></div>
+        <div><i style="--g: repeating-linear-gradient(90deg, var(--plum), var(--accent) 25%)"></i><code>fract(x)</code><p>Se queda con los decimales: sube y vuelve a cero. Repite cosas.</p></div>
+        <div><i style="--g: radial-gradient(circle at 50% 50%, var(--accent), var(--plum) 70%)"></i><code>length(uv - 0.5)</code><p>Distancia al centro. Círculos, focos y viñetas.</p></div>
+      </div>
+
+      <figure class="lab" data-three data-title="Playground GLSL" data-hint="Toca los mandos o pulsa Editar" data-height="480" data-height-mobile="600" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <canvas aria-label="Fondo generado por el shader"></canvas>
+          <div class="panel" id="panel"></div>
+          <pre class="error" id="error" hidden></pre>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { background: #120a1a; color: #f4ecf7; overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+          .panel {
+            position: fixed; left: 12px; right: 12px; bottom: 12px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px 18px;
+            padding: 12px 14px; border-radius: 12px; background: rgb(12 6 18 / .8);
+            font: 500 12px/1.2 var(--f-sans);
+          }
+          .panel label { display: grid; gap: 2px; }
+          .panel span { display: flex; justify-content: space-between; opacity: .85; }
+          .panel b { font: 400 11px var(--f-mono); opacity: .7; }
+          .panel input[type=range] { width: 100%; height: 30px; margin: 0; accent-color: #ff6fc4; }
+          .panel input[type=color] { width: 100%; height: 30px; border: 0; padding: 0; background: none; cursor: pointer; }
+          .error { position: fixed; inset: 12px 12px auto; margin: 0; padding: 12px; border-radius: 10px; background: #2a0710; color: #ffb3c4; font: 12px/1.5 var(--f-mono); white-space: pre-wrap; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          // 1. Los uniforms: los mandos del shader. Cada uno sale abajo como control.
+          const mandos = {
+            uEscala:    { value: 4.0,  min: 0.5, max: 12, label: 'Escala' },
+            uVelocidad: { value: 0.35, min: 0,   max: 2,  label: 'Velocidad' },
+            uOndas:     { value: 1.2,  min: 0,   max: 3,  label: 'Ondas' },
+            uFondo:     { value: '#1a0b2e', label: 'Fondo' },
+            uBrillo:    { value: '#ff4fb8', label: 'Brillo' },
+          };
+
+          // 2. El fragment shader: se ejecuta una vez por píxel. Pulsa «Editar» y cámbialo.
+          const frag = /* glsl */ `
+            uniform float uTime, uEscala, uVelocidad, uOndas;
+            uniform vec3 uFondo, uBrillo;
+            varying vec2 vUv;   // dónde está el píxel: (0,0) abajo a la izquierda, (1,1) arriba a la derecha
+
+            void main() {
+              float t = uTime * uVelocidad;
+              // dos ondas cruzadas que se doblan una a la otra: seda
+              float a = sin(vUv.x * uEscala + t + sin(vUv.y * 3.0 - t) * uOndas);
+              float b = sin(vUv.y * uEscala * 0.6 - t * 0.7 + a * uOndas);
+              float brillo = pow(0.5 + 0.5 * a * b, 3.0);       // de -1..1 a 0..1, y solo las crestas
+              brillo *= smoothstep(0.0, 1.0, vUv.y + 0.15);     // más calma abajo, donde iría el texto
+              gl_FragColor = vec4(mix(uFondo, uBrillo, brillo), 1.0);
+              #include <colorspace_fragment>
+            }`;
+
+          // 3. Lo de siempre: renderer, un rectángulo a pantalla completa y el bucle
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          // Si el GLSL tiene un error, lo enseñamos encima en vez de dejar la pantalla negra
+          renderer.debug.onShaderError = (gl, program, vs, fs) => {
+            error.hidden = false;
+            error.textContent = gl.getShaderInfoLog(fs) || gl.getShaderInfoLog(vs) || gl.getProgramInfoLog(program);
+          };
+
+          const uniforms = { uTime: { value: 0 } };
+          for (const [k, m] of Object.entries(mandos)) {
+            uniforms[k] = { value: typeof m.value === 'string' ? new THREE.Color(m.value) : m.value };
+          }
+          const material = new THREE.ShaderMaterial({
+            uniforms, fragmentShader: frag,
+            vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+          });
+          const scene = new THREE.Scene();
+          scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+          const camera = new THREE.Camera();   // el rectángulo ya viene en coordenadas de pantalla
+
+          // Controles generados a partir de los mandos
+          for (const [k, m] of Object.entries(mandos)) {
+            const color = typeof m.value === 'string';
+            const label = document.createElement('label');
+            label.innerHTML = `<span>${m.label} <b>${color ? '' : m.value}</b></span>` +
+              `<input type="${color ? 'color' : 'range'}" min="${m.min}" max="${m.max}" step="0.01" value="${m.value}">`;
+            label.querySelector('input').addEventListener('input', (e) => {
+              if (color) uniforms[k].value.set(e.target.value);
+              else { uniforms[k].value = +e.target.value; label.querySelector('b').textContent = e.target.value; }
+            });
+            panel.append(label);
+          }
+
+          new ResizeObserver(() => renderer.setSize(canvas.clientWidth, canvas.clientHeight, false)).observe(canvas);
+          renderer.setAnimationLoop((ms) => { uniforms.uTime.value = ms / 1000; renderer.render(scene, camera); });
+        </script>
+        <figcaption>Prueba a editar el GLSL: cambia <code>vUv.x * uEscala</code> por <code>length(vUv - 0.5) * uEscala</code> y las ondas pasan a ser círculos. Quita el <code>pow(…, 3.0)</code> y el brillo invade toda la pantalla: esa potencia es la que deja el color de marca solo en las crestas. Si rompes algo, el error aparece arriba.</figcaption>
+      </figure>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">En el playground cambias la última mezcla por <code>mix(uFondo, uBrillo, vUv.x)</code>. ¿Qué ves?</p>
+        <ol>
+          <li>Las mismas ondas, pero más brillantes a la derecha.</li>
+          <li>Un degradado horizontal quieto, del fondo a la izquierda al brillo a la derecha.</li>
+          <li>Un degradado vertical que se mueve con el tiempo.</li>
+        </ol>
+        <p class="why"><code>vUv.x</code> vale 0 en el borde izquierdo y 1 en el derecho, y no depende del tiempo. Ya no usas <code>brillo</code>, así que las ondas desaparecen: te queda un <code>linear-gradient(to right)</code> calculado píxel a píxel.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Construye un shader como construyes una composición: primero el color plano de fondo, luego el degradado, luego el movimiento y al final el detalle. Si empiezas por el efecto, acabas con algo espectacular que no encaja con nada de la página. Fíjate en el playground: el <code>smoothstep</code> sobre <code>vUv.y</code> no es decoración, deja la parte baja tranquila porque ahí iría el titular.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Muchas GPU de móvil calculan con menos precisión. Si <code>uTime</code> crece durante minutos, algo como <code>sin(vUv.x * 40.0 + uTime)</code> empieza a dar saltos y el fondo se pixela poco a poco. Envuelve el tiempo antes de usarlo, <code>mod(uTime, 600.0)</code>, o reinícialo desde JavaScript. Y no confíes en el hover: en el teléfono, el puntero solo existe mientras el dedo toca.</p>
+      </div>
+
+      <div class="band claim"><div class="inner"><p>Un shader no dibuja formas. <span>Responde a una pregunta, millones de veces por segundo: ¿de qué color es este píxel?</span></p></div></div>
+
+      <h2>Degradados vivos con los colores de la marca</h2>
+      <p>El shader que más vas a usar en la agencia no es una galaxia: es un <strong>degradado vivo</strong>. Tres o cuatro manchas de color de la marca que flotan despacio, como una malla de degradados que respira. Frente a un vídeo de fondo pesa unos pocos kilobytes en vez de varios megas, no se pixela en ninguna resolución, y los colores son exactamente los de la marca, no los que dejó la compresión del vídeo.</p>
+      <p>El paso importante es llevar la paleta de CSS al shader sin que cambie por el camino. <code>mix()</code> mezcla números sin saber qué significan, así que el resultado depende de en qué espacio estén esos números. Hay tres opciones habituales:</p>
+      <ul>
+        <li><strong>Los valores del HEX tal cual</strong> (de 0 a 1): la luz del centro queda razonable, pero el tono se desvía en algunas parejas. El azul y el amarillo pasan por un verde grisáceo; el rojo y el verde, por un marrón algo más oscuro que ambos.</li>
+        <li><strong>Los valores lineales</strong>, que es lo que guarda <code>THREE.Color</code>: la mezcla es físicamente correcta para la luz, pero no para el ojo. El color claro se come al oscuro, el centro sale lavado y el fondo de la marca pierde peso.</li>
+        <li><strong>OKLab</strong>: la luz se reparte de forma pareja, como en un <code>color-mix(in oklab, …)</code> de CSS. Es la opción predecible, y por eso la buena: el degradado del shader se comporta igual que los degradados de tu hoja de estilos.</li>
+      </ul>
+
+      <script type="text/x-code" data-lang="js" data-label="De la paleta OKLCH a los uniforms">
+        // La paleta, tal cual la tienes en las variables CSS: [L, C, H]
+        const marca = { fondo: [0.13, 0.03, 300], masa: [0.30, 0.12, 300], acento: [0.70, 0.21, 338] };
+
+        // OKLCH es OKLab en coordenadas polares: pasar de uno a otro es un seno y un coseno
+        const oklab = ([L, C, H]) => new THREE.Vector3(L, C * Math.cos(H * Math.PI / 180), C * Math.sin(H * Math.PI / 180));
+
+        const uniforms = {
+          uFondo:  { value: oklab(marca.fondo) },
+          uMasa:   { value: oklab(marca.masa) },
+          uAcento: { value: oklab(marca.acento) },
+        };
+        // En el shader: se mezcla en OKLab y solo al final se convierte a RGB (una vez por píxel)
+      </script>
+
+      <figure class="lab" data-three data-title="Generador de degradado en la paleta" data-hint="Elige paleta y compara" data-height="480" data-height-mobile="620" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="top">
+            <div class="grupo" id="paletas"></div>
+            <div class="grupo" id="modos">
+              <button data-modo="0">HEX</button><button data-modo="1">Lineal</button><button data-modo="2">OKLab</button><button data-modo="3" aria-pressed="true">Comparar</button>
+            </div>
+          </div>
+          <div class="vista">
+            <canvas></canvas>
+            <div class="tags" id="tags"><span>HEX</span><span>Lineal</span><span>OKLab</span></div>
+          </div>
+          <div class="bottom">
+            <label>Girar la paleta <input id="giro" type="range" min="-180" max="180" value="0"></label>
+            <code id="vars"></code>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { display: flex; flex-direction: column; background: #10081a; color: #fff; overflow: hidden; font: 500 12px/1.3 var(--f-sans); }
+          .top, .bottom { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; padding: 10px 12px; }
+          .vista { position: relative; flex: 1; min-height: 0; }
+          canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+          .grupo { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 99px; background: rgb(255 255 255 / .07); }
+          button { min-height: 34px; padding: 0 12px; border: 0; border-radius: 99px; background: none; color: #fff; cursor: pointer; }
+          button[aria-pressed="true"] { background: #fff; color: #10081a; }
+          .tags { position: absolute; inset: 0; display: flex; justify-content: space-around; align-items: center; pointer-events: none; font: 600 13px var(--f-sans); text-shadow: 0 1px 8px rgb(0 0 0 / .7); }
+          .tags.oculto { display: none; }
+          @media (orientation: portrait) { .tags { flex-direction: column; } }
+          label { display: grid; gap: 6px; }
+          label input { width: 200px; accent-color: #fff; }
+          code { font: 400 11px/1.5 var(--f-mono); white-space: pre; color: #e9dcf2; }
+          @media (max-width: 520px) { .top { justify-content: start; } label, label input { width: 100%; } code { font-size: 10.5px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          // Paletas en OKLCH [L, C, H]: fondo (60 %), masa (30 %), acento y luz (10 %)
+          const PALETAS = {
+            Medianoche:     [[0.16, 0.05, 300], [0.40, 0.16, 305], [0.72, 0.20, 340], [0.88, 0.09, 60]],
+            'Azul y limón': [[0.24, 0.10, 265], [0.46, 0.22, 264], [0.92, 0.18, 105], [0.78, 0.10, 200]],
+            Bodega:         [[0.20, 0.05, 20],  [0.38, 0.14, 15],  [0.78, 0.13, 80],  [0.94, 0.03, 85]],
+          };
+
+          // OKLCH → OKLab → sRGB (fórmulas de Björn Ottosson, el autor de OKLab)
+          const aLab = ([L, C, H]) => [L, C * Math.cos(H * Math.PI / 180), C * Math.sin(H * Math.PI / 180)];
+          function aPantalla([L, a, b]) {
+            const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+            const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+            const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+            return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+                    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+                    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s]
+              .map((v) => Math.min(1, Math.max(0, v)))
+              .map((v) => v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);  // de 0 a 1: lo que sería el HEX / 255
+          }
+
+          const frag = /* glsl */ `
+            uniform float uTime, uModo;          // 0 = HEX, 1 = lineal, 2 = OKLab, 3 = comparar
+            uniform vec2 uRes;
+            uniform vec3 uLab[4], uHex[4];       // los mismos 4 colores: en OKLab y como valores de HEX (0..1)
+            varying vec2 vUv;
+            vec3 labALineal(vec3 c) {
+              vec3 lms = vec3(c.x + 0.3963377774 * c.y + 0.2158037573 * c.z,
+                              c.x - 0.1055613458 * c.y - 0.0638541728 * c.z,
+                              c.x - 0.0894841775 * c.y - 1.2914855480 * c.z);
+              lms = lms * lms * lms;
+              return mat3(4.0767416621, -1.2684380046, -0.0041960863, -3.3077115913, 2.6097574011,
+                          -0.7034186147, 0.2309699292, -0.3413193965, 1.7076147010) * lms;
+            }
+            vec3 hexALineal(vec3 c) { return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c)); }
+            void main() {
+              // Comparar: la misma composición tres veces (en columnas, o en filas si el canvas es vertical)
+              bool comparar = uModo > 2.5, vertical = uRes.x < uRes.y;
+              vec2 uv = vUv; float panel = uModo;
+              if (comparar && vertical) { panel = 2.0 - floor(vUv.y * 3.0); uv.y = fract(vUv.y * 3.0); }
+              if (comparar && !vertical) { panel = floor(vUv.x * 3.0); uv.x = fract(vUv.x * 3.0); }
+              vec2 k = vec2(uRes.x / uRes.y * (comparar ? (vertical ? 3.0 : 1.0 / 3.0) : 1.0), 1.0), p = uv * k;
+              float t = uTime * 0.22;
+              vec2 c[4];                                   // dónde flota cada color
+              c[0] = vec2(0.1, 0.05);
+              c[1] = vec2(0.45 + 0.25 * sin(t), 0.5 + 0.2 * cos(t * 1.3));
+              c[2] = vec2(0.8 + 0.15 * cos(t * 0.8), 0.75 + 0.15 * sin(t * 1.1));
+              c[3] = vec2(0.95 + 0.1 * sin(t * 0.6 + 2.0), 0.25 + 0.2 * cos(t * 0.9));
+              vec3 hex = vec3(0.0), lin = vec3(0.0), lab = vec3(0.0); float total = 0.0;
+              for (int i = 0; i < 4; i++) {
+                float w = pow(1.0 / max(distance(p, c[i] * k), 0.01), 2.4) * (i == 0 ? 2.5 : 1.0);
+                hex += uHex[i] * w; lin += hexALineal(uHex[i]) * w; lab += uLab[i] * w; total += w;
+              }
+              vec3 color = panel < 0.5 ? hexALineal(hex / total)    // mezcla de los valores del HEX
+                         : panel < 1.5 ? lin / total                // mezcla de valores lineales (lo que guarda THREE.Color)
+                         : labALineal(lab / total);                 // mezcla en OKLab
+              float g = vertical ? 1.0 - vUv.y : vUv.x;    // líneas finas entre los tres paneles
+              float px = abs(g * 3.0 - floor(g * 3.0 + 0.5)) * (vertical ? uRes.y : uRes.x) / 3.0;
+              if (comparar && px < 1.0 && g > 0.1 && g < 0.9) color = mix(color, vec3(1.0), 0.8);
+              gl_FragColor = vec4(color, 1.0);
+              #include <colorspace_fragment>
+            }`;
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const v3 = () => Array.from({ length: 4 }, () => new THREE.Vector3());
+          const uniforms = { uTime: { value: 0 }, uModo: { value: 3 }, uRes: { value: new THREE.Vector2() }, uLab: { value: v3() }, uHex: { value: v3() } };
+          const scene = new THREE.Scene();
+          scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms, fragmentShader: frag,
+            vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }' })));
+
+          let actual = 'Medianoche';
+          function aplicar() {
+            const roles = ['fondo', 'masa', 'acento', 'luz'];
+            const cols = PALETAS[actual].map(([L, C, H]) => [L, C, (H + +giro.value + 360) % 360]);
+            cols.forEach((c, i) => { uniforms.uLab.value[i].set(...aLab(c)); uniforms.uHex.value[i].set(...aPantalla(aLab(c))); });
+            vars.textContent = cols.map(([L, C, H], i) => `--${roles[i]}: oklch(${Math.round(L * 100)}% ${C} ${Math.round(H)});`).join('\n');
+          }
+          for (const nombre of Object.keys(PALETAS)) {
+            const b = document.createElement('button'); b.textContent = nombre;
+            b.onclick = () => { actual = nombre; paletas.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b)); aplicar(); };
+            b.setAttribute('aria-pressed', nombre === actual); paletas.append(b);
+          }
+          modos.onclick = (e) => {
+            const b = e.target.closest('button'); if (!b) return;
+            uniforms.uModo.value = +b.dataset.modo; tags.classList.toggle('oculto', b.dataset.modo !== '3');
+            modos.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+          };
+          giro.oninput = aplicar; aplicar();
+
+          const camera = new THREE.Camera();
+          new ResizeObserver(() => { renderer.setSize(canvas.clientWidth, canvas.clientHeight, false); renderer.getDrawingBufferSize(uniforms.uRes.value); }).observe(canvas);
+          renderer.setAnimationLoop((ms) => { uniforms.uTime.value = ms / 1000; renderer.render(scene, camera); });
+        </script>
+        <figcaption>En Comparar ves la misma composición tres veces. En «Lineal» el fondo oscuro casi desaparece y todo se aclara: es el error típico al mezclar los <code>THREE.Color</code> directamente. Entre «HEX» y «OKLab» la diferencia es más fina: con «Azul y limón», fíjate en el tono de la zona de transición. Gira la paleta y copia las variables de abajo: son los mismos colores que irían en tu CSS.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La paleta de un shader es la paleta de la web con la misma proporción 60-30-10. El fondo de la página es el color dominante del shader (por eso el punto de fondo pesa más que los demás en el código), el color principal hace de masa y el acento solo aparece en las crestas. Si el acento ocupa media pantalla deja de ser acento y el botón de reservar, que es del mismo color, ya no destaca. Y donde va el texto, el shader se calma: más oscuro y con menos movimiento.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Multiplica siempre las coordenadas por la proporción de la pantalla (<code>vUv * vec2(ancho / alto, 1.0)</code>). Si no lo haces, en vertical los círculos se convierten en óvalos estirados y la composición se rompe. Y piensa la composición en 9:16: en la portada de esta lección, en el móvil la viñeta oscurece toda la mitad inferior, porque ahí el texto ocupa todo el ancho.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: por qué Three.js «oscurece» tus colores</summary>
+        <p>Three.js trabaja en sRGB <em>lineal</em>, que es como se comporta la luz de verdad, y convierte a sRGB de pantalla al final. Un <code>new THREE.Color('#ff4fb8')</code> ya guarda el valor lineal. Si en tu <code>ShaderMaterial</code> olvidas la línea <code>#include &lt;colorspace_fragment&gt;</code>, ese valor lineal llega a la pantalla sin convertir y los colores salen más oscuros y saturados que el HEX. Con la línea, el magenta del shader coincide con el del botón CSS. Lo tienes en detalle en la lección de Three.js dentro de una web.</p>
+      </details>
+
+      <div class="split receta wide">
+        <div class="stack" aria-hidden="true">
+          <div class="stack-in">
+            <div class="ly pal" style="--i:0" data-n="1"></div>
+            <div class="ly ruido" style="--i:1" data-n="2"></div>
+            <div class="ly color" style="--i:2" data-n="3"></div>
+            <div class="ly vin" style="--i:3" data-n="4"></div>
+            <div class="ly grano" style="--i:4" data-n="5"></div>
+            <div class="ly texto" style="--i:5" data-n="6">Shaders</div>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin-top:0">La receta de la portada</h3>
+          <p>Así está montado el fondo de arriba, capa a capa. Todo ocurre en un solo shader, pero pensarlo en capas te deja decidir cada una por separado.</p>
+          <ol class="capas">
+            <li><b>Paleta</b><span>Cuatro colores en OKLab: fondo, masa, acento y una luz cálida. Cambian con los botones de la portada.</span></li>
+            <li><b>Ruido deformado</b><span>Ruido que deforma las coordenadas de otro ruido. Es lo que da forma de tinta o de aurora.</span></li>
+            <li><b>Color</b><span>El valor del ruido decide qué color de la paleta toca en cada punto.</span></li>
+            <li><b>Viñeta</b><span>Oscurece abajo a la izquierda, donde está el titular. El contraste del texto se diseña aquí.</span></li>
+            <li><b>Grano</b><span>Ruido fino que cambia en cada fotograma. Quita el aspecto de plástico y las bandas.</span></li>
+            <li><b>Texto HTML</b><span>Encima y fuera del canvas: seleccionable, accesible y con la fuente de la web.</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <h2>Ruido y grano: textura sin imágenes</h2>
+      <p>Lo que hace que un fondo parezca natural es el <strong>ruido</strong>. No el de la tele, sino uno suave: números al azar en una cuadrícula y transiciones suaves entre ellos. Una capa sola parece una nube borrosa. Si sumas varias capas, cada una al doble de detalle y a la mitad de fuerza, obtienes lo que se llama <em>fbm</em>, y aparece el detalle de una nube, del mármol o del humo. Cada capa más es más detalle y también más trabajo para la GPU.</p>
+      <p>El salto a «tinta» llega cuando usas el ruido para <strong>deformar las coordenadas de otro ruido</strong> (en inglés, <em>domain warping</em>). En vez de preguntar «¿cuánto ruido hay en este punto?», preguntas «¿cuánto ruido hay en este punto desplazado por otro ruido?». Las formas se retuercen como pintura en agua. Pulsa «Ruido» en la portada y lo ves en gris, sin color.</p>
+      <p>El <strong>grano</strong> es otra cosa: un valor aleatorio distinto para cada píxel y cada fotograma, muy flojo. Hace dos trabajos. El estético: recuerda a la fotografía analógica y al papel impreso, y quita ese aspecto de degradado de plástico tan digital. Y el técnico: rompe las <strong>bandas</strong>. Una pantalla normal tiene 256 niveles por canal; un degradado oscuro que cruza 1400 píxeles quizá solo dispone de veinte niveles, y se ven los escalones. El grano mezcla niveles vecinos y el ojo hace la media.</p>
+
+      <figure class="lab" data-three data-title="Ruido, capas y grano" data-hint="Activa las bandas y sube el grano" data-height="460" data-height-mobile="560" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div class="copy">
+            <small>Sala Fósforo, Castellón</small>
+            <h1>Conciertos a media luz</h1>
+            <p>Jueves y viernes. Aforo de 120 personas.</p>
+          </div>
+          <div class="panel">
+            <label>Escala <b id="ve">2.5</b><input id="escala" type="range" min="1" max="8" step="0.1" value="2.5"></label>
+            <label>Capas de ruido <b id="vc">5</b><input id="capas" type="range" min="1" max="6" step="1" value="5"></label>
+            <label>Grano <b id="vg">0.035</b><input id="grano" type="range" min="0" max="0.15" step="0.005" value="0.035"></label>
+            <button id="bits" aria-pressed="false">Simular pantalla con bandas</button>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { background: #0b0612; color: #f6eef8; overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+          .copy { position: fixed; left: 22px; top: 20px; max-width: 70%; }
+          .copy small { font: 600 12px var(--f-sans); opacity: .75; }
+          h1 { margin: 8px 0 6px; font: 800 clamp(26px, 6vw, 44px)/.95 var(--f-unbounded); letter-spacing: -0.04em; }
+          .copy p { margin: 0; font-size: 14px; opacity: .8; }
+          .panel { position: fixed; left: 12px; right: 12px; bottom: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; align-items: end;
+            padding: 12px 14px; border-radius: 12px; background: rgb(8 4 12 / .8); font: 500 12px/1.2 var(--f-sans); }
+          label { display: grid; grid-template-columns: 1fr auto; gap: 2px; }
+          label b { font: 400 11px var(--f-mono); opacity: .7; }
+          label input { grid-column: 1 / -1; width: 100%; height: 30px; margin: 0; accent-color: #ff6fc4; }
+          button { min-height: 40px; border: 1px solid rgb(255 255 255 / .3); border-radius: 99px; background: none; color: inherit; cursor: pointer; padding: 0 14px; }
+          button[aria-pressed="true"] { background: #ff6fc4; color: #1a0612; border-color: #ff6fc4; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const frag = /* glsl */ `
+            uniform float uTime, uEscala, uCapas, uGrano, uBandas;
+            uniform vec2 uRes;
+            varying vec2 vUv;
+
+            // Ruido de valor: números al azar en una cuadrícula, suavizados entre sí
+            float azar(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+            float ruido(vec2 p) {
+              vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);
+              return mix(mix(azar(i), azar(i + vec2(1, 0)), u.x), mix(azar(i + vec2(0, 1)), azar(i + 1.0), u.x), u.y);
+            }
+            // fbm: varias capas de ruido, cada una al doble de detalle y la mitad de fuerza
+            float fbm(vec2 p) {
+              float v = 0.0, a = 0.5;
+              for (int i = 0; i < 6; i++) {
+                if (float(i) >= uCapas) break;
+                v += a * ruido(p); p = p * 2.03 + 17.0; a *= 0.5;
+              }
+              return v;
+            }
+
+            void main() {
+              vec2 p = vUv * vec2(uRes.x / uRes.y, 1.0) * uEscala;
+              float n = fbm(p + vec2(uTime * 0.04, -uTime * 0.025));
+              // Aquí trabajamos directamente en valores de pantalla (0..1), sin conversión de espacio
+              vec3 color = mix(vec3(0.03, 0.015, 0.06), vec3(0.24, 0.07, 0.3), vUv.y * 0.6 + n * 0.5);
+              color += vec3(0.75, 0.2, 0.55) * pow(n, 4.0) * 1.6;              // niebla magenta en las crestas
+              color += (azar(gl_FragCoord.xy + fract(uTime) * 91.0) - 0.5) * uGrano;   // el grano
+              if (uBandas > 0.5) color = floor(color * 24.0 + 0.5) / 24.0;    // pantalla de pocos niveles (exagerada)
+              gl_FragColor = vec4(color, 1.0);
+            }`;
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const uniforms = { uTime: { value: 0 }, uEscala: { value: 2.5 }, uCapas: { value: 5 }, uGrano: { value: 0.035 }, uBandas: { value: 0 }, uRes: { value: new THREE.Vector2() } };
+          const scene = new THREE.Scene();
+          scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms, fragmentShader: frag,
+            vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }' })));
+          const camera = new THREE.Camera();
+
+          const enlazar = (input, nombre, salida) => input.addEventListener('input', () => { uniforms[nombre].value = +input.value; salida.textContent = input.value; });
+          enlazar(escala, 'uEscala', ve); enlazar(capas, 'uCapas', vc); enlazar(grano, 'uGrano', vg);
+          bits.onclick = () => { const on = bits.getAttribute('aria-pressed') !== 'true'; bits.setAttribute('aria-pressed', on); uniforms.uBandas.value = on ? 1 : 0; };
+
+          new ResizeObserver(() => { renderer.setSize(canvas.clientWidth, canvas.clientHeight, false); renderer.getDrawingBufferSize(uniforms.uRes.value); }).observe(canvas);
+          renderer.setAnimationLoop((ms) => { uniforms.uTime.value = ms / 1000; renderer.render(scene, camera); });
+        </script>
+        <figcaption>Activa «Simular pantalla con bandas» y pon el grano a cero: aparecen los escalones. Sube el grano poco a poco: hacia <code>0.04</code> las bandas se disuelven y apenas notas el grano. Baja las capas a 1 y verás el ruido «crudo»: borroso y sin detalle.</figcaption>
+      </figure>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Un cliente te dice que el degradado oscuro de la portada «tiene rayas» en su móvil. ¿Qué haces primero?</p>
+        <ol>
+          <li>Subir la resolución del canvas al máximo del dispositivo.</li>
+          <li>Cambiar el degradado por una imagen JPG del mismo degradado.</li>
+          <li>Añadir un grano muy flojo, de 0.02 a 0.04, antes de la salida del color.</li>
+        </ol>
+        <p class="why">Las rayas son bandas: faltan niveles de color, no píxeles. Más resolución no añade niveles, y un JPG las empeora con la compresión. El grano reparte niveles vecinos y el ojo los promedia.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El grano bueno es el que no ves hasta que lo quitas. Entre <code>0.02</code> y <code>0.05</code> en un fondo oscuro da textura de papel caro; por encima de <code>0.08</code> parece un filtro de Instagram o una foto sucia. El grano animado da sensación de película (bien para música, moda o cine); el grano quieto es más tranquilo y lo puedes hacer con un SVG en CSS, sin coste por fotograma (bien para arquitectura, gastronomía o editorial).</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Si pintas el fondo a media resolución para ahorrar, el grano también sale a media resolución y se ve como arena gruesa. En el teléfono funciona mejor separar: el ruido suave en el shader a baja resolución y el grano fino como capa CSS encima (un SVG con <code>feTurbulence</code> al 3–5 % de opacidad), que se pinta a la resolución nativa de la pantalla y no cuesta nada por fotograma. Y baja las capas del fbm de 5 a 3: en una pantalla de 6 pulgadas no se nota y te ahorras casi la mitad del trabajo.</p>
+      </div>
+
+      <h2>Imágenes que se deforman al pasar o tocar</h2>
+      <p>Un shader también puede leer una imagen: en Three.js se le pasa como textura y el shader pregunta «¿qué color tiene la foto en esta posición?». El truco de todas las distorsiones es el mismo: <strong>no mueves la imagen, cambias de dónde lee cada píxel</strong>. Si a la posición le sumas una onda, la foto ondula; si la acercas al puntero, se hace una lupa; si lees el rojo, el verde y el azul en sitios un poco distintos, aparece el desplazamiento RGB de los vídeos musicales.</p>
+      <p>Antes hay que resolver una cosa que en CSS das por hecha: <code>object-fit: cover</code>. El shader no sabe que la foto es 16:10 y el canvas es vertical; si no corriges, la foto se estira. La corrección son tres líneas.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="object-fit: cover dentro del shader">
+        // uAspImg = ancho / alto de la foto; uRes = tamaño del canvas
+        vec2 cubrir(vec2 uv) {
+          float a = uRes.x / uRes.y;
+          vec2 s = a > uAspImg ? vec2(1.0, uAspImg / a) : vec2(a / uAspImg, 1.0);   // recorta por donde sobra
+          return (uv - 0.5) * s + 0.5;
+        }
+      </script>
+
+      <figure class="lab" data-three data-title="Imagen con distorsión" data-hint="Toca la foto o pasa el ratón" data-height="460" data-height-mobile="520" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div class="copy">
+            <small>Residencial Vésper</small>
+            <h1>Balcones que miran al mar</h1>
+            <a href="#">Ver las plantas</a>
+          </div>
+          <div class="modos" id="modos" role="group" aria-label="Efecto">
+            <button data-m="0" aria-pressed="true">Onda</button><button data-m="1">Lupa</button><button data-m="2">RGB</button>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { background: #120b1e; color: #fff6ec; overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: pan-y; }
+          body::after { content: ""; position: fixed; inset: 0; pointer-events: none; background: linear-gradient(75deg, rgb(14 8 24 / .85), transparent 55%); }
+          .copy { position: fixed; left: 26px; bottom: 26px; z-index: 1; max-width: 22rem; pointer-events: none; }
+          .copy small { font: 600 12px var(--f-sans); opacity: .8; }
+          h1 { margin: 8px 0 16px; font: 400 clamp(34px, 7vw, 56px)/.95 var(--f-serif); }
+          .copy a { pointer-events: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 99px; background: #ffb46b; color: #1d0f05; font: 600 14px var(--f-sans); text-decoration: none; }
+          .modos { position: fixed; right: 14px; top: 14px; z-index: 1; display: flex; gap: 4px; padding: 4px; border-radius: 99px; background: rgb(0 0 0 / .45); }
+          .modos button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 99px; background: none; color: #fff; font: 500 13px var(--f-sans); cursor: pointer; }
+          .modos button[aria-pressed="true"] { background: #fff; color: #120b1e; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const frag = /* glsl */ `
+            uniform sampler2D uImagen;
+            uniform float uTime, uModo, uAspImg;
+            uniform vec2 uRes, uRaton, uVel;
+            uniform vec3 uToque;                     // xy: dónde se tocó, z: cuándo
+            varying vec2 vUv;
+
+            vec2 cubrir(vec2 uv) {
+              float a = uRes.x / uRes.y;
+              vec2 s = a > uAspImg ? vec2(1.0, uAspImg / a) : vec2(a / uAspImg, 1.0);
+              return (uv - 0.5) * s + 0.5;
+            }
+            void main() {
+              vec2 k = vec2(uRes.x / uRes.y, 1.0), uv = vUv;
+              if (uModo < 0.5) {                       // ONDA: anillos que salen del toque y se apagan
+                float t = uTime - uToque.z, d = length((uv - uToque.xy) * k);
+                float onda = sin(d * 38.0 - t * 10.0) * exp(-d * 3.5) * exp(-t * 1.4);
+                uv += normalize(uv - uToque.xy + 0.0001) * onda * 0.018;
+              } else if (uModo < 1.5) {                // LUPA: acerca lo que hay bajo el puntero
+                float lupa = smoothstep(0.24, 0.16, length((uv - uRaton) * k));
+                uv = mix(uv, uRaton + (uv - uRaton) * 0.55, lupa);
+              }
+              vec2 c = cubrir(uv), o = uModo > 1.5 ? uVel : vec2(0.0);   // RGB: cada canal en un sitio
+              vec3 color = vec3(texture2D(uImagen, c + o).r, texture2D(uImagen, c).g, texture2D(uImagen, c - o).b);
+              gl_FragColor = vec4(color, 1.0);
+              #include <colorspace_fragment>
+            }`;
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const textura = new THREE.TextureLoader().load('../landing/media/balcones.webp', (t) => (uniforms.uAspImg.value = t.image.width / t.image.height));
+          textura.colorSpace = THREE.SRGBColorSpace;
+          const uniforms = { uImagen: { value: textura }, uTime: { value: 0 }, uModo: { value: 0 }, uAspImg: { value: 1.6 },
+            uRes: { value: new THREE.Vector2() }, uRaton: { value: new THREE.Vector2(0.7, 0.5) }, uVel: { value: new THREE.Vector2() }, uToque: { value: new THREE.Vector3(0.7, 0.6, -9) } };
+          const scene = new THREE.Scene();
+          scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms, fragmentShader: frag,
+            vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }' })));
+          const camera = new THREE.Camera();
+
+          // Puntero suavizado + velocidad (para el RGB). Tocar lanza una onda.
+          const raton = new THREE.Vector2(0.7, 0.5), antes = new THREE.Vector2(), vel = new THREE.Vector2();
+          let quieto = 0;
+          const pos = (e) => { const r = canvas.getBoundingClientRect(); raton.set((e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height); quieto = 0; };
+          canvas.addEventListener('pointermove', pos);
+          canvas.addEventListener('pointerdown', (e) => { pos(e); uniforms.uToque.value.set(raton.x, raton.y, uniforms.uTime.value); vel.set(0.012, 0.004); });
+          modos.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; uniforms.uModo.value = +b.dataset.m; modos.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b)); };
+
+          new ResizeObserver(() => { renderer.setSize(canvas.clientWidth, canvas.clientHeight, false); uniforms.uRes.value.set(canvas.clientWidth, canvas.clientHeight); }).observe(canvas);
+          renderer.setAnimationLoop((ms) => {
+            const t = (uniforms.uTime.value = ms / 1000);
+            quieto += 1 / 60;
+            if (quieto > 2.5) {                      // sin nadie tocando: la demo se mueve sola, despacio
+              raton.set(0.62 + 0.18 * Math.sin(t * 0.7), 0.55 + 0.18 * Math.sin(t * 0.9));
+              if (t - uniforms.uToque.value.z > 3.2) uniforms.uToque.value.set(0.55 + Math.random() * 0.35, 0.3 + Math.random() * 0.5, t);
+            }
+            antes.copy(uniforms.uRaton.value);
+            uniforms.uRaton.value.lerp(raton, 0.1);
+            vel.lerp(uniforms.uRaton.value.clone().sub(antes).multiplyScalar(0.6), 0.15);
+            uniforms.uVel.value.copy(vel);
+            renderer.render(scene, camera);
+          });
+        </script>
+        <figcaption>La onda dura algo más de un segundo y desplaza menos de un 2 % de la imagen: es una reacción, no un estado. Prueba la lupa sobre las barandillas y el RGB moviendo rápido el ratón: el desplazamiento depende de la velocidad, así que en reposo la foto se ve limpia.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El efecto tiene que significar algo. Una onda encaja con un hotel de playa o una marca de agua; la lupa, con una ficha de producto donde el detalle importa (una joyería, un tejido); el desplazamiento RGB, con música, moda o tecnología. El mismo RGB en una clínica dental dice «error de pantalla». Dos reglas de oficio: amplitud pequeña (del 1 al 3 % de la imagen) y vuelta rápida al reposo, entre 300 y 1200 ms. Si la foto no se puede mirar tranquila, el efecto sobra.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>No hay hover: la onda sale del toque (<code>pointerdown</code>) o de la velocidad del scroll. Pon <code>touch-action: pan-y</code> en el canvas para que deslizar en vertical siga haciendo scroll; si no, el usuario queda atrapado en la foto. Y en una galería no crees un contexto WebGL por imagen: el móvil aguanta pocos, y con seis fotos te quedas sin ellos.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: un solo canvas para toda una galería</summary>
+        <p>Las webs premiadas con muchas imágenes distorsionadas no tienen un canvas por foto. Tienen <strong>un único canvas fijo</strong> detrás de toda la página y, por cada <code>&lt;img&gt;</code> del HTML, un plano en la escena 3D que copia su posición y tamaño con <code>getBoundingClientRect()</code> en cada fotograma. El HTML sigue siendo la fuente de verdad (maquetación, accesibilidad, carga diferida) y el canvas solo pinta encima. Un contexto, una sola pasada de render y las imágenes que no se ven ni se dibujan.</p>
+      </details>
+
+      <h2>Brillos en objetos: fresnel y rim light</h2>
+      <p>Mira un lago. A tus pies ves el fondo a través del agua; a lo lejos, el agua refleja el cielo como un espejo. Es el <strong>efecto Fresnel</strong>: cualquier superficie refleja más cuanto más de canto la miras. En los bordes de una esfera, la superficie se ve casi de lado, así que brilla más que en el centro.</p>
+      <p>En un shader se calcula con un producto escalar entre la normal de la superficie (hacia dónde mira cada punto) y la dirección hacia la cámara. Da 1 donde la superficie te mira de frente y 0 en la silueta. Le das la vuelta y lo elevas a una potencia para controlar lo fino que es el borde. Dos líneas.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="Fresnel en el fragment shader">
+        float fresnel = pow(1.0 - max(dot(normal, haciaCamara), 0.0), uPotencia);
+        color += uColorBorde * fresnel * uIntensidad;    // el borde se enciende con el color de la marca
+      </script>
+
+      <p>En fotografía de producto existe lo mismo con otro nombre: <strong>rim light</strong>, una luz detrás del objeto que dibuja su contorno y lo separa del fondo oscuro. Es la luz de los anuncios de perfume, de coches y de relojes. Por eso un fresnel bien puesto se lee como «caro» aunque el usuario no sepa qué está mirando: reconoce el lenguaje de la publicidad de lujo.</p>
+
+      <figure class="lab" data-three data-title="Fresnel y rim light" data-hint="Mueve la potencia" data-height="460" data-height-mobile="560" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div class="copy">
+            <small>Óleo nº 3</small>
+            <h1>Sérum de noche</h1>
+            <p>Una gota antes de dormir.</p>
+          </div>
+          <div class="panel">
+            <label>Potencia <b id="pv">3</b><input id="potencia" type="range" min="0.5" max="8" step="0.1" value="3"></label>
+            <label>Intensidad <b id="iv">1.4</b><input id="intensidad" type="range" min="0" max="3" step="0.05" value="1.4"></label>
+            <button id="solo" aria-pressed="false">Ver solo el fresnel</button>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { overflow: hidden; color: #f7eef6; background: radial-gradient(70% 90% at 70% 40%, #2a1236, #0c0611 70%); }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; }
+          .copy { position: fixed; left: 28px; top: 50%; translate: 0 -60%; max-width: 40%; }
+          .copy small { font: 600 12px var(--f-sans); letter-spacing: .02em; opacity: .75; }
+          h1 { margin: 8px 0 10px; font: 400 clamp(36px, 6.5vw, 60px)/.92 var(--f-cormorant); font-style: italic; }
+          .copy p { margin: 0; font-size: 14px; opacity: .75; }
+          .panel { position: fixed; left: 12px; right: 12px; bottom: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; align-items: end;
+            padding: 12px 14px; border-radius: 12px; background: rgb(8 4 12 / .7); font: 500 12px/1.2 var(--f-sans); }
+          label { display: grid; grid-template-columns: 1fr auto; gap: 2px; }
+          label b { font: 400 11px var(--f-mono); opacity: .7; }
+          label input { grid-column: 1 / -1; width: 100%; height: 30px; margin: 0; accent-color: #ff7ccc; }
+          button { min-height: 40px; border: 1px solid rgb(255 255 255 / .3); border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          button[aria-pressed="true"] { background: #fff; color: #120814; }
+          @media (max-width: 520px) { .copy { top: 22px; translate: none; max-width: none; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const vert = /* glsl */ `
+            uniform float uTime;
+            varying vec3 vNormal, vVista;
+            void main() {
+              vec3 p = position + normal * 0.05 * sin(position.y * 4.0 + uTime) * sin(position.x * 3.0 + uTime * 0.7);  // respira
+              vec4 mv = modelViewMatrix * vec4(p, 1.0);
+              vNormal = normalize(normalMatrix * normal);   // hacia dónde mira la superficie
+              vVista = normalize(-mv.xyz);                  // hacia dónde está la cámara
+              gl_Position = projectionMatrix * mv;
+            }`;
+          const frag = /* glsl */ `
+            uniform vec3 uBase, uBorde;
+            uniform float uPotencia, uIntensidad, uSolo;
+            varying vec3 vNormal, vVista;
+            void main() {
+              vec3 n = normalize(vNormal);
+              float fresnel = pow(1.0 - max(dot(n, normalize(vVista)), 0.0), uPotencia);
+              float luz = max(dot(n, normalize(vec3(-0.5, 0.7, 0.6))), 0.0);   // una luz suave arriba a la izquierda
+              vec3 color = uBase * (0.18 + 0.82 * luz) + uBorde * fresnel * uIntensidad;
+              gl_FragColor = vec4(mix(color, vec3(fresnel), uSolo), 1.0);
+              #include <colorspace_fragment>
+            }`;
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });   // transparente: el fondo es CSS
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const scene = new THREE.Scene();
+          const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
+          camera.position.z = 5;
+          const uniforms = { uTime: { value: 0 }, uBase: { value: new THREE.Color('#3b1747') }, uBorde: { value: new THREE.Color('#ff6fc4') },
+            uPotencia: { value: 3 }, uIntensidad: { value: 1.4 }, uSolo: { value: 0 } };
+          const gota = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 40), new THREE.ShaderMaterial({ uniforms, vertexShader: vert, fragmentShader: frag }));
+          scene.add(gota);
+
+          potencia.oninput = () => { uniforms.uPotencia.value = +potencia.value; pv.textContent = potencia.value; };
+          intensidad.oninput = () => { uniforms.uIntensidad.value = +intensidad.value; iv.textContent = intensidad.value; };
+          solo.onclick = () => { const on = solo.getAttribute('aria-pressed') !== 'true'; solo.setAttribute('aria-pressed', on); uniforms.uSolo.value = on ? 1 : 0; };
+
+          // Encuadre: a la derecha en horizontal, arriba y más pequeña en vertical
+          new ResizeObserver(() => {
+            const w = canvas.clientWidth, h = canvas.clientHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+            const vertical = w / h < 0.9;
+            gota.position.set(vertical ? 0 : 0.95, vertical ? -0.1 : 0.1, 0); gota.scale.setScalar(vertical ? 0.58 : 1);
+          }).observe(canvas);
+          const giro = { x: 0, y: 0 };
+          addEventListener('pointermove', (e) => { giro.y = (e.clientX / innerWidth - 0.5) * 0.8; giro.x = (e.clientY / innerHeight - 0.5) * 0.5; });
+          renderer.setAnimationLoop((ms) => {
+            uniforms.uTime.value = ms / 1000;
+            gota.rotation.y += (giro.y + ms / 4000 - gota.rotation.y) * 0.05;
+            gota.rotation.x += (giro.x - gota.rotation.x) * 0.05;
+            renderer.render(scene, camera);
+          });
+        </script>
+        <figcaption>Con potencia 1 el brillo cubre media esfera y parece plástico; entre 2 y 4 es un borde de luz natural, como una gota; por encima de 6 se queda en un hilo de neón de ciencia ficción. Activa «Ver solo el fresnel»: blanco en la silueta, negro en el centro. El fondo es un degradado CSS: el canvas es transparente.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El fresnel solo funciona sobre fondo oscuro y con una base apagada: es contraste de borde, y si el objeto ya es claro y saturado no hay nada que separar. El color del borde es el acento de la marca o la luz cálida de la escena, nunca un tercer color nuevo. Una potencia de 2 a 4 se lee como realista; más alta, como tecnológica. Elige según lo que vendas: un sérum pide 3, un videojuego puede pedir 7.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El fresnel es de los efectos con mejor relación entre lo premium que se ve y lo que cuesta: una resta, un producto escalar y una potencia por píxel. En el teléfono, úsalo en lugar del bloom (el brillo difuso de postproceso), que necesita varias pasadas extra a pantalla completa. Un borde fresnel bien elegido da el 80 % de la sensación de «brilla» a una fracción del coste.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: añadir fresnel a un material PBR sin reescribirlo</summary>
+        <p>Si tu objeto usa <code>MeshStandardMaterial</code> (luces, sombras, entorno) no hace falta perder todo eso para tener borde. Con <code>material.onBeforeCompile</code> puedes inyectar dos líneas en el shader que Three.js genera: buscas el final del cálculo de color y sumas el fresnel con el acento. Es el mismo código de arriba, pegado dentro del material de siempre. Lo verás aplicado en la lección de modelos, luz y materiales.</p>
+      </details>
+
+      <h2>Rendimiento: resolución, fps y cuándo es mejor CSS</h2>
+      <p>Un shader de fondo se ejecuta una vez por píxel y por fotograma. Haz la cuenta y entenderás todas las decisiones de rendimiento de esta sección.</p>
+
+      <div class="band nums"><div class="inner">
+        <div class="n4"><b>1,3 M</b><span>píxeles en una pantalla de 1440 × 900</span></div>
+        <div class="n4"><b>× 60</b><span>fotogramas por segundo para que se vea fluido</span></div>
+        <div class="n4"><b>78 M</b><span>ejecuciones de tu shader cada segundo</span></div>
+        <div class="n4"><b>÷ 4</b><span>lo que cuesta si pintas a media resolución</span></div>
+        <p class="foot">En un portátil con pantalla Retina, la misma ventana tiene cuatro veces más píxeles: 311 millones de ejecuciones por segundo. Un fondo difuminado no gana nada con esa nitidez. Pintado a la mitad de ancho y de alto, cuesta la cuarta parte y nadie nota la diferencia, porque no tiene bordes que se vean borrosos.</p>
+      </div></div>
+
+      <p>De ahí salen las reglas que sigue la portada de esta lección, y que puedes copiar tal cual:</p>
+      <ol>
+        <li><strong>Resolución de render por debajo de la de pantalla.</strong> La portada pinta al 60 % en escritorio y al 45 % en el móvil, con el DPR limitado a 1,5. El navegador estira el canvas con CSS.</li>
+        <li><strong>Calidad adaptativa.</strong> Mide los fps cada segundo; si bajan de 40, reduce la resolución un 20 %. El contador de la portada lo enseña en vivo.</li>
+        <li><strong>Pintar solo cuando se ve.</strong> Si la portada sale de pantalla, deja de pintar; si está lejos, libera el contexto WebGL entero.</li>
+        <li><strong>Menos capas de ruido en equipos modestos.</strong> Con <code>defines</code> eliges 5 o 3 capas al compilar, sin <code>if</code> dentro del shader.</li>
+        <li><strong>Respaldo y movimiento reducido.</strong> Debajo del canvas hay un degradado CSS con la misma paleta; con <code>prefers-reduced-motion</code> el tiempo se congela y se pinta un único fotograma.</li>
+      </ol>
+
+      <script type="text/x-code" data-lang="js" data-label="El esqueleto de la portada (resumido)">
+        const lite = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || navigator.hardwareConcurrency <= 4;
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let escala = Math.min(devicePixelRatio, 1.5) * (lite ? 0.45 : 0.6);   // resolución de render
+
+        const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader,
+          defines: { CAPAS: lite ? 3 : 5 } });           // el bucle del fbm usa CAPAS
+
+        let fotogramas = 0, acumulado = 0;
+        function bucle(ahora) {
+          requestAnimationFrame(bucle);
+          const dt = (ahora - antes) / 1000; antes = ahora;
+          if (hero.getBoundingClientRect().bottom <= 0) return;      // fuera de pantalla: no pinta
+          if (!reduce) uniforms.uTime.value += dt;
+          renderer.render(scene, camera);
+          fotogramas++; acumulado += dt;
+          if (acumulado >= 1) {                                     // cada segundo, ¿vamos sobrados?
+            if (fotogramas / acumulado < 40 && escala > 0.3) { escala *= 0.8; renderer.setPixelRatio(escala); }
+            fotogramas = acumulado = 0;
+          }
+        }
+      </script>
+
+      <div class="callout idea"><span class="t">Cómo lo hace este cuaderno</span>
+        <p>Los navegadores limitan cuántos contextos WebGL puede haber a la vez y cada uno ocupa memoria de la GPU; cuando te pasas, el más antiguo se pierde y su canvas se queda en negro. Esta página tiene seis canvas 3D (la portada y cinco laboratorios), pero nunca hay más de dos vivos: cuando un laboratorio se aleja de la pantalla, se congela en una imagen de su último fotograma y su contexto se libera; al volver, arranca de nuevo. En una web real harías lo mismo con varias secciones 3D.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">El fondo con shader de una landing va a 24 fps en un Android de gama media. ¿Qué tocas primero?</p>
+        <ol>
+          <li>La resolución de render: <code>setPixelRatio</code> más bajo.</li>
+          <li>El número de colores de la paleta.</li>
+          <li>La duración de las transiciones CSS de la página.</li>
+        </ol>
+        <p class="why">El coste de un shader de fondo crece con el número de píxeles. Bajar la resolución de render de 1 a 0,5 divide el trabajo entre cuatro. Los colores de la paleta son uniforms y apenas cuestan; las transiciones CSS van por otro lado.</p>
+      </div>
+
+      <h3>Cuándo es mejor CSS</h3>
+      <p>No todo lo que se mueve necesita un shader. Desde que existe <code>@property</code>, puedes registrar una variable CSS con tipo (un porcentaje, un ángulo, un color) y el navegador sabe animarla. Con eso, unos <code>radial-gradient</code> que cambian de posición despacio ya son una malla de degradados viva, sin JavaScript y sin contexto WebGL.</p>
+
+      <figure class="lab" data-title="Lo mismo con CSS y @property" data-hint="Pausa y quita el grano" data-height="400" data-height-mobile="480" data-open="css">
+        <script type="text/x-demo" data-lang="html">
+          <section class="cielo grano" id="cielo">
+            <div class="copy">
+              <small>Estudio Alba, arquitectura</small>
+              <h1>Luz antes que muros</h1>
+              <p>Casas en la Plana y el Maestrazgo.</p>
+            </div>
+          </section>
+          <div class="panel">
+            <button id="pausa" aria-pressed="false">Pausar</button>
+            <button id="grano" aria-pressed="true">Grano</button>
+            <span>0 contextos WebGL. 0 KB de JavaScript para el fondo.</span>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          /* Variables con tipo: el navegador sabe interpolarlas y por eso se pueden animar */
+          @property --x1 { syntax: '<percentage>'; inherits: false; initial-value: 70%; }
+          @property --y1 { syntax: '<percentage>'; inherits: false; initial-value: 30%; }
+          @property --x2 { syntax: '<percentage>'; inherits: false; initial-value: 85%; }
+
+          html, body { height: 100%; }
+          body { margin: 0; overflow: hidden; color: #fbf3ff; }
+          .cielo {
+            position: relative; height: 100%; display: grid; align-items: center; padding: 0 28px;
+            background:
+              radial-gradient(38% 50% at var(--x1) var(--y1), oklch(72% 0.2 340 / .9), transparent 70%),
+              radial-gradient(30% 40% at var(--x2) 72%, oklch(84% 0.11 60 / .65), transparent 70%),
+              radial-gradient(70% 80% at 20% 90%, oklch(34% 0.14 300), transparent 75%),
+              oklch(15% 0.05 300);
+            animation: deriva 14s ease-in-out infinite alternate, sube 9s ease-in-out infinite alternate;
+          }
+          @keyframes deriva { to { --x1: 45%; --x2: 60%; } }
+          @keyframes sube { to { --y1: 55%; } }
+          .pausa .cielo, .cielo.pausa { animation-play-state: paused; }
+          /* Grano: un SVG de ruido, quieto, a la resolución de la pantalla */
+          .cielo.grano::after {
+            content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .22; mix-blend-mode: overlay;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+          }
+          .copy { position: relative; z-index: 1; max-width: 26rem; }
+          .copy small { font: 600 12px var(--f-sans); opacity: .8; }
+          h1 { margin: 8px 0 10px; font: 700 clamp(34px, 7vw, 58px)/.95 var(--f-archivo); font-stretch: 112%; letter-spacing: -0.03em; }
+          .copy p { margin: 0; font-size: 15px; opacity: .8; }
+          .panel { position: fixed; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+            padding: 8px 10px; border-radius: 12px; background: rgb(8 4 12 / .6); color: #fff; font: 500 12px var(--f-sans); }
+          button { min-height: 38px; padding: 0 14px; border: 1px solid rgb(255 255 255 / .35); border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          button[aria-pressed="true"] { background: #fff; color: #140a1c; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          pausa.onclick = () => { const on = cielo.classList.toggle('pausa'); pausa.setAttribute('aria-pressed', on); pausa.textContent = on ? 'Seguir' : 'Pausar'; };
+          grano.onclick = () => { const on = cielo.classList.toggle('grano'); grano.setAttribute('aria-pressed', on); };
+        </script>
+        <figcaption>Para un fondo lento de tres manchas, esto es suficiente y cuesta menos: el grano es un SVG quieto que se pinta una vez. Lo que CSS no puede hacer es calcular algo distinto en cada píxel: ni ruido deformado, ni ondas sobre una foto, ni reaccionar al puntero con un remolino. Para eso, shader.</figcaption>
+      </figure>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Efecto</th><th>Mejor con</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Degradado lento de 3 o 4 manchas</td><td>CSS con <code>@property</code></td><td>Sin JavaScript ni contexto WebGL; se pausa solo cuando la pestaña no se ve.</td></tr>
+            <tr><td>Grano quieto</td><td>SVG <code>feTurbulence</code> en CSS</td><td>Se pinta una vez y a la resolución nativa de la pantalla.</td></tr>
+            <tr><td>Malla de degradados que reacciona al puntero</td><td>Los dos</td><td>CSS si es una tarjeta pequeña; shader si es a pantalla completa y tiene que seguir al dedo con suavidad.</td></tr>
+            <tr><td>Tinta, humo o aurora</td><td>Shader</td><td>Necesita ruido calculado en cada píxel, y CSS no tiene ruido animable.</td></tr>
+            <tr><td>Foto que ondula o se hace lupa</td><td>Shader</td><td>Cada píxel tiene que leer la imagen en otra posición.</td></tr>
+            <tr><td>Brillo de borde en un objeto 3D</td><td>Shader (fresnel)</td><td>Depende del ángulo de cada punto de la superficie respecto a la cámara.</td></tr>
+            <tr><td>Desenfoque detrás de un panel</td><td>CSS <code>backdrop-filter</code>, con cuidado</td><td>Sobre un canvas animado se recalcula en cada fotograma: la consola de la portada no lo usa por eso.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>@property</code> es Baseline desde julio de 2024 (Chrome 85, Safari 16.4, Firefox 128): úsala sin miedo, y si un navegador viejo no la entiende el degradado se queda quieto, que también está bien. WebGL funciona en todos los navegadores actuales<!-- verificar soporte -->, pero puede estar desactivado por el usuario, por el modo de ahorro o por un driver: ten siempre el respaldo CSS debajo del canvas.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El teléfono es donde se decide si el shader se queda. Detecta el modo ligero con <code>matchMedia('(pointer: coarse)')</code>, el ancho y <code>navigator.hardwareConcurrency</code>; en ese modo, resolución al 45 %, tres capas de ruido y nada de efectos secundarios. Ten en cuenta que en modo de ahorro de batería el iPhone limita la animación a unos 30 fps: diseña el movimiento lento para que no se note. Y prueba en un móvil real de gama media, no solo en el tuyo.</p>
+      </div>
+
+      <h2>Criterio: shaders que suman y efectos que cansan</h2>
+      <p class="statement">Si al quitar el shader la web dice lo mismo, el shader sobraba.</p>
+      <p>Un shader es un material, como el papel de una invitación de boda o la madera de un mostrador. Bien elegido, el usuario no lo nombra pero siente que la marca cuida los detalles. Mal elegido, es lo único que recuerda, y no para bien. Estas son las diferencias que más se notan:</p>
+
+      <div class="versus wide">
+        <p>Así suma</p><p>Así cansa</p>
+        <div><b>Lento y casi quieto</b>Se mueve tan despacio que lo notas a los tres segundos. Acompaña al titular.</div>
+        <div><b>Rápido y protagonista</b>Ondas veloces que compiten con el texto y marean al hacer scroll.</div>
+        <div><b>Los colores de la marca</b>El mismo 60-30-10 de la web; el acento del shader es el del botón.</div>
+        <div><b>Arcoíris «porque es un shader»</b>Neones que no aparecen en ningún otro sitio de la página.</div>
+        <div><b>Reacciona a ti</b>Responde al puntero, al toque o al scroll con suavidad y vuelve al reposo.</div>
+        <div><b>Se dispara solo</b>Efectos que saltan cada pocos segundos aunque nadie haga nada.</div>
+        <div><b>Uno por página</b>Un momento memorable, en la portada. El resto, tranquilo.</div>
+        <div><b>En todas partes</b>Cada imagen con su distorsión y cada botón con su brillo.</div>
+      </div>
+
+      <p>Piensa también en el sector, con el mismo razonamiento que usas para el color. Encajan bien la música y el ocio nocturno (tinta, grano animado), la moda (distorsión de imagen sutil), la tecnología y el software (auroras en la portada), la arquitectura y los inmuebles de lujo (luz y agua muy lentas) y la cosmética (fresnel en el producto). Encajan mal una clínica, un despacho de abogados o el listado de productos de una tienda PrestaShop: ahí el usuario viene a resolver algo y el movimiento estorba. Si el cliente lo pide igualmente, déjalo en la portada y nunca en el catálogo ni en el proceso de compra.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Mide el contraste del texto en el peor punto, no en la media: busca la cresta más clara que pueda pasar por debajo del titular y comprueba los 4.5:1 ahí. Si no llega, la solución no es una sombra en el texto, sino calmar esa zona en el propio shader (la viñeta de la receta) o limitar el brillo máximo del acento. El texto manda y el shader se adapta.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Una versión estática también es una decisión de diseño válida. Si en el teléfono la web tiene que cargar al instante, exporta un fotograma bonito del shader como WebP de unos 40 KB, pon el grano como SVG en CSS y reserva el shader en vivo para el escritorio. Nadie echa de menos un movimiento que no ha visto; todo el mundo nota una portada que tarda en aparecer.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Un shader responde a «¿de qué color es este píxel?» sabiendo dónde está (<code>uv</code>), cuándo (<code>uTime</code>) y lo que le mandas (los uniforms). El diseño vive en los uniforms.</li>
+          <li>Lleva la paleta OKLCH al shader como OKLab y mezcla ahí: el degradado se comporta como los de tu CSS y el fondo no se lava. Respeta el 60-30-10 y calma la zona del texto.</li>
+          <li>Ruido para la forma, grano para la textura y contra las bandas, distorsión de imagen solo como reacción breve y fresnel para el brillo premium barato.</li>
+          <li>Pinta a menos resolución, adapta la calidad a los fps, para cuando no se ve, no tengas más de dos contextos vivos y ten respaldo CSS. Si basta con <code>@property</code>, usa CSS.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Haz la portada de una sala de conciertos de Castellón (o de la bodega de la Plana de las lecciones de color) con un fondo shader propio: paleta de la marca en OKLab, ruido deformado lento, viñeta bajo el titular y grano al 3 %. Cumple las reglas de rendimiento: render al 50 %, calidad adaptativa, pausa fuera de pantalla, respaldo CSS y un único fotograma con movimiento reducido. Mide los fps en tu móvil y en el de alguien con un Android de gama media, y entrega dos capturas (1440 y 390) con el contraste del titular medido en su peor punto.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+
+<script type="module">
+  import * as THREE from 'three';
+
+  /* =========================================================
+     Portada: fondo con shader a pantalla completa
+     ========================================================= */
+  const hero = document.querySelector('.hero');
+  const holder = hero.querySelector('.h-gl');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lite = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+  const MAX_ESCALA = Math.min(devicePixelRatio, 1.5) * (lite ? 0.45 : 0.6);
+  let escala = MAX_ESCALA;
+
+  // Paletas en OKLCH [L, C, H]: fondo, masa, acento y luz. Al shader le llegan como OKLab.
+  const PALETAS = {
+    medianoche: [[0.12, 0.035, 300], [0.33, 0.15, 302], [0.70, 0.22, 340], [0.87, 0.11, 55]],
+    aurora:     [[0.13, 0.035, 255], [0.33, 0.09, 225], [0.78, 0.16, 165], [0.92, 0.11, 115]],
+    brasa:      [[0.13, 0.03, 30],   [0.34, 0.12, 22],  [0.70, 0.2, 40],   [0.90, 0.12, 85]],
+  };
+  const aLab = ([L, C, H]) => new THREE.Vector3(L, C * Math.cos(H * Math.PI / 180), C * Math.sin(H * Math.PI / 180));
+  let objetivo = PALETAS.medianoche.map(aLab);
+
+  const U = {
+    uTime: { value: reduce ? 31 : 6 },
+    uRes: { value: new THREE.Vector2(1, 1) },
+    uPointer: { value: new THREE.Vector2(0.68, 0.6) },
+    uPush: { value: 0 },
+    uTap: { value: new THREE.Vector3(0.5, 0.5, -99) },
+    uC: { value: objetivo.map((v) => v.clone()) },
+    uW: { value: new THREE.Vector4(1, 0, 0, 0) },
+    uGrain: { value: 0.045 },
+    uPortrait: { value: 0 },
+  };
+
+  const vertexShader = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+  const fragmentShader = /* glsl */ `
+    uniform float uTime, uPush, uGrain, uPortrait;
+    uniform vec2 uRes, uPointer;
+    uniform vec3 uTap;
+    uniform vec3 uC[4];
+    uniform vec4 uW;
+    varying vec2 vUv;
+
+    float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+    float noise(vec2 p) {
+      vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);
+      return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + 1.0), u.x), u.y);
+    }
+    float fbm(vec2 p) { float v = 0.0, a = 0.5; for (int i = 0; i < CAPAS; i++) { v += a * noise(p); p = p * 2.02 + vec2(1.7, 9.2); a *= 0.5; } return v; }
+    vec3 labALineal(vec3 c) {
+      vec3 lms = vec3(c.x + 0.3963377774 * c.y + 0.2158037573 * c.z, c.x - 0.1055613458 * c.y - 0.0638541728 * c.z, c.x - 0.0894841775 * c.y - 1.2914855480 * c.z);
+      lms = lms * lms * lms;
+      return mat3(4.0767416621, -1.2684380046, -0.0041960863, -3.3077115913, 2.6097574011, -0.7034186147, 0.2309699292, -0.3413193965, 1.7076147010) * lms;
+    }
+    vec3 aPantalla(vec3 c) { c = clamp(c, 0.0, 1.0); return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+
+    void main() {
+      vec2 k = vec2(uRes.x / uRes.y, 1.0);
+      vec2 p = (vUv - 0.5) * k, m = (uPointer - 0.5) * k;
+      // 1. Remolino bajo el puntero
+      vec2 d = p - m;
+      float giro = uPush * 1.7 * exp(-dot(d, d) * 4.5);
+      p = m + mat2(cos(giro), sin(giro), -sin(giro), cos(giro)) * d;
+      // 2. Onda al tocar
+      float tt = uTime - uTap.z;
+      vec2 tp = (uTap.xy - 0.5) * k;
+      float dist = length(p - tp);
+      float anillo = exp(-pow((dist - tt * 0.6) * 9.0, 2.0)) * exp(-tt * 1.3) * step(0.0, tt);
+      p += (p - tp) / max(dist, 0.001) * anillo * 0.05;
+      // 3. Ruido deformado (tinta)
+      float t = mod(uTime, 1000.0) * 0.045;
+      vec2 s = p * 1.3 + vec2(0.0, 0.4);
+      vec2 q = vec2(fbm(s + vec2(0.0, t)), fbm(s + vec2(5.2, 1.3) - t));
+      vec2 r = vec2(fbm(s + 2.8 * q + vec2(1.7, 9.2) + t * 1.3), fbm(s + 2.8 * q + vec2(8.3, 2.8) - t));
+      float f = fbm(s + 2.6 * r);
+      // 4. Color, mezclado en OKLab
+      // el color se concentra donde no hay texto: arriba a la derecha (arriba en vertical)
+      float foco = exp(-length((vUv - mix(vec2(0.8, 0.72), vec2(0.62, 0.86), uPortrait)) * k) * 2.0);
+      vec3 c = mix(uC[0], uC[1], smoothstep(0.15, 0.36, f));
+      c = mix(c, uC[2], clamp(smoothstep(0.42, 0.58, f * 0.6 + length(q) * 0.55) * (0.4 + 1.0 * foco), 0.0, 1.0));
+      c = mix(c, uC[3], smoothstep(0.52, 0.66, r.y * 0.7 + f * 0.45) * (0.3 + 0.65 * foco));
+      c.x += anillo * 0.1;
+      // 5. Viñeta: calma donde va el texto (abajo a la izquierda; en vertical, toda la parte baja)
+      float zona = mix(vUv.x * 1.15 + (vUv.y - 0.5) * 0.9, (vUv.y - 0.25) * 1.6, uPortrait);
+      float calma = smoothstep(0.2, 0.9, zona);
+      c = mix(uC[0], c, mix(0.2, 1.0, calma));
+      // Vistas: final, uv, ruido y grano
+      float g = hash(gl_FragCoord.xy + fract(uTime * 7.0) * 113.0) - 0.5;
+      vec3 final = aPantalla(labALineal(c)) + g * uGrain;
+      vec3 col = final * uW.x + vec3(vUv, 0.0) * uW.y + vec3(smoothstep(0.12, 0.5, f)) * uW.z + vec3(0.5 + g * 0.9) * uW.w;
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+
+  const material = new THREE.ShaderMaterial({ uniforms: U, vertexShader, fragmentShader, defines: { CAPAS: lite ? 3 : 5 }, depthTest: false, depthWrite: false });
+  const scene = new THREE.Scene();
+  const plano = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+  plano.frustumCulled = false;
+  scene.add(plano);
+  const camera = new THREE.Camera();
+
+  // Textos de la tarjeta «lo que calcula ahora cada píxel»
+  const VISTAS = [
+    { code: '<i>// mezcla en OKLab y grano</i>\nvec3 c = mix(<b>fondo</b>, <b>acento</b>, tinta);\ncolor = aPantalla(c) + grano * 0.045;', why: 'Paleta en OKLab, ruido deformado, remolino bajo el puntero, viñeta bajo el titular y grano fino.' },
+    { code: '<i>// x en rojo, y en verde</i>\ngl_FragColor = vec4(<b>vUv</b>, 0.0, 1.0);', why: 'Cada píxel solo sabe dónde está: de (0, 0) abajo a la izquierda a (1, 1) arriba a la derecha.' },
+    { code: '<i>// ruido que deforma otro ruido</i>\nfloat tinta = fbm(p + 2.6 * fbm(p + <b>uTime</b>));\ngl_FragColor = vec4(vec3(tinta), 1.0);', why: 'La forma sale del ruido. Fíjate en que el remolino del puntero también mueve el ruido.' },
+    { code: '<i>// un número al azar por píxel y fotograma</i>\nfloat grano = hash(gl_FragCoord.xy + <b>uTime</b>);\ngl_FragColor = vec4(vec3(0.5 + grano), 1.0);', why: 'Aquí, veinte veces más fuerte que en el resultado final, donde ronda el 4 %.' },
+  ];
+  const codeEl = hero.querySelector('[data-code]'), whyEl = hero.querySelector('[data-why]');
+  const pesos = new THREE.Vector4(1, 0, 0, 0);
+  function vista(i) {
+    pesos.set(+(i === 0), +(i === 1), +(i === 2), +(i === 3));
+    codeEl.innerHTML = VISTAS[i].code; whyEl.textContent = VISTAS[i].why;
+    hero.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.view === i)));
+    sucio = true;
+  }
+  hero.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => vista(+b.dataset.view)));
+  hero.querySelectorAll('[data-pal]').forEach((b) => b.addEventListener('click', () => {
+    objetivo = PALETAS[b.dataset.pal].map(aLab);
+    hero.style.setProperty('--h-acc', getComputedStyle(b).getPropertyValue('--c'));
+    hero.querySelectorAll('[data-pal]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    sucio = true;
+  }));
+
+  // Puntero (o dedo). Sin nadie tocando, el remolino pasea despacio.
+  const ptr = { x: 0.68, y: 0.6, tx: 0.68, ty: 0.6, push: 0, ultimo: -1e9 };
+  function setPtr(e) {
+    const r = hero.getBoundingClientRect();
+    ptr.tx = (e.clientX - r.left) / r.width; ptr.ty = 1 - (e.clientY - r.top) / r.height; ptr.ultimo = performance.now();
+  }
+  hero.addEventListener('pointermove', setPtr);
+  hero.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button, a')) return;
+    setPtr(e);
+    if (!reduce) U.uTap.value.set(ptr.tx, ptr.ty, U.uTime.value);
+  });
+
+  // Arranque y parada: al dormir se libera el contexto WebGL entero
+  let renderer = null, raf = 0, antes = 0, fotogramas = 0, acumulado = 0, fps = 0, sigLectura = 0, sucio = true;
+  const ro = { t: hero.querySelector('[data-ro="t"]'), fps: hero.querySelector('[data-ro="fps"]'), res: hero.querySelector('[data-ro="res"]') };
+  function resize() {
+    if (!renderer) return;
+    const w = hero.clientWidth, h = hero.clientHeight;
+    renderer.setPixelRatio(escala);
+    renderer.setSize(w, h, false);
+    U.uRes.value.set(w, h);
+    U.uPortrait.value = w / h < 0.85 ? 1 : 0;
+    sucio = true;
+  }
+  new ResizeObserver(resize).observe(hero);
+  function start() {
+    if (renderer || hero.classList.contains('no-gl')) return;
+    try { renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'low-power' }); }
+    catch (e) { renderer = null; hero.classList.add('no-gl'); return; }
+    renderer.domElement.setAttribute('aria-hidden', 'true');
+    holder.append(renderer.domElement);
+    resize(); antes = performance.now(); fotogramas = 0; acumulado = 0; sucio = true;
+    raf = requestAnimationFrame(loop);
+  }
+  function stop() {
+    if (!renderer) return;
+    cancelAnimationFrame(raf);
+    holder.classList.remove('on');
+    renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove(); renderer = null;
+  }
+
+  function loop(ahora) {
+    raf = requestAnimationFrame(loop);
+    const dt = Math.min((ahora - antes) / 1000, 0.1); antes = ahora;
+    if (hero.getBoundingClientRect().bottom <= 0) return;          // fuera de pantalla: no pinta
+    const kk = reduce ? 1 : 1 - Math.exp(-dt * 3.5);
+    // Puntero: si nadie toca en 2,5 s, el remolino pasea solo
+    if (!reduce) {
+      U.uTime.value += dt;
+      const ocioso = ahora - ptr.ultimo > 2500, s = U.uTime.value;
+      if (ocioso) { ptr.tx = 0.64 + 0.2 * Math.sin(s * 0.23); ptr.ty = 0.6 + 0.16 * Math.sin(s * 0.17 + 1); }
+      const kp = 1 - Math.exp(-dt * (ocioso ? 1.5 : 5));
+      ptr.x += (ptr.tx - ptr.x) * kp; ptr.y += (ptr.ty - ptr.y) * kp;
+      ptr.push += ((ocioso ? 0.55 : 1) - ptr.push) * kp;
+      U.uPointer.value.set(ptr.x, ptr.y); U.uPush.value = ptr.push;
+      sucio = true;
+    }
+    // Transiciones de paleta y de vista
+    let mov = 0;
+    U.uC.value.forEach((v, i) => { mov += v.distanceTo(objetivo[i]); v.lerp(objetivo[i], kk); });
+    mov += U.uW.value.clone().sub(pesos).length(); U.uW.value.lerp(pesos, kk);
+    if (mov > 0.0005) sucio = true;
+    if (!sucio) return;                                             // movimiento reducido: solo pinta si algo cambió
+    renderer.render(scene, camera);
+    sucio = false;
+    if (!holder.classList.contains('on')) holder.classList.add('on');
+    // Calidad adaptativa: si no llega a 40 fps, baja la resolución de render
+    fotogramas++; acumulado += dt;
+    if (acumulado >= 1) {
+      fps = fotogramas / acumulado; fotogramas = 0; acumulado = 0;
+      if (!reduce && fps < 40 && escala > 0.3) { escala = Math.max(0.3, escala * 0.8); resize(); }
+    }
+    if (ahora > sigLectura) {                                       // el DOM se toca 4 veces por segundo, no 60
+      sigLectura = ahora + 250;
+      ro.t.textContent = U.uTime.value.toFixed(1);
+      ro.fps.textContent = fps ? Math.round(fps) : '--';
+      ro.res.textContent = escala.toFixed(2) + '×';
+    }
+  }
+  vista(0);
+
+  /* =========================================================
+     Como mucho 2 contextos WebGL vivos en la página.
+     Portada y laboratorios compiten por dos plazas según su distancia a la pantalla.
+     Un laboratorio que pierde su plaza se congela en una imagen de su último
+     fotograma (su iframe se sustituye por una copia estática) y vuelve al acercarse.
+     ========================================================= */
+  const PLAZAS = 2, MARGEN = 450;
+  const vacio = '<!doctype html><meta charset="utf-8"><body style="margin:0;background:#120a1a">';
+  const items = [{ el: hero, live: () => !!renderer, wake: start, sleep: stop }];
+
+  function congelar(it) {
+    const f = it.frame, vivo = f.getAttribute('srcdoc');
+    if (!vivo || it.frozen) return;
+    it.saved = vivo; it.frozen = 'pendiente';
+    const poner = (html) => { if (it.frozen !== 'pendiente') return; it.frozen = html; f.setAttribute('srcdoc', html); };
+    let doc = null, win = null;
+    try { doc = f.contentDocument; win = f.contentWindow; } catch (e) { /* sin acceso: copia vacía */ }
+    if (!doc || !doc.body || !win || !doc.querySelector('canvas')) return poner(vacio);
+    let hecho = false;
+    const foto = () => {
+      if (hecho) return; hecho = true;
+      try {
+        doc.querySelectorAll('input').forEach((i) => i.setAttribute('value', i.value));
+        const copia = doc.documentElement.cloneNode(true);
+        const orig = doc.querySelectorAll('canvas'), dest = copia.querySelectorAll('canvas');
+        orig.forEach((c, n) => {
+          const img = doc.createElement('img'), cs = win.getComputedStyle(c);
+          img.alt = '';
+          img.src = c.toDataURL('image/webp', 0.85);
+          img.style.cssText = ['position', 'top', 'left', 'right', 'bottom', 'width', 'height', 'z-index', 'border-radius', 'margin']
+            .map((p) => `${p}:${cs.getPropertyValue(p)}`).join(';') + ';display:block;max-width:none';
+          dest[n].replaceWith(img);
+        });
+        copia.querySelectorAll('script').forEach((s) => s.remove());
+        poner('<!doctype html>' + copia.outerHTML);
+      } catch (e) { poner(vacio); }
+    };
+    win.requestAnimationFrame(foto);       // justo después del render del laboratorio, antes de que el búfer se borre
+    setTimeout(foto, 500);
+  }
+
+  document.querySelectorAll('figure.lab[data-three]').forEach((fig) => {
+    const frame = fig.querySelector('.lab-stage iframe');
+    if (!frame) return;
+    const it = { el: fig.querySelector('.lab-stage') || fig, frame, frozen: null, saved: null };
+    it.live = () => !!frame.getAttribute('srcdoc') && !it.frozen;
+    it.wake = () => {
+      if (!it.frozen) return;
+      if (it.frozen === 'pendiente') { it.frozen = null; it.saved = null; return; }
+      const s = it.saved; it.frozen = null; it.saved = null; frame.setAttribute('srcdoc', s);
+    };
+    it.sleep = () => congelar(it);
+    new MutationObserver(() => {
+      const s = frame.getAttribute('srcdoc');
+      if (it.frozen && it.frozen !== 'pendiente' && s !== it.frozen) { it.frozen = null; it.saved = null; }   // el motor ha vuelto a montar la demo
+      programar();
+    }).observe(frame, { attributes: true, attributeFilter: ['srcdoc'] });
+    items.push(it);
+  });
+
+  function distancia(el) {
+    const r = el.getBoundingClientRect(), vh = innerHeight;
+    if (r.bottom < -MARGEN || r.top > vh + MARGEN) return Infinity;
+    const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+    return visible > 0 ? -visible : (r.top >= vh ? r.top - vh : -r.bottom);
+  }
+  let pendiente = false;
+  function equilibrar() {
+    pendiente = false;
+    items.map((it) => ({ it, d: distancia(it.el) })).sort((a, b) => a.d - b.d).forEach(({ it, d }, n) => {
+      if (d !== Infinity && n < PLAZAS) it.wake(); else if (it.live()) it.sleep();
+    });
+  }
+  function programar() { if (!pendiente) { pendiente = true; setTimeout(equilibrar, 120); } }
+  addEventListener('scroll', programar, { passive: true });
+  addEventListener('resize', programar);
+  equilibrar();
+</script>
+</body>
+</html>

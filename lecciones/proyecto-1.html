@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proyecto 1: una landing 2D premium | Hora azul</title>
+<meta name="description" content="Cómo se ha hecho Sorra, la landing del nivel 1: del brief a las tres palabras, la paleta 60/30/10, la pareja tipográfica, la retícula editorial sin cards, los componentes y el móvil, con cada decisión justificada.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad: la de Sorra, la landing que se desmonta aquí.
+     Arena, tinta y teja (60/30/10). Inter Tight 700 muy apretada + Instrument Serif cursiva. */
+  :root {
+    --bg: oklch(94.7% 0.014 85);        /* #F3EEE3 */
+    --bg-2: oklch(91.6% 0.017 83);
+    --bg-3: oklch(87.5% 0.02 80);
+    --fg: oklch(17.8% 0 0);             /* #111111 */
+    --muted: oklch(43.5% 0.014 70);     /* #5A544C, 6,5:1 sobre la arena */
+    --faint: oklch(52% 0.014 70);
+    --accent: oklch(61.6% 0.18 41);     /* #D9541E */
+    --on-accent: oklch(17.8% 0 0);      /* tinta sobre teja: 4,7:1 */
+    --code-bg: oklch(19% 0.008 60);
+    --scheme: light;
+    --f-display: "Inter Tight", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 700;
+    --display-tracking: -0.045em;
+  }
+  body { font-size: clamp(1.04rem, 1rem + 0.2vw, 1.15rem); line-height: 1.62; }
+  .prose em, .hero em, .statement em { font-family: "Instrument Serif", Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
+  .prose h2 { line-height: .96; }
+  .prose h2 em { font-size: 1.08em; }
+  /* Los números de sección, como las etiquetas de la landing: tinta con un cuadrado de teja */
+  .prose h2 .n { display: flex; align-items: center; gap: .55rem; color: var(--fg); }
+  .prose h2 .n::before { content: ""; width: 8px; height: 8px; background: var(--accent); }
+
+  /* ---- Portada: la landing en vivo, que se mira por capas ---- */
+  .hero { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: center; gap: clamp(2rem, 4vw, 4.5rem); padding: 6.5rem var(--gutter) 3rem; }
+  .hero [data-kicker] { font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); margin: 0 0 1.4rem; display: flex; align-items: center; gap: .55rem; }
+  .hero [data-kicker]::before { content: ""; width: 8px; height: 8px; background: var(--accent); flex: none; }
+  .hero h1 { font-size: clamp(3rem, 1.2rem + 5.4vw, 7rem); line-height: .9; letter-spacing: -0.058em; }
+  .hero h1 em { display: inline-block; font-size: 1.1em; letter-spacing: -0.02em; background: linear-gradient(var(--accent), var(--accent)) 0 90% / 100% .07em no-repeat; }
+  .hero .lede { font-size: var(--step-1); line-height: 1.42; letter-spacing: -0.012em; max-width: 34ch; margin: 1.6rem 0 1.8rem; }
+  .hero .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1rem; }
+  .hero .btn { min-height: 48px; padding-inline: 1.3rem; font-size: 1rem; }
+  .stage { display: grid; gap: 1.1rem; }
+  .devices { position: relative; aspect-ratio: 16 / 11.2; }
+  .devices .desk, .devices .phone { position: absolute; overflow: hidden; background: #F3EEE3; }
+  .devices .desk { left: 0; top: 0; width: 88%; aspect-ratio: 16 / 10; box-shadow: 0 0 0 1px oklch(17.8% 0 0 / .16), 0 30px 60px -30px oklch(17.8% 0 0 / .45); }
+  .devices .phone { right: 0; bottom: 0; width: 25%; aspect-ratio: 390 / 844; border-radius: 22px; box-shadow: 0 0 0 5px var(--fg), 0 30px 50px -20px oklch(17.8% 0 0 / .5); }
+  .devices iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; max-width: none; pointer-events: none; transform: scale(var(--s, .5)); }
+  .devices .desk iframe { width: 1440px; height: 900px; }
+  .devices .phone iframe { width: 390px; height: 844px; }
+  .layers { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font: 500 var(--step--1)/1.2 var(--f-ui); }
+  .layers > span { color: var(--muted); margin-right: .3rem; }
+  .layers button { min-height: 44px; border-color: oklch(17.8% 0 0 / .3); }
+  .layers button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .layer-note { margin: 0; min-height: 2.8em; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); max-width: 60ch; }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding-top: 5.5rem; gap: 2.2rem; }
+    .devices { aspect-ratio: auto; display: grid; justify-items: center; }
+    .devices .desk { display: none; }
+    .devices .phone { position: relative; width: min(64vw, 270px); right: auto; bottom: auto; }
+  }
+
+  /* ---- Mapa del proceso: índice editorial con enlaces a las lecciones ---- */
+  .map { list-style: none; margin: 2rem 0; padding: 0; border-top: 1.5px solid var(--fg); counter-reset: paso; }
+  .map li { display: grid; grid-template-columns: 3rem 11rem 1fr; gap: .3rem 1.4rem; padding: 1.1rem 0; border-bottom: 1px solid var(--line-2); align-items: baseline; margin: 0; }
+  .map li::before { counter-increment: paso; content: counter(paso, decimal-leading-zero); font: 600 var(--step--1)/1 var(--f-ui); font-variant-numeric: tabular-nums; color: var(--muted); }
+  .map b { font: 700 var(--step-1)/1.1 var(--f-display); letter-spacing: -0.035em; }
+  .map p { margin: 0; font-size: var(--step--1); color: var(--muted); }
+  .map p a { color: var(--fg); }
+  @media (max-width: 760px) { .map li { grid-template-columns: 2.4rem 1fr; } .map p { grid-column: 2; } }
+
+  /* ---- Ficha de brief ---- */
+  .brief { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1.5px solid var(--fg); margin: 2rem 0; }
+  .brief div { padding: 1rem 1.2rem 1.2rem 0; border-bottom: 1px solid var(--line-2); }
+  .brief div:nth-child(even) { padding-left: 1.2rem; border-left: 1px solid var(--line-2); }
+  .brief dt { font: 600 var(--step--1)/1.3 var(--f-ui); color: var(--muted); margin-bottom: .3rem; }
+  .brief dd { margin: 0; font-size: var(--step-0); line-height: 1.45; }
+  @media (max-width: 640px) { .brief { grid-template-columns: 1fr; } .brief div:nth-child(even) { padding-left: 0; border-left: 0; } }
+
+  /* ---- Tres palabras gigantes ---- */
+  .words { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1.5px solid var(--fg); }
+  .words div { padding: 1.4rem 1.4rem 1.6rem 0; border-right: 1px solid var(--line-2); }
+  .words div + div { padding-left: 1.4rem; }
+  .words div:last-child { border-right: 0; }
+  .words b { display: block; font: 400 clamp(3rem, 1.6rem + 4.2vw, 5.6rem)/.9 "Instrument Serif", Georgia, serif; font-style: italic; letter-spacing: -0.03em; }
+  .words p { margin: 1rem 0 0; font-size: var(--step--1); color: var(--muted); }
+  .words p strong { color: var(--fg); }
+  @media (max-width: 760px) { .words { grid-template-columns: 1fr; } .words div, .words div + div { padding: 1.2rem 0; border-right: 0; border-bottom: 1px solid var(--line-2); } }
+
+  /* ---- La proporción a sangre ---- */
+  .ratio { display: grid; grid-template-columns: 60fr 30fr 10fr; height: clamp(11rem, 26vw, 19rem); margin-block: 3rem 1rem; }
+  .ratio div { position: relative; padding: 1.1rem var(--gutter); display: flex; flex-direction: column; justify-content: space-between; font: 500 var(--step--1)/1.3 var(--f-ui); }
+  .ratio div:nth-child(2), .ratio div:nth-child(3) { padding-inline: 1rem; }
+  .ratio b { font: 700 clamp(2.6rem, 1.4rem + 4vw, 6rem)/.85 var(--f-display); letter-spacing: -0.06em; }
+  .ratio .a { background: #F3EEE3; color: #111; box-shadow: inset 0 1px 0 var(--line-2), inset 0 -1px 0 var(--line-2); }
+  .ratio .t { background: #111; color: #F3EEE3; }
+  .ratio .k { background: #D9541E; color: #111; }
+  .ratio .k b { font-size: clamp(1.6rem, 0.8rem + 2.4vw, 3.4rem); }
+  @media (max-width: 640px) {
+    .ratio { grid-template-columns: 1fr; grid-template-rows: 60fr 30fr 10fr; height: 30rem; }
+    .ratio div, .ratio div:nth-child(2), .ratio div:nth-child(3) { flex-direction: row; align-items: flex-end; padding: .8rem var(--gutter); }
+    .ratio .k { align-items: center; }
+    .ratio .k b { font-size: 1.6rem; }
+  }
+
+  /* ---- Banda de tinta ---- */
+  .band.ink { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.ink .statement { color: var(--bg); margin: 0; max-width: 18ch !important; }
+  .band.ink .statement em { color: var(--accent); }
+  .band.ink p.small { max-width: 52ch; margin: 1.6rem 0 0; color: oklch(80% 0.012 80); font-size: var(--step--1); }
+
+  /* ---- Muestra tipográfica fija ---- */
+  .specimen { border-top: 1.5px solid var(--fg); padding-top: 1rem; }
+  .specimen .aa { display: flex; align-items: baseline; gap: .2em; font-size: clamp(5rem, 3rem + 6vw, 9rem); line-height: .8; }
+  .specimen .aa span:first-child { font-family: "Inter Tight", sans-serif; font-weight: 700; letter-spacing: -0.06em; }
+  .specimen .aa span:last-child { font-family: "Instrument Serif", serif; font-style: italic; letter-spacing: -0.02em; }
+  .specimen dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 1.4rem 0 0; font: 400 var(--step--1)/1.4 var(--f-ui); }
+  .specimen dl div { padding: .7rem 0; border-top: 1px solid var(--line-2); }
+  .specimen dl div:nth-child(even) { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+  .specimen dt { color: var(--muted); }
+  .specimen dd { margin: 0; font-weight: 600; }
+  .scale { list-style: none; padding: 0 !important; margin: 1.6rem 0 0 !important; }
+  .scale li { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--line-2); padding: .5rem 0; margin: 0; }
+  .scale li span { font: 500 .78rem/1 var(--f-code); color: var(--muted); white-space: nowrap; }
+  .scale li b { font-weight: 700; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+  /* ---- Así sí / así no ---- */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0; }
+  .vs figure { margin: 0; }
+  .vs .box { aspect-ratio: 4 / 3; display: grid; place-items: center; padding: 1.2rem; text-align: center; border: 1px solid var(--line-2); }
+  .vs figcaption { font: 500 var(--step--1)/1.45 var(--f-ui); color: var(--muted); padding-top: .7rem; }
+  .vs figcaption b { color: var(--fg); display: block; }
+  .vs .photo-c { background: center / cover url("../landing/media/balcones.webp"); }
+  .vs .photo-g { background: center / cover url("../landing/media/balcones.webp"); filter: grayscale(1) contrast(1.12); }
+  .vs .wrap-p { position: relative; aspect-ratio: 4 / 3; background: #F3EEE3; border: 1px solid var(--line-2); overflow: hidden; }
+  .vs .wrap-p i { position: absolute; inset: 14% 8% 18% 50%; z-index: 1; }
+  .vs .wrap-p s { position: absolute; inset: 14% 8% 18% 50%; translate: -7px 7px; background: #D9541E; }
+  .vs .wrap-p span { position: absolute; left: 7%; top: 16%; width: 38%; font: 700 clamp(1rem, .5rem + 1.5vw, 1.7rem)/.9 var(--f-display); letter-spacing: -0.05em; color: #111; }
+  .vs .wrap-p span em { display: block; font-size: 1.08em; letter-spacing: -0.02em; }
+  .vs .wrap-p u { position: absolute; left: 7%; bottom: 18%; width: 30%; height: 11%; border-radius: 99px; background: #D9541E; }
+  @media (max-width: 640px) { .vs { grid-template-columns: 1fr; } }
+
+  /* ---- Banda del móvil (invertida) ---- */
+  .band.mob { --band-bg: var(--bg-2); }
+  .band.mob h2 { margin-top: 0 !important; }
+  .band.mob .inner > p, .band.mob .inner > .callout { max-width: var(--measure); }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="proyecto-1">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div>
+      <p data-kicker>Proyecto 1</p>
+      <h1 id="t">Proyecto 1: una landing <em>2D premium</em></h1>
+      <p class="lede">Sorra es un estudio de arquitectura inventado de Castelló. Su web aplica todo el nivel 1, sin una sola animación. Mírala por capas y después, abajo, desmontada decisión a decisión.</p>
+      <div class="actions"><a class="btn primary" href="../proyectos/nivel-1/index.html">Abrir la landing</a><span class="chip" data-meta>40 min</span></div>
+    </div>
+    <div class="stage">
+      <div class="devices" aria-label="Vista previa de la landing de Sorra">
+        <div class="desk"><iframe data-src="../proyectos/nivel-1/index.html" title="Landing de Sorra en escritorio" tabindex="-1"></iframe></div>
+        <div class="phone"><iframe data-src="../proyectos/nivel-1/index.html" title="Landing de Sorra en móvil" tabindex="-1"></iframe></div>
+      </div>
+      <div class="layers" role="group" aria-label="Capas de análisis">
+        <span>Mírala por capas</span>
+        <button class="btn" type="button" aria-pressed="false" data-layer="grid">Retícula</button>
+        <button class="btn" type="button" aria-pressed="false" data-layer="noacc">Sin el 10 %</button>
+        <button class="btn" type="button" aria-pressed="false" data-layer="squint">Entornar los ojos</button>
+      </div>
+      <p class="layer-note" aria-live="polite">Toca una capa: la landing de arriba es la de verdad, no una captura.</p>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Las lecciones del nivel 1 te han dado las piezas por separado: cómo se lee un color, qué transmite, por qué pegan unos con otros, qué dice una letra, cómo se combinan dos y cómo se compone una página sin cards. Este proyecto las junta en una web real, con un cliente, un objetivo y un móvil.</p>
+      <p>La landing no tiene animaciones a propósito. Si una web parece cara quieta, el movimiento del nivel 2 la mejorará. Si parece barata quieta, ninguna animación la va a salvar. Abre <a href="../proyectos/nivel-1/index.html">la landing de Sorra</a> en otra pestaña y en tu teléfono, y ve comparando mientras lees.</p>
+
+      <h2>El proceso, <em>en siete pasos</em></h2>
+      <p>Este es el orden en que se tomaron las decisiones. Cada paso se apoya en el anterior y en una o varias lecciones del nivel 1. El orden importa: si eliges la tipografía antes de saber qué tiene que transmitir la marca, eliges por gusto y luego no sabes defenderlo delante del cliente.</p>
+      <ol class="map wide">
+        <li><b>Brief</b><p><strong>Quién es el cliente, qué tiene que conseguir la web y quién la va a ver.</strong> <a href="00-criterio.html">Qué hace que una web parezca cara</a>, <a href="web-pensar.html">Cómo se piensa una web</a></p></li>
+        <li><b>Tres palabras</b><p><strong>Cálido, preciso y sereno: el filtro de todas las decisiones.</strong> <a href="color-paleta.html">Construir una paleta</a>, <a href="tipo-personalidad.html">Qué transmite una tipografía</a></p></li>
+        <li><b>Paleta</b><p><strong>Arena, tinta y teja en 60/30/10.</strong> <a href="color-leer.html">Cómo se lee un color</a>, <a href="color-significado.html">Qué transmite cada color</a>, <a href="color-armonia.html">Por qué pegan</a>, <a href="color-acento.html">Acentos</a>, <a href="color-catalogo.html">Catálogo</a>, <a href="01-oklch.html">OKLCH</a>, <a href="02-paletas.html">Paletas en CSS</a></p></li>
+        <li><b>Tipografía</b><p><strong>Inter Tight muy apretada y una cursiva de Instrument Serif.</strong> <a href="tipo-combinar.html">Combinar tipografías</a>, <a href="tipo-fondo.html">Tipografía, color y fondo</a>, <a href="03-tipografia.html">Tipografía en CSS</a></p></li>
+        <li><b>Retícula</b><p><strong>Doce columnas, un eje en la columna 4 y ninguna card.</strong> <a href="04-composicion.html">Más allá de las cards</a></p></li>
+        <li><b>Componentes</b><p><strong>Etiquetas, botones, cifras, filetes y fotos en gris.</strong> <a href="00-criterio.html">Contención y jerarquía</a></p></li>
+        <li><b>Móvil</b><p><strong>Una columna, el mismo orden de lectura y nada encogido sin más.</strong> Los callouts «En el móvil» de todas las lecciones</p></li>
+      </ol>
+
+      <h2>El brief: <em>quién es Sorra</em></h2>
+      <p>Todo empieza por un cliente concreto. Uno inventado, pero con los datos que te daría uno real en la primera reunión:</p>
+      <dl class="brief wide">
+        <div><dt>Cliente</dt><dd>Estudio de arquitectura de tres personas en El Grau de Castelló. Casas unifamiliares, rehabilitación de masías y reformas integrales.</dd></div>
+        <div><dt>Objetivo de la web</dt><dd>Que la gente pida una primera visita. No vender online ni enseñar un portfolio infinito: conseguir una conversación.</dd></div>
+        <div><dt>Público</dt><dd>Familias de 35 a 55 años con una parcela o una casa que reformar en la provincia. Presupuesto medio-alto, deciden despacio y comparan tres o cuatro estudios.</dd></div>
+        <div><dt>Competencia</dt><dd>Estudios con webs negras y minimalistas que parecen frías, y plantillas de WordPress con un carrusel de fotos y cinco colores.</dd></div>
+        <div><dt>En tres segundos</dt><dd>«Esta gente hace casas bonitas, sabe lo que hace y me va a escuchar.»</dd></div>
+        <div><dt>Lo que tienen</dt><dd>Renders de sus proyectos (con una luz violeta de atardecer que no es la de su marca), textos propios y ninguna identidad previa.</dd></div>
+      </dl>
+      <p>Dos frases de esa ficha deciden media web. «Pedir una primera visita» significa que habrá un único botón principal y que se repetirá. «Deciden despacio y comparan» significa que la web tiene que transmitir calma y criterio, no urgencia: nada de banners, contadores ni flechas animadas.</p>
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La competencia te dice dónde no ponerte. Si los estudios de la zona son negros y fríos o recargados y baratos, el hueco libre es cálido y ordenado. Esa frase, dicha en voz alta al cliente, justifica la paleta antes de enseñarla.</p>
+      </div>
+
+      <h2>Tres palabras: <em>cálido, preciso, sereno</em></h2>
+      <p>Las tres palabras son el filtro de cada decisión posterior. Si dudas entre dos opciones, gana la que cumple mejor las tres. Salen del brief, no de tu gusto: un estudio que hace casas para familias tiene que ser <strong>cálido</strong>; uno que firma estructuras, <strong>preciso</strong>; y uno al que se le confía una obra de catorce meses, <strong>sereno</strong>.</p>
+      <div class="words wide">
+        <div><b>cálido</b><p><strong>Color:</strong> base crema y acento tierra. <strong>Letra:</strong> un gesto en serif cursiva. <strong>Imagen:</strong> materiales, luz.</p></div>
+        <div><b>preciso</b><p><strong>Color:</strong> tinta casi negra con mucho contraste. <strong>Letra:</strong> grotesca apretada. <strong>Estructura:</strong> retícula visible en los filetes.</p></div>
+        <div><b>sereno</b><p><strong>Color:</strong> un solo acento. <strong>Ritmo:</strong> mucho aire entre secciones. <strong>Movimiento:</strong> ninguno.</p></div>
+      </div>
+      <p>Fíjate en que las palabras tiran en direcciones distintas. «Preciso» solo daría una web suiza y fría; «cálido» solo, una web rústica de casa rural. La gracia está en la tensión: <strong>una grotesca exacta suavizada por una cursiva</strong>, y <strong>una tinta dura sobre un fondo cálido</strong>. Esa tensión controlada es lo que hace que la web tenga carácter y no sea genérica.</p>
+      <div class="callout idea"><span class="t">Idea</span>
+        <p>Si el cliente te da cinco palabras, quédate con tres. Con cinco puedes justificar cualquier cosa, y un filtro que lo deja pasar todo no filtra nada.</p>
+      </div>
+
+      <h2>La paleta: <em>arena, tinta y teja</em></h2>
+      <p>Tres colores, cada uno con un papel. No es una regla de estilo, es una forma de no tener que decidir cada vez de qué color va algo: si es fondo, arena; si es texto o imagen, tinta; si es lo único que tienes que hacer en la página, teja.</p>
+      <div class="swatches">
+        <div class="swatch" style="--s:#F3EEE3"><i></i><span><b>Arena, 60 %</b><small>#F3EEE3<br>oklch(94.7% .014 85)</small></span></div>
+        <div class="swatch" style="--s:#111111"><i></i><span><b>Tinta, 30 %</b><small>#111111<br>oklch(17.8% 0 0)</small></span></div>
+        <div class="swatch" style="--s:#D9541E"><i></i><span><b>Teja, 10 %</b><small>#D9541E<br>oklch(61.6% .18 41)</small></span></div>
+      </div>
+
+      <h3>Por qué estos tres</h3>
+      <p><strong>La arena es un blanco con temperatura.</strong> Un blanco puro (#FFF) es el color de las pantallas y del papel de oficina: neutro, clínico. La arena tiene un poco de croma hacia el amarillo (tono 85 en OKLCH) y se lee como cal, piedra clara o papel bueno. Es cálida sin dejar de ser un fondo. En <a href="color-armonia.html">Por qué unos colores pegan</a> lo viste como «neutros con temperatura»: el neutro decide la temperatura de toda la web antes de que aparezca ningún color.</p>
+      <p><strong>La tinta no es negro puro.</strong> #111 sobre arena da 16,3:1, contraste de sobra para leer y para que los titulares pesen como un plano impreso. El negro absoluto (#000) sobre crema vibra un poco más y se ve más digital; en <a href="tipo-fondo.html">Tipografía, color y fondo</a> tienes el porqué. La tinta hace dos trabajos: es el texto y es la banda de contacto, el bloque oscuro que da ritmo.</p>
+      <p><strong>La teja es el acento tierra.</strong> Un naranja quemado, el de la cerámica y el ladrillo cocido, encaja con un estudio que trabaja con barro de l'Alcora y piedra. Es cálido sobre una base cálida, así que no rompe la armonía (análoga en temperatura), pero es tan saturado frente a la arena apagada que salta igual: <a href="color-leer.html">lo saturado grita y lo apagado acompaña</a>. Un azul habría sido más llamativo (complementario), pero frío y tecnológico: fallaría con «cálido».</p>
+
+      <div class="ratio bleed" aria-label="Proporción de la paleta: 60 por ciento arena, 30 tinta, 10 teja">
+        <div class="a"><span>Fondo, aire, superficies</span><b>60</b></div>
+        <div class="t"><span>Texto, fotos, contacto</span><b>30</b></div>
+        <div class="k"><span>Hacer</span><b>10</b></div>
+      </div>
+
+      <h3>La proporción manda más que los colores</h3>
+      <p>Los mismos tres colores pueden dar una web elegante o un cartel de rebajas. La diferencia es cuánto ocupa cada uno. Prueba a repartirlos de tres formas:</p>
+
+      <figure class="lab" data-title="La misma paleta, tres proporciones" data-hint="Toca las proporciones" data-height="440" data-height-mobile="670">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar">
+            <button aria-pressed="true" data-mix="ok">60 / 30 / 10</button>
+            <button aria-pressed="false" data-mix="eq">33 / 33 / 33</button>
+            <button aria-pressed="false" data-mix="loud">Todo teja</button>
+          </div>
+          <section class="web">
+            <header><b>Sorra<i></i></b><span>Proyectos</span><span>Estudio</span><a>Pide una visita</a></header>
+            <div class="hero">
+              <h1>Casas a la medida <em>de la luz.</em></h1>
+              <div class="pic"><span></span><img src="../landing/media/balcones.webp" alt=""></div>
+              <p>Arquitectura en Castelló. <a>Cuéntanos tu casa</a></p>
+            </div>
+          </section>
+          <p class="verdict" id="v"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --arena: #F3EEE3; --tinta: #111; --teja: #D9541E; }
+          body { padding: 14px; background: #e9e5dc; font-family: var(--f-sans); }
+          .bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+          .bar button { min-height: 40px; padding: 0 14px; border: 1px solid #0003; border-radius: 99px; background: #fff; cursor: pointer; font-weight: 600; }
+          .bar [aria-pressed="true"] { background: #111; color: #fff; }
+          /* Los roles: cada mezcla solo cambia qué color hace cada papel */
+          .web { --fondo: var(--arena); --texto: var(--tinta); --cab: var(--arena); --cabt: var(--tinta); --boton: var(--teja); --botont: var(--tinta); --panel: var(--teja); --titulo: var(--tinta); }
+          [data-mix="eq"] .web { --cab: var(--tinta); --cabt: var(--arena); --titulo: var(--teja); --boton: var(--tinta); --botont: var(--arena); }
+          [data-mix="eq"] .pic span { inset: -18% -10% -18% -30%; }
+          [data-mix="loud"] .web { --fondo: var(--teja); --cab: var(--teja); --panel: var(--tinta); --boton: var(--arena); }
+          .web { background: var(--fondo); color: var(--texto); border-radius: 6px; overflow: hidden; }
+          header { display: flex; align-items: center; gap: 16px; padding: 10px 16px; background: var(--cab); color: var(--cabt); font-size: 13px; border-bottom: 1px solid #0001; }
+          header b { font-size: 18px; letter-spacing: -.06em; margin-right: auto; }
+          header i { display: inline-block; width: 5px; height: 5px; background: var(--teja); margin-left: 2px; }
+          header a, .hero a { background: var(--boton); color: var(--botont); padding: 7px 12px; border-radius: 99px; font-weight: 600; }
+          .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px 24px; padding: 22px 16px 24px; align-items: end; }
+          h1 { margin: 0; font-size: clamp(30px, 6.4vw, 54px); line-height: .9; letter-spacing: -.055em; color: var(--titulo); }
+          em { font: italic 400 1.08em var(--f-serif); letter-spacing: -.02em; box-shadow: inset 0 -.08em var(--teja); }
+          .pic { position: relative; grid-row: span 2; }
+          .pic span { position: absolute; inset: 8% -6% -8% 6%; background: var(--panel); }
+          .pic img { position: relative; width: 100%; aspect-ratio: 16 / 11; max-height: 190px; object-fit: cover; filter: grayscale(1) contrast(1.1); }
+          .hero p { margin: 0; font-size: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+          .verdict { font-size: 14px; color: #333; margin: 12px 2px 0; min-height: 3em; }
+          @media (max-width: 520px) { .hero { grid-template-columns: 1fr; } header span { display: none; } .pic { grid-row: auto; } .pic img { aspect-ratio: 16 / 10; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const textos = {
+            ok: 'La arena deja respirar, la tinta da peso y la teja solo aparece en el botón, el subrayado y el panel. Sabes qué tocar sin pensarlo.',
+            eq: 'Los tres colores compiten: cabecera negra, titular naranja, botón negro. Nada destaca porque todo destaca.',
+            loud: 'El acento convertido en fondo deja de ser acento. La web grita y el botón, que ahora es claro, ya no parece lo importante.'
+          };
+          const botones = document.querySelectorAll('[data-mix]');
+          botones.forEach(b => b.addEventListener('click', () => {
+            document.body.dataset.mix = b.dataset.mix;
+            botones.forEach(x => x.setAttribute('aria-pressed', x === b));
+            v.textContent = textos[b.dataset.mix];
+          }));
+          botones[0].click();
+        </script>
+        <figcaption>Fíjate en el botón en cada versión. Con 60/30/10 es lo primero que ves después del titular; con 33/33/33 se pierde entre bloques del mismo peso; con todo teja ha dejado de ser el color «de hacer». El código solo cambia variables de rol (<code>--fondo</code>, <code>--boton</code>…), nunca los tres colores.</figcaption>
+      </figure>
+
+      <p>Ese 60/30/10 no se mide con regla: es una intención. En Sorra la teja aparece en cinco sitios y en ninguno más: el botón (cabecera, portada y contacto), el subrayado del titular, el panel detrás de la foto, los cuadraditos de las etiquetas y la cursiva del contacto. Si mañana alguien propone «poner los precios en naranja», la respuesta ya está escrita.</p>
+
+      <h3>Los tokens, listos para copiar</h3>
+      <script type="text/x-code" data-lang="css" data-label="estilos.css: tres colores y sus derivados">
+        :root {
+          --arena: #F3EEE3;   /* 60 %: fondo */
+          --tinta: #111111;   /* 30 %: texto, fotos, banda de contacto */
+          --teja:  #D9541E;   /* 10 %: solo CTA, subrayado y marcas */
+
+          /* Derivados: no son colores nuevos, salen de los de arriba */
+          --tinta-2: #5A544C;                                    /* texto secundario */
+          --arena-2: color-mix(in oklab, var(--arena), var(--tinta) 5%);
+          --linea:   color-mix(in oklab, var(--tinta) 16%, transparent);
+          --teja-h:  color-mix(in oklab, var(--teja), var(--tinta) 14%);  /* hover */
+        }
+      </script>
+      <p>El texto secundario, los filetes y el hover se derivan con <code>color-mix()</code> en <code>oklab</code>, como en <a href="01-oklch.html">Color en CSS: OKLCH</a>. Así la paleta sigue siendo de tres colores aunque en la hoja de estilos haya siete variables: si cambias la teja, el hover cambia solo.</p>
+
+      <h3>El contraste, medido</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Combinación</th><th>Contraste</th><th>Uso en Sorra</th></tr></thead>
+          <tbody>
+            <tr><td>Tinta sobre arena</td><td>16,3:1</td><td>Todo el texto</td></tr>
+            <tr><td><code>--tinta-2</code> sobre arena</td><td>6,5:1</td><td>Entradillas, pies de foto, datos secundarios</td></tr>
+            <tr><td>Tinta sobre teja</td><td>4,7:1</td><td>Texto de los botones</td></tr>
+            <tr><td>Blanco sobre teja</td><td>4,0:1</td><td>Descartado: no llega a 4,5:1</td></tr>
+            <tr><td>Teja sobre tinta</td><td>4,7:1</td><td>La cursiva del contacto</td></tr>
+            <tr><td>Teja sobre arena</td><td>3,5:1</td><td>Solo formas y subrayados, nunca texto</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>La fila del blanco es la decisión más contraintuitiva de la web. El reflejo es poner texto blanco en un botón naranja, y casi todas las webs lo hacen. Con este naranja da 4,0:1 y no pasa el mínimo de texto normal. La tinta da 4,7:1, se lee mejor al sol y, de paso, une el botón con el resto del texto de la página.</p>
+
+      <figure class="lab" data-title="¿Qué texto va sobre la teja?" data-hint="Prueba los tres" data-height="340">
+        <script type="text/x-demo" data-lang="html">
+          <div class="wrap">
+            <a class="cta" id="cta">Pide una primera visita</a>
+            <p class="ratio"><b id="r"></b> <span id="ok"></span></p>
+            <div class="opts">
+              <button data-c="#FFFFFF">Blanco</button>
+              <button data-c="#F3EEE3">Arena</button>
+              <button data-c="#111111">Tinta</button>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #F3EEE3; font-family: var(--f-sans); color: #111; }
+          .wrap { display: grid; justify-items: center; gap: 18px; padding: 20px; text-align: center; }
+          .cta { background: #D9541E; padding: 18px 30px; border-radius: 99px; font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+          .ratio { margin: 0; font-size: 15px; }
+          .ratio b { font-size: 34px; letter-spacing: -.04em; display: block; font-variant-numeric: tabular-nums; }
+          .opts { display: flex; gap: 6px; }
+          .opts button { min-height: 44px; padding: 0 16px; border-radius: 99px; border: 1px solid #0003; background: #fff; cursor: pointer; font-weight: 600; }
+          .opts [aria-pressed="true"] { background: #111; color: #fff; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Contraste WCAG: luminancia relativa de cada color en sRGB
+          const lum = hex => {
+            const c = hex.match(/\w\w/g).map(x => parseInt(x, 16) / 255)
+              .map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+            return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+          };
+          const contraste = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+          const bs = document.querySelectorAll('[data-c]');
+          bs.forEach(b => b.addEventListener('click', () => {
+            const c = b.dataset.c, n = contraste(c, '#D9541E');
+            cta.style.color = c;
+            r.textContent = n.toFixed(2).replace('.', ',') + ':1';
+            ok.textContent = n >= 4.5 ? 'Pasa AA para texto normal' : 'No llega a 4,5:1 para texto normal';
+            bs.forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+          bs[0].click();
+        </script>
+        <figcaption>La arena parece «más elegante» que el blanco, pero da todavía menos contraste. Con un naranja de luminosidad media (L 62 % en OKLCH) el texto que funciona es el oscuro. Si el cliente exige blanco, la salida es oscurecer el naranja hasta <code>#B8431A</code>, que con blanco da 5,4:1, pero entonces ya no es la misma teja.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Al sol, los contrastes justos se caen. Por eso el botón lleva texto oscuro y 600 de peso, y el texto secundario está en 6,5:1 y no en 4,6:1. Ojo también con la arena en pantallas OLED con el modo «vivo»: los cremas tiran a amarillo. Míralo en dos teléfonos antes de cerrar el tono.</p>
+      </div>
+
+      <div class="band ink"><div class="inner">
+        <p class="statement">Tres colores, dos letras, una retícula y <em>ningún adorno.</em></p>
+        <p class="small">Todo lo que ves en Sorra se puede explicar con esa frase. Lo que no cabía en ella se quedó fuera: degradados, sombras, iconos, un segundo acento, un carrusel.</p>
+      </div></div>
+
+      <h2>La tipografía: <em>una grotesca y una cursiva</em></h2>
+      <div class="split">
+        <div>
+          <p><strong>Inter Tight</strong> es una grotesca neutra, de dibujo racional y apretado. Hace casi todo el trabajo: titulares en 700 con el tracking muy cerrado (−0,058em en la portada), texto en 400, datos en 600. Transmite <em>preciso</em> porque es la letra de los rótulos de plano, de la señalética y de las interfaces: no tiene adornos que distraigan.</p>
+          <p><strong>Instrument Serif en cursiva</strong> aparece solo en momentos concretos: la segunda línea del titular, una frase del estudio, los números del método, el testimonio y la cursiva del contacto. Transmite <em>cálido</em> porque es una serif editorial contemporánea con trazo de pluma: evoca revista y mano, no máquina.</p>
+          <p>La pareja cumple las reglas de <a href="tipo-combinar.html">Combinar tipografías</a>: contraste claro (sans frente a serif cursiva), el mismo espíritu (las dos son contemporáneas, no mezclas una romana del siglo XVIII con una grotesca de 2020) y máximo dos familias. La jerarquía se hace con tamaño y peso, nunca con una tercera fuente.</p>
+          <p>En <a href="tipo-personalidad.html">Qué transmite una tipografía</a> viste que una geométrica (Jost) habría sonado a tecnología y que una didona (Bodoni) habría sonado a moda. Para un estudio que hace casas de familia, la grotesca más la cursiva es el punto exacto entre técnica y calidez.</p>
+        </div>
+        <div class="stick">
+          <div class="specimen">
+            <div class="aa" aria-hidden="true"><span>Aa</span><span>Aa</span></div>
+            <dl>
+              <div><dt>Titulares y texto</dt><dd>Inter Tight 400 a 700</dd></div>
+              <div><dt>Gesto cálido</dt><dd>Instrument Serif cursiva</dd></div>
+            </dl>
+            <ol class="scale" aria-label="Escala tipográfica">
+              <li><b style="font-size:2.6rem">Display</b><span>9,4rem</span></li>
+              <li><b style="font-size:2rem">Sección</b><span>5,25rem</span></li>
+              <li><b style="font-size:1.5rem">Subtítulo</b><span>2,35rem</span></li>
+              <li><b style="font-size:1.15rem;font-weight:400;letter-spacing:-.01em">Entradilla</b><span>1,45rem</span></li>
+              <li><b style="font-size:1rem;font-weight:400;letter-spacing:0">Texto</b><span>1,15rem</span></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <h3>Una escala con saltos grandes</h3>
+      <p>La escala no es una progresión suave de 1,25 en 1,25. Arriba los saltos son enormes (del texto a 18 px se pasa al titular de sección a 84 px y a la portada a 150 px) y abajo son pequeños. Así hay tres niveles que se distinguen de un vistazo y no seis que se confunden. Cada paso usa <code>clamp()</code> para crecer con la pantalla, como en <a href="03-tipografia.html">Tipografía en CSS</a>:</p>
+      <script type="text/x-code" data-lang="css" data-label="La escala de Sorra">
+        :root {
+          --t-small:   0.875rem;
+          --t-base:    clamp(1.0625rem, 1rem + 0.2vw, 1.15rem);
+          --t-lede:    clamp(1.2rem, 1.05rem + 0.5vw, 1.45rem);
+          --t-h3:      clamp(1.55rem, 1.15rem + 1.3vw, 2.35rem);
+          --t-h2:      clamp(2.5rem, 1.4rem + 3.7vw, 5.25rem);
+          --t-display: clamp(3.15rem, 0.9rem + 8.6vw, 9.4rem);
+        }
+        .hero-t     { font-size: var(--t-display); line-height: .9; letter-spacing: -0.058em; }
+        .hero-t .l2 { font-family: "Instrument Serif"; font-style: italic; font-size: 1.1em; }
+      </script>
+      <p>Dos detalles que separan lo profesional de lo correcto. Primero, <strong>el tracking depende del tamaño</strong>: −0,058em en la portada, −0,04em en los titulares de sección, −0,01em en el texto. Una grotesca a 150 px con el tracking por defecto se ve suelta y barata. Segundo, <strong>la cursiva va un 10 % más grande</strong> (<code>1.1em</code>), porque Instrument Serif tiene la altura de la x más baja que Inter Tight y, al mismo tamaño, parece más pequeña.</p>
+
+      <figure class="lab" data-title="El mismo titular con cinco parejas" data-hint="Cambia la pareja" data-height="350" data-height-mobile="470">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar" id="bar"></div>
+          <section class="web">
+            <h1>Casas a la medida <em>de la luz.</em></h1>
+            <p>Somos un estudio de arquitectura en Castelló. Proyectamos casas a partir de una pregunta: por dónde entra el sol.</p>
+          </section>
+          <p class="verdict"><b id="nota"></b> <span id="why"></span></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 14px; background: #F3EEE3; color: #111; font-family: var(--f-sans); }
+          .bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+          .bar button { min-height: 40px; padding: 0 12px; border: 1px solid #0003; border-radius: 99px; background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; }
+          .bar [aria-pressed="true"] { background: #111; color: #F3EEE3; }
+          .web { border-top: 1.5px solid #111; padding-top: 18px; }
+          h1 { margin: 0; font-family: var(--fd); font-weight: var(--wd); letter-spacing: var(--td); font-stretch: var(--sd, 100%); font-size: clamp(34px, 7.4vw, 64px); line-height: .92; }
+          em { font-family: var(--fi); font-style: var(--si, italic); font-weight: var(--wi, 400); font-size: var(--zi, 1.1em); letter-spacing: -.02em; }
+          .web p { font-family: var(--fb); font-size: 16px; line-height: 1.5; max-width: 42ch; margin: 16px 0 0; }
+          .verdict { font-size: 14px; margin: 18px 0 0; min-height: 3.2em; color: #3a3631; }
+          .verdict b { color: #111; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const parejas = [
+            { n: 'Inter Tight + Instrument Serif', v: { fd: 'var(--f-sans)', wd: 700, td: '-.058em', fi: 'var(--f-serif)', fb: 'var(--f-sans)' }, nota: 'La elegida.', why: 'Precisión de plano y un gesto humano. Cálido, preciso y sereno a la vez.' },
+            { n: 'Bodoni + Inter', v: { fd: 'var(--f-bodoni)', wd: 500, td: '-.03em', fi: 'var(--f-bodoni)', fb: 'var(--f-sans)', zi: '1em' }, nota: 'Demasiado moda.', why: 'El contraste de trazo de la didona suena a revista de lujo: fría y distante para casas de familia.' },
+            { n: 'Nunito', v: { fd: 'var(--f-round)', wd: 800, td: '-.03em', fi: 'var(--f-round)', si: 'normal', wi: 400, zi: '1em', fb: 'var(--f-round)' }, nota: 'Demasiado amable.', why: 'Los remates redondos suenan a academia infantil. Pierde «preciso» por completo.' },
+            { n: 'Big Shoulders + Inter', v: { fd: 'var(--f-shoulders)', wd: 800, td: '0', fi: 'var(--f-shoulders)', si: 'normal', wi: 400, zi: '1em', fb: 'var(--f-sans)' }, nota: 'Grita.', why: 'Condensada e industrial, de gimnasio o de festival. Sorra habla bajo.' },
+            { n: 'Archivo ancha + Newsreader', v: { fd: 'var(--f-archivo)', wd: 800, td: '-.04em', sd: '115%', fi: 'var(--f-read)', fb: 'var(--f-read)', zi: '1em' }, nota: 'Válida, más institucional.', why: 'Funcionaría para un estudio grande de obra pública. Para tres arquitectas, menos cercana.' }
+          ];
+          const web = document.querySelector('.web');
+          parejas.forEach((p, i) => {
+            const b = document.createElement('button');
+            b.textContent = p.n;
+            b.onclick = () => {
+              web.removeAttribute('style');
+              for (const [k, val] of Object.entries(p.v)) web.style.setProperty('--' + k, val);
+              nota.textContent = p.nota; why.textContent = p.why;
+              bar.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+            };
+            bar.append(b);
+            if (!i) b.click();
+          });
+        </script>
+        <figcaption>Ninguna de las cinco es «mala» en abstracto: cada una transmite otra cosa. Lo que la descarta es el filtro de las tres palabras. Cuando el cliente te pida «una letra más bonita», enséñale esta comparación con su propio titular.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El titular de portada baja de 150 px a unos 48 px con <code>clamp()</code> y deja que el navegador lo parta en tres líneas con <code>text-wrap: balance</code> («Casas a / la medida / de la luz.»). No fuerces los saltos con <code>&lt;br&gt;</code>: lo que cuadra a 390 px se rompe a 360. El texto se queda en 17 px como mínimo: con menos, la grotesca apretada se vuelve gris.</p>
+      </div>
+
+      <h2>La retícula: <em>doce columnas, cero cards</em></h2>
+      <p>Toda la web cuelga de una retícula de 12 columnas con márgenes y medianil fijos. La decisión que más orden da es pequeña: <strong>en casi todas las secciones, la etiqueta ocupa las columnas 1 a 3 y el contenido empieza en la 4</strong>. Esa línea vertical invisible se repite de arriba abajo, y el ojo la nota aunque no la vea. Activa la capa «Retícula» de la portada para comprobarlo.</p>
+      <script type="text/x-code" data-lang="css" data-label="Una sola clase de retícula para toda la web">
+        .wrap {
+          display: grid;
+          grid-template-columns: repeat(12, minmax(0, 1fr));
+          column-gap: var(--gap);                    /* clamp(14px, 1.8vw, 28px) */
+          max-width: 1520px; margin-inline: auto;
+          padding-inline: var(--m);                  /* clamp(20px, 4.4vw, 64px) */
+        }
+        .work-head .label { grid-column: 1 / 4; }    /* la etiqueta */
+        .work-head h2     { grid-column: 4 / 10; }   /* el eje de la columna 4 */
+
+        /* Índice de proyectos: cada fila hereda las 12 columnas con subgrid */
+        .index li  { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid;
+                     border-top: 1px solid var(--linea); }
+        .index b   { grid-column: 2 / 7; }
+        .index .where { grid-column: 7 / 10; }
+        .index .year  { grid-column: 12; text-align: right; }
+      </script>
+      <p><code>subgrid</code> es lo que permite que las filas del índice, las cifras de la portada, los cuatro pasos del método y las personas del equipo se alineen con las mismas columnas que los titulares, aunque estén anidadas varios niveles dentro.</p>
+
+      <h3>Por qué sin cards</h3>
+      <p>La forma automática de enseñar cinco proyectos es una rejilla de tarjetas con foto, título, sombra y esquinas redondeadas. Funciona, pero es la estructura de cualquier plantilla, y cada tarjeta es una caja que encierra el contenido y corta la página en trozos. En <a href="04-composicion.html">Más allá de las cards</a> viste las alternativas. Sorra usa tres:</p>
+      <ul>
+        <li><strong>Un índice</strong> para los cinco proyectos: filas separadas por filetes, como el índice de un libro o un listado de planos. Se lee de un vistazo y transmite <em>preciso</em>.</li>
+        <li><strong>Dos piezas destacadas</strong> con composiciones distintas: foto grande a 8 columnas con la ficha a la derecha, y una banda de tinta con la maqueta. La asimetría da ritmo.</li>
+        <li><strong>Columnas con filetes</strong> para el método: cuatro pasos separados por líneas finas, sin cajas.</li>
+      </ul>
+
+      <figure class="lab" data-title="Cards frente a índice" data-hint="Cambia la estructura y enciende la retícula" data-height="470" data-height-mobile="540">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar">
+            <button id="modo" aria-pressed="false">Ver con cards</button>
+            <button id="rej" aria-pressed="false">Retícula</button>
+          </div>
+          <section class="page">
+            <div class="cols" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p class="label">03 Proyectos</p>
+            <h2>Obra reciente</h2>
+            <ol class="list">
+              <li><span>01</span><b>Edificio Marjal</b><em>El Grau</em><small>2023</small></li>
+              <li><span>02</span><b>Casa Pinar</b><em>Benicàssim</em><small>2024</small></li>
+              <li><span>03</span><b>Mas de la Sénia</b><em>Les Coves</em><small>2022</small></li>
+              <li><span>04</span><b>Piso Ribalta</b><em>Castelló</em><small>2021</small></li>
+            </ol>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 12px; background: #F3EEE3; color: #111; font-family: var(--f-sans); }
+          .bar { display: flex; gap: 6px; margin-bottom: 12px; }
+          .bar button { min-height: 40px; padding: 0 14px; border: 1px solid #0003; border-radius: 99px; background: transparent; font-weight: 600; cursor: pointer; }
+          .bar [aria-pressed="true"] { background: #111; color: #F3EEE3; }
+          .page { position: relative; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 14px; padding: 18px 16px; }
+          .cols { position: absolute; inset: 0 16px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; opacity: 0; pointer-events: none; }
+          .cols i { background: #D9541E26; border-inline: 1px solid #D9541E66; }
+          .rej .cols { opacity: 1; }
+          .label { grid-column: 1 / 4; margin: 10px 0 0; font-size: 13px; color: #5A544C; }
+          h2 { grid-column: 4 / -1; margin: 0 0 18px; font-size: clamp(30px, 6vw, 52px); letter-spacing: -.05em; line-height: .95; }
+          /* Editorial: filas con filetes que heredan las 12 columnas */
+          .list { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; list-style: none; margin: 0; padding: 0; }
+          .list li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: baseline; padding: 12px 0; border-top: 1px solid #1113; }
+          .list span { grid-column: 1; font-size: 12px; color: #5A544C; }
+          .list b { grid-column: 2 / 8; font-size: clamp(19px, 3.4vw, 30px); letter-spacing: -.04em; }
+          .list em { grid-column: 8 / 11; font-style: normal; font-size: 14px; }
+          .list small { grid-column: 11 / -1; text-align: right; font-size: 14px; }
+          /* Versión cards: la de cualquier plantilla */
+          .cards .list { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+          .cards .list li { grid-column: auto; display: block; padding: 0 0 14px; border: 0; background: #fff; border-radius: 14px; box-shadow: 0 8px 22px #0002; overflow: hidden; }
+          .cards .list li::before { content: ""; display: block; height: 70px; background: linear-gradient(135deg, #c9bfae, #8d8577); margin-bottom: 10px; }
+          .cards .list li > * { display: block; padding: 0 12px; text-align: left; }
+          .cards .list b { font-size: 17px; }
+          @media (max-width: 520px) {
+            .label, h2 { grid-column: 1 / -1; }
+            .list b { grid-column: 2 / 10; } .list em { display: none; } .list small { grid-column: 10 / -1; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const page = document.querySelector('.page');
+          modo.onclick = () => {
+            const on = page.classList.toggle('cards');
+            modo.setAttribute('aria-pressed', on);
+          };
+          rej.onclick = () => {
+            const on = page.classList.toggle('rej');
+            rej.setAttribute('aria-pressed', on);
+          };
+        </script>
+        <figcaption>Con la retícula encendida se ve el truco: en la versión editorial, el título y los nombres empiezan en las mismas columnas que el resto de la página. Las cards rompen esa alineación, añaden cinco colores nuevos (blanco, sombra, degradado) y convierten un estudio de arquitectura en una tienda.</figcaption>
+      </figure>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">El cliente quiere añadir una sección de «Premios» con seis galardones. ¿Qué estructura encaja mejor con el resto de Sorra?</p>
+        <ol>
+          <li>Seis tarjetas con el logo de cada premio, sombra suave y un botón «Ver más».</li>
+          <li>Una lista con filetes: año, nombre del premio y proyecto, alineada con el eje de la columna 4.</li>
+          <li>Un carrusel automático con los logos en color.</li>
+        </ol>
+        <p class="why">La lista con filetes repite la gramática del índice de proyectos y del equipo, y se alinea con el mismo eje. Las tarjetas y el carrusel meterían colores, sombras y movimiento que la web no usa en ningún otro sitio. La coherencia vale más que la novedad de cada sección.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>A 390 px las 12 columnas pasan a 4 y casi todo ocupa el ancho completo. Las filas del índice no se encogen: se recolocan en dos líneas (número y nombre arriba; lugar y año debajo) con su propio <code>grid-template-columns</code>. La foto destacada sale a sangre (margen negativo igual al margen lateral) para que la imagen respire en una pantalla estrecha.</p>
+      </div>
+
+      <h2>Componentes y jerarquía: <em>pocos y repetidos</em></h2>
+      <p>Una web parece cara cuando tiene pocos componentes y los repite con disciplina (lo viste en <a href="00-criterio.html">Qué hace que una web parezca cara</a>). Sorra tiene seis, y ninguno aparece con dos estilos distintos:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Componente</th><th>Cómo es</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Etiqueta de sección</td><td>Cuadrado de teja, número en 600 y nombre en minúscula</td><td>Ordena sin gritar. Evita el tic de las mayúsculas espaciadas sobre cada título.</td></tr>
+            <tr><td>Botón</td><td>Píldora de teja con texto de tinta, 48 px de alto</td><td>Un solo estilo de botón principal: siempre significa «pide una visita».</td></tr>
+            <tr><td>Enlace</td><td>Texto en 600 subrayado en teja</td><td>La acción secundaria se distingue del botón por forma, no por otro color.</td></tr>
+            <tr><td>Filete</td><td>1 px de tinta al 16 %; al 70 % para abrir bloques</td><td>Sustituye a las cajas y sombras. Dos grosores bastan para dos niveles.</td></tr>
+            <tr><td>Cifra</td><td>Inter Tight 600 con <code>tabular-nums</code></td><td>Los números alineados transmiten exactitud (<a href="03-tipografia.html">Números que no bailan</a>).</td></tr>
+            <tr><td>Foto</td><td>En escala de grises con un poco de contraste</td><td>Convierte las imágenes en parte del 30 % de tinta.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Las fotos en gris: la decisión que salva la paleta</h3>
+      <p>Los renders del cliente tienen un cielo violeta y rosa precioso, pero violeta. Con fotos en color, la página tendría cinco colores dominantes y la teja dejaría de ser el único punto caliente. Pasarlas a gris (<code>filter: grayscale(1) contrast(1.12)</code>) las integra en la tinta y deja que el panel de teja detrás de la foto haga de marco. Es el recurso de la landing «mesa» de los vídeos, y funciona por lo mismo.</p>
+      <div class="vs">
+        <figure><div class="wrap-p"><span>Casas a la medida <em>de la luz.</em></span><s></s><i class="photo-c"></i><u></u></div><figcaption><b>Así no</b>El violeta compite con la teja y el botón deja de ser lo único caliente.</figcaption></figure>
+        <figure><div class="wrap-p"><span>Casas a la medida <em>de la luz.</em></span><s></s><i class="photo-g"></i><u></u></div><figcaption><b>Así sí</b>En gris, la foto es textura y la teja manda.</figcaption></figure>
+      </div>
+
+      <h3>La prueba de entornar los ojos</h3>
+      <p>Activa la capa «Entornar los ojos» de la portada. Al desenfocar, desaparece el texto pequeño y quedan las masas: el titular, la foto con su panel y el botón. Ese es el orden en que se lee la página, y coincide con el objetivo del brief (qué hacemos, cómo es, pídenos una visita). Si al entornar los ojos lo que destacara fuera el menú o una fila de iconos, la jerarquía estaría mal aunque cada pieza fuera bonita.</p>
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Antes de añadir algo, pregúntate en qué componente existente encaja. Si no encaja en ninguno, casi siempre sobra. Las webs baratas no lo son por falta de cosas, sino por sobra de variantes: tres estilos de botón, cuatro tamaños de título, sombras distintas en cada caja.</p>
+      </div>
+
+      <div class="band mob"><div class="inner">
+        <h2>El móvil: <em>el mismo orden, otra composición</em></h2>
+        <p>La versión de 390 px no es la de escritorio encogida. Se decide sección a sección qué cambia para que siga pareciendo cara con el pulgar:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Sección</th><th>Escritorio (1440 px)</th><th>Móvil (390 px)</th></tr></thead>
+            <tbody>
+              <tr><td>Cabecera</td><td>Cuatro enlaces y botón</td><td>Logo y menú a pantalla completa con enlaces de 2,1rem</td></tr>
+              <tr><td>Portada</td><td>Titular a 150 px; foto a la derecha subiendo hasta la segunda línea</td><td>Titular a 48 px en tres líneas; entradilla y botón antes de la foto; foto 4:5</td></tr>
+              <tr><td>Cifras</td><td>Tres columnas con filetes verticales</td><td>Tres filas con la cifra a la derecha</td></tr>
+              <tr><td>Índice</td><td>Cinco columnas de datos</td><td>Dos líneas por fila; se oculta el tipo de obra</td></tr>
+              <tr><td>Destacado</td><td>Foto a 8 columnas, ficha a 4</td><td>Foto a sangre y ficha debajo</td></tr>
+              <tr><td>Método</td><td>Cuatro columnas</td><td>Lista con el número a la izquierda</td></tr>
+              <tr><td>Contacto</td><td>Correo a 96 px</td><td>Correo a 30 px con <code>overflow-wrap: anywhere</code>; botón a todo el ancho</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <script type="text/x-code" data-lang="css" data-label="La portada en el móvil: se reordena, no se encoge">
+          @media (max-width: 760px) {
+            .wrap { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .hero { min-height: 0; grid-template-rows: none; }
+            .hero-t { font-size: clamp(2.9rem, 0.6rem + 11.4vw, 3.6rem); }
+            .hero-copy { grid-column: 1 / -1; }            /* el botón, antes que la foto */
+            .hero-photo { grid-column: 1 / -1; margin: 2.4rem 0 0 18px; }
+            .hero-photo img { aspect-ratio: 4 / 5; }       /* vertical, como la pantalla */
+            .actions .btn { flex: 1 1 auto; }              /* botón ancho: más fácil con el pulgar */
+          }
+        </script>
+        <div class="callout movil"><span class="t">En el móvil</span>
+          <p>Lo primero que tiene que caber en 844 px de alto es el titular, la entradilla y el botón. La foto puede asomar por abajo: invita a bajar. Si pones la foto antes, el botón queda a dos pantallas y la portada se convierte en un póster sin acción. Y todos los objetivos táctiles miden 44 px o más, incluidos los enlaces del pie.</p>
+        </div>
+      </div></div>
+
+      <h2>Lo que no lleva, <em>y por qué</em></h2>
+      <p>La mitad del criterio es lo que decides no poner. Cada ausencia de Sorra es una decisión con su razón:</p>
+      <ul>
+        <li><strong>Sin animaciones de entrada.</strong> El brief pide calma y la gente compara estudios despacio. Lo único que se mueve son los subrayados y el fondo de las filas del índice al pasar el ratón. El movimiento llega en el proyecto 2.</li>
+        <li><strong>Sin carrusel.</strong> Esconde contenido y le quita el control a quien lee. Cinco proyectos caben en un índice.</li>
+        <li><strong>Sin sombras ni esquinas redondeadas</strong> salvo en los botones. Las sombras son una cuarta tinta; los filetes ya separan.</li>
+        <li><strong>Sin iconos.</strong> «Superficie: 212 m²» se entiende sin un dibujo de una regla.</li>
+        <li><strong>Sin segundo acento.</strong> Un verde para «disponible» o un azul para los enlaces romperían la regla de que la teja significa «hacer».</li>
+      </ul>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">El cliente quiere destacar más el teléfono en la banda de contacto. ¿Qué cambio respeta el sistema?</p>
+        <ol>
+          <li>Ponerlo en verde, que es el color de llamar.</li>
+          <li>Añadir un icono de teléfono animado que vibre.</li>
+          <li>Subirlo de tamaño y convertirlo en un segundo botón de teja con el mismo estilo que «Pide una primera visita».</li>
+        </ol>
+        <p class="why">El sistema ya tiene una forma de decir «esto es una acción»: la píldora de teja. Reutilizarla destaca el teléfono sin añadir colores ni movimiento. El verde rompería el 10 % y el icono que vibra contradice «sereno».</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>El orden es brief, tres palabras, paleta, tipografía, retícula, componentes y móvil. Cada paso se justifica con el anterior.</li>
+          <li>Tres colores con papeles fijos (60 % fondo, 30 % texto e imagen, 10 % acción) y todo lo demás derivado con <code>color-mix()</code>. El contraste se mide: por eso el botón lleva tinta y no blanco.</li>
+          <li>Dos familias con tensión controlada (grotesca precisa y cursiva cálida) y una escala con saltos grandes y el tracking ajustado a cada tamaño.</li>
+          <li>Una retícula de 12 columnas con un eje repetido en la columna 4, <code>subgrid</code> para alinear lo anidado y estructuras editoriales (índice, filetes, bandas) en lugar de cards.</li>
+          <li>En el móvil se reordena: primero el titular y el botón, después la foto; nada se encoge sin más.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Haz tu propia versión de este proyecto para un negocio real de tu zona que no tenga web o la tenga mal (sin nombrarlo en público): un obrador, una clínica, una bodega. Escribe la ficha de brief y las tres palabras antes de abrir el editor. Después monta la portada y una sección con índice usando solo tres colores en 60/30/10, dos familias y la clase <code>.wrap</code> de 12 columnas. Pásala por la prueba de entornar los ojos y por el teléfono, y apunta en un archivo cada decisión con su porqué en una línea. Ese archivo es la presentación para el cliente.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: la landing real en dos iframes escalados y tres capas de análisis inyectadas en ellos.
+  (() => {
+    const frames = [...document.querySelectorAll('.devices iframe')];
+    const note = document.querySelector('.layer-note');
+    const notes = {
+      grid: 'Las 12 columnas de la landing (4 en el móvil). Mira cómo los titulares y el texto empiezan siempre en la misma línea.',
+      noacc: 'La misma web sin la teja. Sigue siendo correcta, pero ya no tiene firma ni un sitio claro donde tocar.',
+      squint: 'Desenfocada, solo quedan las masas: titular, foto y botón. Ese es el orden de lectura.'
+    };
+    const CSS_LAYERS = `
+      .x-grid-ov { position: fixed; inset: 0; z-index: 100; pointer-events: none; display: none; }
+      .x-grid .x-grid-ov { display: grid; }
+      .x-grid-ov i { background: rgb(217 84 30 / .14); border-inline: 1px solid rgb(217 84 30 / .5); }
+      @media (max-width: 760px) { .x-grid-ov i:nth-child(n+5) { display: none; } }
+      html.x-noacc { --teja: #111111; --teja-h: #333; }
+      html.x-noacc .btn-teja { color: #F3EEE3; }
+      html.x-squint body { filter: blur(7px); }
+    `;
+    // Escala cada iframe para que la página de 1440 o 390 px quepa en su marco
+    const fit = () => frames.forEach((f) => {
+      const box = f.parentElement;
+      if (box.offsetWidth) f.style.setProperty('--s', box.offsetWidth / parseFloat(getComputedStyle(f).width));
+    });
+    // Solo se carga el iframe que se ve: en el móvil el de escritorio está oculto y no hace falta
+    const load = () => frames.forEach((f) => { if (!f.src && f.parentElement.offsetWidth) f.src = f.dataset.src; });
+    new ResizeObserver(() => { fit(); load(); }).observe(document.querySelector('.devices'));
+    fit(); load();
+    const prep = (f) => {
+      const d = f.contentDocument;
+      if (!d || !d.body || d.querySelector('#x-layers')) return;
+      const st = d.createElement('style'); st.id = 'x-layers'; st.textContent = CSS_LAYERS; d.head.append(st);
+      const ov = d.createElement('div'); ov.className = 'x-grid-ov wrap'; ov.setAttribute('aria-hidden', 'true');
+      ov.innerHTML = '<i></i>'.repeat(12); d.body.append(ov);
+      sync();
+    };
+    const state = { grid: false, noacc: false, squint: false };
+    const sync = () => frames.forEach((f) => {
+      const h = f.contentDocument && f.contentDocument.documentElement;
+      if (h) for (const k in state) h.classList.toggle('x-' + k, state[k]);
+    });
+    frames.forEach((f) => { f.addEventListener('load', () => prep(f)); prep(f); });
+    document.querySelectorAll('[data-layer]').forEach((b) => b.addEventListener('click', () => {
+      const k = b.dataset.layer; state[k] = !state[k];
+      b.setAttribute('aria-pressed', String(state[k]));
+      note.textContent = state[k] ? notes[k] : 'Toca una capa: la landing de arriba es la de verdad, no una captura.';
+      sync();
+    }));
+  })();
+</script>
+</body>
+</html>

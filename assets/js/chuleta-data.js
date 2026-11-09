@@ -595,6 +595,321 @@ window.CHULETA = [
   "codigo": "Hola, [nombre]:\n\nTe paso la propuesta de color para la web. Partimos de las tres palabras que acordamos: [palabra 1], [palabra 2] y [palabra 3].\n\nColor principal, [nombre del color]: lo hemos elegido porque [motivo ligado al producto, al material o al territorio] y transmite [palabra].\nFondo y texto, [neutros]: llevan un toque del color principal para que todo se sienta [palabra]; el texto se lee con un contraste de [X]:1.\nAcento, [nombre]: es el único color [frío/cálido/vivo] de la paleta, por eso lo reservamos para [acción principal].\n\nDescartamos [alternativa] porque [razón concreta].\n\nEn el enlace tienes la portada y una ficha de producto con la paleta aplicada. Míralas también en el móvil, que es donde te verán la mayoría de tus clientes.\n\nUn saludo,\nDavid"
  },
  {
+  "leccion": "proyecto-1",
+  "archivo": "proyecto-1.html",
+  "titulo": "Proyecto 1: una landing 2D premium",
+  "seccion": "La paleta: arena, tinta y teja",
+  "etiqueta": "estilos.css: tres colores y sus derivados",
+  "lang": "css",
+  "codigo": ":root {\n  --arena: #F3EEE3;   /* 60 %: fondo */\n  --tinta: #111111;   /* 30 %: texto, fotos, banda de contacto */\n  --teja:  #D9541E;   /* 10 %: solo CTA, subrayado y marcas */\n\n  /* Derivados: no son colores nuevos, salen de los de arriba */\n  --tinta-2: #5A544C;                                    /* texto secundario */\n  --arena-2: color-mix(in oklab, var(--arena), var(--tinta) 5%);\n  --linea:   color-mix(in oklab, var(--tinta) 16%, transparent);\n  --teja-h:  color-mix(in oklab, var(--teja), var(--tinta) 14%);  /* hover */\n}"
+ },
+ {
+  "leccion": "proyecto-1",
+  "archivo": "proyecto-1.html",
+  "titulo": "Proyecto 1: una landing 2D premium",
+  "seccion": "La tipografía: una grotesca y una cursiva",
+  "etiqueta": "La escala de Sorra",
+  "lang": "css",
+  "codigo": ":root {\n  --t-small:   0.875rem;\n  --t-base:    clamp(1.0625rem, 1rem + 0.2vw, 1.15rem);\n  --t-lede:    clamp(1.2rem, 1.05rem + 0.5vw, 1.45rem);\n  --t-h3:      clamp(1.55rem, 1.15rem + 1.3vw, 2.35rem);\n  --t-h2:      clamp(2.5rem, 1.4rem + 3.7vw, 5.25rem);\n  --t-display: clamp(3.15rem, 0.9rem + 8.6vw, 9.4rem);\n}\n.hero-t     { font-size: var(--t-display); line-height: .9; letter-spacing: -0.058em; }\n.hero-t .l2 { font-family: \"Instrument Serif\"; font-style: italic; font-size: 1.1em; }"
+ },
+ {
+  "leccion": "proyecto-1",
+  "archivo": "proyecto-1.html",
+  "titulo": "Proyecto 1: una landing 2D premium",
+  "seccion": "La retícula: doce columnas, cero cards",
+  "etiqueta": "Una sola clase de retícula para toda la web",
+  "lang": "css",
+  "codigo": ".wrap {\n  display: grid;\n  grid-template-columns: repeat(12, minmax(0, 1fr));\n  column-gap: var(--gap);                    /* clamp(14px, 1.8vw, 28px) */\n  max-width: 1520px; margin-inline: auto;\n  padding-inline: var(--m);                  /* clamp(20px, 4.4vw, 64px) */\n}\n.work-head .label { grid-column: 1 / 4; }    /* la etiqueta */\n.work-head h2     { grid-column: 4 / 10; }   /* el eje de la columna 4 */\n\n/* Índice de proyectos: cada fila hereda las 12 columnas con subgrid */\n.index li  { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid;\n             border-top: 1px solid var(--linea); }\n.index b   { grid-column: 2 / 7; }\n.index .where { grid-column: 7 / 10; }\n.index .year  { grid-column: 12; text-align: right; }"
+ },
+ {
+  "leccion": "proyecto-1",
+  "archivo": "proyecto-1.html",
+  "titulo": "Proyecto 1: una landing 2D premium",
+  "seccion": "El móvil: el mismo orden, otra composición",
+  "etiqueta": "La portada en el móvil: se reordena, no se encoge",
+  "lang": "css",
+  "codigo": "@media (max-width: 760px) {\n  .wrap { grid-template-columns: repeat(4, minmax(0, 1fr)); }\n  .hero { min-height: 0; grid-template-rows: none; }\n  .hero-t { font-size: clamp(2.9rem, 0.6rem + 11.4vw, 3.6rem); }\n  .hero-copy { grid-column: 1 / -1; }            /* el botón, antes que la foto */\n  .hero-photo { grid-column: 1 / -1; margin: 2.4rem 0 0 18px; }\n  .hero-photo img { aspect-ratio: 4 / 5; }       /* vertical, como la pantalla */\n  .actions .btn { flex: 1 1 auto; }              /* botón ancho: más fácil con el pulgar */\n}"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "La carga: una sola timeline",
+  "etiqueta": "main.js: el momento orquestado",
+  "lang": "js",
+  "codigo": "function intro() {\n  root.classList.add('is-in');                      // quita el estado escondido\n  if (reduce) return;                               // movimiento reducido: la portada ya está completa\n  const k = matchMedia('(max-width: 760px)').matches ? 0.8 : 1;   // en el móvil, un 20 % más corto\n  const word = SplitText.create('.hero-t .word', { type: 'chars' });\n  const info = SplitText.create('.when span, .where span', { type: 'lines', mask: 'lines' });\n  gsap.set(info.masks, { paddingTop: '0.18em', marginTop: '-0.18em' });   // sitio para la tilde de CASTELLÓ\n\n  gsap.timeline({ defaults: { ease: 'expo.out' } })\n    .from('.rings circle', { scale: 0, transformOrigin: '50% 50%', duration: 1.7 * k, stagger: 0.07 * k }, 0)\n    .from(word.chars, { yPercent: 105, duration: 1.15 * k, stagger: 0.055 * k }, 0.12)\n    .from(info.lines, { yPercent: 100, duration: 0.9 * k, stagger: 0.07 * k }, 0.5 * k)\n    .from('.nav > *', { y: -24, autoAlpha: 0, duration: 0.8 * k, stagger: 0.05 }, 0.6 * k)\n    .from('.acts', { y: 18, autoAlpha: 0, duration: 0.9 * k, ease: 'power3.out' }, 0.85 * k)\n    .from('.hero-foot .btn', { scale: 0.7, autoAlpha: 0, duration: 0.8 * k, ease: 'back.out(2.2)' }, 1.0 * k);\n}\nPromise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1200))]).then(intro);"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "La carga: una sola timeline",
+  "etiqueta": "index.html: script en línea en el head, antes de pintar",
+  "lang": "js",
+  "codigo": "document.documentElement.classList.add('js');\nsetTimeout(() => document.documentElement.classList.add('is-in'), 3000);   // red de seguridad"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "La carga: una sola timeline",
+  "etiqueta": "estilos.css: la portada espera escondida",
+  "lang": "css",
+  "codigo": "@media (prefers-reduced-motion: no-preference) {\n  .js:not(.is-in) [data-anim], .js:not(.is-in) .rings { visibility: hidden; }\n}"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "El scroll que es solo CSS",
+  "etiqueta": "estilos.css: la banda",
+  "lang": "css",
+  "codigo": ".marquee .row { width: max-content; }\n@supports (animation-timeline: view()) {\n  @media (prefers-reduced-motion: no-preference) {\n    .marquee .row {\n      animation: slide-a linear both;\n      animation-timeline: view();\n      animation-range: cover;\n    }\n    .marquee .row.b { animation-name: slide-b; }\n    @keyframes slide-a { to { translate: -32% 0; } }\n    @keyframes slide-b { from { translate: -32% 0; }\n                         to   { translate: 0 0; } }\n  }\n}"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "La escena fijada: GSAP, scrub y SplitText",
+  "etiqueta": "main.js: el manifiesto",
+  "lang": "js",
+  "codigo": "const mm = gsap.matchMedia();\nmm.add({\n  desk: '(min-width: 761px) and (prefers-reduced-motion: no-preference)',\n  mob:  '(max-width: 760px) and (prefers-reduced-motion: no-preference)',\n}, (ctx) => {\n  const { desk } = ctx.conditions;\n  const split = SplitText.create('.manifest-t', { type: 'words' });\n  const tl = gsap.timeline({\n    defaults: { ease: 'none' },\n    scrollTrigger: {\n      trigger: '.manifest', start: 'top top',\n      end: desk ? '+=190%' : '+=110%',          // en el móvil, un pin más corto\n      pin: true, scrub: desk ? 1 : true, anticipatePin: 1,\n    },\n  });\n  tl.from(split.words, { opacity: 0.12, duration: 1, stagger: 0.12 }, 0)\n    .fromTo('.sun', desk ? { yPercent: 38, scale: 0.7 } : { yPercent: 30, scale: 0.85 },\n      { yPercent: desk ? -6 : 0, scale: 1, duration: split.words.length * 0.12 + 1 }, 0)\n    .from('.stats div', { y: 40, autoAlpha: 0, stagger: 0.25, duration: 1, ease: 'power2.out' }, '>-0.6');\n  return () => split.revert();\n});"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "El cambio de día: una View Transition",
+  "etiqueta": "main.js: los días",
+  "lang": "js",
+  "codigo": "const show = (tab) => {\n  tabs.forEach((t) => {\n    const on = t === tab;\n    t.setAttribute('aria-selected', String(on));\n    t.tabIndex = on ? 0 : -1;\n  });\n  tab.append(pill);                     // la píldora es un elemento real: cambia de botón\n  days.forEach((d) => (d.hidden = d.dataset.day !== tab.dataset.day));\n};\nconst go = (tab) => {\n  if (document.startViewTransition && !reduce) document.startViewTransition(() => show(tab));\n  else show(tab);                       // sin la API o con movimiento reducido: cambio directo\n};"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "El cambio de día: una View Transition",
+  "etiqueta": "estilos.css: la transición del cartel",
+  "lang": "css",
+  "codigo": ".tab-pill { view-transition-name: day-pill; }\n.days     { view-transition-name: lineup; }\n\n::view-transition-old(root), ::view-transition-new(root) { animation: none; }   /* el resto, quieto */\n::view-transition-group(day-pill) { animation-duration: .55s; animation-timing-function: cubic-bezier(.7, 0, .2, 1); }\n::view-transition-old(lineup) { animation: lineup-out .28s cubic-bezier(.4, 0, 1, 1) both; }\n::view-transition-new(lineup) { animation: lineup-in .7s cubic-bezier(.16, 1, .3, 1) .1s both; }\n@keyframes lineup-out { to   { opacity: 0; translate: 0 -32px; filter: blur(6px); } }\n@keyframes lineup-in  { from { opacity: 0; translate: 0 56px; } }"
+ },
+ {
+  "leccion": "proyecto-2",
+  "archivo": "proyecto-2.html",
+  "titulo": "Proyecto 2: una landing con scroll animado",
+  "seccion": "Móvil, ratón y movimiento reducido",
+  "etiqueta": "main.js: Lenis solo con ratón",
+  "lang": "js",
+  "codigo": "const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;\nconst finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;\nlet lenis = null;\nif (finePointer && !reduce && window.Lenis) {\n  lenis = new Lenis({ lerp: 0.1 });\n  lenis.on('scroll', ScrollTrigger.update);        // ScrollTrigger se entera de cada paso\n  gsap.ticker.add((t) => lenis.raf(t * 1000));     // un solo reloj para los dos\n  gsap.ticker.lagSmoothing(0);\n}"
+ },
+ {
+  "leccion": "proyecto-4",
+  "archivo": "proyecto-4.html",
+  "titulo": "Proyecto final: la torre en 3D en tiempo real",
+  "seccion": "Mapa de la web y archivos",
+  "etiqueta": "Archivos de proyectos/torre-3d/",
+  "lang": "txt",
+  "codigo": "index.html          estructura, textos e import map de Three\ncss/torre.css       paleta, tipografía, escenario fijo, ficha y móvil\njs/main.js          modo, scroll, capítulos, selector, residencia y formulario\njs/vuelo.js         la torre: recorrido de cámara, raycast, vuelo y proyección\njs/fotogramas.js    respaldo sin WebGL: la secuencia y los polígonos del proyecto 3\njs/datos.js         plantas, precios y estancias (lo comparten los tres modos)\n\nReutiliza (rutas relativas):\n../../assets/js/torre3d.js     la escena (cielo, agua, ciudad, 30 plantas, bloom)\n../../landing/src/residencia.js la maqueta 3D del piso\n../../landing/frames/desk|mob  los 120 fotogramas, solo en el respaldo"
+ },
+ {
+  "leccion": "proyecto-4",
+  "archivo": "proyecto-4.html",
+  "titulo": "Proyecto final: la torre en 3D en tiempo real",
+  "seccion": "Mapa de la web y archivos",
+  "etiqueta": "js/main.js (extracto)",
+  "lang": "js",
+  "codigo": "let mode = params.get('modo');               // ?modo=completo|ligero|fotogramas para probar\nif (!['completo', 'ligero', 'fotogramas'].includes(mode)) {\n  if (!webglOK() || saveData) mode = 'fotogramas';\n  else if (coarse || innerWidth < 760 || navigator.hardwareConcurrency <= 4) mode = 'ligero';\n  else mode = 'completo';\n}\ndocument.documentElement.dataset.mode = mode;  // el CSS también se entera\n\n// Three.js solo viaja si se va a usar; si algo falla, la secuencia toma el relevo\n(mode === 'fotogramas' ? startFallback() : start3D()).catch(startFallback);\n\nasync function start3D() {\n  const { createVuelo } = await import('./vuelo.js');\n  vuelo = createVuelo(canvas, { lite: mode === 'ligero', reduce, onFrame });\n  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); startFallback(); });\n}"
+ },
+ {
+  "leccion": "proyecto-4",
+  "archivo": "proyecto-4.html",
+  "titulo": "Proyecto final: la torre en 3D en tiempo real",
+  "seccion": "Un recorrido de cámara con criterio de encuadre",
+  "etiqueta": "js/vuelo.js",
+  "lang": "js",
+  "codigo": "const KEYS = { wide: [\n  { C: [74, 4, 360], T: [0, 46, 0], sx: 0.18, sy: 0.05 }, // llegada\n  { C: [-46, 36, 48], T: [0, 44, 0], sx: 0.3, sy: 0 },    // fachada\n  { C: [60, 20, 178], T: [0, 52, 0], sx: 0.24, sy: -0.03 } // elegir\n] };\nfunction lookFor(C, T, sx, sy, cam, out) {\n  const dir = T.clone().sub(C), dist = dir.length();\n  dir.normalize();\n  const right = new Vector3().crossVectors(dir, UP).normalize();\n  const up = new Vector3().crossVectors(right, dir);\n  const tanV = Math.tan(degToRad(cam.fov / 2));\n  const tanH = tanV * cam.aspect;\n  return out.copy(T)\n    .addScaledVector(right, -sx * dist * tanH)\n    .addScaledVector(up, -sy * dist * tanV);\n}"
+ },
+ {
+  "leccion": "proyecto-4",
+  "archivo": "proyecto-4.html",
+  "titulo": "Proyecto final: la torre en 3D en tiempo real",
+  "seccion": "Plantas que se iluminan",
+  "etiqueta": "js/vuelo.js: raycast por altura",
+  "lang": "js",
+  "codigo": "// Un único volumen con la planta redondeada de la torre, 30 × 3,2 m de alto.\n// material.visible = false: no se pinta, pero el rayo sí lo toca.\nconst hitbox = new THREE.Mesh(hitGeo, new THREE.MeshBasicMaterial({ visible: false }));\nscene.add(hitbox);\n\nfunction pickAt(clientX, clientY) {\n  const b = canvas.getBoundingClientRect();\n  ndc.set(((clientX - b.left) / b.width) * 2 - 1, -((clientY - b.top) / b.height) * 2 + 1);\n  ray.setFromCamera(ndc, camera);\n  const hit = ray.intersectObject(hitbox, false)[0];\n  return hit ? Math.min(29, Math.max(0, Math.floor(hit.point.y / 3.2))) : -1;\n}"
+ },
+ {
+  "leccion": "proyecto-4",
+  "archivo": "proyecto-4.html",
+  "titulo": "Proyecto final: la torre en 3D en tiempo real",
+  "seccion": "Volar a la planta y anclar la ficha",
+  "etiqueta": "js/vuelo.js: el vuelo vive dentro del recorrido",
+  "lang": "js",
+  "codigo": "function path(t, cam, look) {\n  curves.C.getPoint(u, baseC); curves.L.getPoint(u, baseL);       // pose del scroll\n  let C = baseC, L = baseL;\n  if (fly.active) {\n    const e = ease(Math.min(1, (performance.now() - fly.t0) / (fly.dur * 1000)));\n    const fromC = fly.from ? fly.from.C : baseC;                 // null = el recorrido en vivo\n    if (fly.to != null) floorPose(fly.to, cam, flyC, flyL); else flyC.copy(baseC);\n    C = tmp.lerpVectors(fromC, flyC, e);\n  }\n  cam.position.copy(C); cam.lookAt(look.copy(L));\n  onFrame();                                                      // el HTML sigue a la cámara\n}"
+ },
+ {
+  "leccion": "three-interaccion",
+  "archivo": "three-interaccion.html",
+  "titulo": "Interacción en 3D",
+  "seccion": "Raycasting: hover y clic",
+  "etiqueta": "La función que usarás siempre",
+  "lang": "js",
+  "codigo": "const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();\n\nfunction pick(e, objects) {\n  const r = canvas.getBoundingClientRect();          // el canvas no tiene por qué ocupar la ventana\n  ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;\n  ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;  // en pantalla la Y crece hacia abajo\n  ray.setFromCamera(ndc, camera);\n  return ray.intersectObjects(objects, true)[0] ?? null;   // el más cercano\n}"
+ },
+ {
+  "leccion": "three-interaccion",
+  "archivo": "three-interaccion.html",
+  "titulo": "Interacción en 3D",
+  "seccion": "Etiquetas HTML ancladas al 3D",
+  "etiqueta": "Proyectar un punto 3D a la pantalla",
+  "lang": "js",
+  "codigo": "const v = new THREE.Vector3();\nfunction placeLabel(el, point) {\n  v.copy(point).project(camera);                 // de mundo a NDC (−1..1)\n  const behind = v.z > 1;                        // detrás de la cámara: no enseñar\n  const x = (v.x + 1) / 2 * canvas.clientWidth;\n  const y = (1 - v.y) / 2 * canvas.clientHeight;\n  el.style.transform = `translate3d(${x}px, ${y}px, 0)`;\n  el.classList.toggle('hidden', behind);\n}"
+ },
+ {
+  "leccion": "three-interaccion",
+  "archivo": "three-interaccion.html",
+  "titulo": "Interacción en 3D",
+  "seccion": "Táctil: tocar frente a arrastrar",
+  "etiqueta": "OrbitControls con límites de producto",
+  "lang": "js",
+  "codigo": "const controls = new OrbitControls(camera, canvas);\ncontrols.enableDamping = true;      // inercia suave al soltar\ncontrols.enablePan = false;         // que nadie saque el modelo del encuadre\ncontrols.minPolarAngle = 0.35;      // ni cenital del todo…\ncontrols.maxPolarAngle = 1.25;      // …ni por debajo del suelo\ncontrols.minDistance = 6;\ncontrols.maxDistance = 16;\ncontrols.enableZoom = matchMedia('(pointer: coarse)').matches;  // la rueda roba el scroll"
+ },
+ {
+  "leccion": "three-interaccion",
+  "archivo": "three-interaccion.html",
+  "titulo": "Interacción en 3D",
+  "seccion": "Accesibilidad: lista y teclado",
+  "etiqueta": "El esqueleto accesible de la portada",
+  "lang": "html",
+  "codigo": "<canvas aria-hidden=\"true\"></canvas>                 <!-- decorativo: la información está en el HTML -->\n<ol class=\"rooms\" aria-label=\"Estancias de la residencia\">\n  <li><button type=\"button\" data-room=\"salon\" aria-pressed=\"false\">Salón <small>42 m²</small></button></li>\n  …\n</ol>\n<aside class=\"panel\" aria-live=\"polite\">…</aside>    <!-- se lee al cambiar de estancia -->"
+ },
+ {
+  "leccion": "three-modelos",
+  "archivo": "three-modelos.html",
+  "titulo": "Modelos, luz y materiales",
+  "seccion": "Del Blender a la web",
+  "etiqueta": "Optimizar en la terminal y cargar con meshopt (los decodificadores no están en el vendor del cuaderno)",
+  "lang": "js",
+  "codigo": "// Terminal: suelda, indexa, comprime geometría con meshopt y texturas a WebP\n// npx @gltf-transform/cli optimize residencia.glb residencia-opt.glb --compress meshopt --texture-compress webp\n\nimport { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';\nimport { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';\n\nconst loader = new GLTFLoader();\nloader.setMeshoptDecoder(MeshoptDecoder);   // con Draco sería loader.setDRACOLoader(...)"
+ },
+ {
+  "leccion": "three-modelos",
+  "archivo": "three-modelos.html",
+  "titulo": "Modelos, luz y materiales",
+  "seccion": "GLTFLoader paso a paso",
+  "etiqueta": "El repaso que hace la portada al recibir el modelo",
+  "lang": "js",
+  "codigo": "model.traverse((o) => {\n  if (!o.isMesh) return;\n  const m = o.material;\n  if (m.transparent && m.opacity === 0) { o.visible = false; return; }  // zonas de clic: aquí sobran\n  if (m.isMeshBasicMaterial) lamps.push(m);     // las lámparas «unlit»: brillarán al atardecer\n  o.castShadow = !m.transparent;                // el vidrio no proyecta sombra\n  o.receiveShadow = true;\n});"
+ },
+ {
+  "leccion": "three-modelos",
+  "archivo": "three-modelos.html",
+  "titulo": "Modelos, luz y materiales",
+  "seccion": "El objetivo de la cámara",
+  "etiqueta": "Colocar el modelo en el hueco que deja el texto",
+  "lang": "js",
+  "codigo": "// Centro del hueco libre, en píxeles: a la derecha en horizontal, abajo en vertical\nconst portrait = w < h;\nconst cx = portrait ? w * 0.5 : w * 0.68;\nconst cy = portrait ? h * 0.63 : h * 0.54;\ncamera.setFocalLength(portrait ? 35 : 50);\ncamera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);   // mueve el centro óptico, no la cámara"
+ },
+ {
+  "leccion": "three-scroll",
+  "archivo": "three-scroll.html",
+  "titulo": "Una cámara que vuela con el scroll",
+  "seccion": "Recorridos con curvas",
+  "etiqueta": "El recorrido de la portada: seis puntos y otros seis para la mirada",
+  "lang": "js",
+  "codigo": "const V = (x, y, z) => new THREE.Vector3(x, y, z);\nconst camCurve = new THREE.CatmullRomCurve3([\n  V(-70, 5, 230), V(-58, 12, 140), V(-38, 56, 62),   // del agua hacia la planta 18\n  V(10, 60, 52), V(52, 82, 40), V(30, 118, 46),     // la fachada, el giro y la azotea\n], false, 'centripetal');\nconst lookCurve = new THREE.CatmullRomCurve3([\n  V(-18, 40, 0), V(-8, 34, 0), V(0, 57, 0), V(0, 58, 0), V(0, 80, 0), V(0, 96, 0),\n], false, 'centripetal');\n\n// createTower acepta un path propio: recibe el progreso y coloca la cámara\nconst torre = createTower(canvas, { lite, path(u, camera) {\n  camera.position.copy(camCurve.getPoint(u));\n  camera.lookAt(lookCurve.getPoint(u));\n} });"
+ },
+ {
+  "leccion": "three-scroll",
+  "archivo": "three-scroll.html",
+  "titulo": "Una cámara que vuela con el scroll",
+  "seccion": "Easing y suavizado",
+  "etiqueta": "Paradas: el progreso frena en cada par",
+  "lang": "js",
+  "codigo": "// [progreso del scroll, punto de la curva]\nconst STOPS = [[0, 0], [0.16, 0.08], [0.3, 0.4],\n               [0.48, 0.58], [0.6, 0.76], [0.78, 0.84],\n               [0.9, 1], [1, 1]];\nconst smooth = (x) => x * x * (3 - 2 * x);\n\nfunction along(p) {\n  for (let i = 1; i < STOPS.length; i++) {\n    const [p1, u1] = STOPS[i];\n    if (p <= p1) {\n      const [p0, u0] = STOPS[i - 1];\n      return u0 + (u1 - u0) * smooth((p - p0) / (p1 - p0));\n    }\n  }\n  return 1;\n}"
+ },
+ {
+  "leccion": "three-scroll",
+  "archivo": "three-scroll.html",
+  "titulo": "Una cámara que vuela con el scroll",
+  "seccion": "Paradas y texto sincronizado",
+  "etiqueta": "La frase del tramo 2 aparece y desaparece con el progreso",
+  "lang": "css",
+  "codigo": ".ph2 {\n  /* sube de 0 a 1 a partir de p = 0,26 y baja a 0 al llegar a 0,5 */\n  opacity: clamp(0, min((var(--p) - .26) * 10, (.5 - var(--p)) * 10), 1);\n  translate: 0 calc((.38 - var(--p)) * 140px);\n}"
+ },
+ {
+  "leccion": "three-scroll",
+  "archivo": "three-scroll.html",
+  "titulo": "Una cámara que vuela con el scroll",
+  "seccion": "El móvil",
+  "etiqueta": "La decisión, antes de crear nada",
+  "lang": "js",
+  "codigo": "const reduce   = matchMedia('(prefers-reduced-motion: reduce)').matches;\nconst saveData = navigator.connection?.saveData === true;\nconst cores    = navigator.hardwareConcurrency || 8;\nconst lite     = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || cores <= 4;\n\nif (saveData) {\n  // nada: el póster ya está en el HTML\n} else if (cores <= 2) {\n  const { playFrames } = await import('./secuencia.js');   // la técnica de la lección 09\n  playFrames(canvas, { set: 'mob', progress: () => p });\n} else {\n  try { torre = createTower(canvas, { lite, path }); }\n  catch { /* sin WebGL: se queda el póster */ }\n}"
+ },
+ {
+  "leccion": "three-shaders",
+  "archivo": "three-shaders.html",
+  "titulo": "Shaders para webs",
+  "seccion": "Degradados vivos con los colores de la marca",
+  "etiqueta": "De la paleta OKLCH a los uniforms",
+  "lang": "js",
+  "codigo": "// La paleta, tal cual la tienes en las variables CSS: [L, C, H]\nconst marca = { fondo: [0.13, 0.03, 300], masa: [0.30, 0.12, 300], acento: [0.70, 0.21, 338] };\n\n// OKLCH es OKLab en coordenadas polares: pasar de uno a otro es un seno y un coseno\nconst oklab = ([L, C, H]) => new THREE.Vector3(L, C * Math.cos(H * Math.PI / 180), C * Math.sin(H * Math.PI / 180));\n\nconst uniforms = {\n  uFondo:  { value: oklab(marca.fondo) },\n  uMasa:   { value: oklab(marca.masa) },\n  uAcento: { value: oklab(marca.acento) },\n};\n// En el shader: se mezcla en OKLab y solo al final se convierte a RGB (una vez por píxel)"
+ },
+ {
+  "leccion": "three-shaders",
+  "archivo": "three-shaders.html",
+  "titulo": "Shaders para webs",
+  "seccion": "Imágenes que se deforman al pasar o tocar",
+  "etiqueta": "object-fit: cover dentro del shader",
+  "lang": "js",
+  "codigo": "// uAspImg = ancho / alto de la foto; uRes = tamaño del canvas\nvec2 cubrir(vec2 uv) {\n  float a = uRes.x / uRes.y;\n  vec2 s = a > uAspImg ? vec2(1.0, uAspImg / a) : vec2(a / uAspImg, 1.0);   // recorta por donde sobra\n  return (uv - 0.5) * s + 0.5;\n}"
+ },
+ {
+  "leccion": "three-shaders",
+  "archivo": "three-shaders.html",
+  "titulo": "Shaders para webs",
+  "seccion": "Brillos en objetos: fresnel y rim light",
+  "etiqueta": "Fresnel en el fragment shader",
+  "lang": "js",
+  "codigo": "float fresnel = pow(1.0 - max(dot(normal, haciaCamara), 0.0), uPotencia);\ncolor += uColorBorde * fresnel * uIntensidad;    // el borde se enciende con el color de la marca"
+ },
+ {
+  "leccion": "three-shaders",
+  "archivo": "three-shaders.html",
+  "titulo": "Shaders para webs",
+  "seccion": "Rendimiento: resolución, fps y cuándo es mejor CSS",
+  "etiqueta": "El esqueleto de la portada (resumido)",
+  "lang": "js",
+  "codigo": "const lite = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || navigator.hardwareConcurrency <= 4;\nconst reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;\nlet escala = Math.min(devicePixelRatio, 1.5) * (lite ? 0.45 : 0.6);   // resolución de render\n\nconst material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader,\n  defines: { CAPAS: lite ? 3 : 5 } });           // el bucle del fbm usa CAPAS\n\nlet fotogramas = 0, acumulado = 0;\nfunction bucle(ahora) {\n  requestAnimationFrame(bucle);\n  const dt = (ahora - antes) / 1000; antes = ahora;\n  if (hero.getBoundingClientRect().bottom <= 0) return;      // fuera de pantalla: no pinta\n  if (!reduce) uniforms.uTime.value += dt;\n  renderer.render(scene, camera);\n  fotogramas++; acumulado += dt;\n  if (acumulado >= 1) {                                     // cada segundo, ¿vamos sobrados?\n    if (fotogramas / acumulado < 40 && escala > 0.3) { escala *= 0.8; renderer.setPixelRatio(escala); }\n    fotogramas = acumulado = 0;\n  }\n}"
+ },
+ {
+  "leccion": "three-web",
+  "archivo": "three-web.html",
+  "titulo": "Three.js dentro de una web",
+  "seccion": "Responsive de verdad",
+  "etiqueta": "Resize completo: buffer, DPR, aspect y encuadre",
+  "lang": "js",
+  "codigo": "const ro = new ResizeObserver(() => {\n  const w = canvas.clientWidth, h = canvas.clientHeight;\n  renderer.setPixelRatio(Math.min(devicePixelRatio, lite ? 1.5 : 2));\n  renderer.setSize(w, h, false);          // false: el tamaño CSS lo manda tu hoja de estilos\n  camera.aspect = w / h;\n  camera.fov = camera.aspect < 0.8 ? 38 : 30;\n  const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));\n  camera.position.z = Math.max(objH / 2 / t, objW / 2 / (t * camera.aspect)) * 1.2;\n  camera.updateProjectionMatrix();\n  invalidate();                           // pinta un fotograma nuevo\n});\nro.observe(canvas);"
+ },
+ {
+  "leccion": "three-web",
+  "archivo": "three-web.html",
+  "titulo": "Three.js dentro de una web",
+  "seccion": "Pintar solo cuando hace falta",
+  "etiqueta": "El patrón completo para una portada animada",
+  "lang": "js",
+  "codigo": "let raf = 0, inView = true;\nfunction loop(t) { raf = requestAnimationFrame(loop); update(t); renderer.render(scene, camera); }\nfunction start() { if (!raf && inView && !document.hidden) raf = requestAnimationFrame(loop); }\nfunction stop()  { cancelAnimationFrame(raf); raf = 0; }\n\nnew IntersectionObserver(([e]) => { inView = e.isIntersecting; inView ? start() : stop(); }).observe(canvas);\ndocument.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));"
+ },
+ {
+  "leccion": "three-web",
+  "archivo": "three-web.html",
+  "titulo": "Three.js dentro de una web",
+  "seccion": "Accesibilidad y respaldo",
+  "etiqueta": "Respaldo y movimiento reducido en la portada",
+  "lang": "js",
+  "codigo": "const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;\nlet renderer;\ntry {\n  renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !lite });\n} catch (err) {\n  hero.classList.add('sin-webgl');    // el póster se queda: la portada está completa igual\n  return;\n}\nif (reduce) {\n  renderOnce();                       // un fotograma, sin bucle\n  addEventListener('pointermove', () => requestAnimationFrame(renderOnce));\n} else {\n  start();                            // bucle con pausa fuera de pantalla\n}"
+ },
+ {
   "leccion": "tipo-fondo",
   "archivo": "tipo-fondo.html",
   "titulo": "Tipografía, color y fondo",

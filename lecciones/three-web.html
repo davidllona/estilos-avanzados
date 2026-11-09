@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three.js dentro de una web | Hora azul</title>
+<meta name="description" content="Integrar Three.js en una web real: dónde vive el canvas, responsive con DPR y encuadre, colores de marca en 3D, render bajo demanda, carga diferida y respaldo.">
+<meta name="theme-color" content="#0b1220">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Volumen».
+     Azul noche, blanco frío y un cian de pantalla. Syne 800 para titulares, Inter Tight para leer. */
+  :root {
+    --bg: oklch(16% 0.03 250);
+    --bg-2: oklch(20% 0.035 250);
+    --bg-3: oklch(25% 0.04 250);
+    --fg: oklch(96% 0.01 250);
+    --muted: oklch(77% 0.025 245);
+    --faint: oklch(60% 0.03 245);
+    --accent: oklch(80% 0.14 200);
+    --on-accent: oklch(16% 0.03 250);
+    --code-bg: oklch(12% 0.03 250);
+    --scheme: dark;
+    --f-display: "Syne", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 800;
+    --display-tracking: -0.035em;
+  }
+  body { font-size: clamp(1rem, 0.97rem + 0.18vw, 1.1rem); line-height: 1.62; }
+  .prose h2 { font-size: clamp(2.3rem, 1.6rem + 3vw, 4.4rem); line-height: .94; }
+  .prose h2 .n::before { content: "Capa "; color: var(--faint); }
+  @media (max-width: 760px) { .prose h2 { font-size: clamp(1.9rem, 1rem + 4.6vw, 2.3rem); hyphens: auto; } .statement, .statement.big { font-size: clamp(1.9rem, 1rem + 4.8vw, 2.4rem); } }
+  .split > * { min-width: 0; }
+  .prose h2 em, .statement em { font-style: normal; color: var(--accent); }
+  .quiz .q { font: 600 var(--step-1)/1.3 var(--f-body); letter-spacing: -0.01em; }
+  @media (max-width: 760px) { .table-wrap table { min-width: 620px; } }
+
+  /* ================= Portada: escultura 3D en un sándwich tipográfico ================= */
+  .obra { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 1fr auto auto; column-gap: 2rem;
+    padding: 5.6rem var(--gutter) clamp(1.4rem, 3vh, 2.4rem); background: var(--bg); color: var(--fg); }
+  .obra .poster, .obra canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+  .obra .poster img { width: 100%; height: 100%; object-fit: cover; }
+  .obra canvas { opacity: 0; transition: opacity 1s var(--ease-out); }
+  .obra .poster { transition: opacity 1s var(--ease-out); }
+  .obra.listo canvas { opacity: 1; }
+  .obra.listo .poster { opacity: 0; }
+  /* El titular gigante existe dos veces: sólido detrás del canvas y en contorno delante */
+  .obra .w { position: absolute; left: 0; right: 0; top: 47%; translate: 0 -50%; margin: 0; text-align: center; white-space: nowrap;
+    font: 800 min(14.6vw, 34vh)/.8 var(--f-display); letter-spacing: -0.06em; pointer-events: none; }
+  .obra .w.solid { z-index: 0; color: var(--fg); }
+  .obra .w.line { z-index: 2; color: transparent; -webkit-text-stroke: 1.5px var(--accent);
+    /* El contorno solo se dibuja donde está la escultura: el JS proyecta su centro y su radio */
+    -webkit-mask-image: radial-gradient(circle var(--mr, 26vh) at var(--mx, 58%) var(--my, 47%), #000 80%, transparent 100%);
+    mask-image: radial-gradient(circle var(--mr, 26vh) at var(--mx, 58%) var(--my, 47%), #000 80%, transparent 100%); }
+  .obra .w .b { color: var(--accent); }
+  .obra .w.line .b { color: transparent; }
+  .obra h1 { grid-column: 1; grid-row: 2; margin: 0; font-size: inherit; line-height: inherit; }
+  .obra h1 .sub { position: relative; z-index: 3; display: block; font: 800 clamp(1.9rem, 1.2rem + 2.4vw, 3.6rem)/.95 var(--f-display); letter-spacing: -0.035em; }
+  .obra [data-kicker] { position: relative; z-index: 3; grid-column: 1 / -1; grid-row: 1; align-self: start; margin: 0; font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .obra .lede { position: relative; z-index: 3; grid-column: 1; grid-row: 3; margin: .9rem 0 0; max-width: 38ch; font-size: var(--step-0); line-height: 1.45; color: var(--muted); }
+  .live { position: relative; z-index: 3; grid-column: 2; grid-row: 2 / 4; align-self: end; display: grid; gap: .5rem; justify-items: end; margin: 0; text-align: right; }
+  .live dl { display: grid; grid-template-columns: auto auto; gap: .2rem 1rem; margin: 0; font: 500 .78rem/1.35 var(--f-code); color: var(--muted); }
+  .live dt { color: var(--faint); }
+  .live dd { margin: 0; color: var(--fg); font-variant-numeric: tabular-nums; min-width: 8ch; }
+  .live dd.on { color: var(--accent); }
+  .en-portada .topbar.solid { background: transparent; border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  @media (max-width: 760px) {
+    .obra { grid-template-columns: 1fr; grid-template-rows: 1fr auto auto auto; padding-top: 5rem; }
+    .obra .w { top: 31%; font-size: 21vw; line-height: .84; letter-spacing: -0.065em; }
+    .obra .w.line { --mx: 50%; --my: 150%; --mr: 40vw; }
+    .obra .w span { display: block; }
+    .obra .w .b { padding-left: .9em; }
+    .obra h1 .sub { font-size: clamp(1.9rem, 1rem + 4.6vw, 2.4rem); }
+    .obra .lede { font-size: 1rem; }
+    .live { grid-column: 1; grid-row: 4; justify-items: start; text-align: left; margin-top: 1.1rem; grid-auto-flow: column; align-items: center; justify-content: space-between; }
+    .live dl { grid-template-columns: repeat(3, auto); grid-auto-flow: column; grid-template-rows: auto auto; column-gap: 1.1rem; }
+  }
+
+  /* ================= Cuerpo ================= */
+  .statement.big { font-size: clamp(2.3rem, 1.4rem + 4vw, 5.2rem); line-height: .96; max-width: 17ch !important; margin: 4rem 0 1rem; }
+
+  /* Vista despiezada de la portada */
+  .capas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(.6rem, 2vw, 1.6rem); margin: 3rem 0 1rem; padding: 1rem 0 0; }
+  .capa { margin: 0; }
+  .pane { position: relative; aspect-ratio: 3 / 4; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; transform: perspective(900px) rotateY(34deg); transform-origin: 30% 50%;
+    display: grid; place-items: center; background: color-mix(in oklab, var(--bg-2) 70%, transparent); box-shadow: -18px 22px 40px -24px rgb(0 0 0 / .6); }
+  .pane span { font: 800 clamp(1.1rem, .5rem + 1.6vw, 2rem)/1 var(--f-display); letter-spacing: -0.05em; }
+  .p0 { background: var(--bg); }
+  .p1 span { color: var(--fg); }
+  .p2 { background: transparent; border-style: dashed; }
+  .p2 i { width: 62%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, oklch(98% 0.01 220), oklch(70% 0.08 220) 35%, oklch(30% 0.05 250) 70%, oklch(55% 0.13 200)); }
+  .p3 { background: transparent; }
+  .p3 span { color: transparent; -webkit-text-stroke: 1px var(--accent); }
+  .p4 { background: transparent; align-content: end; justify-items: start; gap: .35rem; padding: 12%; }
+  .p4 .l { display: block; width: 80%; height: 6px; border-radius: 3px; background: var(--fg); }
+  .p4 .l.s { width: 55%; background: var(--muted); }
+  .p4 .btn { display: block; width: 48%; height: 16px; margin-top: .4rem; border-radius: 99px; background: var(--accent); }
+  .capa figcaption { margin-top: .9rem; font: 500 var(--step--1)/1.35 var(--f-ui); color: var(--muted); }
+  .capa figcaption b { display: block; font: 800 clamp(1.6rem, 1rem + 1.6vw, 2.6rem)/1 var(--f-display); color: var(--fg); margin-bottom: .25rem; }
+  .capa figcaption code { display: block; width: fit-content; margin-top: .35rem; font-size: .76rem; white-space: nowrap; }
+  .capas-cap { font: 400 var(--step--1)/1.5 var(--f-ui); color: var(--muted); }
+  @media (max-width: 760px) {
+    .capas { grid-template-columns: 1fr; gap: .7rem; }
+    .capa { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1rem; align-items: center; }
+    .pane { aspect-ratio: 4 / 3; transform: none; box-shadow: none; }
+    .capa figcaption { margin: 0; }
+    .capa figcaption b { font-size: 1.6rem; }
+    .pane span { font-size: .78rem; }
+  }
+
+  /* Tubería del color: fija al lado del texto */
+  .pipe { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--fg); counter-reset: paso; }
+  .pipe li { display: grid; grid-template-columns: 3.2rem 1fr; gap: .2rem 1rem; padding: .9rem 0; border-bottom: 1px solid var(--line-2); }
+  .pipe i { grid-row: span 2; width: 3.2rem; height: 3.2rem; border-radius: 8px; background: var(--s); border: 1px solid var(--line); }
+  .pipe b { font: 700 var(--step-0)/1.2 var(--f-ui); }
+  .pipe span { font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  .pipe code { font-size: .82em; }
+
+  .band.cian { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.cian .inner { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.6rem 4rem; align-items: end; }
+  .band.cian p { margin: 0; font: 800 clamp(2.2rem, 1.2rem + 4vw, 5rem)/.92 var(--f-display); letter-spacing: -0.045em; max-width: 15ch; }
+  .band.cian small { font: 500 var(--step--1)/1.5 var(--f-ui); max-width: 38ch; }
+  .band.cian code { background: oklch(16% 0.03 250 / .12); }
+  @media (max-width: 760px) { .band.cian .inner { grid-template-columns: 1fr; } }
+
+  /* Línea de tiempo de carga, con los tiempos reales de esta visita */
+  .carga { list-style: none; margin: 2.4rem 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--fg); }
+  .carga li { position: relative; padding: 1.2rem 1.2rem 0 0; }
+  .carga li::before { content: ""; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--fg); }
+  .carga li.hot::before { background: var(--accent); border-color: var(--accent); }
+  .carga b { display: block; white-space: nowrap; font: 800 clamp(1.8rem, 1.2rem + 1.8vw, 3rem)/1 var(--f-display); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .carga strong { display: block; margin: .5rem 0 .3rem; font: 600 var(--step-0)/1.25 var(--f-ui); }
+  .carga span { display: block; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  @media (max-width: 760px) {
+    .carga { grid-template-columns: 1fr; border-top: 0; border-left: 2px solid var(--fg); margin-left: 6px; }
+    .carga li { padding: 0 0 1.4rem 1.4rem; }
+    .carga li::before { top: .35rem; left: -7px; }
+  }
+
+  /* Así sí / Así no */
+  .versus { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2.4rem 0 1rem; }
+  .versus figure { margin: 0; }
+  .vs { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; }
+  .vs.no { background: #1a1a2e; }
+  .vs.no i { position: absolute; border-radius: 30%; }
+  .vs.no i:nth-child(1) { width: 34%; aspect-ratio: 1; left: 8%; top: 12%; background: #ff3d8b; rotate: 20deg; }
+  .vs.no i:nth-child(2) { width: 28%; aspect-ratio: 1; right: 10%; top: 30%; background: #4ade80; border-radius: 50%; }
+  .vs.no i:nth-child(3) { width: 40%; aspect-ratio: 1; left: 36%; bottom: -10%; background: #facc15; rotate: -14deg; }
+  .vs.no p { position: absolute; left: 8%; top: 38%; margin: 0; font: 800 clamp(1.1rem, .6rem + 1.6vw, 2rem)/1 var(--f-display); color: #e2e2f0; opacity: .85; }
+  .vs.no small { position: absolute; left: 8%; bottom: 8%; font: 500 .7rem/1 var(--f-ui); color: #8b8ba8; }
+  .vs.si { background: var(--bg); border: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 8%; gap: 6%; }
+  .vs.si p { margin: 0; font: 800 clamp(1.1rem, .6rem + 1.6vw, 2rem)/.95 var(--f-display); letter-spacing: -0.04em; color: var(--fg); }
+  .vs.si p span { display: block; margin-top: .6rem; font: 500 .72rem/1.35 var(--f-ui); letter-spacing: 0; color: var(--muted); }
+  .vs.si p em { display: inline-block; margin-top: .7rem; padding: .35rem .7rem; border-radius: 99px; background: var(--accent); color: var(--on-accent); font: 600 .7rem/1 var(--f-ui); font-style: normal; letter-spacing: 0; }
+  .vs.si i { justify-self: center; width: 92%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 34% 28%, oklch(98% 0.01 220), oklch(72% 0.06 225) 30%, oklch(26% 0.04 250) 66%, oklch(62% 0.12 200)); }
+  .versus figcaption { margin-top: .7rem; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  .versus figcaption b { color: var(--fg); }
+  @media (max-width: 640px) { .versus { grid-template-columns: 1fr; } }
+</style>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="three-web">
+<main id="main">
+  <header class="hero obra" aria-labelledby="t">
+    <picture class="poster" aria-hidden="true">
+      <source media="(max-aspect-ratio: 4/5)" srcset="../assets/media/three-web-poster-mob.webp" width="585" height="1266">
+      <img src="../assets/media/three-web-poster.webp" alt="" width="1440" height="900" fetchpriority="high">
+    </picture>
+    <p data-kicker>Lección 26</p>
+    <h1 id="t"><span class="w solid"><span class="a">Three</span><span class="b">.js</span></span> <span class="sub">dentro de una web</span></h1>
+    <canvas aria-hidden="true"></canvas>
+    <p class="w line" aria-hidden="true"><span class="a">Three</span><span class="b">.js</span></p>
+    <p class="lede">Una escultura en tiempo real entre dos capas de texto. Mueve el ratón, toca o inclina el móvil: el volumen se estira hacia ti y el titular sigue leyéndose.</p>
+    <div class="live">
+      <dl aria-hidden="true">
+        <dt>DPR</dt><dd data-dpr>—</dd>
+        <dt>Pintados</dt><dd data-frames>0</dd>
+        <dt>Estado</dt><dd data-state>cargando</dd>
+      </dl>
+      <span class="chip" data-meta>25 min</span>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Ya sabes hacer escenas en Three.js: galaxias, shaders, iluminación HDR. Lo que cambia cuando esa escena entra en una web de verdad es todo lo de alrededor. El canvas tiene que convivir con un titular que se lea, con un botón que reciba el clic, con un móvil de gama media que no se caliente y con una marca que tiene sus colores apuntados en un PDF.</p>
+      <p>Esta lección va de ese «alrededor». La portada es el ejemplo completo: un canvas transparente entre dos copias del titular, un DPR limitado, pintado solo cuando se ve y un póster que aguanta mientras carga. Abajo a la derecha tienes el contador: sube cuando la portada está en pantalla y se para en cuanto bajas.</p>
+
+      <p class="statement big">El 3D es una capa más de la página, <em>no la página.</em></p>
+
+      <h2>Dónde vive el canvas</h2>
+      <p>Un <code>&lt;canvas&gt;</code> de WebGL es un elemento HTML como una imagen: ocupa una caja, tiene <code>z-index</code>, recibe eventos y se puede tapar. Hay tres sitios donde ponerlo, y cada uno dice algo distinto de la web.</p>
+      <ul>
+        <li><strong>De fondo fijo</strong> (<code>position: fixed</code> detrás de todo): la escena acompaña toda la página. Es lo que hacen las webs de producto donde el objeto gira mientras bajas. Exige mucho, porque está siempre en pantalla.</li>
+        <li><strong>Dentro de una sección</strong> (<code>position: absolute</code> en la portada): el 3D es el protagonista de un momento y luego se va. El más habitual y el más fácil de pausar.</li>
+        <li><strong>En línea</strong>, como una imagen dentro de la retícula: el objeto es un contenido más, al lado de un texto. Ideal para fichas de producto.</li>
+      </ul>
+
+      <div class="capas wide" role="img" aria-label="Vista despiezada de la portada de esta lección: fondo, titular sólido, canvas sin eventos, contorno del titular y HTML con los botones encima">
+        <figure class="capa"><div class="pane p0"></div><figcaption><b>0</b>Fondo de la sección<code>background</code></figcaption></figure>
+        <figure class="capa"><div class="pane p1"><span>Three.js</span></div><figcaption><b>1</b>Titular sólido<code>z-index: 0</code></figcaption></figure>
+        <figure class="capa"><div class="pane p2"><i></i></div><figcaption><b>2</b>El canvas, transparente<code>pointer-events: none</code></figcaption></figure>
+        <figure class="capa"><div class="pane p3"><span>Three.js</span></div><figcaption><b>3</b>Contorno del titular<code>z-index: 2</code></figcaption></figure>
+        <figure class="capa"><div class="pane p4"><span class="l"></span><span class="l s"></span><span class="btn"></span></div><figcaption><b>4</b>HTML de verdad<code>z-index: 3</code></figcaption></figure>
+      </div>
+      <p class="capas-cap">La portada de esta página, despiezada. El titular está dos veces: el sólido queda detrás de la escultura y el contorno, delante. Donde el objeto tapa las letras, el contorno las sigue dibujando. Es un truco de maquetación, no de 3D.</p>
+
+      <figure class="lab" data-three data-title="El canvas como capa" data-hint="Cambia el sitio del canvas y prueba el botón" data-height="520" data-height-mobile="640" data-open="css">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ui">
+            <div class="seg">
+              <button data-mode="fijo" aria-pressed="true">Fondo fijo</button>
+              <button data-mode="seccion" aria-pressed="false">En la sección</button>
+              <button data-mode="linea" aria-pressed="false">En línea</button>
+            </div>
+            <label><input type="checkbox" id="encima"> Canvas encima</label>
+            <label><input type="checkbox" id="pe" checked> pointer-events: none</label>
+          </div>
+          <section class="hero">
+            <canvas></canvas>
+            <div class="copy">
+              <h1>Un altavoz de <em>cerámica</em> hecho en Onda</h1>
+              <p>Esmalte mate, graves cálidos y cero plástico.</p>
+              <button id="cta">Reservar el mío</button>
+              <p id="log">Pulsa el botón.</p>
+            </div>
+          </section>
+          <section class="more"><p>Sigue bajando: en «Fondo fijo» la escena te acompaña; en «En la sección» se queda arriba.</p></section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #17120f; color: #f2e8dc; }
+          .ui { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; background: #17120fe6; font-size: 13px; }
+          .seg { display: flex; gap: 4px; }
+          .seg button { min-height: 36px; padding: 0 12px; border: 1px solid #f2e8dc40; border-radius: 99px; background: none; color: inherit; cursor: pointer; }
+          .seg button[aria-pressed="true"] { background: #f2e8dc; color: #17120f; }
+          .hero { position: relative; min-height: 82vh; display: grid; align-items: center; padding: 24px; }
+          .copy { position: relative; z-index: 1; max-width: 30ch; }
+          h1 { margin: 0 0 10px; font: 400 clamp(32px, 7vw, 56px)/.95 var(--f-serif); }
+          h1 em { color: #e07a4b; }
+          #cta { min-height: 44px; padding: 0 20px; border: 0; border-radius: 99px; background: #e07a4b; color: #17120f; font-weight: 600; cursor: pointer; }
+          #log { font: 12px var(--f-mono); opacity: .75; }
+          .more { min-height: 90vh; padding: 24px; opacity: .7; }
+          /* Los tres sitios del canvas */
+          .fijo canvas    { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+          .seccion canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+          .linea .hero    { grid-template-columns: 1fr 1fr; gap: 20px; }
+          .linea canvas   { order: 2; width: 100%; aspect-ratio: 1; border-radius: 16px; background: #221a15; }
+          /* El error típico: canvas por encima y sin pointer-events: none */
+          .encima canvas  { z-index: 5; }
+          .pe canvas      { pointer-events: none; }
+          @media (max-width: 560px) { .hero { align-items: start; } .linea .hero { grid-template-columns: 1fr; } .linea canvas { order: 0; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });   // alpha: el CSS se ve detrás
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+          renderer.toneMapping = THREE.NeutralToneMapping;
+          const scene = new THREE.Scene();
+          scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+          const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+
+          // El altavoz: un perfil suave girado (como en el torno) y una banda de tela alrededor
+          const profile = new THREE.SplineCurve([[0, -1.05], [0.85, -1.05], [1.1, -0.5], [1.12, 0.3], [0.9, 0.95], [0.35, 1.15], [0, 1.16]]
+            .map(([x, y]) => new THREE.Vector2(x, y))).getPoints(48);
+          const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 96), new THREE.MeshStandardMaterial({ color: '#a4532f', roughness: 0.55 }));
+          const grille = new THREE.Mesh(new THREE.CylinderGeometry(1.145, 1.14, 0.55, 96, 1, true), new THREE.MeshStandardMaterial({ color: '#241c17', roughness: 1 }));
+          grille.position.y = -0.1;
+          const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.06, 32), new THREE.MeshStandardMaterial({ color: '#f2e8dc', roughness: 0.4 }));
+          knob.position.y = 1.17;
+          const speaker = new THREE.Group(); speaker.add(body, grille, knob); scene.add(speaker);
+
+          // El canvas mide lo que diga el CSS: nos adaptamos a su caja en cada modo
+          function fit() {
+            const w = canvas.clientWidth, h = canvas.clientHeight;
+            renderer.setSize(w, h, false);
+            camera.aspect = w / h;
+            const portrait = camera.aspect < 0.8, side = camera.aspect > 1.2 && !document.body.classList.contains('linea');
+            const x = side ? -1.7 : 0, y = portrait ? 1.3 : 0.2;     // en ancho, el objeto a la derecha; en vertical, abajo
+            camera.position.set(x, y + 0.3, portrait ? 11 : 7);
+            camera.lookAt(x, y, 0);
+            camera.updateProjectionMatrix();
+          }
+          new ResizeObserver(fit).observe(canvas);
+
+          // Solo animamos mientras el canvas se ve
+          let visible = true;
+          new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(canvas);
+          renderer.setAnimationLoop((t) => {
+            if (!visible) return;
+            speaker.rotation.y = t / 2400;
+            renderer.render(scene, camera);
+          });
+
+          // Controles de la demo
+          const set = (mode) => {
+            document.body.classList.remove('fijo', 'seccion', 'linea'); document.body.classList.add(mode);
+            document.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === mode));
+            fit();
+          };
+          document.querySelectorAll('[data-mode]').forEach((b) => b.onclick = () => set(b.dataset.mode));
+          encima.onchange = () => document.body.classList.toggle('encima', encima.checked);
+          pe.onchange = () => document.body.classList.toggle('pe', pe.checked);
+          cta.onclick = () => (log.textContent = 'Clic recibido por el botón. Bien.');
+          canvas.onclick = () => (log.textContent = 'El canvas se ha tragado el clic.');
+          set('fijo'); document.body.classList.add('pe');
+        </script>
+        <figcaption>Marca «Canvas encima» y quita «pointer-events: none»: el botón deja de funcionar aunque se vea perfecto. Es el fallo número uno de las webs con 3D, y se arregla con una línea de CSS.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Decide el sitio del canvas por lo que cuenta la web, no por lo que impresiona. Fondo fijo solo si el objeto es el producto y tiene algo que decir en cada sección (el altavoz que se gira para enseñar la rejilla, luego la base). Si solo decora la llegada, va dentro de la portada y se pausa al salir. Un fondo 3D que acompaña toda la página sin cambiar de papel acaba siendo un salvapantallas.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El canvas fijo es el más caro en el teléfono: se repinta encima de todo el scroll y la barra del navegador cambia su alto al subir y bajar. Si lo usas, dale <code>height: 100lvh</code> para que no salte y pausa el render cuando el contenido de encima es opaco. Y nunca le quites <code>pointer-events: none</code> si no hay interacción en 3D: en táctil, un canvas que recibe eventos también puede bloquear el scroll si alguien añade <code>touch-action: none</code>.</p>
+      </div>
+
+      <h2>Responsive de verdad</h2>
+      <p>«Responsive» en 3D no es solo que el canvas ocupe el 100 %. Son cuatro cosas: el tamaño del buffer, el DPR, el aspect de la cámara y, la que más se olvida, el <strong>encuadre</strong>. Una cámara de 30° que encuadra perfecto un objeto ancho a 16:9 lo corta por los lados en un móvil vertical, porque el campo horizontal se encoge con el aspect.</p>
+
+      <figure class="lab" data-three data-title="Encuadre que se adapta" data-hint="Cambia el encaje y pulsa «Ver en móvil»" data-height="440" data-height-mobile="620" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div class="ui">
+            <label><input type="checkbox" id="fit" checked> Encaje responsive</label>
+            <label>DPR máximo <select id="cap"><option>1</option><option selected>1.5</option><option>2</option><option value="9">sin límite</option></select></label>
+          </div>
+          <pre id="hud"></pre>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { background: #eee8df; color: #2b2520; overflow: hidden; }
+          canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+          .ui { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; }
+          select { min-height: 32px; }
+          #hud { position: absolute; left: 12px; bottom: 6px; margin: 0; font: 11px/1.5 var(--f-mono); opacity: .8; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+          const scene = new THREE.Scene();
+          scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+          const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+
+          // Tres jarrones: una composición ancha, la que peor lo pasa en vertical
+          renderer.toneMapping = THREE.NeutralToneMapping;
+          const vase = (pts, color, x) => {
+            const profile = new THREE.SplineCurve(pts.map(([a, b]) => new THREE.Vector2(a, b))).getPoints(40);   // perfil suave
+            const m = new THREE.Mesh(new THREE.LatheGeometry(profile, 64),
+              new THREE.MeshStandardMaterial({ color, roughness: 0.45 }));
+            m.position.x = x; scene.add(m);
+          };
+          vase([[0, 0], [0.45, 0.02], [0.7, 0.6], [0.36, 1.45], [0.42, 1.9], [0, 1.88]], '#c6633d', -1.6);
+          vase([[0, 0], [0.55, 0.02], [0.78, 0.8], [0.55, 1.45], [0.3, 1.6], [0, 1.6]], '#2f4a5c', 0);
+          vase([[0, 0], [0.38, 0.02], [0.46, 1.4], [0.24, 2.1], [0.3, 2.3], [0, 2.28]], '#d7b46a', 1.55);
+          const box = new THREE.Box3().setFromObject(scene), size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+
+          function frame() {
+            const w = canvas.clientWidth, h = canvas.clientHeight, aspect = w / h;
+            const dpr = Math.min(devicePixelRatio, +cap.value);
+            renderer.setPixelRatio(dpr);
+            renderer.setSize(w, h, false);
+            camera.aspect = aspect;
+            camera.fov = aspect < 0.8 ? 38 : 30;                       // en vertical, algo más de campo
+            const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+            const dH = (size.y / 2) / t;                               // distancia para que quepa el alto
+            const dW = (size.x / 2) / (t * aspect);                    // y para que quepa el ancho
+            const d = (fit.checked ? Math.max(dH, dW) : dH) * 1.4;     // margen del 40 %
+            camera.position.set(center.x, center.y + d * 0.08, center.z + d);
+            camera.lookAt(center);
+            camera.updateProjectionMatrix();
+            renderer.render(scene, camera);
+            hud.textContent = `css ${w}×${h} · DPR ${dpr} · buffer ${canvas.width}×${canvas.height} = ${(canvas.width * canvas.height / 1e6).toFixed(2)} Mpx\nfov ${camera.fov}° · distancia ${d.toFixed(1)}`;
+          }
+          new ResizeObserver(frame).observe(canvas);
+          fit.onchange = cap.onchange = frame;
+        </script>
+        <figcaption>Pulsa «Ver en móvil» y desactiva el encaje responsive: los jarrones de los lados se salen del encuadre. Con él activo, la cámara calcula la distancia para el alto y para el ancho y se queda con la mayor. Fíjate también en los megapíxeles: de DPR 1,5 a «sin límite» en un móvil de DPR 3 pintas cuatro veces más.</figcaption>
+      </figure>
+
+      <p>La regla de encaje es una línea de trigonometría que te llevas a cualquier proyecto: con <code>tan(fov / 2)</code> sabes cuánto ve la cámara a una distancia, y el campo horizontal es el vertical multiplicado por el aspect. Calcula la distancia que necesita el alto, la que necesita el ancho, y usa la mayor.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="Resize completo: buffer, DPR, aspect y encuadre">
+        const ro = new ResizeObserver(() => {
+          const w = canvas.clientWidth, h = canvas.clientHeight;
+          renderer.setPixelRatio(Math.min(devicePixelRatio, lite ? 1.5 : 2));
+          renderer.setSize(w, h, false);          // false: el tamaño CSS lo manda tu hoja de estilos
+          camera.aspect = w / h;
+          camera.fov = camera.aspect < 0.8 ? 38 : 30;
+          const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+          camera.position.z = Math.max(objH / 2 / t, objW / 2 / (t * camera.aspect)) * 1.2;
+          camera.updateProjectionMatrix();
+          invalidate();                           // pinta un fotograma nuevo
+        });
+        ro.observe(canvas);
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Escucha el tamaño del canvas con <code>ResizeObserver</code>, no <code>window.resize</code>. Si el canvas está en línea dentro de una retícula, su caja cambia cuando cambia la retícula, aunque la ventana no se mueva. Y pasa siempre <code>false</code> como tercer argumento de <code>setSize</code>: si no, Three escribe un ancho y un alto en línea y pisa tu CSS.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Tres decisiones distintas, no una versión encogida: <strong>DPR a 1,5</strong> como máximo (en un DPR 3 pintarías 9 píxeles por cada píxel CSS y nadie nota la diferencia con 1,5 en un objeto en movimiento), <strong>otro encuadre</strong> (el objeto más pequeño y más abajo, porque arriba va el titular) y <strong>menos geometría</strong> en modo ligero. En la portada de esta página, la esfera tiene 192 × 128 segmentos en escritorio y 128 × 96 en el móvil.</p>
+      </div>
+
+      <h2>Los colores de la marca, en 3D</h2>
+      <p>Le pasas a Three el naranja de la marca, <code>#D9541E</code>, y en pantalla sale otro. No es un error tuyo: es la tubería de color. Un HEX de CSS está en sRGB, un espacio «curvado» pensado para pantallas. Para calcular luz, Three lo pasa a sRGB lineal, multiplica por la iluminación, aplica un <em>tone mapping</em> que comprime los brillos como haría una cámara y, al final, lo devuelve a sRGB. Cada paso puede mover tu color.</p>
+
+      <div class="split">
+        <div>
+          <p>Desde la r152, Three gestiona el color por defecto: <code>new THREE.Color('#D9541E')</code> ya convierte el HEX a lineal, y <code>renderer.outputColorSpace</code> es <code>SRGBColorSpace</code>. Si ves los colores lavados o demasiado oscuros en un proyecto antiguo, casi siempre es una conversión de más o de menos.</p>
+          <p>El que más mueve el color es el <strong>tone mapping</strong>, y cada uno tiene su carácter. ACES Filmic da el aspecto de cine: contraste, brillos que se queman a blanco y, con colores muy saturados, un cambio de tono (los azules eléctricos tiran a violeta). AgX desatura hacia el blanco de forma muy natural, pero se come la viveza de un color corporativo. Neutral, de Khronos, está pensado para producto: deja casi igual los tonos medios, aunque oscurece los canales muy bajos.</p>
+          <p>No te fíes de las descripciones: mide con tu color. Con el naranja de «mesa» en un plano sin luz, el laboratorio de abajo da esto:</p>
+          <div class="swatches">
+            <div class="swatch" style="--s:#D9541E"><i></i><span><b>Ninguno</b><small>#D9541E, exacto</small></span></div>
+            <div class="swatch" style="--s:#E15B1F"><i></i><span><b>ACES</b><small>#E15B1F, más claro</small></span></div>
+            <div class="swatch" style="--s:#C76D48"><i></i><span><b>AgX</b><small>#C76D48, apagado</small></span></div>
+            <div class="swatch" style="--s:#D74E03"><i></i><span><b>Neutral</b><small>#D74E03, más saturado</small></span></div>
+          </div>
+          <p>La receta para que el color de marca coincida:</p>
+          <ul>
+            <li>Elementos «de interfaz» en 3D (un logo, una superficie plana del color de marca): <code>MeshBasicMaterial</code> con <code>toneMapped: false</code>. Sale exacto.</li>
+            <li>Objetos iluminados: elige el tone mapping por el carácter de la escena (Neutral o ACES para producto, AgX si quieres un aire más fotográfico) y ajusta la exposición o el color base hasta que la cara principal se parezca al HEX.</li>
+            <li>Compara siempre con el color en CSS al lado, en la misma pantalla. A ojo, en otro monitor, no vale.</li>
+          </ul>
+        </div>
+        <div class="stick">
+          <ol class="pipe" aria-label="La tubería de color de Three.js, paso a paso">
+            <li style="--s:#D9541E"><i></i><b>HEX de la marca</b><span>sRGB, lo que pone en el manual: <code>#D9541E</code></span></li>
+            <li style="--s:#B11703"><i></i><b>A lineal</b><span><code>Color.set()</code> lo convierte. Si lo pintaras así, se vería oscuro</span></li>
+            <li style="--s:#C3512B"><i></i><b>Luz</b><span>El material multiplica por la iluminación. Con una luz blanca suave sale <code>#C3512B</code></span></li>
+            <li style="--s:#C76D48"><i></i><b>Tone mapping</b><span>Comprime los brillos y cambia el carácter. Con AgX, el plano sin luz sale <code>#C76D48</code></span></li>
+            <li style="--s:#D9541E"><i></i><b>De vuelta a sRGB</b><span><code>outputColorSpace</code>. Sin tone mapping y sin luz, vuelve exacto</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <figure class="lab" data-three data-title="El mismo HEX, en CSS y en 3D" data-hint="Cambia el tone mapping y el material" data-height="330" data-height-mobile="430" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pair">
+            <div class="css" id="css"><span>CSS</span></div>
+            <div class="gl"><canvas></canvas><span>Three.js</span></div>
+          </div>
+          <div class="ui">
+            <label>Marca <input type="color" id="hex" value="#d9541e"></label>
+            <label>Material <select id="mat"><option value="basic">Basic (sin luz)</option><option value="std">Standard (con luz)</option></select></label>
+            <label>Tone mapping <select id="tm"><option value="0">Ninguno</option><option value="4" selected>ACES Filmic</option><option value="6">AgX</option><option value="7">Neutral</option></select></label>
+            <label><input type="checkbox" id="tmoff"> toneMapped: false</label>
+          </div>
+          <p id="out"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #10151f; color: #e8eef6; padding: 14px; font-size: 13px; }
+          .pair { display: grid; grid-template-columns: 1fr 1fr; height: 190px; border-radius: 12px; overflow: hidden; }
+          .pair > div { position: relative; }
+          .pair span { position: absolute; left: 10px; top: 8px; font: 600 12px var(--f-mono); color: #fff; mix-blend-mode: difference; }
+          canvas { width: 100%; height: 100%; }
+          .ui { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; }
+          select, input[type=color] { min-height: 34px; }
+          #out { margin: 14px 0 0; font: 13px/1.5 var(--f-mono); }
+          #out b { padding: 2px 6px; border-radius: 4px; }
+          @media (max-width: 560px) { .pair { height: 150px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas });
+          const scene = new THREE.Scene();
+          const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+          camera.position.z = 1;
+          scene.add(new THREE.AmbientLight('#ffffff', 0.6));
+          const sun = new THREE.DirectionalLight('#ffffff', 2.2); sun.position.set(0.3, 0.5, 1); scene.add(sun);
+
+          const materials = { basic: new THREE.MeshBasicMaterial(), std: new THREE.MeshStandardMaterial({ roughness: 0.8 }) };
+          const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), materials.basic);
+          scene.add(plane);
+          const px = new Uint8Array(4), gl = renderer.getContext();
+          const toHex = (r, g, b) => '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+
+          function draw() {
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            const m = materials[mat.value];
+            m.color.set(hex.value);                 // HEX en sRGB: Three lo pasa a lineal solo
+            m.toneMapped = !tmoff.checked;
+            m.needsUpdate = true;                   // el tone mapping se compila en el shader
+            plane.material = m;
+            renderer.toneMapping = +tm.value;       // 0 ninguno, 4 ACES, 6 AgX, 7 Neutral
+            renderer.render(scene, camera);
+            // Leemos el píxel del centro justo después de pintar
+            gl.readPixels(canvas.width >> 1, canvas.height >> 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+            const got = toHex(px[0], px[1], px[2]), want = hex.value.toLowerCase();
+            const diff = Math.abs(px[0] - parseInt(want.slice(1, 3), 16)) + Math.abs(px[1] - parseInt(want.slice(3, 5), 16)) + Math.abs(px[2] - parseInt(want.slice(5, 7), 16));
+            css.style.background = want;
+            out.innerHTML = `CSS <b style="background:${want}">${want}</b> · 3D <b style="background:${got}">${got}</b> · ${diff < 6 ? 'coincide' : 'se desvía ' + diff + ' puntos'}`;
+          }
+          [hex, mat, tm, tmoff].forEach((el) => el.addEventListener('input', draw));
+          new ResizeObserver(draw).observe(canvas);
+        </script>
+        <figcaption>Con «Basic» y «toneMapped: false» el píxel sale idéntico al CSS. Pasa por los cuatro tone mapping y luego activa la luz: con este naranja, AgX es el que más lo apaga. Prueba también con el marino de tu marca, porque cada color reacciona distinto. El número es la diferencia real de los tres canales, leída del canvas.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>En una web de marca, el 3D tiene que parecer de la misma familia que el HTML de alrededor. Por eso la portada de esta lección no tiene un objeto «de colores»: la escultura es cromo y refleja un estudio construido con la paleta (paneles cian y azul noche). El color de marca entra por la luz y el entorno, no pintando el objeto. Así el 3D se ve rico y a la vez encaja con el cian de los botones.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Las pantallas OLED de los móviles saturan más que tu monitor, y al sol todo pierde contraste. Revisa el color del 3D en un teléfono real: un ACES que en escritorio parece elegante, en un OLED puede verse sucio. Si tu escena tiene un negro de fondo, haz que coincida exactamente con el <code>background</code> del CSS (con alpha transparente es automático), porque en OLED un borde de negro distinto se ve como un rectángulo.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">Pintas el logo de la marca en un plano con <code>MeshBasicMaterial({ color: '#0F1B3D' })</code> y el renderer tiene ACES. ¿Qué verás?</p>
+        <ol>
+          <li>El color exacto: <code>MeshBasicMaterial</code> no recibe luz, así que no cambia.</li>
+          <li>Un color más saturado, porque ACES realza los oscuros.</li>
+          <li>Un color algo distinto: el material no recibe luz, pero el tone mapping se le aplica igual.</li>
+        </ol>
+        <p class="why">«Sin luz» no es «sin tone mapping». El tone mapping se aplica a todos los materiales salvo que pongas <code>toneMapped: false</code>. Es el ajuste que hace que un logo o un plano de interfaz salgan con el HEX exacto.</p>
+      </div>
+
+      <div class="band cian"><div class="inner"><p>Un canvas que no se ve no tiene por qué pintar.</p><small>El navegador ya pausa <code>requestAnimationFrame</code> en las pestañas ocultas, pero no cuando el canvas está fuera de pantalla. Eso te toca a ti. La portada pinta 60 veces por segundo mientras la ves; baja un poco y mira cómo se para el contador.</small></div></div>
+
+      <h2>Pintar solo cuando hace falta</h2>
+      <p>El ejemplo típico de Three.js usa un bucle que pinta 60 veces por segundo para siempre. En una web eso es tirar batería: si nada se mueve, el fotograma 3.001 es idéntico al 3.000. Hay tres niveles de ahorro:</p>
+      <ol>
+        <li><strong>Pausa fuera de pantalla</strong> con <code>IntersectionObserver</code>: si el canvas no se ve, no pintes.</li>
+        <li><strong>Pausa con la pestaña oculta</strong> con <code>visibilitychange</code>: <code>requestAnimationFrame</code> ya se detiene solo, pero tus temporizadores y vídeos no.</li>
+        <li><strong>Render bajo demanda</strong>: si la escena es estática, pinta solo cuando algo cambia (el usuario la gira, cambia el tamaño o carga una textura).</li>
+      </ol>
+
+      <figure class="lab" data-three data-title="Bucle continuo o bajo demanda" data-hint="Gira la maqueta y luego suéltala" data-height="440" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div class="ui">
+            <button data-m="continuo">Bucle continuo</button>
+            <button data-m="demanda" aria-pressed="true">Bajo demanda</button>
+          </div>
+          <p class="hud"><b id="fps">0</b> fotogramas por segundo<br><span id="tot">0</span> pintados en total</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { background: #dfe3e6; color: #1d2329; overflow: hidden; }
+          canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+          .ui { position: absolute; left: 12px; top: 12px; display: flex; gap: 6px; }
+          button { min-height: 40px; padding: 0 14px; border: 1px solid #1d232955; border-radius: 99px; background: #fff8; cursor: pointer; }
+          button[aria-pressed="true"] { background: #1d2329; color: #fff; }
+          .hud { position: absolute; right: 14px; bottom: 10px; margin: 0; text-align: right; font: 12px/1.4 var(--f-mono); }
+          .hud b { font: 600 34px/1 var(--f-mono); }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+          const scene = new THREE.Scene();
+          const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+          camera.position.set(9, 6, 11);
+          scene.add(new THREE.HemisphereLight('#ffffff', '#9aa3ab', 1.6));
+          const sun = new THREE.DirectionalLight('#fff3e0', 2.4); sun.position.set(5, 8, 3); scene.add(sun);
+
+          // Maqueta de un pabellón: losa, cubierta y pilares
+          const white = new THREE.MeshStandardMaterial({ color: '#f4f1ec', roughness: 0.7 });
+          const add = (w, h, d, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), white); m.position.set(x, y, z); scene.add(m); };
+          add(8, 0.3, 5, 0, 0, 0); add(8.6, 0.25, 5.6, 0, 2.6, 0);
+          for (let i = 0; i < 5; i++) { add(0.18, 2.3, 0.18, -3.6 + i * 1.8, 1.3, 2.2); add(0.18, 2.3, 0.18, -3.6 + i * 1.8, 1.3, -2.2); }
+
+          const controls = new OrbitControls(camera, canvas);
+          controls.enableDamping = true;
+          let mode = 'demanda', total = 0, last = 0, pending = false, visible = true;
+
+          function paint() {
+            pending = false;
+            controls.update();                     // con inercia, update() emite 'change' hasta que se para
+            renderer.render(scene, camera);
+            total++;
+          }
+          // Bajo demanda: un fotograma solo cuando algo cambia
+          function request() { if (!pending && visible) { pending = true; requestAnimationFrame(paint); } }
+          controls.addEventListener('change', () => mode === 'demanda' && request());
+
+          // Bucle continuo: pinta siempre, cambie algo o no
+          (function loop() { if (mode === 'continuo' && visible) paint(); requestAnimationFrame(loop); })();
+
+          new ResizeObserver(() => {
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            camera.aspect = canvas.clientWidth / canvas.clientHeight; camera.updateProjectionMatrix();
+            camera.position.setLength(15.4 * Math.max(1, 1.7 / camera.aspect));   // en vertical, más lejos
+            request();
+          }).observe(canvas);
+          new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) request(); }).observe(canvas);
+
+          document.querySelectorAll('[data-m]').forEach((b) => b.onclick = () => {
+            mode = b.dataset.m; request();
+            document.querySelectorAll('[data-m]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+          });
+          setInterval(() => { fps.textContent = (total - last) * 2; tot.textContent = total; last = total; }, 500);
+        </script>
+        <figcaption>En «Bucle continuo» el contador marca 60 aunque no toques nada. En «Bajo demanda» se queda en 0 en reposo, sube mientras arrastras y sigue un instante por la inercia. La maqueta se ve igual en los dos modos: la diferencia solo la nota la batería.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="js" data-label="El patrón completo para una portada animada">
+        let raf = 0, inView = true;
+        function loop(t) { raf = requestAnimationFrame(loop); update(t); renderer.render(scene, camera); }
+        function start() { if (!raf && inView && !document.hidden) raf = requestAnimationFrame(loop); }
+        function stop()  { cancelAnimationFrame(raf); raf = 0; }
+
+        new IntersectionObserver(([e]) => { inView = e.isIntersecting; inView ? start() : stop(); }).observe(canvas);
+        document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La animación en reposo tiene que ser lenta y tener un motivo. La escultura de la portada respira despacio (el ruido avanza a un 18 % de velocidad) porque un objeto que se mueve rápido sin que lo toques reclama atención, y la atención tiene que ir al titular. Si tu objeto no necesita moverse solo, no lo muevas: déjalo quieto y que reaccione al usuario. Ahorras batería y queda más caro.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Un móvil que pinta a 60 fps sin parar se calienta en un par de minutos, y entonces el sistema baja la frecuencia de la GPU y todo va a tirones, también el scroll. En táctil, considera limitar la animación en reposo a 30 fps (pinta un fotograma sí y otro no) y para del todo cuando el canvas no se ve. En la portada de esta página, en modo ligero, el ruido se calcula con menos geometría y el DPR no pasa de 1,5.</p>
+      </div>
+
+      <h2>Cargar sin bloquear</h2>
+      <p>Three.js minificado pesa unos 750 KB sin comprimir (alrededor de 190 KB con gzip). Si lo cargas como un <code>&lt;script&gt;</code> normal en el <code>&lt;head&gt;</code>, el titular espera a que llegue. La solución tiene tres piezas:</p>
+      <ul>
+        <li>Un <strong>import map</strong> que diga dónde está <code>three</code>, para escribir <code>import * as THREE from 'three'</code> sin empaquetador.</li>
+        <li>Un <strong>módulo</strong> (<code>type="module"</code> ya es diferido: no bloquea el HTML) o un <code>import()</code> dinámico para traer la escena solo cuando hace falta.</li>
+        <li>Un <strong>póster</strong>: una imagen del primer fotograma que se ve al instante y se funde con el canvas cuando este pinta.</li>
+      </ul>
+
+      <ol class="carga wide" aria-label="Cronología de carga de la portada en esta visita">
+        <li><b data-mark="fcp">—</b><strong>Póster y titular</strong><span>HTML, CSS y una imagen WebP. El titular ya se lee: aquí se juega la primera impresión.</span></li>
+        <li><b data-mark="mod">—</b><strong>Módulo de la portada</strong><span>Llega three.js y se ejecuta el módulo. La página ya era usable antes.</span></li>
+        <li><b data-mark="gl">—</b><strong>Escena montada</strong><span>Renderer, entorno y geometría. Los shaders se compilan en el primer render.</span></li>
+        <li class="hot"><b data-mark="first">—</b><strong>Primer fotograma</strong><span>El canvas aparece con un fundido y el póster se va. Si todo va bien, no se nota el cambio.</span></li>
+      </ol>
+      <p class="capas-cap">Estos tiempos son los de tu visita, medidos por la propia portada con <code>performance.now()</code>. Recarga la página y cambiarán: la segunda vez three.js sale de la caché.</p>
+
+      <div class="code"><span class="label">El import map va antes que cualquier módulo</span><pre><span class="token tag">&lt;script</span> <span class="token attr-name">type</span>=<span class="token attr-value">"importmap"</span><span class="token tag">&gt;</span>
+  { "imports": {
+      "three": "./vendor/three/three.module.min.js",
+      "three/addons/": "./vendor/three/addons/"
+  } }
+<span class="token tag">&lt;/script&gt;</span>
+<span class="token tag">&lt;script</span> <span class="token attr-name">type</span>=<span class="token attr-value">"module"</span> <span class="token attr-name">src</span>=<span class="token attr-value">"./js/portada3d.js"</span><span class="token tag">&gt;&lt;/script&gt;</span></pre></div>
+
+      <figure class="lab" data-three data-title="Póster primero, 3D después" data-hint="Pulsa «Reiniciar» para verlo otra vez" data-height="380" data-height-mobile="470" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="stage">
+            <div class="poster"><i></i></div>
+            <canvas></canvas>
+            <p class="t">Estudio Vela<br><span>Arquitectura en el Grao</span></p>
+          </div>
+          <ol id="log"></ol>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #0d131d; color: #e6edf5; padding: 12px; }
+          .stage { position: relative; height: 230px; border-radius: 12px; overflow: hidden; background: #141c29; }
+          .poster, canvas { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .9s; }
+          .poster { display: grid; place-items: center; }
+          /* El póster: aquí un dibujo en CSS; en producción, una captura WebP del primer fotograma */
+          .poster i { width: 140px; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #8fb3c9 30%, #1e2a3a 68%, #5cc8d8); filter: blur(1px); }
+          canvas { opacity: 0; }
+          .on canvas { opacity: 1; } .on .poster { opacity: 0; }
+          .t { position: absolute; left: 16px; bottom: 12px; margin: 0; font: 800 22px/1 var(--f-syne); letter-spacing: -.03em; }
+          .t span { font: 400 12px var(--f-sans); letter-spacing: 0; opacity: .7; }
+          #log { margin: 12px 0 0; padding-left: 20px; font: 12px/1.7 var(--f-mono); }
+          #log b { color: #5cd6e6; font-weight: 500; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const t0 = performance.now();
+          const stage = document.querySelector('.stage'), canvas = document.querySelector('canvas');
+          const log = (m) => document.querySelector('#log').insertAdjacentHTML('beforeend', `<li><b>${Math.round(performance.now() - t0)} ms</b> ${m}</li>`);
+          log('Póster en pantalla: es HTML y CSS, no espera a nadie');
+
+          // ¿Hay WebGL? Si no, el póster se queda y la página está completa igual
+          const hasGL = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } })();
+          if (!hasGL) log('Sin WebGL: se queda el póster');
+          else setTimeout(load, 600);   // en una web real: al quedar libre el navegador o al acercarse el canvas
+
+          async function load() {
+            log('Pidiendo three.js con import()');
+            const THREE = await import('three');                       // el import map resuelve la ruta
+            log('three.js listo');
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(30, canvas.clientWidth / canvas.clientHeight, 0.1, 50);
+            camera.position.z = 6.4;
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshStandardMaterial({ color: '#cfe0ea', metalness: 0.9, roughness: 0.22 }));
+            scene.add(ball, new THREE.HemisphereLight('#bfe9ff', '#141c29', 2));
+            const key = new THREE.DirectionalLight('#5cd6e6', 4); key.position.set(3, 2, 2); scene.add(key);
+            renderer.render(scene, camera);
+            requestAnimationFrame(() => { stage.classList.add('on'); log('Primer fotograma: fundido del póster al canvas'); });
+          }
+        </script>
+        <figcaption>El orden importa más que la velocidad: primero algo bonito y legible, luego lo pesado. Si la red es lenta, el usuario no ve una caja negra: ve el póster y el titular.</figcaption>
+      </figure>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p>Los import maps y los módulos con <code>import()</code> dinámico funcionan en todos los navegadores actuales. <!-- verificar soporte --> Si tu proyecto pasa por Vite (como la residencia de la landing), el empaquetador resuelve <code>'three'</code> por ti y no necesitas import map; el póster y la carga diferida siguen siendo cosa tuya.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En 4G, la diferencia entre cargar three.js en el <code>&lt;head&gt;</code> o diferido es la diferencia entre ver el titular al momento o tras uno o dos segundos de pantalla en blanco. Sirve un póster vertical propio (en esta página, uno de 390 × 844 con la escultura más abajo) y, si <code>navigator.connection?.saveData</code> es verdadero, no cargues el 3D: deja el póster.</p>
+      </div>
+
+      <h2>Cuándo el 3D aporta</h2>
+      <p class="statement">Y cuándo es <em>decoración cara.</em></p>
+      <p>El 3D en tiempo real tiene un coste fijo alto: 190 KB de librería como mínimo, GPU, batería y horas de trabajo. Merece la pena cuando hace algo que una imagen no puede hacer: dejarte girar un producto, entrar en una estancia, cambiar un material, o reaccionar a ti de una forma que se siente física. Si solo vas a enseñar el objeto quieto desde un ángulo, una buena imagen pesa 60 KB y se ve igual.</p>
+
+      <div class="versus">
+        <figure>
+          <div class="vs no" aria-hidden="true"><i></i><i></i><i></i><p>Bienvenidos a nuestra web</p><small>Cargando experiencia 3D…</small></div>
+          <figcaption><b>Así no.</b> Tres objetos girando en colores que no son de la marca, el texto encima sin contraste y un cargador que retrasa el contenido. El 3D compite con el mensaje.</figcaption>
+        </figure>
+        <figure>
+          <div class="vs si" aria-hidden="true"><p>Volumen que se toca<span>Un objeto, la paleta de la marca y el texto sobre fondo tranquilo.</span><em>Ver la colección</em></p><i></i></div>
+          <figcaption><b>Así sí.</b> Un único protagonista, colocado en la retícula, con los colores de la paleta y el texto en una zona limpia. El 3D apoya al mensaje.</figcaption>
+        </figure>
+      </div>
+
+      <h3>Las tres reglas de la portada de esta lección</h3>
+      <ul>
+        <li><strong>Un objeto protagonista.</strong> Uno. Dos objetos 3D en la misma vista se reparten la mirada y ninguno gana. Si necesitas más, que uno sea claramente el principal (más grande, más luz, más cerca).</li>
+        <li><strong>La paleta común.</strong> El 3D usa los colores de la web: el fondo es transparente y deja ver el <code>--bg</code> del CSS, y el entorno que refleja el cromo está hecho con el cian y el azul de la lección. Un 3D con su propio fondo gris de Blender parece pegado encima.</li>
+        <li><strong>El texto siempre gana.</strong> El titular se lee aunque el objeto lo tape (por eso el contorno), y la entradilla vive en una zona donde el objeto no llega. Si tu texto va sobre el 3D, comprueba el contraste en el peor fotograma, no en el mejor.</li>
+      </ul>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Caso</th><th>¿3D en tiempo real?</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Configurador de una silla (tapizado, patas)</td><td>Sí</td><td>Combinar materiales con imágenes exige cientos de fotos. El 3D las genera todas.</td></tr>
+            <tr><td>Torre residencial con plantas para elegir</td><td>Sí, o fotogramas</td><td>Si hay que tocar plantas y estancias, tiempo real. Si solo se recorre, fotogramas (lección 09).</td></tr>
+            <tr><td>Portada de una asesoría fiscal</td><td>No</td><td>Su público quiere claridad y rapidez. Un objeto 3D abstracto resta seriedad y suma segundos.</td></tr>
+            <tr><td>Tienda PrestaShop con 800 productos</td><td>No en la ficha; quizá en uno destacado</td><td>Nadie modela 800 productos. Un visor 3D solo para el producto estrella, cargado al tocar.</td></tr>
+            <tr><td>Estudio creativo o portfolio</td><td>Sí, con mesura</td><td>Aquí el 3D es parte del mensaje («sabemos hacer esto»), pero el trabajo sigue siendo lo importante.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Pregúntate qué perdería la web si cambias el canvas por una foto del mismo objeto. Si la respuesta es «nada», usa la foto. Si es «ya no se puede girar, ni elegir el acabado, ni ver cómo reacciona», el 3D se ha ganado su sitio. Con un cliente, este argumento sirve en los dos sentidos: para defender el 3D y para quitárselo de la cabeza cuando no toca.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el teléfono el 3D tiene menos sitio y menos GPU, así que el listón sube. Lo que en escritorio es un objeto al lado del titular, en vertical suele funcionar mejor como un objeto más pequeño entre el titular y la entradilla, sin tapar nada. Si el 3D no cabe con dignidad en 390 px, el móvil lleva el póster y punto.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Un cliente con una bodega de la Plana quiere «una botella en 3D girando» en la portada, sin más interacción. ¿Qué le propones?</p>
+        <ol>
+          <li>Hacerla en Three.js con bloom, porque es lo que pide.</li>
+          <li>Una foto excelente de la botella (o un vídeo corto en bucle) y reservar el 3D para algo que se pueda tocar, como elegir la añada y ver cambiar la etiqueta.</li>
+          <li>Tres botellas 3D en vez de una, para que se vea más gama.</li>
+        </ol>
+        <p class="why">Una botella girando sola es justo lo que una imagen o un vídeo hacen igual de bien con mucho menos coste. El 3D aporta cuando el usuario puede hacer algo con él. Y tres objetos protagonistas a la vez no suman gama: se pisan.</p>
+      </div>
+
+      <h2>Accesibilidad y respaldo</h2>
+      <p>El canvas de una portada es decoración: el contenido de verdad (titular, entradilla, botón) está en HTML. Por eso lleva <code>aria-hidden="true"</code> y nada importante vive solo dentro de él. Si algún día el 3D sí contiene información (por ejemplo, plantas que se pueden elegir), esa información necesita también una versión en HTML; lo verás en la lección de interacción.</p>
+      <p>Dos casos más que cubrir siempre:</p>
+      <ul>
+        <li><strong>Sin WebGL</strong> (equipos antiguos, navegadores con la aceleración desactivada o un contexto que falla): crear el renderer lanza un error. Captúralo y deja el póster. La página tiene que estar completa sin el 3D.</li>
+        <li><strong>Movimiento reducido</strong>: sin animación en reposo ni recorridos. Un fotograma estático bonito y, si acaso, una reacción suave cuando el usuario mueve el ratón, porque ese movimiento lo ha provocado él.</li>
+      </ul>
+
+      <script type="text/x-code" data-lang="js" data-label="Respaldo y movimiento reducido en la portada">
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let renderer;
+        try {
+          renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !lite });
+        } catch (err) {
+          hero.classList.add('sin-webgl');    // el póster se queda: la portada está completa igual
+          return;
+        }
+        if (reduce) {
+          renderOnce();                       // un fotograma, sin bucle
+          addEventListener('pointermove', () => requestAnimationFrame(renderOnce));
+        } else {
+          start();                            // bucle con pausa fuera de pantalla
+        }
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>El contexto WebGL también se puede perder con la página abierta (el sistema reclama la GPU, el usuario abre otra pestaña pesada). Escucha <code>webglcontextlost</code> en el canvas, vuelve a mostrar el póster y no intentes seguir pintando. Y no acumules canvas: los navegadores limitan cuántos contextos WebGL viven a la vez en una página, y al pasarte pierdes el más antiguo. En este cuaderno, cada laboratorio pausa su render cuando sale de la pantalla.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Detecta el modo ligero con tres señales y basta una: <code>matchMedia('(pointer: coarse)')</code>, un ancho menor de 760 px o <code>navigator.hardwareConcurrency &lt;= 4</code>. En ligero: DPR 1,5, sin antialias, menos segmentos y nada de postproceso caro. Y en iOS, la inclinación (<code>deviceorientation</code>) pide permiso con un toque; si no quieres pedirlo, que el objeto reaccione al dedo, como hace la portada.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Tu portada 3D va perfecta en tu portátil, pero en el móvil de un cliente el scroll de toda la página va a tirones a los dos minutos. ¿Qué es lo primero que revisas?</p>
+        <ol>
+          <li>Que el render se pause fuera de pantalla, que el DPR esté limitado y que no haya un bucle a 60 fps cuando nada cambia.</li>
+          <li>Que la fuente Syne esté en WOFF2.</li>
+          <li>Que el canvas tenga <code>will-change: transform</code>.</li>
+        </ol>
+        <p class="why">Los tirones que llegan «a los dos minutos» son térmicos: la GPU se calienta pintando sin parar y el sistema la frena, y con ella todo lo demás. Pausa fuera de pantalla, DPR limitado y render bajo demanda son el 90 % de la solución.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>El canvas es una capa HTML más: decide si es fondo fijo, de sección o en línea, ponle <code>pointer-events: none</code> si no se toca y deja el texto por encima.</li>
+          <li>Responsive en 3D es buffer, DPR limitado, aspect y un encuadre calculado para el alto y el ancho, con una composición propia en vertical.</li>
+          <li>El color de marca se respeta con <code>toneMapped: false</code> en lo plano y midiendo cada tone mapping con tu color en lo iluminado; la paleta entra por la luz y el entorno.</li>
+          <li>Pinta solo cuando se ve y cuando algo cambia; carga con póster primero y respaldo si no hay WebGL o hay movimiento reducido.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge la portada de una web que hayas hecho en la agencia (una tienda o una empresa local) y añádele un objeto 3D protagonista que tenga sentido para ese negocio: una pieza de cerámica, una botella, un mueble. Hazlo con un canvas transparente en la sección, el entorno construido con dos colores de su paleta, DPR limitado, pausa fuera de pantalla, póster WebP vertical y horizontal, y respaldo sin WebGL. Prueba en tu móvil que el botón principal sigue recibiendo el toque y que el contador de fotogramas se para al bajar.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script type="module">
+  // Portada «Volumen»: escultura de cromo con ruido en el vertex shader, entre dos copias del titular.
+  // Fondo transparente (se ve el --bg del CSS), entorno hecho con la paleta, DPR limitado,
+  // pausa fuera de pantalla y con la pestaña oculta, póster mientras carga y respaldo sin WebGL.
+  import * as THREE from 'three';
+  const tMod = performance.now();
+
+  const hero = document.querySelector('.obra');
+  const canvas = hero.querySelector('canvas');
+  const wordLine = hero.querySelector('.w.line');
+  const $ = (s) => hero.querySelector(s);
+  const out = { dpr: $('[data-dpr]'), frames: $('[data-frames]'), state: $('[data-state]') };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lite = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+  const marks = (k, v) => { const el = document.querySelector(`[data-mark="${k}"]`); if (el) el.textContent = Math.round(v) + ' ms'; };
+
+  // Tiempo hasta el primer contenido pintado (el póster y el titular)
+  try {
+    new PerformanceObserver((l) => l.getEntries().forEach((e) => e.name === 'first-contentful-paint' && marks('fcp', e.startTime))).observe({ type: 'paint', buffered: true });
+  } catch {}
+  marks('mod', tMod);
+
+  const NOISE = `
+  vec4 hzPerm(vec4 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
+  vec4 hzInv(vec4 r){ return 1.79284291400159 - 0.85373472095314*r; }
+  float hzNoise(vec3 v){
+    const vec2 C = vec2(1.0/6.0, 1.0/3.0); const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+    vec3 i = floor(v + dot(v, C.yyy)); vec3 x0 = v - i + dot(i, C.xxx);
+    vec3 g = step(x0.yzx, x0.xyz); vec3 l = 1.0 - g; vec3 i1 = min(g.xyz, l.zxy); vec3 i2 = max(g.xyz, l.zxy);
+    vec3 x1 = x0 - i1 + C.xxx; vec3 x2 = x0 - i2 + C.yyy; vec3 x3 = x0 - D.yyy;
+    i = mod(i, 289.0);
+    vec4 p = hzPerm(hzPerm(hzPerm(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    vec3 ns = (1.0/7.0) * D.wyz - D.xzx;
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_);
+    vec4 x = x_ * ns.x + ns.yyyy; vec4 y = y_ * ns.x + ns.yyyy; vec4 h = 1.0 - abs(x) - abs(y);
+    vec4 b0 = vec4(x.xy, y.xy); vec4 b1 = vec4(x.zw, y.zw);
+    vec4 s0 = floor(b0)*2.0 + 1.0; vec4 s1 = floor(b1)*2.0 + 1.0; vec4 sh = -step(h, vec4(0.0));
+    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+    vec3 p0 = vec3(a0.xy, h.x); vec3 p1 = vec3(a0.zw, h.y); vec3 p2 = vec3(a1.xy, h.z); vec3 p3 = vec3(a1.zw, h.w);
+    vec4 nr = hzInv(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+    p0 *= nr.x; p1 *= nr.y; p2 *= nr.z; p3 *= nr.w;
+    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0); m = m*m;
+    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+  }`;
+
+  function init() {
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: !lite, alpha: true, powerPreference: 'high-performance' });
+    } catch (err) {
+      hero.classList.add('sin-webgl'); out.state.textContent = 'sin WebGL: póster';
+      return;
+    }
+    const DPR = Math.min(devicePixelRatio || 1, lite ? 1.5 : 2);
+    renderer.setPixelRatio(DPR);
+    renderer.setClearColor(0x000000, 0);
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    out.dpr.textContent = String(DPR).replace('.', ',');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
+
+    // Entorno de estudio hecho con la paleta: lo que el cromo refleja es la marca
+    const env = new THREE.Scene();
+    env.background = new THREE.Color(0x101c36);
+    const panel = (hex, k, w, h, x, y, z) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), side: THREE.DoubleSide }));
+      m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
+    };
+    panel('#ffffff', 1.7, 9, 3.5, 0, 6, 2);       // caja de luz cenital
+    panel('#34d5f0', 3.6, 1.4, 9, -6, 0, 1.5);    // tira cian: el acento
+    panel('#3c4fd8', 2.4, 1.8, 9, 6, 0.5, -1);    // azul profundo
+    panel('#9fefff', 1.6, 2.5, 2.5, 3.5, 2, 5);   // brillo frontal
+    panel('#1f6f9a', 1.2, 14, 8, 0, 0, -7);       // fondo cian apagado: da cuerpo a la silueta
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(env, 0.02).texture;
+    pmrem.dispose();
+
+    const uniforms = { uTime: { value: 0 }, uDir: { value: new THREE.Vector3(0, 0, 1) }, uPull: { value: 0 } };
+    const mat = new THREE.MeshPhysicalMaterial({ color: 0xdbe6f2, metalness: 1, roughness: 0.2, iridescence: 0.35, iridescenceIOR: 1.35, iridescenceThicknessMinimum: 180, iridescenceThicknessMaximum: 520 });
+    mat.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, uniforms);
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', `#include <common>
+          uniform float uTime; uniform vec3 uDir; uniform float uPull;
+          ${NOISE}
+          vec3 blob(vec3 p) {
+            vec3 n = normalize(p);
+            float d = hzNoise(n * 1.05 + vec3(0.0, uTime * 0.18, uTime * 0.11)) * 0.16 + hzNoise(n * 2.4 - uTime * 0.07) * 0.02;
+            d += uPull * pow(max(dot(n, uDir), 0.0), 5.0) * 0.3;     // se estira hacia el puntero
+            return n * (1.15 + d);
+          }`)
+        .replace('#include <beginnormal_vertex>', `
+          vec3 n0 = normalize(position);
+          vec3 tg = normalize(abs(n0.y) < 0.99 ? cross(n0, vec3(0.0, 1.0, 0.0)) : cross(n0, vec3(1.0, 0.0, 0.0)));
+          vec3 bt = cross(n0, tg);
+          vec3 P = blob(position);
+          vec3 objectNormal = normalize(cross(blob(position + tg * 0.01) - P, blob(position + bt * 0.01) - P));
+          #ifdef USE_TANGENT
+            vec3 objectTangent = vec3(tangent.xyz);
+          #endif`)
+        .replace('#include <begin_vertex>', 'vec3 transformed = P;');
+    };
+    mat.customProgramCacheKey = () => 'blob-v1';
+    const mesh = new THREE.Mesh(lite ? new THREE.SphereGeometry(1, 128, 96) : new THREE.SphereGeometry(1, 192, 128), mat);
+    scene.add(mesh);
+    marks('gl', performance.now());
+
+    // Encuadre: en horizontal, el objeto ocupa el 60 % del alto, algo a la derecha;
+    // en vertical, el 80 % del ancho y más abajo (el titular va arriba)
+    let W = 0, H = 0, raf = 0, inView = true;
+    function frameCamera() {
+      W = canvas.clientWidth; H = canvas.clientHeight;
+      renderer.setSize(W, H, false);
+      const aspect = W / H, portrait = aspect < 0.8;
+      camera.aspect = aspect; camera.fov = portrait ? 34 : 28;
+      const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), R = 1.45;
+      const dist = portrait ? R / (t * aspect * 0.8) : R / (t * 0.6);
+      const visH = 2 * dist * t;
+      camera.position.set(0, 0, dist);
+      mesh.position.set(portrait ? 0 : visH * aspect * 0.1, portrait ? -visH * 0.01 : -visH * 0.02, 0);
+      camera.updateProjectionMatrix();
+      // Centro y radio en pantalla de la escultura: la máscara del contorno los usa
+      const c = mesh.position.clone().project(camera);
+      const cr = canvas.getBoundingClientRect(), wr = wordLine.getBoundingClientRect();   // la máscara se mide desde la caja del texto
+      wordLine.style.setProperty('--mx', Math.round((c.x + 1) / 2 * cr.width + cr.left - wr.left) + 'px');
+      wordLine.style.setProperty('--my', Math.round((1 - c.y) / 2 * cr.height + cr.top - wr.top) + 'px');
+      wordLine.style.setProperty('--mr', Math.round((1.3 / visH) * H) + 'px');
+    }
+    new ResizeObserver(() => { frameCamera(); if (!raf) renderOnce(); }).observe(canvas);
+    frameCamera();
+    document.fonts.ready.then(frameCamera);           // el titular cambia de caja cuando llega Syne
+
+    // Puntero, dedo o inclinación: un objetivo suavizado
+    const target = new THREE.Vector2(), cur = new THREE.Vector2();
+    let pull = 0, pullTarget = 0;
+    const aim = (x, y) => { target.set(x, y); pullTarget = 1; if (reduce) requestAnimationFrame(renderOnce); };
+    addEventListener('pointermove', (e) => aim((e.clientX / innerWidth) * 2 - 1, -((e.clientY / innerHeight) * 2 - 1)), { passive: true });
+    addEventListener('pointerdown', (e) => e.pointerType !== 'mouse' && aim((e.clientX / innerWidth) * 2 - 1, -((e.clientY / innerHeight) * 2 - 1)), { passive: true });
+    document.documentElement.addEventListener('pointerleave', () => (pullTarget = 0));
+    addEventListener('deviceorientation', (e) => {
+      if (e.gamma == null) return;
+      aim(THREE.MathUtils.clamp(e.gamma / 30, -1, 1), THREE.MathUtils.clamp((45 - e.beta) / 30, -1, 1));
+    });
+
+    const q = new THREE.Quaternion(), dir = new THREE.Vector3();
+    let frames = 0, first = true, clock = 0, last = performance.now();
+    function update(now) {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (!reduce) clock += dt;
+      const k = reduce ? 1 : 1 - Math.pow(0.002, dt);         // suavizado independiente de los fps
+      cur.lerp(target, k);
+      pull += (pullTarget - pull) * k;
+      mesh.rotation.y = clock * 0.12 + cur.x * 0.35;
+      mesh.rotation.x = -cur.y * 0.22;
+      scene.environmentRotation.y = cur.x * 0.9;               // los brillos se deslizan con el puntero
+      scene.environmentRotation.x = -cur.y * 0.3;
+      dir.set(cur.x * 1.1, cur.y * 0.9, 1).normalize().applyQuaternion(q.copy(mesh.quaternion).invert());
+      uniforms.uDir.value.copy(dir);
+      uniforms.uPull.value = pull;
+      uniforms.uTime.value = clock;
+    }
+    function renderOnce(now = performance.now()) {
+      update(now);
+      renderer.render(scene, camera);
+      frames++;
+      if (frames % 6 === 0 || first) out.frames.textContent = frames.toLocaleString('es-ES');
+      if (first) {
+        first = false; marks('first', performance.now());
+        requestAnimationFrame(() => hero.classList.add('listo'));
+      }
+    }
+
+    // Bucle con pausa: fuera de pantalla y con la pestaña oculta no se pinta
+    const setState = (s, on) => { out.state.textContent = s; out.state.classList.toggle('on', !!on); };
+    function loop(now) { raf = requestAnimationFrame(loop); renderOnce(now); }
+    function start() {
+      if (reduce) { setState('estático (movimiento reducido)'); renderOnce(); return; }
+      if (!raf && inView && !document.hidden) { last = performance.now(); raf = requestAnimationFrame(loop); setState('pintando', true); }
+    }
+    function stop(why) { cancelAnimationFrame(raf); raf = 0; setState(why); }
+    new IntersectionObserver(([e]) => { inView = e.isIntersecting; inView ? start() : stop('en pausa: fuera de pantalla'); }).observe(hero);
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop('en pausa: pestaña oculta') : start()));
+    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); stop('contexto perdido: póster'); hero.classList.remove('listo'); });
+
+    // La barra superior, transparente mientras la portada ocupa la pantalla
+    const onScroll = () => document.documentElement.classList.toggle('en-portada', hero.getBoundingClientRect().bottom > innerHeight * 0.5);
+    addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+    renderOnce();
+    start();
+  }
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lucero, treinta plantas sobre el puerto</title>
+<meta name="description" content="Proyecto final del nivel 4 de Hora azul: la torre residencial en 3D en tiempo real, con cámara guiada por el scroll, plantas que se tocan y la residencia en 3D.">
+<meta name="theme-color" content="#120f24">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/cormorant-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/torre.css">
+<!-- El import map va antes de cualquier módulo: «three» apunta a la copia local -->
+<script type="importmap">{"imports":{"three":"../../vendor/three/three.module.min.js","three/addons/":"../../vendor/three/addons/"}}</script>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<div class="loader" aria-hidden="true">
+  <p class="loader-brand">Lucero</p>
+  <p class="loader-state" data-loader-state>Encendiendo la torre</p>
+  <span class="loader-bar"><i data-loader-bar></i></span>
+</div>
+
+<header class="nav" data-nav>
+  <a class="logo" href="#inicio" aria-label="Lucero, inicio">Lucero</a>
+  <nav class="nav-links" id="menu" aria-label="Principal">
+    <a href="#plantas">Plantas</a>
+    <a href="#residencia">La residencia</a>
+    <a href="#tarde">La tarde</a>
+    <a href="../../lecciones/proyecto-4.html">Cómo está hecha</a>
+    <a href="../../index.html">Volver al cuaderno</a>
+  </nav>
+  <a class="btn btn-light nav-cta" href="#visita">Visita privada</a>
+  <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu"><span class="vh">Abrir menú</span><i></i><i></i></button>
+</header>
+
+<main id="contenido">
+
+  <!-- 1 y 2. Vuelo y selector de planta: un único escenario fijo con un único canvas -->
+  <section class="track" id="inicio" aria-label="Llegada a la torre y selector de planta">
+    <span class="anchor" id="plantas" aria-hidden="true"></span>
+    <div class="stage" data-stage>
+      <canvas class="tower" data-tower aria-hidden="true"></canvas>
+      <canvas class="seq" data-seq aria-hidden="true"></canvas>
+      <figure class="fb" data-fb hidden>
+        <picture>
+          <source media="(max-aspect-ratio: 1/1)" srcset="../../landing/media/torre-plantas-mob.webp" width="800" height="1267">
+          <img src="../../landing/media/torre-plantas.webp" width="1600" height="1000" alt="La torre al atardecer con sus treinta plantas" decoding="async">
+        </picture>
+        <svg class="fb-svg" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" data-fb-svg></svg>
+      </figure>
+      <div class="shade" aria-hidden="true"></div>
+
+      <!-- Capítulos del vuelo: aparecen por tramos del progreso -->
+      <div class="chap chap-hero" data-in="-1" data-out="0.1">
+        <p class="kicker">Treinta plantas sobre el puerto</p>
+        <h1 class="brand"><span class="vh">Lucero, </span><span aria-hidden="true">Lucero</span></h1>
+        <p class="lead">La torre que se enciende cuando cae la tarde. Ochenta y cuatro residencias orientadas al poniente, y una que te está esperando.</p>
+        <div class="hero-actions">
+          <a class="btn btn-warm" href="#plantas">Elegir planta</a>
+          <a class="btn btn-ghost" href="#visita">Visita privada</a>
+        </div>
+      </div>
+      <div class="chap" data-in="0.17" data-out="0.34" aria-hidden="true">
+        <p class="note">Ochenta y cuatro residencias. <em>Ninguna mira a otra.</em></p>
+      </div>
+      <div class="chap" data-in="0.42" data-out="0.6" aria-hidden="true">
+        <p class="note">Las losas se curvan planta a planta: <em>sombra al mediodía, sol de poniente.</em></p>
+      </div>
+      <div class="chap" data-in="0.7" data-out="0.86" aria-hidden="true">
+        <p class="kicker">Azotea</p>
+        <p class="note">Una piscina de borde infinito a <em>noventa y seis metros</em> sobre la bahía.</p>
+      </div>
+
+      <!-- Contador de planta: durante el vuelo marca la altura de la cámara; después, la planta elegida -->
+      <div class="alt" data-alt>
+        <p class="alt-label" data-alt-label>Altura</p>
+        <p class="alt-num"><span data-alt-floor>00</span></p>
+        <p class="alt-m" data-alt-m>a 4 m sobre el mar</p>
+        <div class="gauge" data-gauge role="slider" tabindex="-1" aria-label="Planta" aria-valuemin="2" aria-valuemax="29" aria-valuenow="18" aria-orientation="vertical">
+          <i class="gauge-mark" data-gauge-mark></i>
+        </div>
+      </div>
+
+      <!-- Selector: aparece cuando la torre está entera en pantalla -->
+      <div class="pick" data-pick aria-hidden="true">
+        <h2 class="h2">Elige <em>tu planta</em></h2>
+        <p class="pick-hint"><span class="only-fine">Pasa el ratón por la torre y haz clic en una planta.</span><span class="only-touch">Toca una planta de la torre.</span> Las libres se encienden enteras; las vendidas, a media luz.</p>
+        <div class="pick-row">
+          <button class="btn btn-ghost icon" type="button" data-step="-1" aria-label="Bajar una planta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <p class="pick-now"><span data-pick-floor>18</span><small data-pick-state>2 de 3 libres</small></p>
+          <button class="btn btn-ghost icon" type="button" data-step="1" aria-label="Subir una planta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+          <button class="btn btn-warm" type="button" data-open-floor>Ver la planta</button>
+        </div>
+      </div>
+
+      <!-- Ficha de planta: anclada a la planta en 3D (escritorio) u hoja inferior (móvil) -->
+      <article class="ficha" data-ficha aria-live="polite" hidden>
+        <i class="ficha-line" aria-hidden="true"></i>
+        <header class="ficha-head">
+          <p class="ficha-num"><span data-f-num>18</span></p>
+          <div>
+            <p class="ficha-type" data-f-type>La Residencia</p>
+            <p class="ficha-state" data-f-state>2 de 3 libres</p>
+          </div>
+        </header>
+        <dl class="ficha-data">
+          <div><dt>Superficie</dt><dd data-f-m2>148 m²</dd></div>
+          <div><dt>Terraza</dt><dd data-f-ter>31 m²</dd></div>
+          <div><dt>Vistas</dt><dd data-f-view>Mar y ciudad</dd></div>
+          <div><dt>Desde</dt><dd data-f-price>1,85 M€</dd></div>
+        </dl>
+        <p class="ficha-text" data-f-text hidden></p>
+        <div class="ficha-actions">
+          <button class="btn btn-warm" type="button" data-f-res>Ver la residencia</button>
+          <button class="btn btn-ghost" type="button" data-f-back>Volver a la torre</button>
+        </div>
+        <div class="ficha-steps">
+          <button type="button" data-f-step="-1">Planta inferior</button>
+          <button type="button" data-f-step="1">Planta superior</button>
+        </div>
+      </article>
+
+      <p class="tag" data-tag hidden></p>
+      <p class="cue" aria-hidden="true"><span></span>Desliza para llegar</p>
+      <div class="progress" aria-hidden="true"><i data-progress></i></div>
+    </div>
+  </section>
+
+  <!-- 3. La residencia en 3D -->
+  <section class="res" id="residencia" aria-labelledby="res-t">
+    <div class="res-stage" data-res-stage>
+      <canvas class="res-canvas" data-res-canvas aria-label="Maqueta 3D de la residencia. También puedes elegir una estancia en la lista."></canvas>
+      <img class="res-still" data-res-still src="../../landing/media/residencia.webp" width="1600" height="1000" alt="Maqueta de la residencia vista desde arriba" loading="lazy" decoding="async" hidden>
+      <div class="pins" data-pins></div>
+      <p class="res-hint" aria-hidden="true"><span class="only-fine">Haz clic en una estancia o en un número</span><span class="only-touch">Toca un número para entrar</span></p>
+    </div>
+    <aside class="res-panel">
+      <p class="kicker" data-res-floor>Planta 18, orientación oeste</p>
+      <h2 id="res-t" class="h2">La <em>Residencia</em></h2>
+      <p class="price">desde <b data-res-price>1,85 M€</b></p>
+      <dl class="specs">
+        <div><dt>Superficie</dt><dd data-res-m2>148 m²</dd></div>
+        <div><dt>Terraza</dt><dd data-res-ter>31 m²</dd></div>
+        <div><dt>Distribución</dt><dd data-res-dorm>2 dormitorios y estudio</dd></div>
+        <div><dt>Baños</dt><dd>2</dd></div>
+      </dl>
+      <ol class="rooms" data-rooms></ol>
+      <div class="room-detail" data-room-detail aria-live="polite"><p>Elige una estancia para entrar en ella.</p></div>
+      <div class="res-actions">
+        <button class="btn btn-ghost" type="button" data-res-reset>Vista general</button>
+        <a class="btn btn-warm" href="#visita">Solicitar planos</a>
+      </div>
+    </aside>
+  </section>
+
+  <!-- 4. La tarde en Lucero: tres momentos con hora -->
+  <section class="tarde" id="tarde" aria-labelledby="tarde-t">
+    <header class="tarde-head">
+      <h2 id="tarde-t" class="h2">Una tarde <em>en Lucero</em></h2>
+      <p class="muted">La torre está pensada para la última hora de luz. Así pasa una tarde de octubre, planta a planta.</p>
+    </header>
+    <ol class="moments">
+      <li class="moment">
+        <p class="time">18:52</p>
+        <figure class="m-img"><img src="../../landing/media/azotea.webp" width="1600" height="1000" alt="La azotea con la piscina iluminada al atardecer" loading="lazy" decoding="async"></figure>
+        <div class="m-copy">
+          <h3>El sol toca la piscina</h3>
+          <p>Veinticinco metros de agua en la azotea, reservada a los residentes. Es el único sitio de la bahía desde el que el sol se pone dos veces: en el cielo y en la lámina.</p>
+        </div>
+      </li>
+      <li class="moment">
+        <p class="time">19:31</p>
+        <figure class="m-img"><img src="../../landing/media/balcones.webp" width="1600" height="1000" alt="Las terrazas curvas de la torre vistas desde abajo" loading="lazy" decoding="async"></figure>
+        <div class="m-copy">
+          <h3>La hora azul</h3>
+          <p>Las terrazas siguen la curva de cada losa y no hay mamparas entre vecinos. A esta hora el cielo y la ciudad tienen la misma luz y la torre empieza a encenderse.</p>
+        </div>
+      </li>
+      <li class="moment">
+        <p class="time">20:15</p>
+        <figure class="m-img"><img src="../../landing/media/torre-plantas.webp" width="1600" height="1000" alt="La torre entera encendida sobre el agua" loading="lazy" decoding="async"></figure>
+        <div class="m-copy">
+          <h3>Treinta plantas encendidas</h3>
+          <p>Conserjería veinticuatro horas, club en la planta uno y el paseo marítimo a la puerta. Desde el puerto, Lucero es la primera luz que se ve al volver.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- 5. Frase -->
+  <section class="claim" aria-label="Manifiesto">
+    <p>Aquí no eliges un piso por un plano. <em>Lo eliges por la luz que entra a las ocho de la tarde.</em></p>
+  </section>
+
+  <!-- 6. Visita -->
+  <section class="visit" id="visita" aria-labelledby="visita-t">
+    <div class="visit-copy">
+      <h2 id="visita-t" class="h2">Visita <em>privada</em></h2>
+      <p class="muted">Te enseñamos la planta que hayas elegido a la hora que da sentido al proyecto: media hora antes del anochecer.</p>
+      <dl class="visit-data">
+        <div><dt>Oficina de ventas</dt><dd>Paseo del Puerto, 4</dd></div>
+        <div><dt>Horario</dt><dd>De martes a sábado, de 17 a 21 h</dd></div>
+      </dl>
+    </div>
+    <form class="visit-form" novalidate>
+      <label>Nombre<input name="nombre" autocomplete="name" required></label>
+      <label>Correo<input name="correo" type="email" autocomplete="email" required></label>
+      <label>Planta de interés<select name="planta" data-floor-select></select></label>
+      <button class="btn btn-warm" type="submit">Solicitar visita</button>
+      <p class="form-note" role="status">Es una demo del cuaderno: el formulario no envía datos.</p>
+    </form>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Lucero es un proyecto ficticio. La torre se dibuja en tu pantalla con Three.js; es el proyecto final del <a href="../../index.html">cuaderno Hora azul</a>.</p>
+  <p><a href="../../lecciones/proyecto-4.html">Cómo está hecha</a> <a href="../../landing/index.html">La versión en fotogramas</a></p>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

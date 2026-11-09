@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sorra, arquitectura en Castelló</title>
+<meta name="description" content="Sorra es un estudio de arquitectura de Castelló: casas unifamiliares, rehabilitación de masías y reformas integrales pensadas a partir de la luz. Proyecto 1 del cuaderno Hora azul.">
+<meta name="theme-color" content="#F3EEE3">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/inter-tight.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/fonts.css">
+<link rel="stylesheet" href="estilos.css">
+<script src="menu.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<header class="nav">
+  <a class="logo" href="#inicio" aria-label="Sorra, inicio">Sorra<i aria-hidden="true"></i></a>
+  <nav class="nav-links" id="menu" aria-label="Principal">
+    <a href="#proyectos">Proyectos</a>
+    <a href="#estudio">Estudio</a>
+    <a href="#metodo">Método</a>
+    <a href="#contacto">Contacto</a>
+    <a class="nav-out" href="../../lecciones/proyecto-1.html">Cómo se ha hecho</a>
+  </nav>
+  <a class="btn btn-teja nav-cta" href="#contacto">Pide una visita</a>
+  <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu"><span class="vh">Abrir menú</span><i></i><i></i></button>
+</header>
+
+<main id="contenido">
+
+  <!-- 1. Portada: titular, foto y tres datos -->
+  <section class="hero wrap" id="inicio" aria-labelledby="hero-t">
+    <h1 class="hero-t" id="hero-t"><span class="l1">Casas a la medida</span> <em class="l2">de la luz.</em></h1>
+    <div class="hero-copy">
+      <p class="lede">Somos un estudio de arquitectura en Castelló. Proyectamos casas, rehabilitamos masías y reformamos pisos a partir de una pregunta: por dónde entra el sol.</p>
+      <div class="actions">
+        <a class="btn btn-teja" href="#contacto">Cuéntanos tu casa</a>
+        <a class="link" href="#proyectos">Ver proyectos</a>
+      </div>
+    </div>
+    <figure class="hero-photo">
+      <span class="panel" aria-hidden="true"></span>
+      <img src="../../landing/media/balcones.webp" width="1600" height="1000" alt="Fachada curva de un edificio de viviendas con balcones corridos, vista desde abajo">
+      <figcaption><span>01</span> Edificio Marjal, El Grau de Castelló, 2023</figcaption>
+    </figure>
+    <dl class="facts">
+      <div><dt>Casas terminadas</dt><dd>64</dd></div>
+      <div><dt>Años en Castelló</dt><dd>14</dd></div>
+      <div><dt>Obras a la vez, como máximo</dt><dd>5</dd></div>
+    </dl>
+  </section>
+
+  <!-- 2. El estudio: una frase grande -->
+  <section class="intro wrap" id="estudio" aria-labelledby="intro-t">
+    <p class="label"><span>02</span> El estudio</p>
+    <h2 class="vh" id="intro-t">El estudio</h2>
+    <p class="statement">Somos un estudio pequeño a propósito. Tres arquitectas, un taller junto al puerto y una regla que no negociamos: <em>primero dibujamos el sol,</em> después las paredes.</p>
+    <div class="intro-cols">
+      <p>Antes de trazar una línea pasamos una mañana en tu parcela o en tu casa actual. Miramos a qué hora entra la luz en cada estancia, de dónde viene el viento de levante y qué se ve desde la cocina. Con eso decidimos la orientación, el tamaño de cada hueco y la profundidad de los aleros.</p>
+      <p>Trabajamos con cal, piedra del Maestrazgo, cerámica de l'Alcora y madera sin barnizar: materiales que envejecen bien y que cualquier albañil de la zona sabe reparar. No hacemos más de cinco obras a la vez, para que la persona que dibuja tu casa sea la que la visita cada semana.</p>
+    </div>
+  </section>
+
+  <!-- 3. Proyectos: índice editorial y dos piezas destacadas -->
+  <section class="work" id="proyectos" aria-labelledby="work-t">
+    <div class="wrap work-head">
+      <p class="label"><span>03</span> Proyectos</p>
+      <h2 id="work-t">Obra reciente</h2>
+      <p class="work-note">Una selección de lo que hemos terminado entre 2019 y 2025. Cada proyecto tiene su ficha completa con planos y presupuesto final.</p>
+    </div>
+
+    <ol class="index wrap">
+      <li><span class="n">01</span><b>Edificio Marjal</b><span class="where">El Grau de Castelló</span><span class="type">Vivienda colectiva</span><span class="year">2023</span></li>
+      <li><span class="n">02</span><b>Casa Pinar</b><span class="where">Benicàssim</span><span class="type">Vivienda unifamiliar</span><span class="year">2024</span></li>
+      <li><span class="n">03</span><b>Mas de la Sénia</b><span class="where">Les Coves de Vinromà</span><span class="type">Rehabilitación de masía</span><span class="year">2022</span></li>
+      <li><span class="n">04</span><b>Residencia Almassora</b><span class="where">Almassora</span><span class="type">Vivienda colectiva</span><span class="year">2025</span></li>
+      <li><span class="n">05</span><b>Piso Ribalta</b><span class="where">Castelló de la Plana</span><span class="type">Reforma integral</span><span class="year">2021</span></li>
+    </ol>
+
+    <article class="feature wrap" aria-labelledby="f1-t">
+      <figure class="feature-photo">
+        <img src="../../landing/media/azotea.webp" width="1600" height="1000" alt="Última planta de un edificio con terraza y ventanas iluminadas al atardecer, junto al mar">
+      </figure>
+      <div class="feature-copy">
+        <p class="label"><span>02</span> Casa Pinar, Benicàssim</p>
+        <h3 id="f1-t">Ver el mar desde la cama sin que la calle te vea a ti.</h3>
+        <p>Una familia de cuatro con una parcela estrecha entre pinos. Giramos la casa 18 grados respecto a la calle: la fachada norte queda casi ciega y la sur se abre entera al mar, protegida por un alero de 1,4 metros que deja entrar el sol de invierno y corta el de agosto.</p>
+        <dl class="specs">
+          <div><dt>Superficie</dt><dd>212 m²</dd></div>
+          <div><dt>Parcela</dt><dd>640 m²</dd></div>
+          <div><dt>Plazo de obra</dt><dd>14 meses</dd></div>
+          <div><dt>Certificación</dt><dd>Energía A</dd></div>
+        </dl>
+      </div>
+    </article>
+
+    <article class="plan" aria-labelledby="f2-t">
+      <div class="wrap plan-in">
+        <div class="plan-copy">
+          <p class="label"><span>04</span> Residencia Almassora</p>
+          <h3 id="f2-t">Una galería que recorre toda la fachada sur.</h3>
+          <p>Doce viviendas de tres y cuatro dormitorios. Todas tienen la misma pieza: una galería acristalada de 2,2 metros de fondo que hace de invernadero en enero y de porche en julio. Ningún dormitorio da a patio.</p>
+          <a class="link link-light" href="#contacto">Pedir la ficha completa</a>
+        </div>
+        <figure class="plan-img">
+          <img src="../../landing/media/residencia.webp" width="1600" height="1000" alt="Maqueta en perspectiva de una vivienda: salón, cocina, tres dormitorios y terraza perimetral">
+          <figcaption>Maqueta de la vivienda tipo B, 118 m² útiles.</figcaption>
+        </figure>
+      </div>
+    </article>
+  </section>
+
+  <!-- 4. Método: cuatro pasos en columnas con filetes -->
+  <section class="method wrap" id="metodo" aria-labelledby="method-t">
+    <div class="method-head">
+      <p class="label"><span>05</span> Método</p>
+      <h2 id="method-t">Cómo trabajamos contigo</h2>
+    </div>
+    <ol class="steps">
+      <li><span class="num">01</span><h3>Escuchar</h3><p>Una mañana en tu parcela o en tu casa actual. Apuntamos cómo vives, no cómo crees que debería salir en una revista.</p><span class="time">1 semana</span></li>
+      <li><span class="num">02</span><h3>Medir la luz</h3><p>Estudio solar de las cuatro estaciones y de las vistas. De aquí salen la orientación y el tamaño de cada ventana.</p><span class="time">2 semanas</span></li>
+      <li><span class="num">03</span><h3>Dibujar</h3><p>Anteproyecto, maqueta y presupuesto cerrado antes de pedir la licencia. Si no encaja, volvemos a dibujar sin coste.</p><span class="time">6 a 8 semanas</span></li>
+      <li><span class="num">04</span><h3>Construir</h3><p>Dirección de obra con visita semanal y una sola persona de contacto, de la primera excavación a la entrega de llaves.</p><span class="time">10 a 16 meses</span></li>
+    </ol>
+  </section>
+
+  <!-- 5. Testimonio -->
+  <section class="quote wrap" aria-label="Lo que dicen nuestros clientes">
+    <blockquote>
+      <p>«Nos preguntaron a qué hora desayunábamos. Ahora el sol entra en la cocina justo a esa hora.»</p>
+      <footer><b>Marta y Joan</b>, Casa Pinar, Benicàssim</footer>
+    </blockquote>
+  </section>
+
+  <!-- 6. Equipo: lista como índice -->
+  <section class="team wrap" aria-labelledby="team-t">
+    <div class="team-head">
+      <p class="label"><span>06</span> Equipo</p>
+      <h2 id="team-t">Tres personas, una mesa larga</h2>
+    </div>
+    <ul class="people">
+      <li><b>Clara Monfort</b><span>Arquitecta, dirección de proyecto</span><span>Desde 2011</span></li>
+      <li><b>Inés Vidal</b><span>Arquitecta, estudio solar y energía</span><span>Desde 2015</span></li>
+      <li><b>Laura Peris</b><span>Arquitecta técnica, dirección de obra</span><span>Desde 2018</span></li>
+    </ul>
+  </section>
+
+  <!-- 7. Contacto: banda de tinta -->
+  <section class="contact" id="contacto" aria-labelledby="contact-t">
+    <div class="wrap contact-in">
+      <p class="label"><span>07</span> Contacto</p>
+      <h2 id="contact-t">¿Tienes una parcela o una casa que <em>quieres cambiar?</em></h2>
+      <a class="mail" href="mailto:hola@sorra.studio">hola@sorra.studio</a>
+      <dl class="contact-data">
+        <div><dt>Estudio</dt><dd>Calle Ribera 14, bajo<br>12100 El Grau de Castelló</dd></div>
+        <div><dt>Teléfono</dt><dd><a href="tel:+34964214830">964 21 48 30</a></dd></div>
+        <div><dt>Horario</dt><dd>De lunes a jueves, de 9 a 18 h<br>Viernes, de 9 a 14 h</dd></div>
+      </dl>
+      <a class="btn btn-teja contact-cta" href="mailto:hola@sorra.studio?subject=Primera%20visita">Pide una primera visita</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <p class="foot-logo">Sorra<i aria-hidden="true"></i></p>
+  <p>Sorra es un estudio inventado para el cuaderno Hora azul. Proyecto 1, nivel de fundamentos visuales.</p>
+  <nav aria-label="Cuaderno">
+    <a href="../../lecciones/proyecto-1.html">Cómo se ha hecho</a>
+    <a href="../../index.html">Volver al cuaderno</a>
+  </nav>
+</footer>
+</body>
+</html>

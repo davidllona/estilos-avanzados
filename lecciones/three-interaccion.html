@@ -1,0 +1,1281 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interacción en 3D | Hora azul</title>
+<meta name="description" content="Raycasting, zonas de toque invisibles, cámara que vuela hacia un objeto, etiquetas HTML ancladas al 3D, táctil, accesibilidad y rendimiento del raycast.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Maqueta».
+     Verde fieltro de mesa de maqueta, papel claro y un lima de puntero láser.
+     JetBrains Mono para titulares, como la consola donde ves lo que toca el rayo; Inter Tight para leer. */
+  :root {
+    --bg: oklch(24% 0.05 160);
+    --bg-2: oklch(28% 0.05 160);
+    --bg-3: oklch(33% 0.055 160);
+    --fg: oklch(95% 0.02 120);
+    --muted: oklch(80% 0.035 135);
+    --faint: oklch(68% 0.04 140);
+    --accent: oklch(86% 0.18 128);
+    --on-accent: oklch(22% 0.05 160);
+    --code-bg: oklch(17% 0.035 160);
+    --scheme: dark;
+    --f-display: "JetBrains Mono", ui-monospace, monospace;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 600;
+    --display-tracking: -0.045em;
+  }
+  body { font-size: clamp(1.02rem, 0.98rem + 0.2vw, 1.14rem); line-height: 1.62; }
+  .prose h2 { font-size: clamp(2.1rem, 1.4rem + 2.6vw, 3.9rem); line-height: 1; max-width: 20ch; }
+  .prose h2 em { font-style: normal; color: var(--accent); }
+  .prose h2 .n::before { content: "> "; color: var(--faint); }
+  .prose h3 { font-family: var(--f-ui); font-weight: 650; letter-spacing: -0.02em; }
+  .prose a { color: var(--accent); }
+  .quiz .q { font-family: var(--f-ui); font-weight: 650; letter-spacing: -0.02em; }
+  .prose strong { color: oklch(98% 0.02 120); }
+
+  /* ================= Portada: la residencia que se toca ================= */
+  .maqueta { --lime: var(--accent); color: var(--fg); background:
+      radial-gradient(ellipse 60% 55% at 62% 55%, oklch(33% 0.06 155) 0%, transparent 70%),
+      radial-gradient(circle at 1px 1px, oklch(95% 0.02 120 / .09) 1px, transparent 1.4px) 0 0 / 26px 26px,
+      var(--bg); }
+  .maqueta::after { content: ""; position: absolute; inset: auto 0 0; height: 12vh; z-index: 0; pointer-events: none; background: linear-gradient(transparent, var(--bg)); }
+  .maqueta canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; opacity: 0; transition: opacity 1s var(--ease-out); }
+  .maqueta.ready canvas { opacity: 1; }
+  .maqueta .poster { position: absolute; z-index: 1; right: 2vw; top: 16vh; width: min(60vw, 980px); height: auto; transition: opacity .8s; pointer-events: none; }
+  .maqueta.ready .poster { opacity: 0; }
+
+  .h-copy { position: absolute; z-index: 3; left: var(--gutter); top: clamp(5.8rem, 15vh, 9rem); max-width: min(34rem, 40vw); pointer-events: none; transition: opacity .5s, translate .6s var(--ease-out); }
+  .maqueta.focused .h-copy { opacity: 0; translate: 0 -1rem; }
+  .h-copy [data-kicker] { margin: 0 0 1.2rem; font: 500 var(--step--1)/1.2 var(--f-code); color: var(--accent); }
+  .maqueta h1 { margin: 0; font: 600 clamp(2.9rem, 0.8rem + 5vw, 6.6rem)/.92 var(--f-display); letter-spacing: -0.06em; }
+  .maqueta h1 span { color: var(--accent); }
+  .maqueta .lede { margin: 1.4rem 0 0; max-width: 32ch; font-size: var(--step-1); line-height: 1.4; color: var(--muted); }
+
+  /* Lista de estancias: la alternativa accesible y, a la vez, el menú */
+  .rooms { position: absolute; z-index: 3; left: var(--gutter); bottom: clamp(1.2rem, 4vh, 2.4rem); margin: 0; padding: 0; list-style: none; width: min(19rem, 30vw); border-top: 1px solid oklch(95% 0.02 120 / .2); }
+  .rooms li { margin: 0; }
+  @media (min-width: 761px) { .rooms { padding: 0 .5rem; border-radius: 0 0 12px 12px; background: oklch(22% 0.05 160 / .55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); } }
+  .rooms button { width: 100%; display: grid; grid-template-columns: 2.2rem 1fr auto; align-items: center; min-height: 44px; padding: 0 .2rem; border: 0; border-bottom: 1px solid oklch(95% 0.02 120 / .14); background: none; color: var(--fg); font: 500 .95rem/1 var(--f-ui); text-align: left; cursor: pointer; transition: color .25s, background-color .25s, padding .3s var(--ease-out); }
+  .rooms button b { font: 600 .78rem/1 var(--f-code); color: var(--faint); }
+  .rooms button small { font: 500 .78rem/1 var(--f-code); color: var(--faint); }
+  .rooms button:hover, .rooms button.hover { color: var(--accent); padding-left: .6rem; }
+  .rooms button[aria-pressed="true"] { color: var(--on-accent); background: var(--accent); padding-left: .6rem; }
+  .rooms button[aria-pressed="true"] :is(b, small) { color: var(--on-accent); }
+  .rooms button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Etiquetas HTML ancladas a puntos 3D */
+  .labels { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+  .rtag { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: .5rem; padding: 0 .75rem 0 .35rem; min-height: 34px; border-radius: 999px; border: 1px solid oklch(95% 0.02 120 / .3); background: oklch(20% 0.045 160 / .72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: var(--fg); font: 500 .8rem/1 var(--f-code); white-space: nowrap; pointer-events: auto; cursor: pointer; translate: -50% -130%; transition: opacity .35s, background-color .25s, color .25s; will-change: transform; }
+  .rtag::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: 14px; background: oklch(95% 0.02 120 / .45); }
+  .rtag i { position: relative; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font: 700 .66rem/1 var(--f-code); font-style: normal; }
+  .rtag i::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid var(--accent); opacity: 0; animation: ping 2.6s var(--ease-out) infinite; animation-delay: var(--d, 0s); }
+  @keyframes ping { 0% { transform: scale(.6); opacity: .9; } 70%, 100% { transform: scale(1.5); opacity: 0; } }
+  .rtag:hover, .rtag.hover { background: var(--accent); color: var(--on-accent); }
+  .rtag:hover i, .rtag.hover i { background: var(--on-accent); color: var(--accent); }
+  .maqueta.focused .rtag { opacity: 0; pointer-events: none; }
+  .maqueta:not(.ready) .labels { display: none; }
+
+  /* Ficha de la estancia */
+  .panel { position: absolute; z-index: 4; right: var(--gutter); top: 50%; translate: 0 -46%; width: min(23rem, 30vw); padding: 1.6rem 1.6rem 1.3rem; border-radius: 18px; background: oklch(96% 0.02 120); color: oklch(22% 0.05 160); box-shadow: 0 40px 80px -30px oklch(10% 0.04 160 / .7); opacity: 0; transform: translateX(1.5rem); pointer-events: none; transition: opacity .45s, transform .6s var(--ease-out); }
+  .maqueta.focused .panel { opacity: 1; transform: none; pointer-events: auto; }
+  .panel .p-k { margin: 0; font: 500 .78rem/1 var(--f-code); color: oklch(45% 0.05 160); }
+  .panel .p-name { margin: .8rem 0 0; font: 600 clamp(1.8rem, 1.2rem + 1.4vw, 2.5rem)/1 var(--f-display); letter-spacing: -0.05em; }
+  .panel .p-m2 { margin: .5rem 0 0; font: 500 .9rem/1 var(--f-code); }
+  .panel .p-m2 b { font-size: 2.4rem; letter-spacing: -0.05em; }
+  .panel .p-text { margin: 1rem 0 1.3rem; font-size: .98rem; line-height: 1.5; color: oklch(35% 0.04 160); }
+  .p-nav { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .p-nav button { min-height: 44px; padding: 0 1rem; border-radius: 999px; border: 1px solid oklch(22% 0.05 160 / .25); background: none; color: inherit; font: 600 .85rem/1 var(--f-ui); cursor: pointer; }
+  .p-nav .back { background: oklch(22% 0.05 160); color: oklch(96% 0.02 120); border-color: transparent; margin-left: auto; }
+  .p-nav button:focus-visible { outline: 2px solid oklch(45% 0.15 140); outline-offset: 2px; }
+
+  .h-end { position: absolute; z-index: 3; right: var(--gutter); bottom: clamp(1.2rem, 4vh, 2.4rem); display: grid; justify-items: end; gap: .6rem; }
+  .hud { margin: 0; font: 500 .78rem/1.3 var(--f-code); color: var(--faint); text-align: right; min-height: 1.3em; }
+  .hud b { color: var(--accent); font-weight: 600; }
+  .maqueta .chip { border-color: oklch(95% 0.02 120 / .35); }
+
+  @media (max-width: 760px) {
+    .maqueta .poster { right: auto; left: -8vw; top: 38svh; width: 116vw; }
+    .h-copy { top: 5.1rem; right: var(--gutter); max-width: none; }
+    .h-copy [data-kicker] { margin-bottom: .8rem; }
+    .maqueta h1 { font-size: clamp(2.4rem, 1rem + 7.6vw, 3.3rem); }
+    .maqueta .lede { margin-top: .9rem; font-size: 1rem; }
+    .rooms { left: 0; right: 0; width: auto; bottom: 3.6rem; display: flex; gap: .4rem; overflow-x: auto; padding: 0 var(--gutter); border: 0; scrollbar-width: none; transition: opacity .3s; }
+    .rooms li { flex: none; }
+    .rooms button { width: auto; grid-template-columns: auto auto; gap: .5rem; padding: 0 .9rem !important; border: 1px solid oklch(95% 0.02 120 / .25); border-radius: 999px; background: oklch(20% 0.045 160 / .6); }
+    .rooms button small { display: none; }
+    .maqueta.focused .rooms { opacity: 0; pointer-events: none; }
+    .rtag { padding: 0 .3rem; min-height: 32px; }
+    .rtag span { display: none; }
+    .panel { left: .6rem; right: .6rem; top: auto; bottom: .6rem; translate: none; width: auto; padding: 1.2rem 1.2rem 1rem; transform: translateY(2rem); }
+    .panel .p-name { margin-top: .5rem; }
+    .panel .p-m2 b { font-size: 1.8rem; }
+    .panel .p-text { margin: .6rem 0 .9rem; font-size: .92rem; }
+    .h-end { left: var(--gutter); right: var(--gutter); bottom: 1rem; grid-template-columns: 1fr auto; align-items: center; }
+    .hud { text-align: left; }
+  }
+  @media (max-width: 760px) and (max-height: 700px) { .maqueta .lede { display: none; } }
+
+  /* ================= Cuerpo ================= */
+  /* Tubería del raycast: del dedo a la acción */
+  .pipe { display: grid; grid-template-columns: repeat(5, 1fr); margin: 2.4rem 0; border-top: 1px solid var(--accent); }
+  .pipe div { position: relative; padding: 1.2rem 1rem 1.3rem 0; }
+  .pipe div + div { padding-left: 1rem; border-left: 1px dashed oklch(95% 0.02 120 / .2); }
+  .pipe b { display: block; font: 600 .8rem/1 var(--f-code); color: var(--accent); }
+  .pipe strong { display: block; margin: .7rem 0 .4rem; font: 600 1.15rem/1.15 var(--f-code); letter-spacing: -0.03em; }
+  .pipe p { margin: 0; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  .pipe code { font-size: .78rem; }
+  @media (max-width: 760px) { .pipe { grid-template-columns: 1fr; } .pipe div, .pipe div + div { display: grid; grid-template-columns: 2rem 1fr; gap: 0 .6rem; padding: .9rem 0; border-left: 0; border-bottom: 1px dashed oklch(95% 0.02 120 / .2); } .pipe b { grid-row: span 2; padding-top: .2rem; } .pipe strong { margin: 0 0 .3rem; } }
+
+  /* Banda lima */
+  .band.lime { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.lime p { margin: 0; font: 600 clamp(1.9rem, 1rem + 3.4vw, 4.2rem)/1.02 var(--f-display); letter-spacing: -0.06em; max-width: 22ch; text-wrap: balance; }
+  .band.lime small { display: block; margin-top: 1.4rem; font: 500 var(--step--1)/1.4 var(--f-ui); max-width: 52ch; }
+
+  .split > * { min-width: 0; }   /* el bloque de código no puede ensanchar la columna */
+  /* Gestos: tabla de umbrales en el split */
+  .gestures { margin: 0; border: 1px solid var(--line-2); border-radius: var(--radius-m); background: var(--bg-2); overflow: hidden; }
+  .gestures div { display: grid; grid-template-columns: 7.5rem 1fr; gap: 1rem; padding: 1rem 1.2rem; border-bottom: 1px solid var(--line); }
+  .gestures div:last-child { border-bottom: 0; }
+  .gestures dt { font: 600 .9rem/1.3 var(--f-code); color: var(--accent); }
+  .gestures dd { margin: 0; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  .gestures dd b { color: var(--fg); }
+
+  /* Teclado */
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 2rem 0; border-top: 1px solid var(--line-2); }
+  .keys div { padding: 1.2rem 1rem 1.2rem 0; border-bottom: 1px solid var(--line-2); }
+  .keys div + div { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+  .keys kbd { display: inline-grid; place-items: center; min-width: 2.6rem; height: 2.6rem; padding: 0 .7rem; border-radius: 8px; border: 1px solid oklch(95% 0.02 120 / .35); border-bottom-width: 3px; font: 600 .85rem/1 var(--f-code); color: var(--fg); background: var(--bg-2); }
+  .keys p { margin: .8rem 0 0; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  @media (max-width: 760px) { .keys { grid-template-columns: 1fr 1fr; } .keys div:nth-child(3) { border-left: 0; padding-left: 0; } }
+
+  /* Así sí / Así no */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 2.4rem 0; }
+  .vs figure { margin: 0; }
+  .vs .mock { position: relative; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; background: radial-gradient(ellipse at 55% 60%, oklch(36% 0.06 155), oklch(22% 0.05 160)); border: 1px solid var(--line); }
+  .vs .plan { position: absolute; left: 22%; top: 28%; width: 56%; height: 48%; background: oklch(90% 0.02 90); transform: perspective(500px) rotateX(48deg) rotateZ(-28deg); box-shadow: 0 30px 30px -10px oklch(10% 0.03 160 / .7); }
+  .vs .plan::before, .vs .plan::after { content: ""; position: absolute; background: oklch(78% 0.04 70); }
+  .vs .plan::before { left: 45%; top: 0; bottom: 30%; width: 3px; }
+  .vs .plan::after { left: 0; right: 55%; top: 55%; height: 3px; }
+  .vs .glow { position: absolute; left: 31%; top: 36%; width: 20%; height: 18%; border-radius: 6px; background: oklch(86% 0.18 128 / .35); box-shadow: 0 0 0 1px var(--accent); transform: perspective(500px) rotateX(48deg) rotateZ(-28deg); }
+  .vs .pin { position: absolute; display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .6rem .25rem .25rem; border-radius: 999px; background: oklch(20% 0.045 160 / .8); border: 1px solid oklch(95% 0.02 120 / .3); font: 500 .7rem/1 var(--f-code); color: var(--fg); }
+  .vs .pin i { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); }
+  .vs .cursor { position: absolute; left: 41%; top: 44%; width: 18px; height: 18px; clip-path: polygon(0 0, 100% 62%, 52% 62%, 34% 100%); background: #fff; }
+  .vs .fine { position: absolute; left: 50%; bottom: 8%; translate: -50% 0; font: 400 .62rem/1 var(--f-ui); color: oklch(95% 0.02 120 / .35); white-space: nowrap; }
+  .vs figcaption { margin-top: .8rem; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  .vs figcaption b { display: block; font: 600 .95rem/1.3 var(--f-code); color: var(--fg); margin-bottom: .2rem; }
+  .vs .no figcaption b { color: oklch(72% 0.15 25); }
+  .vs .yes figcaption b { color: var(--accent); }
+  @media (max-width: 640px) { .vs { grid-template-columns: 1fr; } }
+</style>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="three-interaccion">
+<main id="main">
+  <header class="hero maqueta" aria-labelledby="t">
+    <img class="poster" src="../landing/media/residencia.webp" alt="" width="1600" height="1000" decoding="async">
+    <canvas aria-hidden="true"></canvas>
+    <div class="labels" aria-hidden="true"></div>
+    <div class="h-copy">
+      <p data-kicker>Lección</p>
+      <h1 id="t">Interacción <span>en 3D</span></h1>
+      <p class="lede">Toca una estancia: el rayo la encuentra, la cámara vuela hacia ella y la etiqueta sigue a su punto en el espacio.</p>
+    </div>
+    <ol class="rooms" aria-label="Estancias de la residencia">
+      <li><button type="button" data-room="salon" aria-pressed="false"><b>01</b>Salón<small>42 m²</small></button></li>
+      <li><button type="button" data-room="cocina" aria-pressed="false"><b>02</b>Cocina y comedor<small>28 m²</small></button></li>
+      <li><button type="button" data-room="principal" aria-pressed="false"><b>03</b>Dormitorio principal<small>24 m²</small></button></li>
+      <li><button type="button" data-room="bano" aria-pressed="false"><b>04</b>Baño en suite<small>9 m²</small></button></li>
+      <li><button type="button" data-room="estudio" aria-pressed="false"><b>05</b>Estudio<small>14 m²</small></button></li>
+      <li><button type="button" data-room="terraza" aria-pressed="false"><b>06</b>Terraza<small>31 m²</small></button></li>
+    </ol>
+    <aside class="panel" aria-live="polite" aria-label="Ficha de la estancia">
+      <p class="p-k"><span data-p="n">01</span> de 06</p>
+      <p class="p-name" data-p="name">Salón</p>
+      <p class="p-m2"><b data-p="m2">42</b> m²</p>
+      <p class="p-text" data-p="text"></p>
+      <div class="p-nav">
+        <button type="button" data-go="-1">Anterior</button>
+        <button type="button" data-go="1">Siguiente</button>
+        <button type="button" data-go="0" class="back">Ver la planta</button>
+      </div>
+    </aside>
+    <div class="h-end">
+      <p class="hud" data-hud aria-hidden="true">Cargando la maqueta</p>
+      <span class="chip" data-meta>25 min</span>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Hasta ahora el 3D se miraba. En esta lección se toca. Es el salto que convierte una portada bonita en una herramienta: el configurador donde eliges la tapicería, el plano de una promoción donde tocas un piso y te enseña sus metros, la maqueta de la residencia de la portada.</p>
+      <p>Todo se apoya en una sola pregunta, que harás decenas de veces por segundo: <strong>¿qué hay debajo del dedo?</strong> Three.js la responde con un rayo. El resto (zonas de toque, vuelos de cámara, etiquetas) es diseño alrededor de esa respuesta.</p>
+
+      <h2>Raycasting: <em>hover y clic</em></h2>
+      <p>Un <code>Raycaster</code> lanza una línea recta desde la cámara, a través del punto de la pantalla donde está el puntero, y devuelve todo lo que atraviesa, ordenado por distancia. El primero de la lista es lo que el usuario está señalando.</p>
+
+      <div class="pipe wide">
+        <div><b>01</b><strong>Puntero</strong><p><code>clientX</code>, <code>clientY</code> en píxeles de la ventana.</p></div>
+        <div><b>02</b><strong>NDC</strong><p>Coordenadas de −1 a 1 dentro del canvas. Ojo: la Y va al revés.</p></div>
+        <div><b>03</b><strong>Rayo</strong><p><code>setFromCamera(ndc, camera)</code> lo orienta como la cámara.</p></div>
+        <div><b>04</b><strong>Impactos</strong><p><code>intersectObjects()</code> devuelve objeto, distancia y punto.</p></div>
+        <div><b>05</b><strong>Acción</strong><p>Resaltar, seleccionar, volar. El diseño empieza aquí.</p></div>
+      </div>
+
+      <script type="text/x-code" data-lang="js" data-label="La función que usarás siempre">
+        const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+
+        function pick(e, objects) {
+          const r = canvas.getBoundingClientRect();          // el canvas no tiene por qué ocupar la ventana
+          ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+          ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;  // en pantalla la Y crece hacia abajo
+          ray.setFromCamera(ndc, camera);
+          return ray.intersectObjects(objects, true)[0] ?? null;   // el más cercano
+        }
+      </script>
+
+      <figure class="lab" data-three data-title="Configurador: el rayo encuentra la pieza" data-hint="Pasa el ratón y toca una pieza" data-height="470" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <aside>
+            <p class="k">Pieza</p>
+            <p id="part">Toca una pieza</p>
+            <div id="fin" aria-label="Acabados"></div>
+          </aside>
+          <p class="hud"><span id="ndc">x 0.00 y 0.00</span><span id="dist">–</span></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #e9ece2; color: #13261b; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          aside { position: fixed; left: 16px; top: 16px; width: 210px; padding: 14px 16px; border-radius: 14px; background: rgb(255 255 255 / .7); backdrop-filter: blur(8px); }
+          .k { margin: 0; font: 500 11px var(--f-mono); color: #5d6f62; }
+          #part { margin: 4px 0 10px; font: 600 22px/1.1 var(--f-mono); letter-spacing: -.04em; }
+          #fin { display: flex; gap: 8px; }
+          #fin button { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgb(19 38 27 / .25); cursor: pointer; }
+          .hud { position: fixed; right: 16px; bottom: 14px; margin: 0; display: grid; justify-items: end; gap: 2px; font: 500 12px var(--f-mono); color: #5d6f62; }
+          @media (max-width: 480px) { aside { left: 10px; right: 10px; width: auto; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+          import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+          const $ = (s) => document.querySelector(s);
+          const canvas = $('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.toneMapping = THREE.NeutralToneMapping;
+          renderer.shadowMap.enabled = true;
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#e9ece2');
+          scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+          const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
+          const sun = new THREE.DirectionalLight('#fff', 1.5);
+          sun.position.set(-3, 6, 4); sun.castShadow = true; sun.shadow.radius = 6; scene.add(sun);
+
+          // Cada pieza es un grupo con nombre: el rayo devuelve la malla y subimos a su grupo
+          const chair = new THREE.Group(); scene.add(chair);
+          function part(name, color) {
+            const g = new THREE.Group(); g.name = name;
+            g.userData.mat = new THREE.MeshStandardMaterial({ color, roughness: .7 });
+            chair.add(g); return g;
+          }
+          const add = (g, geo, x, y, z) => { const m = new THREE.Mesh(geo, g.userData.mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
+          add(part('Asiento', '#d9cdb8'), new RoundedBoxGeometry(1.1, .14, 1, 4, .05), 0, .82, 0);
+          add(part('Cojín', '#c46a3b'), new RoundedBoxGeometry(.98, .16, .88, 5, .07), 0, .97, .03);
+          add(part('Respaldo', '#d9cdb8'), new RoundedBoxGeometry(1.1, .9, .1, 4, .045), 0, 1.4, -.5).rotation.x = -.12;
+          const legs = part('Patas', '#3b2a20');
+          for (const [x, z] of [[-.47, -.42], [.47, -.42], [-.47, .42], [.47, .42]]) add(legs, new THREE.CylinderGeometry(.035, .028, .76, 16), x, .38, z);
+          const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: .15 }));
+          floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+          const FINISHES = {
+            Asiento: ['#d9cdb8', '#2d2a26', '#7d8f6a'], Cojín: ['#c46a3b', '#2f4f6b', '#e8dcc6'],
+            Respaldo: ['#d9cdb8', '#2d2a26', '#7d8f6a'], Patas: ['#3b2a20', '#c9a15a', '#16130f'],
+          };
+
+          const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+          let hovered = null, selected = null;
+          function pick(e) {
+            const r = canvas.getBoundingClientRect();
+            ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+            ray.setFromCamera(ndc, camera);
+            const hit = ray.intersectObject(chair, true)[0];
+            $('#ndc').textContent = `x ${ndc.x.toFixed(2)}  y ${ndc.y.toFixed(2)}`;
+            $('#dist').textContent = hit ? `impacto a ${hit.distance.toFixed(2)} m` : 'sin impacto';
+            return hit ? hit.object.parent : null;
+          }
+          function draw() {
+            for (const g of chair.children) {
+              g.userData.mat.emissive.set(g === selected ? '#7ccf3c' : g === hovered ? '#3f6a22' : '#000');
+              g.userData.mat.emissiveIntensity = g === selected ? .45 : .3;
+            }
+            renderer.render(scene, camera);
+          }
+          // Hover solo con ratón: en táctil no existe y se queda «pegado»
+          canvas.addEventListener('pointermove', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            const p = pick(e);
+            if (p !== hovered) { hovered = p; canvas.style.cursor = p ? 'pointer' : ''; draw(); }
+          });
+          canvas.addEventListener('pointerleave', () => { hovered = null; draw(); });
+          canvas.addEventListener('click', (e) => {
+            selected = pick(e);
+            $('#part').textContent = selected ? selected.name : 'Toca una pieza';
+            $('#fin').innerHTML = '';
+            for (const c of selected ? FINISHES[selected.name] : []) {
+              const b = Object.assign(document.createElement('button'), { type: 'button', ariaLabel: c });
+              b.style.background = c;
+              b.onclick = () => { selected.userData.mat.color.set(c); draw(); };
+              $('#fin').append(b);
+            }
+            draw();
+          });
+
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h;
+            const d = w < h ? 7.4 : 5;
+            camera.position.set(d * .62, d * .48, d * .78); camera.lookAt(w < h ? 0 : -.5, w < h ? .55 : .9, 0);
+            camera.updateProjectionMatrix(); draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Fíjate en la línea de abajo: las coordenadas NDC y la distancia del impacto. Y en el código: el rayo devuelve una malla suelta (una pata), pero lo que el usuario quiere elegir es la pieza entera, así que subimos al grupo con <code>hit.object.parent</code>. Organiza la escena en grupos con nombre y el raycast te lo agradecerá.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El hover es una pregunta («¿esto se puede tocar?») y el clic una respuesta. Dale al hover un cambio leve y rápido (un tinte, el cursor de mano) y al clic uno claro y estable (color fuerte, ficha abierta). Si el hover ya hace mucho, el clic no tiene a dónde crecer.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En táctil no hay hover: el primer toque ya es el clic. Filtra el hover con <code>e.pointerType === 'mouse'</code>, como el laboratorio, o se quedará una pieza resaltada para siempre tras el primer toque. Y lo que en escritorio explicaba el hover (el nombre de la pieza) tiene que estar visible sin tocar o aparecer con el toque.</p>
+      </div>
+
+      <h2>Zonas invisibles <em>como áreas de toque</em></h2>
+      <p>Un dedo mide unos 9 mm, y un objeto 3D lejano puede ocupar dos píxeles. Si el rayo tiene que acertar en la malla real, el usuario fallará casi siempre. La solución de los videojuegos: <strong>detrás de cada objeto, una forma simple e invisible más grande</strong> que es la que recibe el rayo. La portada lo hace con las estancias: el rayo no busca el sofá, busca un plano invisible del tamaño del salón.</p>
+
+      <figure class="lab" data-three data-title="Zonas de toque" data-hint="Intenta tocar la farola con y sin zonas" data-height="460" data-height-mobile="540" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <form>
+            <label><input id="use" type="checkbox"> Usar zonas de toque</label>
+            <label><input id="show" type="checkbox"> Ver zonas</label>
+          </form>
+          <p id="out" aria-live="polite">Toca la farola, la papelera o un banco</p>
+          <p class="score">Aciertos <b id="ok">0</b>  Fallos <b id="ko">0</b></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #dfe4d6; color: #13261b; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          form { position: fixed; left: 14px; top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+          label { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px; border-radius: 99px; background: rgb(255 255 255 / .7); font-size: 13px; font-weight: 600; cursor: pointer; }
+          input { width: 18px; height: 18px; accent-color: #3e7d1e; }
+          #out { position: fixed; left: 16px; bottom: 14px; right: 140px; margin: 0; font: 600 18px/1.2 var(--f-mono); letter-spacing: -.03em; }
+          .score { position: fixed; right: 16px; bottom: 16px; margin: 0; font: 500 12px var(--f-mono); white-space: pre; }
+          .ring { position: fixed; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 2px solid #c2410c; pointer-events: none; animation: r .6s ease-out forwards; }
+          @keyframes r { from { transform: scale(.4); } to { transform: scale(1.4); opacity: 0; } }
+          @media (max-width: 480px) { #out { right: 16px; bottom: 40px; font-size: 16px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const $ = (s) => document.querySelector(s);
+          const canvas = $('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#dfe4d6');
+          const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+          scene.add(new THREE.HemisphereLight('#ffffff', '#9aa58c', 2.2));
+          const sun = new THREE.DirectionalLight('#fff', 1.2); sun.position.set(-4, 8, 3); scene.add(sun);
+
+          // Una plaza de maqueta con objetos pequeños y difíciles de tocar
+          const white = new THREE.MeshStandardMaterial({ color: '#2f4a3a', roughness: .6 });   // mobiliario oscuro
+          const paper = new THREE.MeshStandardMaterial({ color: '#f4f1ea', roughness: .9 });
+          const plaza = new THREE.Mesh(new THREE.BoxGeometry(9, .1, 6), new THREE.MeshStandardMaterial({ color: '#cdd3c0' }));
+          plaza.position.y = -.05; scene.add(plaza);
+          // Edificios de maqueta alrededor: contexto, no se tocan
+          for (const [x, z, w, d, h] of [[-3.6, -2.4, 1.6, 1.1, 1.6], [-1.6, -2.5, 2, .9, 2.4], [1, -2.4, 2.4, 1.1, 1.2], [3.5, -2.3, 1.8, 1.3, 2]]) {
+            const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), paper); b.position.set(x, h / 2, z); scene.add(b);
+          }
+          const lawn = new THREE.Mesh(new THREE.BoxGeometry(2.4, .04, 1.6), new THREE.MeshStandardMaterial({ color: '#9fb08a' }));
+          lawn.position.set(-2.6, .02, 1.6); scene.add(lawn);
+          const items = [];
+          function item(name, x, z, parts) {
+            const g = new THREE.Group(); g.name = name; g.position.set(x, 0, z);
+            for (const [geo, y] of parts) { const m = new THREE.Mesh(geo, white); m.position.y = y; g.add(m); }
+            scene.add(g); items.push(g);
+          }
+          item('Farola', -2.6, -.9, [[new THREE.CylinderGeometry(.025, .03, 1.2), .6], [new THREE.SphereGeometry(.07), 1.22]]);
+          item('Papelera', 1.2, 1.6, [[new THREE.CylinderGeometry(.07, .06, .2, 16), .1]]);
+          item('Banco 1', -.4, 1.4, [[new THREE.BoxGeometry(.6, .06, .16), .2]]);
+          item('Banco 2', 2.8, .3, [[new THREE.BoxGeometry(.6, .06, .16), .2]]);
+          item('Fuente', .4, -.8, [[new THREE.CylinderGeometry(.35, .38, .14, 32), .07]]);
+
+          // La zona: un cilindro generoso e invisible (material visible: false, pero el rayo lo atraviesa)
+          const zoneMat = new THREE.MeshBasicMaterial({ color: '#4d9a24', transparent: true, opacity: .28, depthWrite: false, visible: false });
+          const zones = items.map((it) => {
+            const z = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, 1.5, 24), zoneMat);
+            z.position.set(it.position.x, .75, it.position.z); z.userData.item = it; scene.add(z); return z;
+          });
+
+          const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+          let ok = 0, ko = 0;
+          canvas.addEventListener('click', (e) => {
+            const r = canvas.getBoundingClientRect();
+            ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+            ray.setFromCamera(ndc, camera);
+            const useZones = $('#use').checked;
+            const hit = ray.intersectObjects(useZones ? zones : items, true)[0];
+            let target = hit && (useZones ? hit.object.userData.item : hit.object.parent);
+            if (target) { ok++; $('#out').textContent = target.name; }
+            else {
+              ko++; $('#out').textContent = 'Fallo: el dedo no le ha dado';
+              const ring = Object.assign(document.createElement('i'), { className: 'ring' });
+              ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px';
+              document.body.append(ring); setTimeout(() => ring.remove(), 700);
+            }
+            $('#ok').textContent = ok; $('#ko').textContent = ko;
+          });
+          $('#show').onchange = (e) => { zoneMat.visible = e.target.checked; draw(); };
+          $('#use').onchange = () => { ok = ko = 0; $('#ok').textContent = $('#ko').textContent = 0; };
+
+          function draw() { renderer.render(scene, camera); }
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h;
+            const d = w < h ? 27 : 13.5;
+            camera.position.set(0, d * .8, d * .62); camera.lookAt(0, .3, -.4);
+            camera.updateProjectionMatrix(); draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Sin zonas, la farola mide un par de píxeles de ancho y cuesta acertar incluso con ratón. Con zonas, cualquier toque cerca vale. Activa «Ver zonas» para ver el truco: cilindros de un metro alrededor de cada objeto. Con <code>visible: false</code> en el material no se pintan, pero el rayo los sigue encontrando.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Diseña la zona por el objetivo, no por el objeto. Una estancia es un rectángulo en el suelo; una planta de la torre, un cilindro que la envuelve; un producto, su caja envolvente. Formas simples: el rayo va más rápido y el usuario no tiene que ser preciso. Si dos zonas se solapan, gana la más cercana a la cámara, así que comprueba que eso tiene sentido desde el encuadre real.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Comprueba el tamaño de la zona en pantalla, no en metros: proyecta dos esquinas y mide la distancia en píxeles. Por debajo de 44 px, agranda la zona o, mejor, añade una etiqueta HTML tocable encima (como los números de la portada). Un botón HTML siempre es más fácil de acertar que un objeto 3D.</p>
+      </div>
+
+      <h2>Animar la cámara <em>hacia un objeto</em></h2>
+      <p>Tocar algo y que la cámara vuele hacia ello es el gesto que hace que una escena se sienta navegable. Técnicamente es interpolar dos cosas a la vez: <strong>dónde está la cámara</strong> y <strong>a dónde mira</strong>. Si solo mueves la posición y dejas el punto de mira fijo, la cámara gira de forma rara al final del vuelo.</p>
+
+      <figure class="lab" data-three data-libs="gsap" data-title="Vuelo de cámara: tween propio o GSAP" data-hint="Toca un pabellón o un botón" data-height="480" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <nav id="nav" aria-label="Pabellones"></nav>
+          <form>
+            <label>Motor <select id="engine"><option>Propio</option><option>GSAP</option></select></label>
+            <label>Curva <select id="ease"><option value="io">Suave</option><option value="lin">Lineal</option></select></label>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #173528; color: #eef3e2; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          nav { position: fixed; top: 14px; left: 14px; right: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+          nav button { min-height: 42px; padding: 0 14px; border-radius: 99px; border: 1px solid rgb(238 243 226 / .3); background: rgb(10 30 20 / .5); color: inherit; font: 600 13px var(--f-mono); cursor: pointer; }
+          nav button[aria-pressed="true"] { background: #b5ea6a; color: #12281c; border-color: #b5ea6a; }
+          form { position: fixed; right: 14px; bottom: 14px; display: flex; gap: 10px; padding: 8px 12px; border-radius: 14px; background: rgb(10 30 20 / .6); font-size: 12px; font-weight: 600; }
+          label { display: grid; gap: 3px; }
+          select { min-height: 38px; border-radius: 8px; border: 1px solid rgb(238 243 226 / .3); background: #173528; color: inherit; font: 600 13px var(--f-sans); padding: 0 8px; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const $ = (s) => document.querySelector(s);
+          const canvas = $('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.shadowMap.enabled = true;
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#173528');
+          const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
+          scene.add(new THREE.HemisphereLight('#f2f7e6', '#173528', 1.6));
+          const sun = new THREE.DirectionalLight('#fff4e6', 2); sun.position.set(-8, 14, 6);
+          sun.castShadow = true; sun.shadow.camera.left = sun.shadow.camera.bottom = -12; sun.shadow.camera.right = sun.shadow.camera.top = 12; scene.add(sun);
+          const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: '#244a37' }));
+          ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+          // Cuatro pabellones de un campus: cada uno con su vista
+          const B = [['A', 'Recepción', -5, -3, 2.2, '#efe9dc'], ['B', 'Talleres', 4, -4, 3.4, '#d9cdb8'], ['C', 'Auditorio', -4, 4, 1.4, '#c46a3b'], ['D', 'Torre', 4.5, 3.5, 6, '#f4f1ea']];
+          const blocks = B.map(([id, name, x, z, h, c]) => {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(3, h, 3), new THREE.MeshStandardMaterial({ color: c, roughness: .7 }));
+            m.position.set(x, h / 2, z); m.castShadow = m.receiveShadow = true; m.userData = { id, name, h }; scene.add(m); return m;
+          });
+
+          // Estado de la cámara: posición y punto de mira, los dos se animan
+          const HOME = { pos: new THREE.Vector3(14, 13, 16), look: new THREE.Vector3(0, 1, 0) };
+          const cam = { pos: HOME.pos.clone(), look: HOME.look.clone() };
+          let k = 1;   // en vertical, todo más lejos
+          function viewOf(m) {
+            const look = m.position.clone();
+            return { pos: look.clone().add(new THREE.Vector3(.7, .55, .9).multiplyScalar((4 + m.userData.h * 1.2) * k)), look };
+          }
+          const easeIO = (t) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+          let tween = null;
+          function fly(to) {
+            // La duración crece con la distancia: un salto corto no debe tardar lo mismo que uno largo
+            const dur = Math.min(1.8, .6 + cam.pos.distanceTo(to.pos) / 18);
+            const lin = $('#ease').value === 'lin';
+            if ($('#engine').value === 'GSAP') {
+              tween = null;
+              const ease = lin ? 'none' : 'power3.inOut';
+              gsap.to(cam.pos, { ...to.pos, duration: dur, ease, overwrite: true, onUpdate: draw });
+              gsap.to(cam.look, { ...to.look, duration: dur, ease, overwrite: true });
+            } else {
+              gsap.killTweensOf([cam.pos, cam.look]);
+              tween = { from: { pos: cam.pos.clone(), look: cam.look.clone() }, to, t0: performance.now(), dur: dur * 1000, ease: lin ? (t) => t : easeIO };
+              requestAnimationFrame(step);
+            }
+          }
+          function step(now) {   // el tween propio: interpolar con una curva
+            if (!tween) return;
+            const k = Math.min(1, (now - tween.t0) / tween.dur), e = tween.ease(k);
+            cam.pos.lerpVectors(tween.from.pos, tween.to.pos, e);
+            cam.look.lerpVectors(tween.from.look, tween.to.look, e);
+            draw();
+            if (k < 1) requestAnimationFrame(step); else tween = null;
+          }
+          function draw() { camera.position.copy(cam.pos); camera.lookAt(cam.look); renderer.render(scene, camera); }
+
+          function select(m) {
+            document.querySelectorAll('nav button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.id === (m ? m.userData.id : 'home')));
+            fly(m ? viewOf(m) : HOME);
+          }
+          for (const m of [null, ...blocks]) {
+            const b = Object.assign(document.createElement('button'), { type: 'button', textContent: m ? `${m.userData.id} ${m.userData.name}` : 'Vista general' });
+            b.dataset.id = m ? m.userData.id : 'home'; b.setAttribute('aria-pressed', !m);
+            b.onclick = () => select(m); $('#nav').append(b);
+          }
+          const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+          canvas.addEventListener('click', (e) => {
+            ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+            ray.setFromCamera(ndc, camera);
+            const hit = ray.intersectObjects(blocks)[0];
+            select(hit ? hit.object : null);
+          });
+          function resize() {
+            renderer.setSize(innerWidth, innerHeight, false);
+            camera.aspect = innerWidth / innerHeight;
+            const portrait = innerWidth < innerHeight;
+            camera.fov = portrait ? 45 : 35;   // en vertical, más campo y más distancia
+            k = portrait ? 1.5 : 1;
+            HOME.pos.set(14, 13, 16).multiplyScalar(k);
+            if (!tween && !gsap.isTweening(cam.pos)) cam.pos.copy(HOME.pos);
+            camera.updateProjectionMatrix(); draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Vuela de A a D en «Lineal» y luego en «Suave»: el lineal arranca y frena en seco, como un ascensor sin amortiguación; el suave acelera y aterriza. Los dos motores hacen lo mismo. El propio son veinte líneas sin dependencias (la residencia de la landing lo usa así); GSAP compensa si ya está en la web, porque encadena, cancela y sincroniza con el scroll gratis.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un vuelo de cámara tiene que orientar, no lucirse. Entre 0,8 y 1,6 segundos según la distancia, curva suave, y sin dar vueltas: la ruta más corta. Llega con el objeto en el hueco libre de la pantalla (no debajo de la ficha que se abre) y deja siempre un «Ver la planta» visible para volver. Si el usuario toca otra cosa a mitad de vuelo, cancela y sal hacia el nuevo destino desde donde estás.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En vertical la ficha suele ser una hoja que sube desde abajo y tapa media pantalla, así que el destino del vuelo cambia: el objeto tiene que quedar en la mitad de arriba. La portada lo resuelve moviendo el centro óptico con <code>setViewOffset</code> dentro del mismo vuelo. Y con <code>prefers-reduced-motion</code>, nada de volar: corte directo a la vista nueva.</p>
+      </div>
+
+      <div class="band lime"><div class="inner">
+        <p>Lo que se toca en 3D casi siempre es mejor que sea HTML.</p>
+        <small>Etiquetas, fichas, listas y botones van en HTML encima del canvas: texto nítido, accesible, con tu tipografía y tus estados de foco. El 3D pone el lugar; el HTML, la interfaz.</small>
+      </div></div>
+
+      <h2>Etiquetas HTML <em>ancladas al 3D</em></h2>
+      <p>Una etiqueta que sigue a un punto del espacio se hace en dos pasos: <code>vector.project(camera)</code> convierte la posición 3D a NDC y, de ahí, a píxeles; luego mueves el elemento HTML con <code>transform</code>. Se recalcula solo cuando la cámara se mueve, y con <code>translate3d</code> el navegador no tiene que recolocar nada más de la página.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="Proyectar un punto 3D a la pantalla">
+        const v = new THREE.Vector3();
+        function placeLabel(el, point) {
+          v.copy(point).project(camera);                 // de mundo a NDC (−1..1)
+          const behind = v.z > 1;                        // detrás de la cámara: no enseñar
+          const x = (v.x + 1) / 2 * canvas.clientWidth;
+          const y = (1 - v.y) / 2 * canvas.clientHeight;
+          el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+          el.classList.toggle('hidden', behind);
+        }
+      </script>
+
+      <figure class="lab" data-three data-title="Etiquetas que siguen al edificio" data-hint="Activa y desactiva la ocultación" data-height="470" data-height-mobile="540" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div id="tags"></div>
+          <form>
+            <label><input id="occ" type="checkbox" checked> Ocultar las que quedan detrás</label>
+            <button id="pause" type="button" aria-pressed="false">Pausar giro</button>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #12281c; color: #eef3e2; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          #tags { position: fixed; inset: 0; pointer-events: none; }
+          .tag { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 99px; background: rgb(10 30 20 / .78); border: 1px solid rgb(238 243 226 / .3); font: 500 12px var(--f-mono); white-space: nowrap; translate: -50% -140%; transition: opacity .25s; }
+          .tag::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: 12px; background: rgb(238 243 226 / .5); }
+          .tag i { width: 14px; height: 14px; border-radius: 50%; background: #b5ea6a; }
+          .tag.hidden { opacity: .12; }
+          form { position: fixed; left: 14px; right: 14px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+          label, button { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px; border-radius: 99px; background: rgb(10 30 20 / .7); border: 1px solid rgb(238 243 226 / .25); color: inherit; font: 600 13px var(--f-sans); cursor: pointer; }
+          input { width: 18px; height: 18px; accent-color: #b5ea6a; }
+          button[aria-pressed="true"] { background: #b5ea6a; color: #12281c; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const $ = (s) => document.querySelector(s);
+          const renderer = new THREE.WebGLRenderer({ canvas: $('canvas'), antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#12281c');
+          const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+          scene.add(new THREE.HemisphereLight('#f4f7ea', '#12281c', 1.8));
+          const sun = new THREE.DirectionalLight('#fff3e2', 2); sun.position.set(-5, 9, 6); scene.add(sun);
+
+          // Un edificio escalonado que gira sobre su base
+          const building = new THREE.Group(); scene.add(building);
+          const mat = new THREE.MeshStandardMaterial({ color: '#efe9dc', roughness: .8 });
+          for (const [w, h, d, y, x] of [[4, 2.4, 3, 0, 0], [3, 2.4, 2.4, 2.4, -.4], [2, 2.4, 1.8, 4.8, -.7]]) {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y + h / 2, 0); building.add(m);
+          }
+          const base = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, .2, 64), new THREE.MeshStandardMaterial({ color: '#2d5a42' }));
+          base.position.y = -.1; building.add(base);
+
+          // Puntos de anclaje, en coordenadas del edificio (giran con él)
+          const POINTS = [['Azotea', -.7, 7.3, 0], ['Planta 6', -.4, 4, 1.25], ['Jardín', 2.6, .1, 1.6], ['Garaje', 1, .6, -1.6]];
+          const tags = POINTS.map(([name, x, y, z]) => {
+            const el = Object.assign(document.createElement('span'), { className: 'tag', innerHTML: `<i></i>${name}` });
+            $('#tags').append(el);
+            const anchor = new THREE.Object3D(); anchor.position.set(x, y, z); building.add(anchor);
+            return { el, anchor };
+          });
+
+          const v = new THREE.Vector3(), ray = new THREE.Raycaster();
+          function placeTags() {
+            const w = innerWidth, h = innerHeight;
+            for (const { el, anchor } of tags) {
+              anchor.getWorldPosition(v);
+              // Oclusión: ¿hay algo entre la cámara y el punto?
+              const dist = v.distanceTo(camera.position);
+              ray.set(camera.position, v.clone().sub(camera.position).normalize());
+              const hit = ray.intersectObject(building, true)[0];
+              const occluded = $('#occ').checked && hit && hit.distance < dist - .05;
+              v.project(camera);
+              el.style.transform = `translate3d(${(v.x + 1) / 2 * w}px, ${(1 - v.y) / 2 * h}px, 0)`;
+              el.classList.toggle('hidden', occluded || v.z > 1);
+            }
+          }
+
+          let spin = true, onScreen = true;
+          $('#pause').onclick = (e) => { spin = !spin; e.target.setAttribute('aria-pressed', !spin); };
+          new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)).observe(renderer.domElement);
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h;
+            const d = w < h ? 30 : 20;
+            camera.position.set(0, d * .42, d); camera.lookAt(0, 3.3, 0); camera.updateProjectionMatrix();
+          }
+          addEventListener('resize', resize); resize();
+          renderer.setAnimationLoop((t) => {
+            if (!onScreen) return;
+            if (spin) building.rotation.y = t / 4000;
+            renderer.render(scene, camera);
+            placeTags();   // después de mover la cámara o el modelo, nunca antes
+          });
+        </script>
+        <figcaption>Desactiva la casilla y mira «Garaje» cuando el edificio gira: la etiqueta flota por delante de una pared que debería taparla. Con la casilla, un segundo rayo desde la cámara hasta el punto comprueba si hay algo en medio y la atenúa. Es barato con cuatro etiquetas; con cien, comprueba solo unas pocas por fotograma.</figcaption>
+      </figure>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Si usas <code>setViewOffset</code> (como la portada), la proyección ya lo incluye: el punto proyectado cae donde lo ves en el canvas. Y recoloca las etiquetas en el mismo fotograma en que pintas, después de mover la cámara; si lo haces antes, irán un fotograma por detrás y se notará un temblor.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Seis etiquetas con nombre no caben en 390 px sin pisarse. La portada enseña solo el número en el móvil y el nombre completo en la ficha. Si aun así se solapan, prioriza: muestra las más cercanas a la cámara o la seleccionada, y oculta el resto.</p>
+      </div>
+
+      <h2>Táctil: tocar <em>frente a arrastrar</em></h2>
+      <p>En una escena que se puede girar con el dedo, el mismo gesto empieza igual para dos intenciones: elegir algo o mover la cámara. Hay que decidir al soltar, midiendo cuánto se ha movido el dedo y cuánto ha durado el gesto.</p>
+
+      <div class="split">
+        <div>
+          <p><code>OrbitControls</code> resuelve el giro, pero sin límites deja al usuario perdido: cámara bajo el suelo, la maqueta del revés, el zoom tan lejos que el modelo es un punto. En una web, limita siempre:</p>
+          <script type="text/x-code" data-lang="js" data-label="OrbitControls con límites de producto">
+            const controls = new OrbitControls(camera, canvas);
+            controls.enableDamping = true;      // inercia suave al soltar
+            controls.enablePan = false;         // que nadie saque el modelo del encuadre
+            controls.minPolarAngle = 0.35;      // ni cenital del todo…
+            controls.maxPolarAngle = 1.25;      // …ni por debajo del suelo
+            controls.minDistance = 6;
+            controls.maxDistance = 16;
+            controls.enableZoom = matchMedia('(pointer: coarse)').matches;  // la rueda roba el scroll
+          </script>
+        </div>
+        <dl class="gestures stick">
+          <div><dt>Toque</dt><dd>Menos de <b>8 px</b> de movimiento y menos de <b>400 ms</b>. Selecciona.</dd></div>
+          <div><dt>Arrastre</dt><dd>Más de 8 px. Gira la cámara y <b>no selecciona</b> al soltar.</dd></div>
+          <div><dt>Pellizco</dt><dd>Dos dedos: zoom. En una página con scroll, mejor que el zoom sea solo con botones.</dd></div>
+          <div><dt>Deslizar vertical</dt><dd>Sobre una escena a pantalla completa es <b>scroll de la página</b>. No lo robes.</dd></div>
+        </dl>
+      </div>
+
+      <figure class="lab" data-three data-title="Tocar o arrastrar, con límites" data-hint="Arrastra para girar, toca una casa" data-height="480" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <p id="out" aria-live="polite">Arrastra para girar. Toca una casa para elegirla.</p>
+          <form>
+            <label><input id="lim" type="checkbox" checked> Límites</label>
+            <span id="read"></span>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #e3e8d9; color: #13261b; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          #out { position: fixed; left: 16px; top: 14px; right: 16px; margin: 0; font: 600 18px/1.2 var(--f-mono); letter-spacing: -.03em; pointer-events: none; }
+          form { position: fixed; left: 14px; right: 14px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; pointer-events: none; }
+          label { pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px; border-radius: 99px; background: rgb(255 255 255 / .75); font-size: 13px; font-weight: 600; }
+          input { width: 18px; height: 18px; accent-color: #3e7d1e; }
+          #read { font: 500 12px var(--f-mono); color: #4c5d51; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+          const $ = (s) => document.querySelector(s);
+          const canvas = $('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#e3e8d9');
+          const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
+          camera.position.set(8, 6, 9);
+          scene.add(new THREE.HemisphereLight('#ffffff', '#8c9a80', 2.2));
+          const sun = new THREE.DirectionalLight('#fff', 1.3); sun.position.set(-4, 8, 3); scene.add(sun);
+          const disc = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, .3, 64), new THREE.MeshStandardMaterial({ color: '#b9c4a8' }));
+          disc.position.y = -.15; scene.add(disc);
+
+          // Un barrio de cinco casas con tejado
+          const houses = [[-2, -1.5], [1.2, -2], [2.4, 1.2], [-1.4, 1.8], [0, 0]].map(([x, z], i) => {
+            const g = new THREE.Group(); g.position.set(x, 0, z); g.name = `Casa ${i + 1}`;
+            const m = new THREE.MeshStandardMaterial({ color: '#f4f1ea', roughness: .8 });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1, 1.2), m); body.position.y = .5;
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(1.05, .7, 4), m); roof.position.y = 1.35; roof.rotation.y = Math.PI / 4;
+            g.add(body, roof); g.userData.mat = m; scene.add(g); return g;
+          });
+
+          const controls = new OrbitControls(camera, canvas);
+          controls.enableDamping = true; controls.enablePan = false; controls.target.set(0, .6, 0);
+          function limits(on) {
+            controls.minPolarAngle = on ? .35 : 0; controls.maxPolarAngle = on ? 1.25 : Math.PI;
+            controls.minDistance = on ? 6 : .5; controls.maxDistance = on ? 16 : 60;
+          }
+          limits(true); $('#lim').onchange = (e) => limits(e.target.checked);
+
+          // Toque o arrastre: se decide al soltar
+          const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+          let down = null;
+          canvas.addEventListener('pointerdown', (e) => (down = { x: e.clientX, y: e.clientY, t: performance.now() }));
+          canvas.addEventListener('pointerup', (e) => {
+            if (!down) return;
+            const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y), dt = performance.now() - down.t;
+            down = null;
+            if (moved > 8 || dt > 400) { $('#out').textContent = `Arrastre de ${Math.round(moved)} px: gira, no elige`; return; }
+            ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+            ray.setFromCamera(ndc, camera);
+            const hit = ray.intersectObjects(houses, true)[0];
+            const house = hit ? hit.object.parent : null;
+            houses.forEach((h) => h.userData.mat.color.set(h === house ? '#9fd65c' : '#f4f1ea'));
+            $('#out').textContent = house ? `Toque: ${house.name}` : 'Toque en vacío';
+          });
+
+          let onScreen = true;
+          new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)).observe(canvas);
+          function resize() {
+            renderer.setSize(innerWidth, innerHeight, false);
+            camera.aspect = innerWidth / innerHeight;
+            camera.fov = innerWidth < innerHeight ? 54 : 35;   // en vertical, más campo para que quepa el barrio
+            camera.updateProjectionMatrix();
+          }
+          addEventListener('resize', resize); resize();
+          renderer.setAnimationLoop(() => {
+            if (!onScreen) return;
+            controls.update();   // necesario cada fotograma para la inercia
+            const s = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+            $('#read').textContent = `ángulo ${THREE.MathUtils.radToDeg(s.phi).toFixed(0)}°  distancia ${s.radius.toFixed(1)}`;
+            renderer.render(scene, camera);
+          });
+        </script>
+        <figcaption>Quita los límites y baja la cámara: acabas mirando el disco por debajo, una vista que no le sirve a nadie. Con límites, el ángulo se queda entre 20° y 72° desde la vertical y el zoom entre 6 y 16. Y suelta tras un arrastre encima de una casa: no se selecciona, porque has girado, no tocado.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p><code>OrbitControls</code> pone <code>touch-action: none</code> en el canvas, y eso bloquea el scroll de la página cuando el dedo cae encima. En un laboratorio de 480 px se tolera; en una escena a pantalla completa, es una trampa. Opciones: no uses órbita en la portada (la de esta lección solo responde a toques y deja pasar el scroll), actívala con un botón «Explorar en 3D» que abre un modo a pantalla completa con salida clara, o gira solo con dos dedos.</p>
+      </div>
+
+      <h2>Accesibilidad: <em>lista y teclado</em></h2>
+      <p>Un canvas es una imagen para el lector de pantalla y un agujero negro para el teclado. La regla es simple: <strong>todo lo que se puede hacer tocando el 3D tiene que poder hacerse con HTML</strong>. En la portada, la lista de estancias no es un extra: es la misma navegación en botones de verdad, que además sirve de menú para quien no quiere apuntar.</p>
+
+      <div class="keys wide">
+        <div><kbd>Tab</kbd><p>Recorre la lista de estancias y los botones de la ficha, en orden.</p></div>
+        <div><kbd>Enter</kbd><p>Abre la estancia: la cámara vuela y la ficha se anuncia con <code>aria-live</code>.</p></div>
+        <div><kbd>←</kbd> <kbd>→</kbd><p>Con la ficha abierta, estancia anterior y siguiente.</p></div>
+        <div><kbd>Esc</kbd><p>Vuelve a la planta completa.</p></div>
+      </div>
+
+      <script type="text/x-code" data-lang="html" data-label="El esqueleto accesible de la portada">
+        <canvas aria-hidden="true"></canvas>                 <!-- decorativo: la información está en el HTML -->
+        <ol class="rooms" aria-label="Estancias de la residencia">
+          <li><button type="button" data-room="salon" aria-pressed="false">Salón <small>42 m²</small></button></li>
+          …
+        </ol>
+        <aside class="panel" aria-live="polite">…</aside>    <!-- se lee al cambiar de estancia -->
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Sincroniza los dos mundos en ambas direcciones: pasar el ratón por la lista resalta la estancia en 3D, y pasarlo por la estancia resalta su fila. Así la lista enseña a usar la maqueta y la maqueta explica la lista. Las etiquetas 3D duplican la lista, así que van con <code>aria-hidden</code> y fuera del orden de tabulación: el lector de pantalla las oiría dos veces.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Tu maqueta 3D es preciosa y se usa tocando estancias. ¿Qué necesita alguien que navega con teclado y lector de pantalla?</p>
+        <ol>
+          <li>Un <code>aria-label</code> largo en el canvas que describa la maqueta</li>
+          <li><code>tabindex="0"</code> en el canvas para que reciba el foco</li>
+          <li>Una lista de botones HTML que haga lo mismo que tocar, y la ficha con <code>aria-live</code></li>
+        </ol>
+        <p class="why">Una descripción no permite actuar, y el foco en el canvas no dice qué hay dentro. Botones reales con su estado (<code>aria-pressed</code>) y una región que se anuncia al cambiar dan la misma funcionalidad sin ver el 3D.</p>
+      </div>
+
+      <h2>Rendimiento: raycast <em>con throttle y capas</em></h2>
+      <p>Un raycast recorre los triángulos de cada objeto cuya caja envolvente toca el rayo. Con una escultura de cientos de miles de triángulos en medio, cada llamada cuesta milisegundos. Y un ratón puede disparar <code>pointermove</code> más veces por segundo de las que la pantalla pinta. Dos técnicas lo resuelven:</p>
+      <ul>
+        <li><strong>Throttle con <code>requestAnimationFrame</code></strong>: el evento solo guarda la posición; el raycast se hace una vez por fotograma, como mucho. Calcular más veces de las que se pinta es trabajo tirado.</li>
+        <li><strong>Capas</strong> (<code>layers</code>): pon lo que se puede tocar en la capa 1 y configura <code>raycaster.layers.set(1)</code>. El rayo ignora todo lo demás (decoración, vegetación, el suelo) sin recorrer sus triángulos.</li>
+      </ul>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">En el laboratorio de abajo, con «Capas» desactivado, el rayo comprueba la fachada y una escultura muy densa. ¿Qué pasará con el tiempo de cada raycast al pasar el ratón por encima de la escultura?</p>
+        <ol>
+          <li>Nada: el rayo se para en la primera malla que toca</li>
+          <li>Se dispara: recorre los triángulos de la escultura aunque no te interese</li>
+          <li>Baja, porque la escultura tapa la fachada</li>
+        </ol>
+        <p class="why"><code>intersectObjects</code> no para en el primer impacto: comprueba todo lo que el rayo cruza y luego ordena. Si el objeto denso está en la lista, se recorre entero cada vez. Con capas, ni se mira.</p>
+      </div>
+
+      <figure class="lab" data-three data-title="Throttle y capas" data-hint="Mueve el ratón sobre la escultura con y sin capas" data-height="480" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <form>
+            <label><input id="raf" type="checkbox" checked> Throttle con rAF</label>
+            <label><input id="layers" type="checkbox" checked> Capas</label>
+          </form>
+          <dl>
+            <dt>Raycasts por segundo</dt><dd id="rps">0</dd>
+            <dt>Último raycast</dt><dd id="ms">–</dd>
+            <dt>Ventana</dt><dd id="win">–</dd>
+          </dl>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #0f2219; color: #eef3e2; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          form { position: fixed; left: 14px; top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+          label { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 14px; border-radius: 99px; background: rgb(10 30 20 / .75); border: 1px solid rgb(238 243 226 / .25); font-size: 13px; font-weight: 600; cursor: pointer; }
+          input { width: 18px; height: 18px; accent-color: #b5ea6a; }
+          dl { position: fixed; right: 14px; bottom: 14px; margin: 0; display: grid; grid-template-columns: auto auto; gap: 4px 14px; padding: 12px 14px; border-radius: 12px; background: rgb(10 30 20 / .8); font-size: 12px; }
+          dt { color: #a9bba3; } dd { margin: 0; font: 600 12px var(--f-mono); text-align: right; color: #b5ea6a; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const $ = (s) => document.querySelector(s);
+          const canvas = $('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#0f2219');
+          const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
+          scene.add(new THREE.HemisphereLight('#f4f7ea', '#0f2219', 1.6));
+          const sun = new THREE.DirectionalLight('#fff', 1.6); sun.position.set(-4, 6, 8); scene.add(sun);
+
+          // Fachada: 1200 ventanas en un solo InstancedMesh, en la capa 1 (la que se toca)
+          const COLS = 30, ROWS = 40;
+          const windows = new THREE.InstancedMesh(new THREE.BoxGeometry(.26, .2, .05), new THREE.MeshStandardMaterial({ color: '#fff' }), COLS * ROWS);
+          const o = new THREE.Object3D(), base = new THREE.Color('#29453a');
+          for (let i = 0; i < COLS * ROWS; i++) {
+            o.position.set((i % COLS - COLS / 2) * .34, Math.floor(i / COLS) * .28 - 4, 0); o.updateMatrix();
+            windows.setMatrixAt(i, o.matrix); windows.setColorAt(i, base);
+          }
+          windows.layers.enable(1); scene.add(windows);   // capa 0 (se pinta) y capa 1 (se toca)
+          const slab = new THREE.Mesh(new THREE.BoxGeometry(COLS * .34 + .4, ROWS * .28 + .4, .3), new THREE.MeshStandardMaterial({ color: '#d8d2c4', roughness: .9 }));
+          slab.position.set(-.17, ROWS * .14 - 4.14, -.18); scene.add(slab);
+          // Escultura decorativa de ~150 000 triángulos delante: capa 0, no se toca
+          const sculpture = new THREE.Mesh(new THREE.TorusKnotGeometry(1.4, .45, 1200, 64), new THREE.MeshStandardMaterial({ color: '#c46a3b', roughness: .35 }));
+          sculpture.position.set(0, 0, 2.5); scene.add(sculpture);
+
+          const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+          let last = -1, count = 0, pending = false;
+          function cast() {
+            // Capa 1: solo lo tocable. Capa 0: todo lo que se pinta, escultura incluida
+            ray.layers.set($('#layers').checked ? 1 : 0);
+            const t0 = performance.now();
+            ray.setFromCamera(ndc, camera);
+            const hit = ray.intersectObjects(scene.children).find((h) => h.object === windows);
+            $('#ms').textContent = (performance.now() - t0).toFixed(2) + ' ms'; count++;
+            const id = hit ? hit.instanceId : -1;
+            if (id !== last) {
+              if (last >= 0) windows.setColorAt(last, base);
+              if (id >= 0) windows.setColorAt(id, new THREE.Color('#b5ea6a'));
+              windows.instanceColor.needsUpdate = true; last = id;
+              $('#win').textContent = id >= 0 ? `fila ${Math.floor(id / COLS) + 1}, columna ${id % COLS + 1}` : '–';
+              draw();
+            }
+          }
+          canvas.addEventListener('pointermove', (e) => {
+            ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+            if (!$('#raf').checked) return cast();         // sin throttle: un raycast por evento
+            if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; cast(); }); }
+          });
+          setInterval(() => { $('#rps').textContent = count; count = 0; }, 1000);
+
+          function draw() { renderer.render(scene, camera); }
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h;
+            camera.position.set(2.5, 1, w < h ? 26 : 15); camera.lookAt(0, 1.2, 0);
+            camera.updateProjectionMatrix(); draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Pasa el ratón por encima de la escultura naranja con «Capas» desactivado y mira «Último raycast»: los milisegundos se multiplican, aunque solo te interesan las ventanas. Con capas, la escultura ni se mira. Y las 1200 ventanas son un único <code>InstancedMesh</code>: el impacto devuelve <code>instanceId</code>, que dice qué ventana es sin tener 1200 objetos.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En táctil no hay hover, así que no hay raycast continuo: solo uno por toque. El presupuesto en móvil es el de pintar, no el del rayo. Aun así, un raycast contra una malla densa en un móvil modesto puede comerse un fotograma entero en el momento del toque; usa zonas simples en una capa propia y nunca lances el rayo contra la escena completa.</p>
+      </div>
+
+      <h2>Criterio: lo tocable <em>tiene que parecer tocable</em></h2>
+      <p>El fallo más común en las webs con 3D interactivo no es técnico: es que nadie sabe que se puede tocar. En una interfaz plana los botones parecen botones; en una escena 3D nada lo parece salvo que lo diseñes. Compara:</p>
+
+      <div class="vs wide">
+        <figure class="no">
+          <div class="mock" aria-hidden="true"><div class="plan"></div><span class="fine">Haz clic en las estancias para explorar</span></div>
+          <figcaption><b>Así no</b>Una maqueta preciosa y muda. La instrucción, en gris diminuto abajo. Nadie la lee, nadie toca, y el 3D se queda en decoración cara.</figcaption>
+        </figure>
+        <figure class="yes">
+          <div class="mock" aria-hidden="true"><div class="plan"></div><div class="glow"></div><span class="pin" style="left:30%;top:30%"><i></i>01 Salón</span><span class="pin" style="left:56%;top:52%"><i></i>02 Cocina</span><span class="cursor"></span></div>
+          <figcaption><b>Así sí</b>Etiquetas con un pulso suave que invitan, la zona que se ilumina al pasar, el cursor de mano y una lista al lado. Se ve qué se toca antes de tocar.</figcaption>
+        </figure>
+      </div>
+
+      <p>Las señales que funcionan, de más a menos importante:</p>
+      <ol>
+        <li><strong>Etiquetas visibles en reposo</strong>, ancladas a lo que se puede tocar. Dicen qué hay y dónde, sin pedir nada.</li>
+        <li><strong>Un pulso suave</strong> en esas etiquetas, escalonado para que no laten a la vez. Atrae la mirada sin gritar; con <code>prefers-reduced-motion</code>, quieto.</li>
+        <li><strong>Respuesta al hover inmediata</strong>: zona iluminada, cursor de mano, la fila de la lista resaltada. Menos de 100 ms, o parece que no ha pasado nada.</li>
+        <li><strong>Un primer estado que enseña</strong>: la portada pasa el resaltado por las estancias al cargar, una vez, para decir «esto responde».</li>
+      </ol>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>No hagas tocable lo que no lleva a nada. Si los árboles se iluminan al pasar pero no abren ficha, el usuario aprende que la iluminación miente y deja de explorar. Pocas zonas, todas con recompensa, y todas con la misma señal: el mismo lima, el mismo pulso, la misma ficha.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Un raycast convierte el puntero en NDC, lanza un rayo desde la cámara y devuelve los impactos ordenados. Organiza la escena en grupos con nombre y lanza el rayo contra zonas simples, no contra la malla real.</li>
+          <li>Volar la cámara es interpolar posición y punto de mira a la vez, con curva suave y duración según la distancia, hacia el hueco libre de la pantalla.</li>
+          <li>Etiquetas, fichas y listas van en HTML: se colocan proyectando puntos 3D y garantizan accesibilidad y teclado.</li>
+          <li>En táctil, decide al soltar si fue toque o arrastre, limita <code>OrbitControls</code> y no robes el scroll.</li>
+          <li>Throttle con rAF, capas para lo tocable y señales visibles: lo tocable tiene que parecer tocable.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Una promoción de viviendas en Benicàssim quiere su edificio en la web: cuatro plantas, tres pisos por planta. Constrúyelo con cajas (o con el GLB de la residencia apilado) y añade un cilindro invisible por planta en la capa 1. Al tocar una planta, la cámara vuela hacia ella, se ilumina y se abre una ficha HTML con los tres pisos como botones. Añade la lista de plantas como alternativa accesible, etiquetas con el número de planta que se ocultan cuando quedan detrás del edificio y, en el móvil, ficha como hoja inferior con el edificio en la mitad de arriba.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+
+<script type="module">
+  /* Portada: la residencia de la torre, en GLB, como maqueta interactiva.
+     Raycast contra zonas invisibles (capa 1), vuelo de cámara con tween propio,
+     etiquetas HTML proyectadas, lista accesible sincronizada y render bajo demanda. */
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+  const ROOMS = [
+    { id: 'salon', name: 'Salón', m2: 42, x: [-10, -1.2], z: [-1.6, 6], look: [-5.6, 0.4, 2.2], text: 'Doble orientación, chimenea de bioetanol y salida directa a la terraza. La estancia que se enseña primero.' },
+    { id: 'cocina', name: 'Cocina y comedor', m2: 28, x: [-1.2, 4.6], z: [-1.6, 6], look: [1.6, 0.4, 2.2], text: 'Isla de piedra de 3,2 m, mesa para seis y despensa oculta tras el panelado de nogal.' },
+    { id: 'principal', name: 'Dormitorio principal', m2: 24, x: [4.6, 10], z: [-6, 2.6], look: [7.3, 0.4, -1.8], text: 'Vestidor de nogal a medida y ventanal al este: la luz de la mañana entra hasta la cama.' },
+    { id: 'bano', name: 'Baño en suite', m2: 9, x: [4.6, 10], z: [2.6, 6], look: [7.3, 0.3, 4.3], text: 'Bañera exenta de piedra, doble lavabo y ducha a ras de suelo con mampara de vidrio.' },
+    { id: 'estudio', name: 'Estudio', m2: 14, x: [-10, -3.4], z: [-6, -1.6], look: [-6.7, 0.4, -3.8], text: 'Puerta corredera y estantería a medida. Despacho de día, cuarto de invitados cuando hace falta.' },
+    { id: 'terraza', name: 'Terraza', m2: 31, x: [-10, 10], z: [6, 9.2], look: [0, 0.3, 7.6], dir: [0.15, 0.75, 1], text: 'Jacuzzi, tumbonas y barandilla de vidrio. Treinta y un metros de exterior a 96 m de altura.' },
+  ];
+  const hero = document.querySelector('.maqueta');
+  const canvas = hero.querySelector('canvas');
+  const labelsBox = hero.querySelector('.labels');
+  const hud = hero.querySelector('[data-hud]');
+  const listButtons = [...hero.querySelectorAll('.rooms button')];
+  const P = (k) => hero.querySelector(`[data-p="${k}"]`);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lite = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+
+  let api = null, focused = null, hovered = null;
+
+  /* ---------- Interfaz HTML (funciona aunque no haya WebGL) ---------- */
+  function select(id) {
+    const r = ROOMS.find((x) => x.id === id) || null;
+    focused = r;
+    hero.classList.toggle('focused', !!r);
+    listButtons.forEach((b) => b.setAttribute('aria-pressed', String(!!r && b.dataset.room === r.id)));
+    if (r) {
+      const i = ROOMS.indexOf(r);
+      P('n').textContent = String(i + 1).padStart(2, '0');
+      P('name').textContent = r.name; P('m2').textContent = r.m2; P('text').textContent = r.text;
+    }
+    if (api) api.focus(r);
+  }
+  function hover(id) {
+    hovered = id;
+    listButtons.forEach((b) => b.classList.toggle('hover', b.dataset.room === id));
+    labelsBox.querySelectorAll('.rtag').forEach((t) => t.classList.toggle('hover', t.dataset.room === id));
+    if (api) api.hover(id);
+  }
+  listButtons.forEach((b) => {
+    b.addEventListener('click', () => select(focused && focused.id === b.dataset.room ? null : b.dataset.room));
+    b.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hover(b.dataset.room); });
+    b.addEventListener('pointerleave', () => hover(null));
+  });
+  hero.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => step(+b.dataset.go)));
+  function step(d) {
+    if (!d || !focused) return select(null);
+    const i = (ROOMS.indexOf(focused) + d + ROOMS.length) % ROOMS.length;
+    select(ROOMS[i].id);
+  }
+  document.addEventListener('keydown', (e) => {
+    if (!focused || e.target.closest('textarea, input, select')) return;
+    if (e.key === 'Escape') select(null);
+    if (hero.matches(':focus-within') && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { e.preventDefault(); step(e.key === 'ArrowRight' ? 1 : -1); }
+  });
+
+  try { api = start(); }
+  catch (e) { hud.textContent = 'Sin WebGL: usa la lista de estancias'; }
+
+  function start() {
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, lite ? 1.25 : 1.75));
+    renderer.toneMapping = THREE.AgXToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+
+    const scene = new THREE.Scene();
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environmentIntensity = 0.45;
+    const camera = new THREE.PerspectiveCamera(30, 1, 1, 400);
+    camera.layers.enable(1);                       // las zonas viven en la capa 1 y también se pintan
+
+    scene.add(new THREE.HemisphereLight('#f1f7e4', '#1f3d2c', 1.1));
+    const key = new THREE.DirectionalLight('#fff3e3', 2.3);
+    key.position.set(-6, 30, 10); key.castShadow = true;
+    key.shadow.mapSize.set(lite ? 1024 : 2048, lite ? 1024 : 2048);
+    Object.assign(key.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 5, far: 70 });
+    key.shadow.radius = 5; key.shadow.bias = -0.0004; key.shadow.normalBias = 0.03;
+    scene.add(key);
+    const rim = new THREE.DirectionalLight('#c9f59a', 0.7); rim.position.set(18, 8, -16); scene.add(rim);
+    // la sombra cae sobre la página: un suelo que solo recibe sombra
+    const shadowFloor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.22 }));
+    shadowFloor.rotation.x = -Math.PI / 2; shadowFloor.position.y = -0.75; shadowFloor.receiveShadow = true; scene.add(shadowFloor);
+
+    const zones = [];
+    const anchors = {};                            // punto 3D de cada etiqueta
+    const tags = {};
+
+    new GLTFLoader().load('../assets/models/residencia.glb', (gltf) => {
+      const model = gltf.scene;
+      if (model.children[0]) model.children[0].rotation.set(0, 0, 0);
+      const found = [];
+      model.traverse((o) => {
+        if (!o.isMesh) return;
+        const m = o.material;
+        if (m.transparent && m.opacity === 0) { found.push(o); return; }
+        o.castShadow = !m.transparent; o.receiveShadow = true;
+      });
+      // El GLB no trae nombres: cada zona se empareja con la estancia cuyo centro está más cerca
+      const c = new THREE.Vector3();
+      for (const r of ROOMS) {
+        const cx = (r.x[0] + r.x[1]) / 2, cz = (r.z[0] + r.z[1]) / 2;
+        const z = found.reduce((best, o) => { o.getWorldPosition(c); const d = Math.hypot(c.x - cx, c.z - cz); return !best || d < best.d ? { o, d } : best; }, null).o;
+        z.material = new THREE.MeshBasicMaterial({ color: '#b8f05f', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+        z.layers.set(1);                            // solo esto lo mira el rayo
+        z.userData.room = r; zones.push(z);
+        anchors[r.id] = new THREE.Vector3(cx, 0.9, cz);
+      }
+      scene.add(model);
+      // etiquetas HTML (decorativas para el lector: la lista ya lo dice)
+      ROOMS.forEach((r, i) => {
+        const t = document.createElement('button');
+        t.type = 'button'; t.tabIndex = -1; t.className = 'rtag'; t.dataset.room = r.id;
+        t.style.setProperty('--d', (i * 0.43).toFixed(2) + 's');
+        t.innerHTML = `<i>${String(i + 1).padStart(2, '0')}</i><span>${r.name}</span>`;
+        t.addEventListener('click', () => select(r.id));
+        t.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hover(r.id); });
+        t.addEventListener('pointerleave', () => hover(null));
+        labelsBox.append(t); tags[r.id] = t;
+      });
+      hero.classList.add('ready');
+      hud.innerHTML = 'Toca una estancia o una etiqueta';
+      snap(); dirty = true; wake();
+      if (!reduce) intro();
+    }, (e) => { if (e.total) hud.textContent = `Cargando la maqueta, ${Math.round((e.loaded / e.total) * 100)} %`; },
+    () => { hud.textContent = 'No se ha podido cargar el modelo: usa la lista'; });
+
+    /* ---------- Encuadre: hueco libre según el estado y la pantalla ---------- */
+    const HOME_DIR = new THREE.Vector3(26, 27, 30).normalize();
+    const HOME_LOOK = new THREE.Vector3(0, 0, 1.4);
+    let W = 1, H = 1;
+    const tan = (deg) => Math.tan(THREE.MathUtils.degToRad(deg / 2));
+    function region(r) {
+      const portrait = W < H * 0.95;
+      if (!r) return portrait ? { x: [0, W], y: [H * 0.38, H * 0.84] } : { x: [W * 0.4, W * 0.97], y: [H * 0.14, H * 0.9] };
+      return portrait ? { x: [0, W], y: [H * 0.06, H * 0.56] } : { x: [W * 0.26, W * 0.68], y: [H * 0.1, H * 0.9] };
+    }
+    function view(r) {
+      const g = region(r), rw = g.x[1] - g.x[0], rh = g.y[1] - g.y[0];
+      const tv = tan(camera.fov), th = tv * camera.aspect;
+      const fitH = th * rw / W, fitV = tv * rh / H;
+      let pos, look;
+      if (!r) {
+        look = HOME_LOOK.clone();
+        const d = Math.max(12.6 / fitH, 9.2 / fitV) + (W < H ? 2 : 7);
+        pos = look.clone().addScaledVector(HOME_DIR, d);
+      } else {
+        look = new THREE.Vector3(...r.look);
+        const half = Math.max(r.x[1] - r.x[0], r.z[1] - r.z[0]) / 2 + 1.2;
+        const d = Math.max(half / fitH, half * 0.8 / fitV) + 6;
+        pos = look.clone().addScaledVector(new THREE.Vector3(...(r.dir || [0.62, 0.8, 0.78])).normalize(), d);
+      }
+      return { pos, look, cx: (g.x[0] + g.x[1]) / 2 / W, cy: (g.y[0] + g.y[1]) / 2 / H };
+    }
+    const cur = { pos: new THREE.Vector3(), look: new THREE.Vector3(), cx: 0.6, cy: 0.5 };
+    function size() {
+      const w = hero.clientWidth, h = hero.clientHeight;
+      if (w === W && h === H) return false;
+      W = w; H = h; renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.setFocalLength(w < h * 0.95 ? 35 : 50);
+      return true;
+    }
+    function snap() { size(); const v = view(focused); cur.pos.copy(v.pos); cur.look.copy(v.look); cur.cx = v.cx; cur.cy = v.cy; tw = null; }
+    function applyCamera() {
+      camera.position.copy(cur.pos); camera.lookAt(cur.look);
+      camera.setViewOffset(W, H, W / 2 - cur.cx * W, H / 2 - cur.cy * H, W, H);
+      camera.updateProjectionMatrix();
+    }
+
+    /* ---------- Vuelo de cámara (tween propio) ---------- */
+    let tw = null;
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    function flyTo(r) {
+      const to = view(r);
+      if (reduce) { cur.pos.copy(to.pos); cur.look.copy(to.look); cur.cx = to.cx; cur.cy = to.cy; dirty = true; wake(); return; }
+      const dur = Math.min(1600, 800 + cur.pos.distanceTo(to.pos) * 22);
+      tw = { from: { pos: cur.pos.clone(), look: cur.look.clone(), cx: cur.cx, cy: cur.cy }, to, t0: performance.now(), dur };
+      wake();
+    }
+
+    /* ---------- Resaltado de zonas ---------- */
+    function paintZones() {
+      for (const z of zones) {
+        const id = z.userData.room.id;
+        z.material.opacity = focused && focused.id === id ? 0.24 : hovered === id ? 0.16 : 0;
+      }
+      dirty = true; wake();
+    }
+    function intro() {   // una pasada de resaltado al cargar: «esto responde»
+      ROOMS.forEach((r, i) => setTimeout(() => { if (!focused && !hovered) { const z = zones.find((x) => x.userData.room === r); zones.forEach((x) => (x.material.opacity = 0)); z.material.opacity = 0.14; dirty = true; wake(); } }, 600 + i * 260));
+      setTimeout(() => paintZones(), 600 + ROOMS.length * 260);
+    }
+
+    /* ---------- Raycast: el puntero solo guarda la posición; el rayo, una vez por fotograma ---------- */
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+    ray.layers.set(1);
+    let pending = false, down = null;
+    function setNdc(e) { const b = canvas.getBoundingClientRect(); ndc.set(((e.clientX - b.left) / b.width) * 2 - 1, -((e.clientY - b.top) / b.height) * 2 + 1); }
+    function pick() {
+      const t0 = performance.now();
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObjects(zones, false)[0];
+      const r = hit ? hit.object.userData.room : null;
+      hud.innerHTML = `pick(<b>${r ? r.id : 'nada'}</b>) ${(performance.now() - t0).toFixed(2)} ms`;
+      return r;
+    }
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse' || !zones.length) return;
+      setNdc(e); pending = true; wake();
+    });
+    canvas.addEventListener('pointerleave', () => { if (hovered) hover(null); canvas.style.cursor = ''; });
+    canvas.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+    canvas.addEventListener('pointerup', (e) => {
+      if (!down || !zones.length) return;
+      const tap = Math.hypot(e.clientX - down.x, e.clientY - down.y) < 8 && performance.now() - down.t < 450;
+      down = null;
+      if (!tap) return;
+      setNdc(e); const r = pick();
+      select(r ? (focused && focused.id === r.id ? null : r.id) : null);
+    });
+
+    /* ---------- Etiquetas proyectadas ---------- */
+    const v = new THREE.Vector3();
+    function placeTags() {
+      for (const r of ROOMS) {
+        const t = tags[r.id]; if (!t) continue;
+        v.copy(anchors[r.id]).project(camera);
+        t.style.transform = `translate3d(${((v.x + 1) / 2 * W).toFixed(1)}px, ${((1 - v.y) / 2 * H).toFixed(1)}px, 0)`;
+      }
+    }
+
+    /* ---------- Bucle bajo demanda ---------- */
+    let dirty = true, visible = true, running = false;
+    function wake() { if (!running && visible) { running = true; requestAnimationFrame(tick); } }
+    function tick(now) {
+      if (size()) snap();   // al girar el móvil o redimensionar, encuadre nuevo sin vuelo
+      let moving = false;
+      if (tw) {
+        const k = Math.min(1, (now - tw.t0) / tw.dur), e = ease(k);
+        cur.pos.lerpVectors(tw.from.pos, tw.to.pos, e); cur.look.lerpVectors(tw.from.look, tw.to.look, e);
+        cur.cx = tw.from.cx + (tw.to.cx - tw.from.cx) * e; cur.cy = tw.from.cy + (tw.to.cy - tw.from.cy) * e;
+        if (k >= 1) tw = null;
+        moving = true;
+      }
+      if (moving || dirty) { applyCamera(); }
+      if (pending) {
+        pending = false;
+        const r = pick();
+        canvas.style.cursor = r ? 'pointer' : '';
+        if ((r ? r.id : null) !== hovered) hover(r ? r.id : null);
+      }
+      if (moving || dirty) { renderer.render(scene, camera); placeTags(); dirty = false; }
+      if (visible && (moving || dirty || pending)) requestAnimationFrame(tick); else running = false;
+    }
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) { dirty = true; wake(); } }).observe(hero);
+    new ResizeObserver(() => { dirty = true; wake(); }).observe(hero);
+    snap(); wake();
+
+    return {
+      focus(r) { paintZones(); flyTo(r); },
+      hover() { paintZones(); },
+    };
+  }
+</script>
+</body>
+</html>

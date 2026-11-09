@@ -1,0 +1,1309 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelos, luz y materiales | Hora azul</title>
+<meta name="description" content="Cargar un GLB con criterio, materiales PBR que comunican, iluminación de fotógrafo, tone mapping, postproceso con mesura y la focal de la cámara.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Plató».
+     Papel de fondo infinito, tinta cálida y un cobre de foco de tungsteno. Fraunces + Inter Tight,
+     con JetBrains Mono para la ficha técnica, como los datos de una cámara. */
+  :root {
+    --bg: oklch(92% 0.008 80);
+    --bg-2: oklch(88.5% 0.011 78);
+    --bg-3: oklch(84% 0.014 76);
+    --fg: oklch(18% 0.01 60);
+    --muted: oklch(40% 0.014 60);
+    --faint: oklch(50% 0.014 60);
+    --accent: oklch(58% 0.15 50);
+    --accent-ink: oklch(48% 0.14 50);
+    --on-accent: oklch(97% 0.01 80);
+    --code-bg: oklch(20% 0.012 60);
+    --scheme: light;
+    --f-display: "Fraunces", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 600;
+    --display-tracking: -0.035em;
+    --dusk: oklch(34% 0.06 300);
+  }
+  body { font-size: clamp(1.02rem, 0.98rem + 0.2vw, 1.14rem); line-height: 1.62; }
+  .prose h2 { font-variation-settings: "opsz" 144; line-height: .98; }
+  .prose h2 em, .statement em { font-style: italic; font-weight: 500; color: var(--accent-ink); }
+  .prose h2 .n { font-family: var(--f-code); font-weight: 500; letter-spacing: 0; color: var(--accent-ink); }
+  .prose h2 .n::before { content: "Toma "; color: var(--faint); }
+  .prose a { color: var(--accent-ink); }
+  @media (max-width: 640px) { .table-wrap table { min-width: 560px; } }
+
+  /* ================= Portada: render de estudio en vivo ================= */
+  html.hero-dusk { --top-fg: oklch(94% 0.02 80); }
+  .studio { --hfg: var(--fg); --hmuted: var(--muted); --hac: var(--accent-ink); --hline: oklch(18% 0.01 60 / .18);
+    background: var(--bg); color: var(--hfg); touch-action: pan-y; cursor: grab;
+    transition: background-color 1.4s var(--ease-out), color 1.2s var(--ease-out); }
+  .studio:active { cursor: grabbing; }
+  .studio[data-mode="dusk"] { --hfg: oklch(95% 0.018 80); --hmuted: oklch(82% 0.03 70); --hac: oklch(82% 0.13 68); --hline: oklch(95% 0.02 80 / .22); background: var(--dusk); }
+  .studio .stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.2s var(--ease-out); }
+  .studio .stage.on { opacity: 1; }
+  /* Foto de respaldo: se ve mientras carga el GLB y si no hay WebGL */
+  .studio .poster { position: absolute; z-index: 0; right: 1vw; top: 16vh; width: min(62vw, 1000px); height: auto; transition: opacity 1s, filter 1.4s; pointer-events: none; }
+  .studio.ready .poster { opacity: 0; }
+  .studio[data-mode="dusk"] .poster { filter: brightness(.62) sepia(.35) hue-rotate(-18deg) saturate(1.4); }
+  /* Fundido con la página: el fondo infinito sigue en el cuerpo de la lección (solo de día) */
+  .studio::after { content: ""; position: absolute; inset: auto 0 0; height: 16vh; z-index: 1; pointer-events: none;
+    background: linear-gradient(to bottom, transparent, var(--bg)); transition: opacity 1.2s; }
+  .studio[data-mode="dusk"]::after { opacity: 0; }
+
+  .h-copy { position: absolute; z-index: 2; left: var(--gutter); top: clamp(6rem, 17vh, 11rem); max-width: min(36rem, 40vw); pointer-events: none; }
+  .h-copy [data-kicker] { margin: 0 0 1.3rem; font: 500 var(--step--1)/1 var(--f-code); color: var(--hmuted); transition: color 1.2s; }
+  .studio h1 { margin: 0; font: 600 clamp(3.2rem, 0.6rem + 6.2vw, 8.2rem)/.88 var(--f-display); letter-spacing: -0.045em; font-variation-settings: "opsz" 144; text-wrap: balance; }
+  .studio h1 em { display: block; font-style: italic; font-weight: 400; color: var(--hac); transition: color 1.2s; }
+  .studio .lede { margin: 1.6rem 0 0; max-width: 31ch; font-size: var(--step-1); line-height: 1.38; color: var(--hmuted); transition: color 1.2s; }
+
+  .h-ui { position: absolute; z-index: 2; left: var(--gutter); right: var(--gutter); bottom: clamp(1.2rem, 3.4vh, 2.4rem);
+    display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 1.2rem 2.4rem; }
+  .switch { display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid var(--hline); background: color-mix(in oklab, var(--bg) 55%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: background-color 1.2s, border-color 1.2s; }
+  .studio[data-mode="dusk"] .switch { background: oklch(25% 0.05 300 / .55); }
+  .switch button { display: inline-flex; align-items: center; gap: .55rem; min-height: 46px; padding: 0 1.15rem; border: 0; border-radius: 999px; background: transparent; color: inherit; font: 600 var(--step--1)/1 var(--f-ui); cursor: pointer; transition: background-color .5s, color .5s; }
+  .switch button i { width: 14px; height: 14px; border-radius: 50%; background: oklch(86% 0.13 85); box-shadow: 0 0 0 3px oklch(86% 0.13 85 / .25); }
+  .switch button[data-mode="dusk"] i { background: oklch(70% 0.17 45); box-shadow: 0 0 0 3px oklch(70% 0.17 45 / .25); }
+  .switch button[aria-pressed="true"] { background: var(--hfg); color: var(--bg); }
+  .studio[data-mode="dusk"] .switch button[aria-pressed="true"] { color: var(--dusk); }
+  .switch button:focus-visible { outline: 2px solid var(--hac); outline-offset: 2px; }
+  .spec { display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: .2rem 2.2rem; margin: 0; padding: 0 0 .35rem; }
+  .spec div { border-left: 1px solid var(--hline); padding-left: .8rem; transition: border-color 1.2s; }
+  .spec dt { font: 500 .72rem/1.3 var(--f-ui); color: var(--hmuted); transition: color 1.2s; }
+  .spec dd { margin: .2rem 0 0; font: 500 .95rem/1.2 var(--f-code); font-variant-numeric: tabular-nums; }
+  .h-end { display: grid; justify-items: end; gap: .6rem; padding-bottom: .35rem; }
+  .status { margin: 0; font: 500 var(--step--1)/1.2 var(--f-ui); color: var(--hmuted); transition: color 1.2s; }
+  .studio .chip { border-color: var(--hline); }
+
+  @media (max-width: 1100px) { .spec { grid-template-columns: repeat(2, auto); } }
+  @media (max-width: 760px) {
+    .studio .poster { right: auto; left: -6vw; top: 41svh; width: 112vw; }
+    .h-copy { top: 5.2rem; max-width: none; right: var(--gutter); }
+    .h-copy [data-kicker] { margin-bottom: .9rem; }
+    .studio h1 { font-size: clamp(2.9rem, 1rem + 9.6vw, 4rem); }
+    .studio .lede { margin-top: 1rem; font-size: 1.02rem; max-width: 34ch; }
+    .h-ui { grid-template-columns: 1fr auto; gap: .9rem 1rem; bottom: 1rem; }
+    .switch { grid-column: 1 / -1; justify-self: stretch; }
+    .switch button { flex: 1; justify-content: center; }
+    .spec { grid-template-columns: repeat(2, auto); gap: .5rem 1.2rem; }
+    .spec dd { font-size: .82rem; }
+    .h-end { align-self: end; }
+  }
+  @media (max-width: 760px) and (max-height: 700px) { .studio .lede { display: none; } }
+
+  /* ================= Cuerpo ================= */
+  /* Desglose del peso del GLB */
+  .weight { margin: 2.4rem 0 1rem; }
+  .weight .bar { display: flex; height: 3.4rem; border: 1px solid var(--fg); }
+  .weight .bar i { display: block; height: 100%; }
+  .weight .bar .geo { flex: 96.3; background: var(--fg); }
+  .weight .bar .json { flex: 2.8; background: var(--accent); }
+  .weight .bar .tex { flex: .9; background: var(--bg-3); min-width: 6px; }
+  .weight .nums { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line-2); }
+  .weight .nums div { padding: 1.2rem 1.2rem 1.3rem 0; }
+  .weight .nums div + div { border-left: 1px solid var(--line-2); padding-left: 1.2rem; }
+  .weight b { display: block; font: 600 clamp(2.4rem, 1.6rem + 2.6vw, 4rem)/.9 var(--f-display); letter-spacing: -0.04em; font-variation-settings: "opsz" 144; }
+  .weight b small { font-size: .42em; letter-spacing: 0; }
+  .weight span { display: block; margin-top: .5rem; font-size: var(--step--1); color: var(--muted); line-height: 1.4; }
+  .weight .key { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; margin-top: .8rem; font: 500 .8rem/1.3 var(--f-code); color: var(--muted); }
+  .weight .key i { display: inline-block; width: .8rem; height: .8rem; vertical-align: -1px; margin-right: .4rem; border: 1px solid var(--fg); }
+  @media (max-width: 760px) { .weight .nums { grid-template-columns: 1fr 1fr; } .weight .nums div:nth-child(3) { border-left: 0; padding-left: 0; } .weight .nums div:nth-child(n+3) { border-top: 1px solid var(--line-2); } }
+
+  /* Muestrario de materiales: esferas pintadas con CSS */
+  .materials { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; margin: 2.6rem 0; border-top: 1px solid var(--fg); }
+  .materials figure { margin: 0; padding: 1.4rem 1rem 1.2rem 0; border-right: 1px solid var(--line-2); }
+  .materials figure + figure { padding-left: 1rem; }
+  .materials figure:last-child { border-right: 0; }
+  .materials .ball { width: min(100%, 120px); aspect-ratio: 1; border-radius: 50%; margin-bottom: 1rem; box-shadow: 0 18px 22px -16px oklch(18% 0.01 60 / .55); }
+  .materials h3 { margin: 0 0 .25rem; font: 600 var(--step-0)/1.15 var(--f-display); letter-spacing: -0.02em; }
+  .materials code { display: block; font-size: .72rem; color: var(--muted); background: none; padding: 0; margin-bottom: .5rem; }
+  .materials p { margin: 0; font-size: var(--step--1); line-height: 1.45; color: var(--muted); }
+  .m-barro { background: radial-gradient(circle at 34% 30%, #d58c62 0, #b4643a 38%, #6e3317 100%); }
+  .m-esmalte { background: radial-gradient(circle at 34% 28%, #fff 0 6%, #f1ece2 12%, #d9d1c3 60%, #8f8678 100%); }
+  .m-laca { background: radial-gradient(circle at 34% 28%, #f4f4f4 0 4%, #3a3a3a 9%, #141414 45%, #050505 100%); }
+  .m-laton { background: radial-gradient(circle at 36% 30%, #fff1c9 0 5%, #d9b46c 18%, #9c7533 55%, #3c2a10 100%); }
+  .m-acero { background: radial-gradient(circle at 36% 30%, #fff 0 5%, #d6dbe2 16%, #8c939c 52%, #2c3036 100%); }
+  .m-tela { background: radial-gradient(circle at 40% 36%, #8b6f8c 0, #6b5170 45%, #3a2a3f 100%); }
+  @media (max-width: 900px) { .materials { grid-template-columns: repeat(3, 1fr); } .materials figure:nth-child(3) { border-right: 0; } .materials figure:nth-child(4) { padding-left: 0; } .materials figure:nth-child(n+4) { border-top: 1px solid var(--line-2); } }
+  @media (max-width: 520px) { .materials { grid-template-columns: 1fr 1fr; } .materials figure { border-right: 1px solid var(--line-2) !important; padding-left: 1rem !important; } .materials figure:nth-child(odd) { padding-left: 0 !important; } .materials figure:nth-child(even) { border-right: 0 !important; } .materials figure:nth-child(n+3) { border-top: 1px solid var(--line-2); } .materials .ball { width: 84px; } }
+
+  /* Esquema de luz en planta (split con elemento fijo) */
+  .light-plan { margin: 0; padding: 1.2rem; border: 1px solid var(--line-2); background: var(--bg-2); border-radius: var(--radius-m); }
+  .light-plan svg { display: block; width: 100%; height: auto; }
+  .light-plan figcaption { margin-top: .8rem; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  .light-list { list-style: none; padding: 0 !important; margin: 1.4rem 0; border-top: 1px solid var(--line-2); }
+  .light-list li { display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 1rem; padding: 1rem 0; margin: 0; border-bottom: 1px solid var(--line-2); }
+  .light-list b { font: 600 2.4rem/1 var(--f-display); color: var(--accent-ink); font-variation-settings: "opsz" 144; }
+  .light-list strong { display: block; font: 600 var(--step-0)/1.3 var(--f-ui); }
+  .light-list span { color: var(--muted); font-size: var(--step--1); line-height: 1.5; }
+
+  /* Banda de atardecer: la misma maqueta, dos luces */
+  .band.dusk { --band-bg: var(--dusk); --band-fg: oklch(95% 0.018 80); }
+  .band.dusk .inner { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem 4rem; align-items: end; }
+  .band.dusk p.big { margin: 0; font: 500 clamp(2.2rem, 1.2rem + 3.6vw, 4.8rem)/.98 var(--f-display); letter-spacing: -0.035em; font-variation-settings: "opsz" 144; text-wrap: balance; }
+  .band.dusk p.big em { color: oklch(82% 0.13 68); }
+  .band.dusk dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .6rem 1.2rem; font: 500 .9rem/1.4 var(--f-code); }
+  .band.dusk dt { color: oklch(78% 0.04 300); }
+  .band.dusk dd { margin: 0; }
+  @media (max-width: 760px) { .band.dusk .inner { grid-template-columns: 1fr; } }
+
+  /* Tira de objetivos */
+  .lenses { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 2.4rem 0; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--line-2); }
+  .lenses div { padding: 1.3rem 1rem 1.4rem 0; }
+  .lenses div + div { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+  .lenses b { display: block; font: 600 clamp(2.6rem, 1.6rem + 3vw, 4.6rem)/.85 var(--f-display); letter-spacing: -0.05em; font-variation-settings: "opsz" 144; }
+  .lenses b small { font: 500 .9rem/1 var(--f-code); letter-spacing: 0; margin-left: .2rem; color: var(--muted); }
+  .lenses strong { display: block; margin: .9rem 0 .3rem; font: 600 var(--step--1)/1.3 var(--f-ui); }
+  .lenses p { margin: 0; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  .lenses .on b { color: var(--accent-ink); }
+  @media (max-width: 760px) {
+    .lenses { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+    .lenses div { flex: 0 0 62%; scroll-snap-align: start; }
+  }
+
+  /* Receta de postproceso: cifras en fila */
+  .recipe { display: grid; grid-template-columns: repeat(3, 1fr); margin: 2rem 0; border-top: 1px solid var(--fg); }
+  .recipe div { padding: 1.1rem 1rem 1.2rem 0; }
+  .recipe div + div { border-left: 1px solid var(--line-2); padding-left: 1rem; }
+  .recipe b { display: block; font: 500 clamp(2rem, 1.4rem + 2vw, 3.2rem)/1 var(--f-code); letter-spacing: -0.04em; color: var(--accent-ink); }
+  .recipe span { display: block; margin-top: .4rem; font-size: var(--step--1); color: var(--muted); line-height: 1.4; }
+  .recipe strong { display: block; color: var(--fg); font-weight: 600; }
+</style>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="three-modelos">
+<main id="main">
+  <header class="hero studio" aria-labelledby="t" data-mode="day">
+    <img class="poster" src="../landing/media/residencia.webp" alt="" width="1600" height="1000" decoding="async">
+    <canvas class="stage" aria-hidden="true"></canvas>
+    <div class="h-copy">
+      <p data-kicker>Lección</p>
+      <h1 id="t">Modelos, luz <em>y materiales</em></h1>
+      <p class="lede">La residencia en GLB, en un plató de fondo infinito y en tiempo real. Cambia la luz: la misma maqueta pasa de catálogo a deseo.</p>
+    </div>
+    <div class="h-ui">
+      <div class="switch" role="group" aria-label="Luz del plató">
+        <button type="button" data-mode="day" aria-pressed="true"><i aria-hidden="true"></i>Día</button>
+        <button type="button" data-mode="dusk" aria-pressed="false"><i aria-hidden="true"></i>Atardecer</button>
+      </div>
+      <dl class="spec">
+        <div><dt>Objetivo</dt><dd data-spec="lens">50 mm</dd></div>
+        <div><dt>Luz clave</dt><dd data-spec="k">5600 K</dd></div>
+        <div><dt>Tone mapping</dt><dd>AgX</dd></div>
+        <div><dt>Exposición</dt><dd data-spec="exp">1,00</dd></div>
+      </dl>
+      <div class="h-end">
+        <p class="status" data-status aria-live="polite">Cargando la maqueta</p>
+        <span class="chip" data-meta>25 min</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En las lecciones anteriores el 3D era tuyo: formas que creabas con código. En una web real casi nunca es así. El modelo llega de Blender, de un arquitecto o de una tienda de recursos, y tu trabajo es el de un fotógrafo de producto: <strong>recibirlo, aligerarlo, darle materiales creíbles, iluminarlo con intención y elegir el objetivo</strong>.</p>
+      <p>La portada hace exactamente eso con <code>residencia.glb</code>, la misma planta de la landing de la torre. Todo lo que ves arriba (el fondo curvo, el foco que deja una mancha de luz, la sombra suave, el cambio a atardecer) lo vas a montar pieza a pieza.</p>
+
+      <h2>Del Blender a <em>la web</em></h2>
+      <p>Un modelo 3D son tres cosas: <strong>geometría</strong> (vértices y caras), <strong>materiales</strong> (cómo responde cada superficie a la luz) y <strong>texturas</strong> (imágenes que pintan esos materiales). El formato que lo empaqueta para la web es <strong>glTF</strong>, al que Khronos llama «el JPEG del 3D»: está pensado para entregar, no para editar.</p>
+      <p>glTF tiene dos sabores. <code>.gltf</code> es un JSON que apunta a un <code>.bin</code> y a las imágenes, cómodo para inspeccionar. <code>.glb</code> lo mete todo en un único binario: una sola petición, un solo archivo que cachear. Para producción, GLB.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Formato</th><th>Para qué sirve</th><th>En una web</th></tr></thead>
+          <tbody>
+            <tr><td><code>.glb</code> / <code>.gltf</code></td><td>Entrega: geometría, materiales PBR, texturas, animaciones y cámaras</td><td>El estándar. Three.js lo carga con <code>GLTFLoader</code></td></tr>
+            <tr><td><code>.fbx</code></td><td>Intercambio entre programas de animación</td><td>Pesado y cerrado. Pásalo a GLB antes de publicarlo</td></tr>
+            <tr><td><code>.obj</code></td><td>Geometría simple, muy antiguo</td><td>Sin materiales PBR ni jerarquía. Solo para salir del paso</td></tr>
+            <tr><td><code>.usdz</code></td><td>Realidad aumentada en iPhone</td><td>Se ofrece aparte, como enlace de «Ver en tu salón»</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Qué pesa de verdad</h3>
+      <p>Abre el GLB de la residencia y cuenta. Es un caso típico de exportación sin optimizar, y por eso es buen material de estudio:</p>
+
+      <div class="weight wide" aria-label="Desglose del peso de residencia.glb">
+        <div class="bar" aria-hidden="true"><i class="geo"></i><i class="json"></i><i class="tex"></i></div>
+        <div class="key" aria-hidden="true"><span><i style="background:var(--fg)"></i>Geometría 2,95 MB</span><span><i style="background:var(--accent)"></i>JSON de la escena 86 kB</span><span><i style="background:var(--bg-3)"></i>Textura del parqué 16 kB</span></div>
+        <div class="nums">
+          <div><b>3,06<small> MB</small></b><span>Peso total del archivo</span></div>
+          <div><b>96<small> %</small></b><span>Es geometría: posiciones, normales y UV</span></div>
+          <div><b>92 128</b><span>Vértices, a 32 bytes cada uno</span></div>
+          <div><b>61<small> de 94</small></b><span>Piezas sin índices: cada vértice compartido se repite</span></div>
+        </div>
+      </div>
+
+      <p>La lectura es clara: aquí no sobran texturas, sobra geometría. Las esquinas redondeadas de los muebles (<code>RoundedBoxGeometry</code>) generan miles de vértices, y 61 de las 94 piezas no usan índices, así que cada vértice compartido entre triángulos se guarda varias veces. Soldar vértices, indexar y comprimir dejaría el archivo en una fracción.</p>
+      <p>Para comprimir hay dos caminos, y conviene conocer los dos:</p>
+      <ul>
+        <li><strong>Draco</strong> comprime mucho la geometría, pero hay que descargar un decodificador en WebAssembly y descomprimir cuesta CPU. Bueno para mallas muy densas que se cargan una vez.</li>
+        <li><strong>meshopt</strong> comprime algo menos por sí solo, pero decodifica muy rápido y combina bien con el gzip o el Brotli del servidor. También comprime animaciones. Hoy suele ser la opción por defecto.</li>
+        <li>Para las texturas, <strong>KTX2</strong> (Basis Universal) se queda comprimido también dentro de la GPU. Un WebP pesa poco en la descarga, pero en la memoria gráfica ocupa lo mismo que un PNG.</li>
+      </ul>
+
+      <script type="text/x-code" data-lang="js" data-label="Optimizar en la terminal y cargar con meshopt (los decodificadores no están en el vendor del cuaderno)">
+        // Terminal: suelda, indexa, comprime geometría con meshopt y texturas a WebP
+        // npx @gltf-transform/cli optimize residencia.glb residencia-opt.glb --compress meshopt --texture-compress webp
+
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+        const loader = new GLTFLoader();
+        loader.setMeshoptDecoder(MeshoptDecoder);   // con Draco sería loader.setDRACOLoader(...)
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Trata el modelo de portada como la foto de portada. Si una imagen de 300 kB ya te parece pesada, 3 MB de modelo son diez fotos antes de que el usuario vea nada. El presupuesto lo decide lo que aporta: un configurador de producto justifica más peso que un objeto decorativo que gira. Y mientras carga, enseña siempre una imagen fija del mismo encuadre, como hace la portada.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Lo que revienta un móvil no es la descarga, es la memoria de la GPU. Una textura de 4096 × 4096 sin comprimir ocupa unos 64 MB, y casi 90 MB con sus mipmaps. Exporta las texturas a 1024 o 2048 como máximo y usa KTX2 si el modelo lleva muchas. En geometría, piensa en decenas de miles de triángulos para la portada, no en millones.</p>
+      </div>
+
+      <h2>GLTFLoader <em>paso a paso</em></h2>
+      <p>Cargar es una línea. Lo que separa una demo de una web es lo que haces después: <strong>medir, centrar, encuadrar y repasar</strong> el modelo, porque nunca llega como lo necesitas. Este laboratorio carga el mismo GLB de 3 MB y te enseña lo que trae.</p>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Cargas un GLB con materiales de Blender, lo añades a la escena y sale completamente negro. ¿Qué falta?</p>
+        <ol>
+          <li>Convertir las texturas a sRGB</li>
+          <li>Luz: ni luces ni un mapa de entorno en la escena</li>
+          <li>Llamar a <code>material.needsUpdate = true</code></li>
+        </ol>
+        <p class="why">GLTFLoader crea <code>MeshStandardMaterial</code>, que es físico: sin luz que reflejar, devuelve negro. Basta con un <code>scene.environment</code> (como <code>RoomEnvironment</code>) o un par de luces. Solo los materiales «unlit», como las lámparas de este modelo, se ven sin luz.</p>
+      </div>
+
+      <figure class="lab" data-three data-title="Cargar, centrar e inspeccionar" data-hint="Pulsa «Ver la caja»" data-height="470" data-height-mobile="520" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <aside class="card">
+            <p class="file">residencia.glb</p>
+            <p id="st">Cargando…</p>
+            <dl>
+              <dt>Peso</dt><dd id="kb">–</dd>
+              <dt>Mallas</dt><dd id="meshes">–</dd>
+              <dt>Materiales</dt><dd id="mats">–</dd>
+              <dt>Triángulos</dt><dd id="tris">–</dd>
+              <dt>Medidas</dt><dd id="size">–</dd>
+            </dl>
+          </aside>
+          <button id="box" type="button" aria-pressed="false">Ver la caja</button>
+          <div class="load"><i id="bar"></i></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #e7e4df; color: #1d1915; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          .card { position: fixed; left: 16px; top: 16px; width: 200px; padding: 14px 16px; background: rgb(255 255 255 / .62); backdrop-filter: blur(8px); border: 1px solid rgb(29 25 21 / .12); border-radius: 12px; }
+          .file { margin: 0; font: 600 15px var(--f-mono); }
+          #st { margin: 2px 0 10px; font-size: 12px; color: #6b6158; }
+          dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 12px; }
+          dt { color: #6b6158; } dd { margin: 0; font: 500 12px var(--f-mono); text-align: right; }
+          button { position: fixed; right: 16px; bottom: 22px; min-height: 44px; padding: 0 18px; border-radius: 99px; border: 1px solid #1d1915; background: #1d1915; color: #f3efe8; font: 600 13px var(--f-sans); cursor: pointer; }
+          button[aria-pressed="true"] { background: #be5a0a; border-color: #be5a0a; }
+          .load { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; background: rgb(29 25 21 / .1); }
+          .load i { display: block; height: 100%; background: #be5a0a; transform: scaleX(0); transform-origin: 0 50%; transition: transform .2s; }
+          @media (max-width: 480px) {
+            .card { left: 10px; right: 10px; top: 10px; width: auto; padding: 10px 12px; }
+            dl { grid-template-columns: repeat(2, auto 1fr); }
+            #st { margin-bottom: 6px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          const $ = (s) => document.querySelector(s);
+          const renderer = new THREE.WebGLRenderer({ canvas: $('canvas'), antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.toneMapping = THREE.AgXToneMapping;
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#e7e4df');
+          // Sin luz, los materiales PBR salen negros: un entorno de estudio basta
+          scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+          const sun = new THREE.DirectionalLight('#fff1e0', 1.8);
+          sun.position.set(-8, 14, 10); scene.add(sun);
+          const camera = new THREE.PerspectiveCamera(30, 1, 0.5, 400);
+          const turntable = new THREE.Group(); scene.add(turntable);
+          let radius = 14, helper;
+
+          // La ruta es relativa a lecciones/, la carpeta de esta página
+          new GLTFLoader().load('../assets/models/residencia.glb', (gltf) => {
+            const model = gltf.scene;
+            // 1. Medir: la caja envolvente dice dónde está y cuánto ocupa
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            // 2. Centrar: el modelo llega donde lo dejó el artista, no en el origen
+            model.position.sub(box.getCenter(new THREE.Vector3()));
+            turntable.add(model);
+            radius = size.length() / 2;
+            helper = new THREE.Box3Helper(new THREE.Box3().setFromObject(model), '#be5a0a');
+            helper.visible = false; turntable.add(helper);
+            // 3. Repasar: contar mallas, materiales y triángulos
+            let meshes = 0, tris = 0; const mats = new Set();
+            model.traverse((o) => {
+              if (!o.isMesh) return;
+              meshes++; mats.add(o.material);
+              const g = o.geometry;
+              tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+            });
+            $('#meshes').textContent = meshes;
+            $('#mats').textContent = mats.size;
+            $('#tris').textContent = Math.round(tris).toLocaleString('es');
+            $('#size').textContent = `${size.x.toFixed(0)} × ${size.z.toFixed(0)} m`;
+            $('#st').textContent = 'Cargado y centrado';
+            resize(); renderer.render(scene, camera);
+          }, (e) => {
+            if (!e.total) return;   // el servidor tiene que enviar Content-Length
+            const p = e.loaded / e.total;
+            $('#bar').style.transform = `scaleX(${p})`;
+            $('#st').textContent = `Cargando ${Math.round(p * 100)} %`;
+            $('#kb').textContent = (e.total / 1048576).toFixed(2) + ' MB';
+          }, () => ($('#st').textContent = 'No se ha podido cargar'));
+
+          $('#box').onclick = (e) => {
+            helper.visible = !helper.visible;
+            e.target.setAttribute('aria-pressed', helper.visible);
+          };
+
+          // 4. Encuadrar: la distancia sale del tamaño, no de probar números
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false);
+            camera.aspect = w / h;
+            const half = THREE.MathUtils.degToRad(camera.fov / 2);
+            const fit = Math.min(Math.tan(half), Math.tan(half) * camera.aspect);
+            const d = (radius / fit) * (w < h ? 1.05 : 0.7);
+            camera.position.set(0, d * 0.6, d * 0.8);
+            camera.lookAt(0, w < h ? 3.5 : 0, 0);
+            camera.updateProjectionMatrix();
+          }
+          addEventListener('resize', resize); resize();
+
+          // Gira solo mientras se ve: fuera de pantalla no pinta
+          let onScreen = true;
+          new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)).observe(renderer.domElement);
+          renderer.setAnimationLoop((t) => {
+            if (!onScreen) return;
+            turntable.rotation.y = t / 9000;
+            renderer.render(scene, camera);
+          });
+        </script>
+        <figcaption>Fíjate en «Mallas» y «Materiales»: 94 piezas y 22 materiales, sin un solo nombre. Este GLB no trae nombres, así que, para encontrar las zonas invisibles de cada estancia, la portada las reconoce por su material transparente. Cuando el modelo venga de Blender, pide que cada objeto tenga nombre: luego lo buscarás con <code>getObjectByName('sofa')</code>.</figcaption>
+      </figure>
+
+      <p>Cuatro pasos que repetirás con cada modelo:</p>
+      <ol>
+        <li><strong>Medir</strong> con <code>Box3.setFromObject()</code>. Si mide 2000 de ancho, el artista trabajó en milímetros: escala por 0,001 antes de seguir, o la niebla, las sombras y la cámara se volverán locas.</li>
+        <li><strong>Centrar</strong> restando el centro de la caja. Así la mesa giratoria gira sobre el modelo y no alrededor de un punto lejano.</li>
+        <li><strong>Encuadrar</strong> calculando la distancia desde el tamaño y el fov. Funciona con cualquier modelo y en cualquier proporción de pantalla.</li>
+        <li><strong>Repasar</strong> con <code>traverse()</code>: activar sombras, ocultar lo que sobra, cambiar materiales por nombre.</li>
+      </ol>
+
+      <script type="text/x-code" data-lang="js" data-label="El repaso que hace la portada al recibir el modelo">
+        model.traverse((o) => {
+          if (!o.isMesh) return;
+          const m = o.material;
+          if (m.transparent && m.opacity === 0) { o.visible = false; return; }  // zonas de clic: aquí sobran
+          if (m.isMeshBasicMaterial) lamps.push(m);     // las lámparas «unlit»: brillarán al atardecer
+          o.castShadow = !m.transparent;                // el vidrio no proyecta sombra
+          o.receiveShadow = true;
+        });
+      </script>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>No descargues el modelo hasta que haga falta. Si no está en la portada, carga el módulo con <code>import()</code> cuando la sección esté a una pantalla de distancia (un <code>IntersectionObserver</code> con <code>rootMargin: '100%'</code>). Y muestra el porcentaje: tres segundos con un número que sube se esperan mejor que uno en blanco.</p>
+      </div>
+
+      <h2>Materiales PBR: lo que <em>comunica</em> una superficie</h2>
+      <p>PBR significa «renderizado basado en la física»: el material no se pinta, se describe, y la luz hace el resto. Por eso el mismo material funciona de día y al atardecer. En <code>MeshStandardMaterial</code> lo describes con tres mandos:</p>
+      <ul>
+        <li><strong>Color</strong> (<code>color</code>, el albedo): el color de la superficie sin luces ni sombras pintadas. Si en la textura hay sombras dibujadas, se sumarán a las reales y todo parecerá sucio.</li>
+        <li><strong>Rugosidad</strong> (<code>roughness</code>, de 0 a 1): lo pulida que está la superficie a escala microscópica. Con 0, el reflejo es un punto nítido; con 1, la luz se reparte y el objeto parece mate.</li>
+        <li><strong>Metalicidad</strong> (<code>metalness</code>): 0 o 1, casi nunca un valor intermedio. Un metal no tiene color difuso: su color está en los reflejos. Los valores intermedios solo sirven para metal con polvo o pintura gastada.</li>
+      </ul>
+
+      <div class="materials wide">
+        <figure><div class="ball m-barro"></div><h3>Barro</h3><code>r 0.92 · m 0</code><p>Cálido y mate: cercano, artesano, hecho a mano.</p></figure>
+        <figure><div class="ball m-esmalte"></div><h3>Esmalte</h3><code>r 0.2 · m 0</code><p>Claro con brillo suave: limpio, cuidado, de estudio.</p></figure>
+        <figure><div class="ball m-laca"></div><h3>Laca negra</h3><code>r 0.06 · m 0</code><p>Brillo duro sobre oscuro: lujo frío, tecnología.</p></figure>
+        <figure><div class="ball m-laton"></div><h3>Latón</h3><code>r 0.3 · m 1</code><p>Metal cálido satinado: premium clásico, hostelería.</p></figure>
+        <figure><div class="ball m-acero"></div><h3>Acero</h3><code>r 0.12 · m 1</code><p>Metal frío pulido: precisión, industria.</p></figure>
+        <figure><div class="ball m-tela"></div><h3>Terciopelo</h3><code>r 1 · m 0</code><p>Sin reflejo y profundo: confort, intimidad.</p></figure>
+      </div>
+
+      <p>¿Por qué el brillo suena a frío y caro, y lo mate a cálido y cercano? Porque en el mundo real lo brillante es duro, nuevo o pulido: cristal, metal trabajado, un coche recién lavado. Hay esfuerzo humano detrás y no se toca sin dejar huella. Lo mate es tierra, papel, madera, tela: materiales que se tocan y que envejecen bien. La temperatura del color empuja en la misma dirección: un mate en tonos tierra es el polo cálido; un brillante gris azulado, el frío.</p>
+
+      <figure class="lab" data-three data-title="Sliders de material" data-hint="Prueba los cinco y luego mezcla" data-height="480" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <nav id="presets" aria-label="Materiales"></nav>
+          <p id="txt" aria-live="polite"></p>
+          <form class="ctrl">
+            <label>Rugosidad <output id="ro"></output><input id="r" type="range" min="0" max="1" step="0.01"></label>
+            <label>Metalicidad <output id="mo"></output><input id="m" type="range" min="0" max="1" step="0.01"></label>
+            <label class="col">Color <input id="c" type="color"></label>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #e7e4df; color: #1d1915; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          nav { position: fixed; top: 14px; left: 14px; right: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+          nav button { min-height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid rgb(29 25 21 / .25); background: rgb(255 255 255 / .55); color: inherit; font: 600 13px var(--f-sans); cursor: pointer; }
+          nav button[aria-pressed="true"] { background: #1d1915; color: #f3efe8; border-color: #1d1915; }
+          #txt { position: fixed; left: 16px; top: 66px; max-width: 250px; margin: 0; font: 400 italic 22px/1.15 var(--f-serif); }
+          .ctrl { position: fixed; left: 14px; right: 14px; bottom: 14px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px 18px; padding: 12px 16px; border-radius: 14px; background: rgb(255 255 255 / .6); backdrop-filter: blur(8px); font-size: 12px; font-weight: 600; }
+          label { display: grid; grid-template-columns: 1fr auto; gap: 4px; align-items: center; }
+          label input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: #be5a0a; height: 28px; }
+          output { font: 500 12px var(--f-mono); color: #6b6158; }
+          .col { grid-template-columns: auto; justify-items: start; }
+          .col input { width: 46px; height: 36px; border: 0; padding: 0; background: none; }
+          @media (max-width: 480px) { #txt { top: auto; bottom: 150px; font-size: 19px; } .ctrl { grid-template-columns: 1fr 1fr; } .col { grid-column: 1 / -1; grid-template-columns: auto auto; align-items: center; gap: 10px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          const $ = (s) => document.querySelector(s);
+          const renderer = new THREE.WebGLRenderer({ canvas: $('canvas'), antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.toneMapping = THREE.NeutralToneMapping;   // el más fiel al color elegido
+          renderer.shadowMap.enabled = true;
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#e7e4df');
+          // El metal solo refleja su entorno: sin él, el latón sale negro
+          scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+          const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 60);
+
+          // Un jarrón torneado y una esfera con el mismo material
+          const mat = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });
+          const profile = [[0, 0], [.5, 0], [.68, .3], [.74, .75], [.55, 1.25], [.34, 1.62], [.4, 1.92], [.35, 1.94], [.3, 1.7]];
+          // Una curva suave por esos puntos: sin ella, el torno sale facetado
+          const smooth = (pts) => new THREE.SplineCurve(pts.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(90);
+          const vase = new THREE.Mesh(new THREE.LatheGeometry(smooth(profile), 96), mat);
+          const ball = new THREE.Mesh(new THREE.SphereGeometry(.42, 64, 32), mat);
+          vase.position.x = -.35; ball.position.set(.95, .42, .45);
+          [vase, ball].forEach((m) => { m.castShadow = true; scene.add(m); });
+          // Suelo que solo recibe sombra: se funde con el fondo, como un plató
+          const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: .16 }));
+          floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+          const key = new THREE.DirectionalLight('#fff4e8', 2);
+          key.position.set(-3, 6, 3); key.castShadow = true; key.shadow.radius = 8;
+          key.shadow.mapSize.set(1024, 1024); scene.add(key);
+
+          const PRESETS = {
+            Barro:        { c: '#b4643a', r: .92, m: 0, t: 'Mate y cálido: artesano, cercano.' },
+            Esmalte:      { c: '#ece6da', r: .2,  m: 0, t: 'Brillo suave: limpio, de estudio.' },
+            'Laca negra': { c: '#151515', r: .06, m: 0, t: 'Brillo duro: lujo frío, tecnología.' },
+            Latón:        { c: '#c9a15a', r: .3,  m: 1, t: 'Metal cálido: premium clásico.' },
+            Acero:        { c: '#c9ced6', r: .12, m: 1, t: 'Metal frío: precisión, industria.' },
+          };
+          function apply(p) {
+            $('#r').value = p.r; $('#m').value = p.m; $('#c').value = p.c; $('#txt').textContent = p.t; update();
+          }
+          function update() {
+            mat.roughness = +$('#r').value; mat.metalness = +$('#m').value; mat.color.set($('#c').value);
+            $('#ro').textContent = mat.roughness.toFixed(2); $('#mo').textContent = mat.metalness.toFixed(2);
+          }
+          Object.entries(PRESETS).forEach(([name, p], i) => {
+            const b = Object.assign(document.createElement('button'), { type: 'button', textContent: name });
+            b.onclick = () => { apply(p); document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-pressed', x === b)); };
+            b.setAttribute('aria-pressed', i === 0); $('#presets').append(b);
+          });
+          $('form').oninput = () => { update(); $('#txt').textContent = 'Tu mezcla'; };
+          apply(PRESETS.Barro);
+
+          let dist = 6;
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+            dist = w < h ? 9.5 : 6;   // en vertical, más lejos para que quepan las dos piezas
+          }
+          addEventListener('resize', resize); resize();
+
+          // Cámara en órbita lenta: los reflejos se mueven y se lee el material
+          let onScreen = true;
+          new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)).observe(renderer.domElement);
+          renderer.setAnimationLoop((t) => {
+            if (!onScreen) return;
+            const a = t / 5000;
+            camera.position.set(Math.sin(a) * dist + .2, 1.7, Math.cos(a) * dist);
+            camera.lookAt(.25, .7, 0);
+            renderer.render(scene, camera);
+          });
+        </script>
+        <figcaption>Pon el latón y baja la metalicidad a 0: se convierte en plástico amarillo. Lo que hace que algo parezca metal no es el color, es que su color esté en los reflejos. Y sube la rugosidad del acero a 0,5: sigue siendo metal, pero cepillado, más industrial y menos joya.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Elige el material por lo que tiene que decir la marca, igual que eliges una tipografía. Una bodega de la Plana vende tierra y tiempo: barro mate, madera con rugosidad alta, vidrio oscuro. Un estudio de arquitectura vende precisión: hormigón liso, acero satinado, vidrio claro. Si todo en tu escena brilla, nada destaca; reserva el brillo para el objeto protagonista.</p>
+      </div>
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Metalicidad 1 y rugosidad 0 sin mapa de entorno dan un objeto negro: un espejo que no tiene nada que reflejar. Si un metal sale apagado, el problema casi nunca es el material, es que le falta entorno.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p><code>MeshPhysicalMaterial</code> añade barniz (<code>clearcoat</code>), transmisión de vidrio y brillo de tela, pero cada extra cuesta en cada píxel. En el móvil quédate con <code>MeshStandardMaterial</code> y usa el físico solo en la pieza protagonista, y solo si se nota. La transmisión es la más cara: obliga a renderizar la escena dos veces.</p>
+      </div>
+
+      <h2>Iluminación como <em>en fotografía</em></h2>
+      <p>En 3D tienes luces infinitas y gratis, y por eso es tan fácil iluminar mal: cinco focos de cualquier color, ninguna intención. Los fotógrafos de producto llevan un siglo resolviendo este problema con muy pocas luces. Copia su método.</p>
+
+      <div class="split">
+        <div>
+          <ul class="light-list">
+            <li><b>1</b><div><strong>Luz clave</strong><span>La principal, a unos 45° de la cámara y por encima. Dibuja la forma y decide de dónde viene la sombra. Es la única que proyecta sombra.</span></div></li>
+            <li><b>2</b><div><strong>Relleno</strong><span>Del lado contrario, más débil (entre un tercio y la mitad de la clave). Abre las sombras sin borrarlas: la proporción entre clave y relleno es el contraste de la foto.</span></div></li>
+            <li><b>3</b><div><strong>Contraluz</strong><span>Detrás del objeto, apuntando a la cámara. Dibuja un filo de luz en el contorno y lo separa del fondo. Es lo que hace que un producto «salga» de la pantalla.</span></div></li>
+          </ul>
+          <p>Además de las luces está el <strong>entorno</strong>: una imagen de 360° que ilumina la escena desde todas partes y que los materiales reflejan. <code>RoomEnvironment</code> genera una habitación de estudio por código, sin descargar nada; un <strong>HDRI</strong> es una foto real de 360° con la luz de un sitio (un atardecer, un almacén), que se carga con <code>HDRLoader</code> y pesa de 1 a varios MB. El entorno da los reflejos y la luz suave; las luces dan la dirección y las sombras.</p>
+        </div>
+        <figure class="light-plan stick">
+          <svg viewBox="0 0 400 360" role="img" aria-label="Esquema en planta de una iluminación de tres puntos">
+            <defs><radialGradient id="pool" r=".5"><stop offset="0" stop-color="oklch(58% 0.15 50)" stop-opacity=".22"/><stop offset="1" stop-color="oklch(58% 0.15 50)" stop-opacity="0"/></radialGradient></defs>
+            <circle cx="200" cy="150" r="120" fill="url(#pool)"/>
+            <g fill="none" stroke="currentColor" stroke-width="1" opacity=".35" stroke-dasharray="3 5">
+              <line x1="80" y1="250" x2="200" y2="150"/><line x1="330" y1="230" x2="200" y2="150"/><line x1="250" y1="40" x2="200" y2="150"/><line x1="200" y1="330" x2="200" y2="150"/>
+            </g>
+            <circle cx="200" cy="150" r="26" fill="currentColor"/>
+            <text x="200" y="196" text-anchor="middle" font-family="Inter Tight" font-size="12" fill="currentColor">objeto</text>
+            <g font-family="JetBrains Mono" font-size="12" fill="currentColor">
+              <g transform="translate(80 250) rotate(-40)"><rect x="-20" y="-12" width="40" height="24" rx="3" fill="oklch(58% 0.15 50)"/></g>
+              <text x="40" y="292">1 clave</text>
+              <g transform="translate(330 230) rotate(32)"><rect x="-16" y="-10" width="32" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/></g>
+              <text x="300" y="268">2 relleno</text>
+              <g transform="translate(250 40) rotate(-155)"><rect x="-14" y="-9" width="28" height="18" rx="3" fill="currentColor"/></g>
+              <text x="272" y="30">3 contraluz</text>
+              <path d="M186 318 h28 l8 -10 v28 l-8 -10 h-28z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <text x="200" y="352" text-anchor="middle">cámara</text>
+            </g>
+          </svg>
+          <figcaption>Vista desde arriba. La clave forma unos 45° con la cámara; el relleno, del otro lado y más débil; el contraluz, detrás.</figcaption>
+        </figure>
+      </div>
+
+      <figure class="lab" data-three data-title="Montajes de luz" data-hint="Cambia de montaje y apaga luces" data-height="480" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <nav id="setups" aria-label="Montajes"></nav>
+          <div class="lights" id="lights" aria-label="Luces"></div>
+          <p id="note" aria-live="polite"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #2b2724; color: #f1ebe2; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          nav { position: fixed; top: 14px; left: 14px; right: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+          button { min-height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid rgb(241 235 226 / .3); background: rgb(20 17 15 / .45); color: inherit; font: 600 13px var(--f-sans); cursor: pointer; }
+          nav button[aria-pressed="true"] { background: #f1ebe2; color: #1d1915; }
+          .lights { position: fixed; left: 14px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 6px; max-width: 60%; }
+          .lights button { display: inline-flex; align-items: center; gap: 8px; }
+          .lights button i { width: 9px; height: 9px; border-radius: 50%; background: #5b524b; }
+          .lights button[aria-pressed="true"] i { background: #ffb36b; box-shadow: 0 0 10px #ffb36b; }
+          #note { position: fixed; right: 16px; bottom: 16px; max-width: 230px; margin: 0; text-align: right; font: italic 400 20px/1.15 var(--f-serif); }
+          @media (max-width: 480px) { .lights { max-width: none; right: 14px; } #note { left: 16px; right: 16px; bottom: 112px; max-width: none; text-align: left; font-size: 18px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          const $ = (s) => document.querySelector(s);
+          const renderer = new THREE.WebGLRenderer({ canvas: $('canvas'), antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.toneMapping = THREE.AgXToneMapping;
+          renderer.shadowMap.enabled = true;
+          const scene = new THREE.Scene();
+          const BG = new THREE.Color('#2b2724');
+          scene.fog = new THREE.Fog(BG, 9, 20);   // el suelo se funde con el fondo
+          // scene.background no pasa por el tone mapping y la niebla sí: una esfera de fondo los iguala
+          scene.add(new THREE.Mesh(new THREE.SphereGeometry(40), new THREE.MeshBasicMaterial({ color: BG, side: THREE.BackSide })));
+          scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+          const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 120);
+
+          const ceramic = new THREE.MeshStandardMaterial({ color: '#e9e1d4', roughness: .38, side: THREE.DoubleSide });
+          const profile = [[0, 0], [.5, 0], [.68, .3], [.74, .75], [.55, 1.25], [.34, 1.62], [.4, 1.92], [.35, 1.94], [.3, 1.7]];
+          // Una curva suave por esos puntos: sin ella, el torno sale facetado
+          const smooth = (pts) => new THREE.SplineCurve(pts.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(90);
+          const vase = new THREE.Mesh(new THREE.LatheGeometry(smooth(profile), 96), ceramic);
+          const ball = new THREE.Mesh(new THREE.SphereGeometry(.42, 64, 32), ceramic);
+          vase.position.x = -.35; ball.position.set(.95, .42, .45);
+          const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: '#4d453f', roughness: 1 }));
+          floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true;
+          [vase, ball].forEach((m) => (m.castShadow = true));
+          scene.add(vase, ball, floor);
+
+          // Tres luces: solo la clave proyecta sombra
+          const L = {
+            Clave:     new THREE.DirectionalLight('#fff0dc', 0),
+            Relleno:   new THREE.DirectionalLight('#dce6ff', 0),
+            Contraluz: new THREE.DirectionalLight('#ffffff', 0),
+          };
+          L.Clave.castShadow = true; L.Clave.shadow.radius = 6; L.Clave.shadow.mapSize.set(1024, 1024);
+          Object.values(L).forEach((l) => scene.add(l));
+          const on = { Clave: true, Relleno: true, Contraluz: true, Entorno: true };
+
+          // [intensidad, posición] de cada luz y fuerza del entorno
+          const SETUPS = {
+            'Tres puntos': { Clave: [2.6, [-3, 4, 3]], Relleno: [.8, [4, 2, 2.5]], Contraluz: [3, [1, 3, -4]], Entorno: .2, t: 'Forma, volumen y un filo que lo despega del fondo.' },
+            'Solo clave':  { Clave: [3, [-3, 4, 3]], Relleno: [0], Contraluz: [0], Entorno: 0, t: 'Dramático: la mitad del objeto desaparece.' },
+            'Entorno':     { Clave: [0], Relleno: [0], Contraluz: [0], Entorno: 1.2, t: 'Suave y plano: cómodo, pero sin dirección.' },
+            'Contraluz':   { Clave: [.25, [-3, 4, 3]], Relleno: [0], Contraluz: [5, [0, 2.2, -4]], Entorno: .08, t: 'Silueta y contorno: misterio, nocturno.' },
+            'Ventana':     { Clave: [3.4, [-6, 1.5, .4]], Relleno: [.25, [4, 2, 2]], Contraluz: [0], Entorno: .15, t: 'Luz baja y lateral: atardecer, sombra larga.' },
+          };
+          let current = SETUPS['Tres puntos'];
+          function draw() {
+            for (const [name, light] of Object.entries(L)) {
+              const [i, pos] = current[name];
+              light.intensity = on[name] ? i : 0;
+              if (pos) light.position.set(...pos);
+            }
+            scene.environmentIntensity = on.Entorno ? current.Entorno : 0;
+            $('#note').textContent = current.t;
+            renderer.render(scene, camera);   // se pinta solo cuando algo cambia
+          }
+          for (const name of Object.keys(SETUPS)) {
+            const b = Object.assign(document.createElement('button'), { type: 'button', textContent: name });
+            b.setAttribute('aria-pressed', name === 'Tres puntos');
+            b.onclick = () => { current = SETUPS[name]; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-pressed', x === b)); draw(); };
+            $('#setups').append(b);
+          }
+          for (const name of Object.keys(on)) {
+            const b = Object.assign(document.createElement('button'), { type: 'button', innerHTML: `<i></i>${name}` });
+            b.setAttribute('aria-pressed', true);
+            b.onclick = () => { on[name] = !on[name]; b.setAttribute('aria-pressed', on[name]); draw(); };
+            $('#lights').append(b);
+          }
+
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h;
+            const d = w < h ? 9 : 6.2;
+            camera.position.set(1.2, 2, d); camera.lookAt(.25, w < h ? .5 : .75, 0);
+            camera.updateProjectionMatrix(); draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Pasa de «Tres puntos» a «Solo clave» y apaga el contraluz en el primero: el borde claro del jarrón desaparece y se pega al fondo. Este laboratorio no tiene bucle de animación: solo pinta al cambiar algo, así que fuera de pantalla no gasta nada.</figcaption>
+      </figure>
+
+      <h3>Sombras suaves</h3>
+      <p>Una sombra dura y pixelada delata el 3D barato más que cualquier otra cosa. Tres ajustes la arreglan: un mapa de sombra con resolución suficiente (<code>shadow.mapSize</code>), un desenfoque (<code>shadow.radius</code> con <code>PCFShadowMap</code>) y la cámara de sombra ajustada al objeto, no a toda la escena. Y para un suelo que solo debe recibir sombra, <code>ShadowMaterial</code>: es transparente salvo donde hay sombra, así que se funde con cualquier fondo HTML.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La luz cuenta la hora y el tono. Alta y neutra, como a mediodía, es la del catálogo honesto: enseña el producto tal cual, sin opinar. Baja, lateral y cálida es la del atardecer: sombras largas, contraste, emoción; vende un estilo de vida, no unas medidas. Por eso la portada tiene un interruptor: la inmobiliaria enseña los metros de día y vende la terraza al atardecer.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Una sola luz con sombra, mapa de 1024 y radio moderado. Si la escena no se mueve, no recalcules la sombra en cada fotograma: <code>renderer.shadowMap.autoUpdate = false</code> y <code>renderer.shadowMap.needsUpdate = true</code> solo cuando algo cambie. Para objetos que nunca se mueven, lo mejor es hornear la sombra en una textura desde Blender: cero coste en tiempo real.</p>
+      </div>
+
+      <div class="band dusk"><div class="inner">
+        <p class="big">La misma maqueta, dos luces: <em>catálogo a mediodía, deseo al atardecer.</em></p>
+        <dl>
+          <dt>Clave</dt><dd>5600 K alta → 3200 K rasante</dd>
+          <dt>Relleno</dt><dd>cielo neutro → violeta</dd>
+          <dt>Entorno</dt><dd>0,5 → 0,12</dd>
+          <dt>Lámparas</dt><dd>×1 → ×3,5 con bloom</dd>
+          <dt>Fondo</dt><dd>papel → ciruela</dd>
+        </dl>
+      </div></div>
+
+      <h2>Tone mapping <em>y exposición</em></h2>
+      <p>La escena calcula la luz en alto rango dinámico: el reflejo del sol en el latón puede valer 20 y la sombra 0,01. La pantalla solo enseña de 0 a 1. El <strong>tone mapping</strong> es la curva que comprime ese rango, como hace una cámara de fotos, y la <strong>exposición</strong> (<code>toneMappingExposure</code>) es cuánta luz dejas entrar antes de comprimir.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Curva</th><th>Cómo se ve</th><th>Úsala para</th></tr></thead>
+          <tbody>
+            <tr><td><code>NoToneMapping</code></td><td>Lo que pasa de 1 se quema en blanco plano. El color base se respeta exacto</td><td>Escenas planas sin luces, interfaces en 3D</td></tr>
+            <tr><td><code>ACESFilmicToneMapping</code></td><td>Contraste de cine y saturación alta; los brillos viran al amarillo y los naranjas se van al blanco</td><td>Escenas dramáticas, noche, juegos</td></tr>
+            <tr><td><code>AgXToneMapping</code></td><td>Más neutra: los brillos se desaturan hacia blanco sin cambiar de tono. Algo plana: sube la exposición</td><td>Arquitectura, renders realistas, la portada</td></tr>
+            <tr><td><code>NeutralToneMapping</code></td><td>La de Khronos para comercio electrónico: deja intactos los colores medios y solo comprime los brillos</td><td>Producto con colores de marca, configuradores</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <figure class="lab" data-three data-title="Comparador de tone mapping" data-hint="Mueve el divisor y cambia las curvas" data-height="480" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div id="line"></div>
+          <span class="tag l" id="tl"></span><span class="tag r" id="tr"></span>
+          <p class="ref"><i></i>#BE5A0A en CSS</p>
+          <form>
+            <select id="left" aria-label="Curva de la izquierda"></select>
+            <select id="right" aria-label="Curva de la derecha"></select>
+            <label>Exposición <input id="exp" type="range" min="0.3" max="2.5" step="0.05" value="1"></label>
+            <label>Divisor <input id="split" type="range" min="0.05" max="0.95" step="0.01" value="0.5"></label>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #1c1917; color: #f1ebe2; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          #line { position: fixed; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #f1ebe2; box-shadow: 0 0 0 1px rgb(0 0 0 / .3); pointer-events: none; }
+          .tag { position: fixed; top: 14px; padding: 6px 10px; border-radius: 6px; background: rgb(20 17 15 / .7); font: 600 13px var(--f-mono); }
+          .tag.l { left: 14px; } .tag.r { right: 14px; }
+          .ref { position: fixed; top: 14px; left: 50%; translate: -50% 0; margin: 0; display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border-radius: 6px; background: rgb(20 17 15 / .7); font-size: 12px; white-space: nowrap; }
+          .ref i { width: 26px; height: 26px; border-radius: 4px; background: #BE5A0A; }
+          @media (max-width: 480px) { .ref { top: 52px; } }
+          form { position: fixed; left: 14px; right: 14px; bottom: 14px; display: grid; grid-template-columns: auto auto 1fr 1fr; gap: 10px 16px; align-items: center; padding: 10px 14px; border-radius: 14px; background: rgb(20 17 15 / .72); font-size: 12px; font-weight: 600; }
+          select { min-height: 40px; padding: 0 10px; border-radius: 8px; border: 1px solid rgb(241 235 226 / .3); background: #2b2724; color: inherit; font: 600 13px var(--f-sans); }
+          label { display: grid; gap: 2px; } input[type=range] { width: 100%; accent-color: #e0782e; height: 28px; }
+          @media (max-width: 560px) { form { grid-template-columns: 1fr 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const $ = (s) => document.querySelector(s);
+          const renderer = new THREE.WebGLRenderer({ canvas: $('canvas'), antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.setScissorTest(true);   // dos mitades, dos curvas
+          const scene = new THREE.Scene();
+          scene.fog = new THREE.Fog('#1c1917', 9, 22);   // el suelo se funde con el fondo
+          // esfera de fondo en vez de scene.background: así también pasa por cada curva
+          scene.add(new THREE.Mesh(new THREE.SphereGeometry(40), new THREE.MeshBasicMaterial({ color: '#1c1917', side: THREE.BackSide })));
+          const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 120);
+
+          const std = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: .35, ...o });
+          const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); scene.add(m); return m; };
+          const ball = new THREE.SphereGeometry(.55, 64, 32);
+          add(ball, std('#be5a0a'), -1.3, .55, 0);           // el naranja de la marca, iluminado
+          add(ball, std('#00a6b8'), 0, .55, .3);
+          add(ball, std('#f2eee8'), 1.3, .55, 0);
+          // Un tubo de luz muy por encima de 1: aquí es donde las curvas se separan
+          add(new THREE.CapsuleGeometry(.07, 3, 8, 24), std('#000', { emissive: '#ffb066', emissiveIntensity: 9 }), 0, 1.6, -.9).rotation.z = Math.PI / 2;
+          // La muestra plana del HEX de marca, sin luz, cruzando el divisor: compárala con la de CSS
+          add(new THREE.PlaneGeometry(2.4, .55), new THREE.MeshBasicMaterial({ color: '#be5a0a', fog: false }), 0, 2.4, -1.4);
+          add(new THREE.PlaneGeometry(40, 40), std('#57504a', { roughness: .9 }), 0, 0, 0).rotation.x = -Math.PI / 2;
+          const key = new THREE.DirectionalLight('#fff3e4', 6); key.position.set(-2, 4, 3); scene.add(key);
+          scene.add(new THREE.HemisphereLight('#9fb4ff', '#2a221c', .8));
+
+          const TM = { Ninguno: THREE.NoToneMapping, Reinhard: THREE.ReinhardToneMapping, ACES: THREE.ACESFilmicToneMapping, AgX: THREE.AgXToneMapping, Neutral: THREE.NeutralToneMapping };
+          for (const sel of [$('#left'), $('#right')]) sel.innerHTML = Object.keys(TM).map((k) => `<option>${k}</option>`).join('');
+          $('#left').value = 'ACES'; $('#right').value = 'Neutral';
+
+          function draw() {
+            const w = innerWidth, h = innerHeight, x = Math.round(w * $('#split').value);
+            renderer.toneMappingExposure = +$('#exp').value;
+            // Mitad izquierda
+            renderer.toneMapping = TM[$('#left').value];
+            renderer.setScissor(0, 0, x, h); renderer.render(scene, camera);
+            // Mitad derecha: misma escena, otra curva
+            renderer.toneMapping = TM[$('#right').value];
+            renderer.setScissor(x, 0, w - x, h); renderer.render(scene, camera);
+            $('#line').style.left = x + 'px';
+            $('#tl').textContent = $('#left').value; $('#tr').textContent = $('#right').value;
+          }
+          $('form').oninput = draw;
+
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); camera.aspect = w / h;
+            camera.position.set(0, 1.9, w < h ? 11 : 7.4); camera.lookAt(0, w < h ? 1.05 : 1.2, 0);
+            camera.updateProjectionMatrix(); draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Compara la franja plana de arriba con el cuadrado CSS: con «Neutral» y «Ninguno» coinciden; con ACES el naranja de la marca se aclara y amarillea. Luego mira el tubo de luz: sin curva se quema en un blanco plano; con AgX conserva el degradado.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Si en la escena hay un color de marca que el cliente va a comparar con su logo, empieza por <code>NeutralToneMapping</code>: es la curva pensada para que un sofá azul en 3D siga siendo el azul del catálogo. Si buscas atmósfera (noche, atardecer, arquitectura), AgX o ACES. Elige una por proyecto y ajusta la exposición en cada escena; cambiar de curva a mitad de web hace que la marca cambie de color entre secciones.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">El naranja corporativo #D9541E sale en 3D más claro y tirando a amarillo, aunque el material tiene exactamente ese HEX. ¿Qué es lo primero que pruebas?</p>
+        <ol>
+          <li>Bajar la intensidad de todas las luces a la mitad</li>
+          <li>Poner el color en HSL en vez de HEX</li>
+          <li>Cambiar a <code>NeutralToneMapping</code> y ajustar la exposición</li>
+        </ol>
+        <p class="why">Three.js ya convierte el HEX de sRGB a lineal, así que el color de partida es correcto. Lo que lo desvía es la curva: ACES empuja los naranjas brillantes hacia el amarillo y el blanco. Neutral deja intactos los tonos medios.</p>
+      </div>
+
+      <h2>Postproceso <em>con mesura</em></h2>
+      <p>El postproceso trata la imagen ya renderizada, como un retoque en Lightroom pero en cada fotograma. Se monta con <code>EffectComposer</code> como una cadena de pasadas: primero <code>RenderPass</code> pinta la escena en una textura, luego cada efecto la transforma, y al final <code>OutputPass</code> aplica el tone mapping y la conversión a sRGB. Ese orden importa: el bloom tiene que trabajar con la luz real, antes de comprimirla.</p>
+
+      <figure class="lab" data-three data-title="Bloom y viñeta" data-hint="Prueba «A tope» y vuelve a «Con mesura»" data-height="470" data-height-mobile="560" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <nav id="presets" aria-label="Ajustes"></nav>
+          <form>
+            <label>Bloom <output id="bo"></output><input id="b" type="range" min="0" max="3" step="0.05"></label>
+            <label>Umbral <output id="to"></output><input id="t" type="range" min="0" max="1" step="0.01"></label>
+            <label>Viñeta <output id="vo"></output><input id="v" type="range" min="0" max="2.5" step="0.05"></label>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #17120f; color: #f1ebe2; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          nav { position: fixed; top: 14px; left: 14px; right: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+          nav button { min-height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid rgb(241 235 226 / .3); background: rgb(20 17 15 / .45); color: inherit; font: 600 13px var(--f-sans); cursor: pointer; }
+          nav button[aria-pressed="true"] { background: #f1ebe2; color: #17120f; }
+          form { position: fixed; left: 14px; right: 14px; bottom: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 16px; padding: 10px 14px; border-radius: 14px; background: rgb(20 17 15 / .72); font-size: 12px; font-weight: 600; }
+          label { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+          input { grid-column: 1 / -1; width: 100%; accent-color: #e0782e; height: 28px; }
+          output { font: 500 12px var(--f-mono); opacity: .7; }
+          @media (max-width: 480px) { form { grid-template-columns: 1fr; gap: 2px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+          import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+          import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+          import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+          import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+          import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
+
+          const $ = (s) => document.querySelector(s);
+          const renderer = new THREE.WebGLRenderer({ canvas: $('canvas'), antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.toneMapping = THREE.AgXToneMapping;
+          const scene = new THREE.Scene();
+          scene.fog = new THREE.Fog('#17120f', 7, 18);
+          scene.add(new THREE.Mesh(new THREE.SphereGeometry(40), new THREE.MeshBasicMaterial({ color: '#17120f', side: THREE.BackSide })));
+          const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 120);
+
+          // Una mesa de comedor con tres lámparas colgantes
+          const walnut = new THREE.MeshStandardMaterial({ color: '#5a3a26', roughness: .45 });
+          const table = new THREE.Mesh(new THREE.BoxGeometry(4.2, .12, 1.6), walnut); table.position.y = 1; scene.add(table);
+          for (const x of [-1.6, 1.6]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(.12, 1, 1.2), walnut); leg.position.set(x, .5, 0); scene.add(leg); }
+          const vase = new THREE.Mesh(new THREE.CylinderGeometry(.16, .22, .55, 48), new THREE.MeshStandardMaterial({ color: '#d9cdb8', roughness: .3 }));
+          vase.position.set(.4, 1.34, .1); scene.add(vase);
+          const glow = new THREE.MeshStandardMaterial({ color: '#000', emissive: '#ffcf9a', emissiveIntensity: 5 });
+          for (const x of [-1.3, 0, 1.3]) {
+            const bulb = new THREE.Mesh(new THREE.SphereGeometry(.17, 32, 16), glow); bulb.position.set(x, 2.3, 0); scene.add(bulb);
+            const cord = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, 2), new THREE.MeshBasicMaterial({ color: '#000' })); cord.position.set(x, 3.4, 0); scene.add(cord);
+            const p = new THREE.PointLight('#ffb878', 3, 4, 1.6); p.position.set(x, 2.1, 0); scene.add(p);
+          }
+          const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: '#2a211b', roughness: 1 }));
+          floor.rotation.x = -Math.PI / 2; scene.add(floor);
+          scene.add(new THREE.HemisphereLight('#6b5a7a', '#1a120c', .35));
+
+          // La cadena: escena → bloom → viñeta → tone mapping y sRGB
+          const composer = new EffectComposer(renderer);
+          composer.addPass(new RenderPass(scene, camera));
+          const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0, .45, .9);
+          const vignette = new ShaderPass(VignetteShader);
+          composer.addPass(bloom); composer.addPass(vignette); composer.addPass(new OutputPass());
+
+          const PRESETS = { 'Sin postproceso': [0, .9, 0], 'Con mesura': [.4, .85, .8], 'A tope': [2.6, .1, 2.2] };
+          function draw() {
+            const b = +$('#b').value, t = +$('#t').value, v = +$('#v').value;
+            bloom.strength = b; bloom.threshold = t; bloom.enabled = b > 0;
+            vignette.uniforms.darkness.value = v; vignette.enabled = v > 0;
+            $('#bo').textContent = b.toFixed(2); $('#to').textContent = t.toFixed(2); $('#vo').textContent = v.toFixed(2);
+            // Sin efectos no hay pasadas: se pinta directo, más barato
+            if (b > 0 || v > 0) composer.render(); else renderer.render(scene, camera);
+          }
+          Object.entries(PRESETS).forEach(([name, [b, t, v]]) => {
+            const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: name });
+            btn.setAttribute('aria-pressed', name === 'Con mesura');
+            btn.onclick = () => { $('#b').value = b; $('#t').value = t; $('#v').value = v; document.querySelectorAll('nav button').forEach((x) => x.setAttribute('aria-pressed', x === btn)); draw(); };
+            $('#presets').append(btn);
+          });
+          [$('#b').value, $('#t').value, $('#v').value] = PRESETS['Con mesura'];
+          $('form').oninput = draw;
+
+          function resize() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); composer.setSize(w, h); composer.setPixelRatio(renderer.getPixelRatio());
+            camera.aspect = w / h;
+            camera.position.set(0, 2.2, w < h ? 11 : 6.6); camera.lookAt(0, 1.55, 0);
+            camera.updateProjectionMatrix(); draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Con mesura, solo las bombillas brillan y el borde oscurece lo justo para llevar la mirada a la mesa. A tope, con el umbral en 0,1, brilla hasta la madera: la imagen se ve lechosa y barata. La regla: si al quitar el efecto lo echas de menos, está bien; si se nota como efecto, sobra.</figcaption>
+      </figure>
+
+      <div class="recipe wide">
+        <div><b>0,3–0,5</b><span><strong>Fuerza del bloom</strong>Que se intuya, no que se vea.</span></div>
+        <div><b>≥ 0,85</b><span><strong>Umbral</strong>Solo brilla lo que de verdad emite luz.</span></div>
+        <div><b>0,6–1</b><span><strong>Viñeta</strong>Un oscurecimiento que nadie nota hasta que lo quitas.</span></div>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Cada pasada vuelve a recorrer todos los píxeles de la pantalla, y el bloom hace varias a distintas resoluciones. En móvil, quítalo o calcúlalo a media resolución; la portada de esta lección lo desactiva en modo ligero y lo carga con <code>import()</code> solo en escritorio. La viñeta puede ser un degradado CSS encima del canvas: el mismo efecto sin pasada.</p>
+      </div>
+
+      <h2>El objetivo <em>de la cámara</em></h2>
+      <p>En Three.js la cámara tiene un <code>fov</code> (campo de visión vertical en grados), pero piensa en milímetros, como un fotógrafo: <code>camera.setFocalLength(50)</code> traduce la focal de un objetivo de 35 mm a fov. La focal no es un zoom: cambia la <strong>perspectiva</strong>, cuánto se deforman las cosas cercanas y cuánto se acerca el fondo.</p>
+
+      <div class="lenses wide">
+        <div><b>24<small>mm</small></b><strong>Gran angular</strong><p>Espacio, inmobiliaria, interiorismo. Exagera la profundidad y deforma los bordes.</p></div>
+        <div><b>35<small>mm</small></b><strong>Reportaje</strong><p>Objeto con contexto. Natural en vertical, por eso la portada la usa en el móvil.</p></div>
+        <div class="on"><b>50<small>mm</small></b><strong>Normal</strong><p>Cercano a cómo miramos. Neutro y honesto: la portada en escritorio.</p></div>
+        <div><b>85<small>mm</small></b><strong>Retrato</strong><p>Producto y personas. Comprime el fondo y favorece las formas.</p></div>
+        <div><b>135<small>mm</small></b><strong>Tele</strong><p>Aplana: la maqueta parece un plano. Elegante en producto pequeño.</p></div>
+      </div>
+
+      <figure class="lab" data-three data-title="Focal y encuadre" data-hint="Mueve la focal con «Mantener tamaño» activado" data-height="470" data-height-mobile="540" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <p class="read"><b id="mm"></b><span id="info"></span></p>
+          <form>
+            <div class="quick" id="quick"></div>
+            <label class="r">Focal <input id="f" type="range" min="14" max="135" step="1" value="50"></label>
+            <label class="chk"><input id="keep" type="checkbox" checked> Mantener tamaño</label>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #e7e4df; color: #1d1915; font-family: var(--f-sans); overflow: hidden; }
+          canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+          .read { position: fixed; top: 14px; left: 16px; margin: 0; }
+          .read b { display: block; font: 600 54px/1 var(--f-serif); letter-spacing: -.02em; }
+          .read span { font: 500 12px var(--f-mono); color: #6b6158; }
+          form { position: fixed; left: 14px; right: 14px; bottom: 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px 16px; align-items: center; padding: 10px 14px; border-radius: 14px; background: rgb(255 255 255 / .62); backdrop-filter: blur(8px); font-size: 12px; font-weight: 600; }
+          .quick { display: flex; gap: 4px; }
+          .quick button { min-width: 44px; min-height: 40px; border-radius: 8px; border: 1px solid rgb(29 25 21 / .2); background: transparent; font: 600 12px var(--f-mono); cursor: pointer; color: inherit; }
+          .r { display: grid; gap: 2px; } .r input { width: 100%; accent-color: #be5a0a; height: 28px; }
+          .chk { display: flex; gap: 8px; align-items: center; min-height: 40px; } .chk input { width: 20px; height: 20px; accent-color: #be5a0a; }
+          @media (max-width: 560px) { form { grid-template-columns: 1fr; gap: 4px; } .quick button { flex: 1; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+          const $ = (s) => document.querySelector(s);
+          const renderer = new THREE.WebGLRenderer({ canvas: $('canvas'), antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          renderer.toneMapping = THREE.AgXToneMapping;
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#e7e4df');
+          scene.fog = new THREE.Fog('#e7e4df', 30, 70);
+          scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+          const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 200);
+
+          // Suelo con marcas cada metro: delata la perspectiva
+          const c = document.createElement('canvas'); c.width = c.height = 128;
+          const g = c.getContext('2d'); g.fillStyle = '#ddd8d0'; g.fillRect(0, 0, 128, 128);
+          g.fillStyle = '#b9b1a5'; g.fillRect(0, 0, 128, 2); g.fillRect(0, 0, 2, 128);
+          const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(60, 60); tex.colorSpace = THREE.SRGBColorSpace;
+          const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ map: tex, roughness: 1 }));
+          floor.rotation.x = -Math.PI / 2; scene.add(floor);
+
+          // Tres jarrones en fila hacia el fondo: el primero es el protagonista
+          const profile = [[0, 0], [.5, 0], [.68, .3], [.74, .75], [.55, 1.25], [.34, 1.62], [.4, 1.92], [.35, 1.94], [.3, 1.7]];
+          // Una curva suave por esos puntos: sin ella, el torno sale facetado
+          const smooth = (pts) => new THREE.SplineCurve(pts.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(90);
+          const lathe = new THREE.LatheGeometry(smooth(profile), 64);
+          [['#be5a0a', 0, 0], ['#3f3a35', 1.6, -4], ['#a7a097', 3.2, -8]].forEach(([col, x, z]) => {
+            const m = new THREE.Mesh(lathe, new THREE.MeshStandardMaterial({ color: col, roughness: .4, side: THREE.DoubleSide }));
+            m.position.set(x, 0, z); scene.add(m);
+          });
+          const sun = new THREE.DirectionalLight('#fff3e6', 1.6); sun.position.set(-4, 8, 6); scene.add(sun);
+
+          const BASE = 50;
+          let D0 = 8;                          // distancia a 50 mm: se calcula al redimensionar
+          const target = new THREE.Vector3(0, .95, 0);       // el jarrón protagonista
+          const dir = new THREE.Vector3(-.5, .3, 1).normalize();
+          function draw() {
+            const f = +$('#f').value, keep = $('#keep').checked;
+            camera.setFocalLength(f);
+            // Dolly: alejar en proporción a la focal mantiene el tamaño del primer jarrón
+            const d = keep ? D0 * f / BASE : D0;
+            camera.position.copy(target).addScaledVector(dir, d);
+            camera.lookAt(target); camera.updateProjectionMatrix();
+            $('#mm').textContent = f + ' mm';
+            $('#info').textContent = `fov ${camera.fov.toFixed(1)}°, a ${d.toFixed(1)} m`;
+            renderer.render(scene, camera);
+          }
+          for (const f of [24, 35, 50, 85, 135]) {
+            const b = Object.assign(document.createElement('button'), { type: 'button', textContent: f });
+            b.onclick = () => { $('#f').value = f; draw(); }; $('#quick').append(b);
+          }
+          $('form').oninput = draw;
+          function resize() {
+            renderer.setSize(innerWidth, innerHeight, false);
+            camera.aspect = innerWidth / innerHeight;
+            // a 50 mm, el jarrón (1,94 m) ocupa el 45 % del alto (el 30 % en vertical, que hay controles debajo)
+            const portrait = innerWidth < innerHeight;
+            camera.setFocalLength(BASE);
+            D0 = (1.94 / (portrait ? 0.3 : 0.45) / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+            target.y = portrait ? 0.15 : 0.95;
+            draw();
+          }
+          addEventListener('resize', resize); resize();
+        </script>
+        <figcaption>Con «Mantener tamaño», el jarrón naranja no cambia y todo lo demás sí: a 24 mm los del fondo se alejan y se hacen pequeños; a 135 mm se pegan detrás como en un decorado. Es el efecto Vértigo de Hitchcock. Sin la casilla, la focal solo recorta.</figcaption>
+      </figure>
+
+      <h3>Encuadrar producto con texto al lado</h3>
+      <p>En una web, el modelo casi nunca está solo: comparte pantalla con el titular. Centrarlo y empujar el texto encima es la solución barata. La buena es desplazar el <em>centro óptico</em> de la cámara, sin moverla, con <code>setViewOffset</code>: el modelo se coloca en el hueco libre y la perspectiva sigue siendo la de una cámara que lo mira de frente. Es lo que hace la portada: en escritorio lo lleva a la derecha del titular; en vertical, debajo.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="Colocar el modelo en el hueco que deja el texto">
+        // Centro del hueco libre, en píxeles: a la derecha en horizontal, abajo en vertical
+        const portrait = w < h;
+        const cx = portrait ? w * 0.5 : w * 0.68;
+        const cy = portrait ? h * 0.63 : h * 0.54;
+        camera.setFocalLength(portrait ? 35 : 50);
+        camera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);   // mueve el centro óptico, no la cámara
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Para producto, entre 50 y 85 mm y la cámara algo por encima del objeto, como en un estudio. El gran angular solo cuando vendes espacio (un salón, una terraza), y con cuidado: de cerca deforma los muebles de los bordes. Deja aire alrededor: un objeto que toca los bordes del encuadre parece que no cabe, y lo que no cabe parece barato.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En vertical, el fov de Three.js es el vertical, así que el mismo número deja la imagen estrechísima de lado. <code>setFocalLength</code> mide sobre el lado largo, lo que ayuda, pero aun así necesitarás más distancia o una focal más corta (la portada pasa de 50 a 35 mm). Calcula la distancia a partir del ancho, no del alto, y reserva arriba el hueco del titular con <code>setViewOffset</code>.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Quieres que la maqueta se vea plana y elegante, como un plano de arquitecto, pero que ocupe lo mismo en pantalla. ¿Qué haces?</p>
+        <ol>
+          <li>Subir la focal (85–135 mm) y alejar la cámara en proporción</li>
+          <li>Bajar la focal a 18 mm y acercar la cámara</li>
+          <li>Escalar el modelo al doble</li>
+        </ol>
+        <p class="why">La focal larga comprime la perspectiva, y alejarte en la misma proporción mantiene el tamaño. Con 18 mm pasa lo contrario: más profundidad y bordes deformados. Escalar el modelo no cambia la perspectiva.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Entrega en GLB y mide antes de publicar: casi siempre sobra geometría o textura. meshopt para geometría, KTX2 para texturas, y una imagen fija mientras carga.</li>
+          <li>Cada modelo pasa por lo mismo: medir, centrar, encuadrar desde el tamaño y repasar con <code>traverse()</code>.</li>
+          <li>El material comunica: lo mate es cálido y cercano; lo brillante, frío y caro. El metal necesita entorno.</li>
+          <li>Ilumina como un fotógrafo: clave, relleno y contraluz, más un entorno. Una sola sombra, suave.</li>
+          <li>Una curva de tone mapping por proyecto (Neutral si hay colores de marca), postproceso que no se nota y la focal elegida por lo que quieres contar.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Imagina que una tienda de cerámica de l’Alcora quiere su jarrón estrella en la portada. Modela uno con <code>LatheGeometry</code> (o descarga un GLB con licencia libre) y móntale un plató: fondo con <code>ShadowMaterial</code> sobre el color de su web, luz de tres puntos, <code>NeutralToneMapping</code> y un objetivo de 85 mm. Haz dos versiones de luz, «taller por la mañana» y «tienda de noche», con un botón para pasar de una a otra. En el móvil, sin bloom y con el modelo debajo del titular.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+
+<script type="module">
+  /* Portada: render de estudio en tiempo real de residencia.glb.
+     Fondo infinito, foco con sombra suave, mesa giratoria y dos luces (día y atardecer).
+     Pinta solo mientras la portada se ve; en el móvil, modo ligero sin bloom. */
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+  const hero = document.querySelector('.studio');
+  const canvas = hero.querySelector('.stage');
+  const status = hero.querySelector('[data-status]');
+  const buttons = [...hero.querySelectorAll('.switch button')];
+  const spec = (k, v) => { const n = hero.querySelector(`[data-spec="${k}"]`); if (n) n.textContent = v; };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lite = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+
+  let api = null;
+  function setMode(m) {
+    hero.dataset.mode = m;
+    document.documentElement.classList.toggle('hero-dusk', m === 'dusk');
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+    spec('k', m === 'day' ? '5600 K' : '3200 K');
+    spec('exp', m === 'day' ? '1,00' : '0,92');
+    if (api) api.go(m === 'dusk' ? 1 : 0);
+  }
+  buttons.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  // la luz del plató solo se ve en la portada: el color de la barra superior vuelve al de la página al bajar
+  addEventListener('scroll', () => document.documentElement.classList.toggle('hero-dusk', hero.dataset.mode === 'dusk' && scrollY < innerHeight * 0.6), { passive: true });
+
+  try { api = start(); }
+  catch (e) { hero.classList.add('no-gl'); status.textContent = 'Sin WebGL: ves la foto de estudio'; }
+
+  function start() {
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, lite ? 1.25 : 1.75));
+    renderer.toneMapping = THREE.AgXToneMapping;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+
+    const scene = new THREE.Scene();
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    const camera = new THREE.PerspectiveCamera(30, 1, 1, 900);
+
+    /* Fondo infinito: un plano que se curva hacia arriba (suelo, curva y pared) */
+    function sweep() {
+      const W = 520, FLOOR = 240, R = 46, WALL = 260, Z0 = -16;
+      const total = FLOOR + Math.PI * R / 2 + WALL;
+      const geo = new THREE.PlaneGeometry(W, total, 1, 90);
+      const p = geo.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const s = p.getY(i) + total / 2;            // 0 en el borde delantero
+        let y, z;
+        if (s < FLOOR) { y = 0; z = Z0 + FLOOR - s; }
+        else if (s < FLOOR + Math.PI * R / 2) { const a = (s - FLOOR) / R; z = Z0 - R * Math.sin(a); y = R * (1 - Math.cos(a)); }
+        else { z = Z0 - R; y = R + (s - FLOOR - Math.PI * R / 2); }
+        p.setXYZ(i, p.getX(i), y, z);
+      }
+      geo.computeVertexNormals();
+      return geo;
+    }
+    const paper = new THREE.MeshStandardMaterial({ color: '#e7e4df', roughness: 1 });
+    const backdrop = new THREE.Mesh(sweep(), paper);
+    backdrop.receiveShadow = true; scene.add(backdrop);
+
+    /* Luces: cielo y suelo, foco clave con sombra suave y un contraluz */
+    const hemi = new THREE.HemisphereLight(); scene.add(hemi);
+    const key = new THREE.SpotLight('#fff', 1, 0, 0.46, 0.9, 0);
+    key.castShadow = true;
+    key.shadow.mapSize.set(lite ? 1024 : 2048, lite ? 1024 : 2048);
+    key.shadow.camera.near = 10; key.shadow.camera.far = 160;
+    key.shadow.radius = lite ? 3 : 6; key.shadow.bias = -0.0004; key.shadow.normalBias = 0.03;
+    scene.add(key, key.target);
+    const rim = new THREE.DirectionalLight('#fff', 0); rim.position.set(24, 14, -30); scene.add(rim);
+
+    const C = (h) => new THREE.Color(h);
+    const DAY = { bg: C('#e9e4dc'), sky: C('#f7f2ea'), ground: C('#a99c8c'), hemi: 0.62, key: C('#fff2e2'), keyI: 3.8, keyPos: new THREE.Vector3(-30, 40, 18), rim: C('#e2e9ff'), rimI: 0.5, env: 0.5, lamp: 1, pts: 0, exp: 1.0, bloom: 0 };
+    const DUSK = { bg: C('#433457'), sky: C('#8070b4'), ground: C('#2a1e28'), hemi: 0.55, key: C('#ff8a47'), keyI: 5.2, keyPos: new THREE.Vector3(-44, 9, 12), rim: C('#8f7bff'), rimI: 2.2, env: 0.12, lamp: 3.5, pts: 5, exp: 0.92, bloom: 0.5 };
+
+    const turntable = new THREE.Group(); scene.add(turntable);
+    const lamps = [], points = [];
+
+    /* Postproceso solo en escritorio, y cargado bajo demanda */
+    let composer = null, bloom = null;
+    if (!lite) {
+      Promise.all([
+        import('three/addons/postprocessing/EffectComposer.js'),
+        import('three/addons/postprocessing/RenderPass.js'),
+        import('three/addons/postprocessing/UnrealBloomPass.js'),
+        import('three/addons/postprocessing/OutputPass.js'),
+      ]).then(([{ EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }]) => {
+        composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0, 0.55, 0.9);
+        composer.addPass(bloom); composer.addPass(new OutputPass());
+        frame(true); apply(mix);
+      });
+    }
+
+    /* Mezcla de las dos luces: k = 0 día, k = 1 atardecer */
+    let mix = 0, tw = null;
+    const lerp = (a, b, t) => a + (b - a) * t;
+    function apply(k) {
+      paper.color.lerpColors(DAY.bg, DUSK.bg, k);
+      hemi.color.lerpColors(DAY.sky, DUSK.sky, k); hemi.groundColor.lerpColors(DAY.ground, DUSK.ground, k);
+      hemi.intensity = lerp(DAY.hemi, DUSK.hemi, k);
+      key.color.lerpColors(DAY.key, DUSK.key, k); key.intensity = lerp(DAY.keyI, DUSK.keyI, k);
+      key.position.lerpVectors(DAY.keyPos, DUSK.keyPos, k);
+      rim.color.lerpColors(DAY.rim, DUSK.rim, k); rim.intensity = lerp(DAY.rimI, DUSK.rimI, k);
+      scene.environmentIntensity = lerp(DAY.env, DUSK.env, k);
+      lamps.forEach((m) => m.color.copy(m.userData.base).multiplyScalar(lerp(DAY.lamp, DUSK.lamp, k)));
+      points.forEach((p) => (p.intensity = lerp(DAY.pts, DUSK.pts, k)));
+      renderer.toneMappingExposure = lerp(DAY.exp, DUSK.exp, k);
+      if (bloom) bloom.strength = lerp(DAY.bloom, DUSK.bloom, k);
+    }
+    apply(0);
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    function go(target) {
+      if (reduce) { mix = target; apply(mix); wake(); return; }
+      tw = { from: mix, to: target, t0: performance.now(), dur: 1600 }; wake();
+    }
+
+    /* Modelo */
+    new GLTFLoader().load('../assets/models/residencia.glb', (gltf) => {
+      const model = gltf.scene;
+      if (model.children[0]) model.children[0].rotation.set(0, 0, 0);   // el GLB trae un leve giro exportado
+      model.traverse((o) => {
+        if (!o.isMesh) return;
+        const m = o.material;
+        if (m.transparent && m.opacity === 0) { o.visible = false; return; }   // zonas de clic: aquí sobran
+        if (m.isMeshBasicMaterial && !lamps.includes(m)) { m.userData.base = m.color.clone(); lamps.push(m); }
+        o.castShadow = !m.transparent; o.receiveShadow = true;
+      });
+      // luces de las lámparas: apagadas de día, se encienden al atardecer
+      for (const [x, z] of [[-5.8, 2.3], [1.8, 4.3], [7.3, -3.3], [1.2, 7.4]]) {
+        const p = new THREE.PointLight('#ffb070', 0, 7, 2); p.position.set(x, 1.6, z); model.add(p); points.push(p);
+      }
+      const box = new THREE.Box3().setFromObject(model);
+      const c = box.getCenter(new THREE.Vector3());
+      model.position.set(-c.x, -box.min.y, -c.z);
+      turntable.add(model);
+      apply(mix); frame(true);
+      hero.classList.add('ready'); canvas.classList.add('on');
+      status.textContent = reduce ? 'Arrastra para girar la maqueta' : 'Arrastra para girarla';
+    }, (e) => {
+      if (e.total) status.textContent = `Cargando la maqueta, ${Math.round((e.loaded / e.total) * 100)} %`;
+    }, () => { status.textContent = 'No se ha podido cargar el modelo'; });
+
+    /* Encuadre: el modelo va al hueco libre (derecha en horizontal, abajo en vertical) */
+    let W = 0, H = 0;
+    function frame(force) {
+      const w = hero.clientWidth, h = hero.clientHeight;
+      if (!force && w === W && h === H) return;
+      W = w; H = h;
+      renderer.setSize(w, h, false);
+      if (composer) { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); }
+      const portrait = w < h * 0.95;
+      camera.aspect = w / h;
+      camera.setFocalLength(portrait ? 35 : 50);
+      spec('lens', portrait ? '35 mm' : '50 mm');
+      // hueco libre en píxeles
+      const rx = portrait ? [0, w] : [w * 0.36, w * 0.99];
+      const ry = portrait ? [h * 0.43, h * 0.8] : [h * 0.12, h * 0.9];
+      const cx = (rx[0] + rx[1]) / 2, cy = (ry[0] + ry[1]) / 2;
+      camera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);
+      // distancia para que la maqueta (radio ~13,4, al girar) quepa en el hueco
+      const elev = THREE.MathUtils.degToRad(portrait ? 30 : 26);
+      const tv = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      const th = (tv * camera.aspect * (rx[1] - rx[0])) / w, tvr = (tv * (ry[1] - ry[0])) / h;
+      const Rh = 13.4, Rv = 13.4 * Math.sin(elev) + 1.6 * Math.cos(elev);
+      const d = Math.max(Rh / th, Rv / tvr) * 1.02 + 6;
+      camera.position.set(0, 0.8 + Math.sin(elev) * d, Math.cos(elev) * d);
+      camera.lookAt(0, 0.8, 0);
+      camera.updateProjectionMatrix();
+      dirty = true;
+    }
+
+    /* Mesa giratoria: gira sola y se puede arrastrar (en táctil, el gesto vertical sigue siendo scroll) */
+    let spin = 0.55, vel = 0, drag = null, dirty = true;
+    hero.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button, a')) return;
+      drag = { x: e.clientX }; vel = 0; wake();
+    });
+    addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x; drag.x = e.clientX;
+      vel = dx * 0.005; spin += vel; dirty = true; wake();
+    });
+    const end = () => { drag = null; };
+    addEventListener('pointerup', end); addEventListener('pointercancel', end);
+
+    function draw() {
+      if (composer && bloom && bloom.strength > 0.01) composer.render();
+      else renderer.render(scene, camera);
+    }
+
+    /* Bucle: solo mientras la portada se ve y algo se mueve */
+    let visible = true, running = false, last = 0;
+    function wake() { if (!running && visible) { running = true; last = performance.now(); requestAnimationFrame(tick); } }
+    function tick(now) {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      frame(false);
+      let moving = false;
+      if (tw) {
+        const k = Math.min(1, (now - tw.t0) / tw.dur);
+        mix = lerp(tw.from, tw.to, ease(k)); apply(mix);
+        if (k >= 1) tw = null;
+        moving = true;
+      }
+      if (!drag) {
+        if (Math.abs(vel) > 1e-4) { spin += vel; vel *= 0.92; moving = true; }
+        if (!reduce) { spin += dt * 0.07; moving = true; }
+      }
+      turntable.rotation.y = spin;
+      if (moving || dirty || drag) { draw(); dirty = false; }
+      if (visible && (moving || drag)) requestAnimationFrame(tick); else running = false;
+    }
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) { dirty = true; wake(); } }).observe(hero);
+    new ResizeObserver(() => { frame(false); wake(); }).observe(hero);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+    frame(true); wake();
+    return { go };
+  }
+</script>
+</body>
+</html>

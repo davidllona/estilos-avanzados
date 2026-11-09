@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ressò 2027, festival de música en la Platja del Pinar</title>
+<meta name="description" content="Ressò: tres noches de música frente al mar en El Grau de Castelló, del 9 al 11 de julio de 2027. Proyecto 2 del cuaderno Hora azul.">
+<meta name="theme-color" content="#0f1013">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/big-shoulders.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/fonts.css">
+<link rel="stylesheet" href="../../vendor/lenis/lenis.css">
+<link rel="stylesheet" href="estilos.css">
+<script>
+  // Marca que hay JS antes de pintar: la portada se esconde solo si va a animarse.
+  // Si algo falla, a los 3 s se muestra igual.
+  document.documentElement.classList.add('js');
+  setTimeout(() => document.documentElement.classList.add('is-in'), 3000);
+</script>
+<script src="../../vendor/gsap/gsap.min.js" defer></script>
+<script src="../../vendor/gsap/ScrollTrigger.min.js" defer></script>
+<script src="../../vendor/gsap/SplitText.min.js" defer></script>
+<script src="../../vendor/lenis/lenis.min.js" defer></script>
+<script src="main.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<span class="progress" aria-hidden="true"></span>
+
+<header class="nav" data-anim>
+  <a class="nav-logo" href="#inicio" aria-label="Ressò, inicio">Ressò<sup>27</sup></a>
+  <nav class="nav-links" aria-label="Principal">
+    <a href="#cartel">Cartel</a>
+    <a href="#experiencia">El festival</a>
+    <a href="#entradas">Entradas</a>
+    <a class="nav-out" href="../../lecciones/proyecto-2.html">Cómo se ha hecho</a>
+  </nav>
+  <a class="btn btn-rojo nav-cta" href="#entradas">Entradas</a>
+</header>
+
+<main id="contenido">
+
+  <!-- 1. Portada: el momento orquestado de la carga -->
+  <section class="hero" id="inicio" aria-labelledby="hero-t">
+    <div class="rings" aria-hidden="true">
+      <svg viewBox="0 0 1000 1000" focusable="false">
+        <circle class="disc" cx="500" cy="500" r="150"/>
+        <circle cx="500" cy="500" r="215"/>
+        <circle cx="500" cy="500" r="285"/>
+        <circle cx="500" cy="500" r="360"/>
+        <circle cx="500" cy="500" r="430"/>
+        <circle cx="500" cy="500" r="495"/>
+      </svg>
+    </div>
+    <div class="hero-top">
+      <p class="when" data-anim><span>9, 10 y 11</span> <span>de julio de 2027</span></p>
+      <p class="where" data-anim><span>Platja del Pinar</span> <span>El Grau de Castelló</span></p>
+    </div>
+    <h1 class="hero-t" id="hero-t">
+      <span class="vh">Ressò, festival de música 2027</span>
+      <span class="word" aria-hidden="true" data-anim><span>Res</span><span>sò</span></span>
+    </h1>
+    <div class="hero-foot">
+      <p class="acts" data-anim>Brava Costa, Ona Mirall, Neón Salitre, Júlia Torrent <span>y 32 artistas más</span></p>
+      <a class="btn btn-rojo btn-xl" href="#entradas" data-anim>Entradas desde 49 €</a>
+    </div>
+  </section>
+
+  <!-- 2. Banda de nombres: scroll animado solo con CSS (animation-timeline: view()) -->
+  <section class="marquee" aria-label="Algunos artistas del cartel">
+    <p class="row a" aria-hidden="true"><span>Brava Costa</span><span>Neón Salitre</span><span>Ona Mirall</span><span>Club Marea</span><span>Júlia Torrent</span><span>Faro Sur</span><span>Les Sirenes</span><span>Doble Eco</span><span>Brava Costa</span><span>Neón Salitre</span></p>
+    <p class="row b" aria-hidden="true"><span>Kilómetro Cero</span><span>Vera Volta</span><span>Sal i Sucre</span><span>Cobalto</span><span>Delta Nocturno</span><span>Mística Ruta</span><span>La Furia Tranquila</span><span>Kilómetro Cero</span><span>Vera Volta</span></p>
+    <p class="vh">Brava Costa, Neón Salitre, Ona Mirall, Club Marea, Júlia Torrent, Faro Sur, Les Sirenes, Doble Eco, Kilómetro Cero, Vera Volta, Sal i Sucre, Cobalto, Delta Nocturno, Mística Ruta y La Furia Tranquila.</p>
+  </section>
+
+  <!-- 3. Manifiesto: sección fijada con GSAP, scrub y SplitText -->
+  <section class="manifest" aria-labelledby="manifest-t">
+    <div class="manifest-in">
+      <div class="sun" aria-hidden="true"><i></i><i></i><i></i></div>
+      <h2 class="vh" id="manifest-t">El festival</h2>
+      <p class="manifest-t">Tres noches frente al mar. Dos escenarios entre pinos. Treinta y seis artistas y un sonido que vuelve cada verano, <span>como un eco.</span></p>
+      <dl class="stats">
+        <div><dd>36</dd><dt>artistas</dt></div>
+        <div><dd>2</dd><dt>escenarios</dt></div>
+        <div><dd>3</dd><dt>noches</dt></div>
+        <div><dd>0</dd><dt>vasos de un solo uso</dt></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- 4. Cartel por días: cambio de día con View Transition -->
+  <section class="lineup" id="cartel" aria-labelledby="lineup-t">
+    <div class="lineup-head">
+      <h2 id="lineup-t">El cartel</h2>
+      <div class="tabs" role="tablist" aria-label="Día del festival">
+        <button role="tab" type="button" id="tab-vie" aria-controls="day-vie" aria-selected="true" data-day="vie">Viernes 9<span class="tab-pill" aria-hidden="true"></span></button>
+        <button role="tab" type="button" id="tab-sab" aria-controls="day-sab" aria-selected="false" tabindex="-1" data-day="sab">Sábado 10</button>
+        <button role="tab" type="button" id="tab-dom" aria-controls="day-dom" aria-selected="false" tabindex="-1" data-day="dom">Domingo 11</button>
+      </div>
+    </div>
+    <div class="days">
+      <div class="day" id="day-vie" role="tabpanel" aria-labelledby="tab-vie" data-day="vie">
+        <ul class="tier t1"><li>Brava Costa</li><li>Neón Salitre</li></ul>
+        <ul class="tier t2"><li>Júlia Torrent</li><li>Club Marea</li><li>Faro Sur</li></ul>
+        <ul class="tier t3"><li>Doble Eco</li><li>Vera Volta</li><li>Sal i Sucre</li><li>Cobalto</li><li>Delta Nocturno</li><li>Mar de Fons</li></ul>
+        <p class="doors"><span>Puertas a las 19:00</span><span>Último concierto a las 04:00</span><span>Escenarios Mar y Pinar</span></p>
+      </div>
+      <div class="day" id="day-sab" role="tabpanel" aria-labelledby="tab-sab" data-day="sab" hidden>
+        <ul class="tier t1"><li>Ona Mirall</li><li>Kilómetro Cero</li></ul>
+        <ul class="tier t2"><li>Les Sirenes</li><li>Mística Ruta</li><li>Tramuntana Sound</li></ul>
+        <ul class="tier t3"><li>Arena Blanca</li><li>Los Ultravioleta</li><li>Pinar Pinar</li><li>Nit Llarga</li><li>Àngels Ros</li><li>Salitre DJ</li></ul>
+        <p class="doors"><span>Puertas a las 18:00</span><span>Último concierto a las 05:00</span><span>Escenarios Mar y Pinar</span></p>
+      </div>
+      <div class="day" id="day-dom" role="tabpanel" aria-labelledby="tab-dom" data-day="dom" hidden>
+        <ul class="tier t1"><li>La Furia Tranquila</li><li>Júlia Torrent</li></ul>
+        <ul class="tier t2"><li>Delta Nocturno</li><li>Faro Sur</li><li>Cobalto</li></ul>
+        <ul class="tier t3"><li>Brisa de Llevant</li><li>Les Germanes Puig</li><li>Ruta 340</li><li>Ola Lenta</li><li>Marjal</li><li>Sesión del amanecer</li></ul>
+        <p class="doors"><span>Puertas a las 18:00</span><span>Último concierto a las 07:00, en la arena</span><span>Escenario Mar</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. El festival: apariciones con view() en CSS -->
+  <section class="exp" id="experiencia" aria-labelledby="exp-t">
+    <h2 class="exp-t" id="exp-t">No es solo <span>lo que suena</span></h2>
+    <ol class="exp-list">
+      <li class="reveal">
+        <span class="n">01</span>
+        <h3>Escenario Mar</h3>
+        <p>Sobre la arena y de cara al Mediterráneo. Los cabezas de cartel tocan con el sol cayendo detrás del público.</p>
+        <i class="line" aria-hidden="true"></i>
+      </li>
+      <li class="reveal">
+        <span class="n">02</span>
+        <h3>Escenario Pinar</h3>
+        <p>Bajo los pinos, para mil personas. Directos de madrugada, sonido envolvente y ningún foco de más.</p>
+        <i class="line" aria-hidden="true"></i>
+      </li>
+      <li class="reveal">
+        <span class="n">03</span>
+        <h3>Baño a las siete</h3>
+        <p>El domingo la última sesión acaba en la orilla al amanecer. Trae bañador: es tradición desde la primera edición.</p>
+        <i class="line" aria-hidden="true"></i>
+      </li>
+    </ol>
+  </section>
+
+  <!-- 6. Entradas: tabla tipográfica -->
+  <section class="tickets" id="entradas" aria-labelledby="tickets-t">
+    <div class="tickets-head">
+      <h2 id="tickets-t">Entradas</h2>
+      <p>Primera tanda hasta el 31 de enero. Sin gastos de gestión y con devolución hasta 30 días antes.</p>
+    </div>
+    <ul class="ticket-list">
+      <li>
+        <div><h3>Entrada de día</h3><p>Un día a elegir. Acceso a los dos escenarios.</p></div>
+        <b class="price">49 €</b>
+        <a class="btn btn-line" href="#entradas">Comprar <span class="vh">entrada de día</span></a>
+      </li>
+      <li class="star">
+        <div><h3>Abono tres días</h3><p>Viernes, sábado y domingo. El que elige casi todo el mundo.</p></div>
+        <b class="price">89 €</b>
+        <a class="btn btn-rojo" href="#entradas">Comprar <span class="vh">abono tres días</span></a>
+      </li>
+      <li>
+        <div><h3>Abono y camping</h3><p>Tres días y parcela en el pinar, a 400 metros del escenario.</p></div>
+        <b class="price">119 €</b>
+        <a class="btn btn-line" href="#entradas">Comprar <span class="vh">abono y camping</span></a>
+      </li>
+      <li>
+        <div><h3>Pinar privado</h3><p>Zona elevada junto al escenario Mar, barra propia y aseos sin colas.</p></div>
+        <b class="price">159 €</b>
+        <a class="btn btn-line" href="#entradas">Comprar <span class="vh">pinar privado</span></a>
+      </li>
+    </ul>
+    <dl class="info">
+      <div><dt>Cómo llegar</dt><dd>Lanzadera gratuita desde la estación de tren de Castelló cada 20 minutos.</dd></div>
+      <div><dt>Edad</dt><dd>Mayores de 16. De 16 a 17, con autorización firmada.</dd></div>
+      <div><dt>Pago</dt><dd>Pulsera sin efectivo. Recargas en la web y en el recinto.</dd></div>
+    </dl>
+  </section>
+</main>
+
+<footer class="foot">
+  <p class="foot-word" aria-hidden="true">Ressò</p>
+  <div class="foot-row">
+    <p>Ressò es un festival inventado para el cuaderno Hora azul. Proyecto 2, nivel de movimiento.</p>
+    <nav aria-label="Cuaderno">
+      <a href="../../lecciones/proyecto-2.html">Cómo se ha hecho</a>
+      <a href="../../index.html">Volver al cuaderno</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

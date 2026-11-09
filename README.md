@@ -8,19 +8,20 @@ Está pensado para repasarse desde el **móvil**. Cada demo tiene un botón «Ve
 
 ## Qué contiene
 
-El cuaderno explica **el porqué** del diseño: qué transmite cada color, por qué unos pegan con otros, qué tipografía va con qué fondo y cómo se piensa una web según el negocio. La técnica de CSS y el scroll cinematográfico quedan como bloque extra.
+Una **ruta por niveles**: de diseño en 2D a webs con 3D de verdad. Cada nivel termina con un proyecto, una landing completa que usa todo lo aprendido.
 
-| Bloque | Lecciones |
-| --- | --- |
-| Antes de empezar | Qué hace que una web parezca cara |
-| **Color** | Cómo se lee un color · Qué transmite cada color · Por qué unos colores pegan · El toque: acentos que lo cambian todo · Construir una paleta paso a paso · Catálogo de paletas explicadas |
-| **Tipografía** | Qué transmite una tipografía · Combinar tipografías · Tipografía, color y fondo |
-| **Diseño web** | Cómo se piensa una web · Webs que venden emoción · Webs que venden confianza |
-| Técnica (el extra) | OKLCH · Paletas en CSS · Tipografía en CSS · Composición · Movimiento · Scroll con CSS · View Transitions · GSAP · Secuencias · Capas interactivas · Recursos con IA · Rendimiento · Proyecto final: la torre |
+| Nivel | Lecciones | Proyecto |
+| --- | --- | --- |
+| **1 · Fundamentos visuales** | Qué hace que una web parezca cara · Cómo se lee un color · Qué transmite cada color · Por qué unos colores pegan · Acentos · Construir una paleta · Catálogo de paletas · Qué transmite una tipografía · Combinar tipografías · Tipografía, color y fondo · OKLCH · Paletas en CSS · Tipografía en CSS · Composición | *Sorra*, estudio de arquitectura (`proyectos/nivel-1/`) |
+| **2 · Movimiento** | Movimiento con criterio · Scroll con CSS · View Transitions · GSAP | *Ressò 2027*, festival (`proyectos/nivel-2/`) |
+| **3 · Scroll cinematográfico** | Secuencias de fotogramas · Capas interactivas · Recursos con IA · Rendimiento | *Vésper*, la torre en fotogramas (`landing/`) |
+| **4 · 3D de verdad** | Three.js en una web · 3D guiado por el scroll · Shaders · Modelos GLB · Interacción en 3D | *Lucero*, la torre en tiempo real (`proyectos/torre-3d/`) |
+| Referencia · Diseñar por sector | Cómo se piensa una web · Webs que venden emoción · Webs que venden confianza | |
 
 Además:
 
-- **`landing/`** · *Vésper*, la landing final con todas las técnicas: llegada a la torre con 120 fotogramas controlados por el scroll (versión 16:9 y 9:16), plantas que se iluminan sobre la imagen, la residencia en 3D en tiempo real con Three.js, View Transitions, scroll-driven CSS y Lenis.
+- **`index.html`** · la portada: la torre en 3D en tiempo real; al bajar, la cámara sube planta a planta y cada tramo es un nivel.
+- **`laboratorio.html`** · laboratorio de color: mueve los tres colores de la paleta y mira qué combina, qué no y por qué; web cara contra web barata; diez paletas explicadas.
 - **`radar.html`** · novedades de CSS y animación con su soporte real en Chrome, Safari y Firefox. Los datos están en `assets/js/radar-data.js`.
 - **`chuleta.html`** · todos los fragmentos de código del cuaderno con buscador.
 
@@ -30,7 +31,7 @@ Además:
 - Cada lección tiene identidad propia (paleta y tipografía en un `<style>` que redefine los tokens de `base.css`) y una portada a pantalla completa con la técnica de la lección funcionando.
 - Recuadros **Criterio** (decisiones de diseño), **En el móvil**, **Ojo** (trampas) y **Soporte** (navegadores, con datos de Baseline de noviembre de 2026).
 - Tests de predicción y comprobación, «Entender más» plegado, resumen de tres puntos y un reto práctico.
-- El progreso se guarda en el `localStorage` del navegador: en la portada, cada lección terminada enciende una planta de la torre.
+- El progreso se guarda en el `localStorage` del navegador: en la portada, cada lección terminada se marca como «Hecha» y el botón principal te lleva a la siguiente.
 
 ## Verlo en local
 
@@ -49,18 +50,22 @@ En GitHub: **Settings → Pages → Build and deployment → Source: Deploy from
 ## Estructura
 
 ```
-index.html                portada: torre de progreso y temario
+index.html                portada: la torre 3D y la ruta por niveles
+laboratorio.html          laboratorio de color
 radar.html, chuleta.html  novedades y chuleta
 lecciones/NN-*.html       una página por lección
 assets/css/base.css       estilos del cuaderno (paleta «hora azul», componentes, responsive)
 assets/css/demo.css       base que se carga dentro de cada demo (fuentes y reset)
 assets/js/cuaderno.js     motor: temario, barra, índice lateral, laboratorios, tests y progreso
+assets/js/torre3d.js      la torre en Three.js (portada, lección de 3D con scroll)
+assets/models/            residencia.glb para la lección de modelos
 assets/js/radar-data.js   datos del radar y de la tabla de soporte
 assets/js/chuleta-data.js generado con tools/generar_chuleta.py
 assets/media/             vídeo de la torre para la demo de currentTime
 assets/fonts/             12 familias (Bricolage, Newsreader, Fraunces, Bodoni Moda, Syne, Archivo…); ver assets/css/fonts.css
-vendor/                   GSAP 3.15 (ScrollTrigger, SplitText, Flip), Lenis 1.3 y Prism, en local
-landing/                  la landing Vésper (ver abajo)
+vendor/                   GSAP 3.15 (ScrollTrigger, SplitText, Flip), Lenis 1.3, Prism y Three.js r187 (con addons), en local
+proyectos/                landings de los niveles 1, 2 y 4
+landing/                  la landing Vésper, proyecto del nivel 3 (ver abajo)
 tools/                    scripts de mantenimiento
 ```
 
@@ -77,7 +82,7 @@ tools/                    scripts de mantenimiento
      <figcaption>Qué observar.</figcaption>
    </figure>
    ```
-   `data-libs` admite `gsap scrolltrigger splittext flip lenis`.
+   `data-libs` admite `gsap scrolltrigger splittext flip lenis`. Con `data-three` el bloque JS se carga como módulo con un import map: `import * as THREE from 'three'` y `three/addons/...`.
 4. Código suelto: `<script type="text/x-code" data-lang="css" data-label="opcional"> … </script>`.
 5. Test: `<div class="quiz" data-answer="2"><p class="q">…</p><ol><li>…</li></ol><p class="why">…</p></div>` (`data-answer` empieza en 1).
 6. Vuelve a generar la chuleta: `python3 tools/generar_chuleta.py`.
@@ -94,6 +99,6 @@ tools/                    scripts de mantenimiento
 
 ## Créditos y licencias
 
-- Material de estudio personal. Vésper es un proyecto ficticio.
+- Material de estudio personal. Sorra, Ressò, Vésper y Lucero son proyectos ficticios.
 - [GSAP](https://gsap.com) (licencia estándar sin coste de Webflow), [Lenis](https://github.com/darkroomengineering/lenis) (MIT), [Prism](https://prismjs.com) (MIT) y [Three.js](https://threejs.org) (MIT) están en `vendor/` y `landing/js/`.
 - Fuentes con licencia SIL Open Font License, vía Fontsource.

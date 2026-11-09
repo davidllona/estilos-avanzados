@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proyecto final: la torre en 3D en tiempo real | Hora azul</title>
+<meta name="description" content="Desmontaje de Lucero, la torre en 3D en tiempo real: recorrido de cámara, raycast por planta, ficha anclada, residencia 3D, móvil, rendimiento medido y comparación con la versión en fotogramas.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad: «Altura». Noche honda, crema y champán; Cormorant cursiva para la voz,
+     cifras finas de Inter Tight para los datos. La misma familia que Lucero. */
+  :root {
+    --bg: oklch(14% 0.04 285);
+    --bg-2: oklch(18.5% 0.045 287);
+    --bg-3: oklch(23% 0.05 288);
+    --fg: oklch(95% 0.016 78);
+    --muted: oklch(80% 0.025 78);
+    --faint: oklch(66% 0.03 78);
+    --accent: oklch(85% 0.12 75);
+    --on-accent: oklch(14% 0.04 285);
+    --code-bg: oklch(11% 0.03 285);
+    --scheme: dark;
+    --f-display: "Cormorant", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 500;
+    --display-tracking: -0.02em;
+  }
+  .prose h2 { font-style: italic; font-size: var(--step-5); line-height: .9; }
+  .prose h3 { font-style: italic; }
+  .split > * { min-width: 0; }
+  .num-thin { font: 200 1em/1 var(--f-ui); font-variant-numeric: tabular-nums; letter-spacing: -0.04em; }
+
+  /* ---- Portada: la escena del proyecto, importada tal cual ---- */
+  .hero { background: oklch(22% 0.07 320); color: var(--fg); }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; touch-action: pan-y; }
+  .hero .veil { position: absolute; inset: 0; z-index: -1; pointer-events: none; background:
+      linear-gradient(90deg, oklch(14% 0.04 285 / .78) 0%, oklch(14% 0.04 285 / .3) 40%, transparent 62%),
+      linear-gradient(0deg, oklch(14% 0.04 285 / .7), transparent 34%),
+      linear-gradient(180deg, oklch(14% 0.04 285 / .5), transparent 16%); }
+  .hero .still { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+  .hero-copy { position: absolute; left: var(--gutter); bottom: clamp(5.5rem, 14vh, 9rem); max-width: min(40rem, 56vw); pointer-events: none; }
+  .hero-copy > * { pointer-events: auto; }
+  .hero [data-kicker] { font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); margin: 0 0 1rem; }
+  .hero h1 { font: italic 500 clamp(3.6rem, 1.2rem + 7.4vw, 9rem)/.84 var(--f-display); letter-spacing: -0.03em; margin: 0; text-wrap: balance; }
+  .hero h1 em { color: var(--accent); }
+  .hero .lede { font-size: var(--step-1); line-height: 1.4; color: oklch(95% 0.016 78 / .86); max-width: 32ch; margin: 1.4rem 0 1.6rem; }
+  .hero .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; }
+  .hero .btn:not(.primary) { background: oklch(14% 0.04 285 / .4); backdrop-filter: blur(8px); }
+  /* Telemetría de la escena en vivo */
+  .telemetry { position: absolute; right: var(--gutter); top: 50%; translate: 0 -50%; display: grid; gap: 1.1rem; justify-items: end; text-align: right; margin: 0; }
+  .telemetry div { display: grid; }
+  .telemetry dt { font: 500 .78rem/1.2 var(--f-ui); color: var(--fg); opacity: .8; }
+  .telemetry dd { margin: .2rem 0 0; font: 200 1.9rem/1 var(--f-ui); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+  .telemetry .big dd { font-size: clamp(4rem, 2rem + 5vw, 7rem); color: var(--accent); line-height: .85; }
+  .telemetry dt, .telemetry dd { text-shadow: 0 0 2px oklch(14% 0.04 285 / .5), 0 1px 16px oklch(14% 0.04 285 / .7); }
+  .hero .hint { position: absolute; right: var(--gutter); bottom: 2rem; margin: 0; font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  @media (max-width: 760px), (max-aspect-ratio: 4/5) {
+    .hero .veil { background: linear-gradient(0deg, oklch(14% 0.04 285 / .92) 0%, oklch(14% 0.04 285 / .45) 40%, transparent 62%), linear-gradient(180deg, oklch(14% 0.04 285 / .5), transparent 18%); }
+    .hero-copy { left: var(--gutter); right: var(--gutter); bottom: 2.4rem; max-width: none; }
+    .hero h1 { font-size: clamp(3rem, 14vw, 4.6rem); }
+    .hero .lede { font-size: 1.05rem; margin: 1rem 0 1.2rem; }
+    .telemetry { top: 4.6rem; translate: none; gap: .7rem; }
+    .telemetry dd { font-size: 1.25rem; }
+    .telemetry .big dd { font-size: 3.4rem; }
+    .telemetry .opt, .telemetry .opt2 { display: none; }
+    .hero .hint { display: none; }
+  }
+
+  /* ---- Mapa de la web: índice editorial ---- */
+  .map { list-style: none; margin: 2rem 0; padding: 0; border-top: 1px solid var(--fg); counter-reset: m; }
+  .map li { display: grid; grid-template-columns: 3.4rem 12rem 1fr 6rem; gap: .4rem 1.4rem; padding: 1.3rem 0; border-bottom: 1px solid var(--line-2); align-items: baseline; }
+  .map li::before { counter-increment: m; content: counter(m, decimal-leading-zero); font: 200 2rem/1 var(--f-ui); color: var(--accent); font-variant-numeric: tabular-nums; }
+  .map b { font: italic 500 var(--step-2)/1.05 var(--f-display); }
+  .map p { margin: 0; color: var(--muted); font-size: var(--step--1); }
+  .map p strong { color: var(--fg); font-weight: 600; }
+  .map .l { font: 500 var(--step--1)/1.4 var(--f-ui); text-align: right; }
+  @media (max-width: 760px) { .map li { grid-template-columns: 3rem 1fr; } .map li > :not(b) { grid-column: 2; } .map .l { text-align: left; } }
+
+  /* ---- Tres modos: tira a sangre ---- */
+  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-block: 3rem; background: var(--bg); }
+  .modes figure { margin: 0; position: relative; }
+  .modes img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+  .modes figcaption { padding: 1rem var(--gutter) 0 1rem; font-size: var(--step--1); color: var(--muted); max-width: 36ch; }
+  .modes figcaption b { display: block; font: italic 500 var(--step-2)/1.1 var(--f-display); color: var(--fg); margin-bottom: .3rem; }
+  @media (max-width: 760px) { .modes { grid-template-columns: 1fr; gap: 1.6rem; } }
+
+  /* ---- Teléfonos ---- */
+  .phones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.8rem, 2vw, 1.6rem); margin: 2.4rem 0; }
+  .phones figure { margin: 0; }
+  .phones img { width: 100%; height: auto; border-radius: 22px; box-shadow: 0 0 0 5px oklch(10% 0.03 285), 0 0 0 6px oklch(100% 0 0 / .16), 0 30px 60px -24px oklch(4% 0.03 285); }
+  .phones figcaption { margin-top: 1rem; font-size: var(--step--1); color: var(--muted); }
+  @media (max-width: 560px) { .phones { grid-template-columns: 1fr 1fr; } .phones figure:last-child { display: none; } }
+
+  /* ---- Telemetría medida: cifras grandes ---- */
+  .figures { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--fg); margin: 2.4rem 0; }
+  .figures div { padding: 1.3rem 1.2rem 1.4rem 0; border-right: 1px solid var(--line-2); }
+  .figures div + div { padding-left: 1.2rem; }
+  .figures div:last-child { border-right: 0; }
+  .figures b { display: block; font: 200 clamp(2.6rem, 1.6rem + 3vw, 4.4rem)/.9 var(--f-ui); letter-spacing: -0.04em; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .figures b small { font-size: .38em; letter-spacing: 0; margin-left: .15em; color: var(--muted); }
+  .figures p { margin: .7rem 0 0; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  @media (max-width: 760px) { .figures { grid-template-columns: 1fr 1fr; } .figures div { border-right: 0; border-bottom: 1px solid var(--line-2); padding: 1.1rem .8rem 1.2rem 0 !important; } }
+
+  /* ---- Bandas ---- */
+  .band.mobile { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.mobile h2 { margin-top: 0 !important; }
+  .band.mobile h2 .n { color: oklch(46% 0.1 60); }
+  .band.mobile p { max-width: var(--measure); }
+  .band.mobile .table-wrap { border-color: oklch(14% 0.04 285 / .2); }
+  .band.mobile th { background: oklch(14% 0.04 285 / .06); color: oklch(14% 0.04 285 / .72); }
+  .band.mobile td, .band.mobile th { border-color: oklch(14% 0.04 285 / .14); }
+  .band.mobile .callout { background: oklch(14% 0.04 285 / .06); }
+  .band.mobile .callout .t { color: oklch(42% 0.1 60); }
+  .band.mobile code { background: oklch(14% 0.04 285 / .08); }
+  .band.claim { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.claim p { font: italic 500 clamp(2.2rem, 1.2rem + 4vw, 5.2rem)/1 var(--f-display); letter-spacing: -0.02em; margin: 0; max-width: 18ch; text-wrap: balance; }
+
+  /* ---- Versus: fotogramas frente a tiempo real ---- */
+  .versus { display: grid; grid-template-columns: 9rem 1fr 1fr; border-top: 1px solid var(--fg); margin: 2.4rem 0; }
+  .versus > * { padding: 1rem 1rem 1rem 0; border-bottom: 1px solid var(--line-2); margin: 0; }
+  .versus .h { font: italic 500 var(--step-2)/1 var(--f-display); padding-top: 1.2rem; }
+  .versus .k { font: 600 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .versus .v { font-size: var(--step--1); line-height: 1.5; }
+  .versus .v strong { color: var(--accent); font-weight: 600; }
+  @media (max-width: 760px) {
+    .versus { grid-template-columns: 1fr 1fr; }
+    .versus > :first-child { display: none; }
+    .versus .k { grid-column: 1 / -1; padding-bottom: 0; border-bottom: 0; color: var(--accent); }
+  }
+</style>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="proyecto-4">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <canvas data-hero-canvas aria-hidden="true"></canvas>
+    <div class="veil" aria-hidden="true"></div>
+    <div class="hero-copy">
+      <p data-kicker>Proyecto final</p>
+      <h1 id="t">La torre en 3D, <em>en tiempo real</em></h1>
+      <p class="lede">Esta portada es la escena de Lucero importada tal cual. Toca una planta: se enciende, la cámara vuela hacia ella y los números de la derecha son los del renderizador en este momento.</p>
+      <div class="actions">
+        <a class="btn primary" href="../proyectos/torre-3d/index.html">Abrir Lucero</a>
+        <a class="btn" href="../landing/index.html">La versión en fotogramas</a>
+        <span class="chip" data-meta>45 min</span>
+      </div>
+    </div>
+    <dl class="telemetry" aria-live="off">
+      <div class="big"><dt data-t-label>Planta</dt><dd data-t-floor>18</dd></div>
+      <div><dt>Draw calls</dt><dd data-t-calls>0</dd></div>
+      <div class="opt"><dt>Triángulos</dt><dd data-t-tris>0</dd></div>
+      <div class="opt2"><dt>Fotogramas pintados</dt><dd data-t-frames>0</dd></div>
+      <div class="opt"><dt>Modo</dt><dd data-t-mode>…</dd></div>
+    </dl>
+    <p class="hint" data-hint>Pasa por la torre o toca una planta</p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En el proyecto 3 la torre era una película: 120 fotogramas renderizados de antemano que el scroll pasaba uno a uno. Era bonita, pero solo se podía mirar. <strong>Lucero</strong> es la misma idea llevada al tiempo real: la torre se dibuja en tu pantalla, así que la cámara puede ir donde quieras, cada planta responde al ratón o al dedo y la ficha de un piso se pega a su fachada en 3D.</p>
+      <p>Esta lección desmonta la web pieza a pieza: qué archivo hace qué, el código que importa, las decisiones de diseño, qué cambia en el móvil, cuánto pesa y cuánto cuesta pintarla, y cuándo te conviene más la versión en fotogramas.</p>
+
+      <h2>Mapa de la web y archivos</h2>
+      <p>Seis secciones. Las dos primeras comparten un único escenario fijo con un único canvas: primero vuelas, después eliges. Separarlas en dos canvas habría duplicado la escena y gastado un contexto WebGL que necesitamos para la residencia.</p>
+
+      <ol class="map">
+        <li><b>El vuelo</b><p><strong>Del agua a la azotea y de vuelta a la torre entera.</strong> Recorrido propio con <code>CatmullRomCurve3</code>, capítulos por tramos y contador de planta que sigue la altura de la cámara.</p><span class="l"><a href="three-scroll.html">3D·2</a></span></li>
+        <li><b>Elige tu planta</b><p><strong>La torre se queda quieta y se puede tocar.</strong> Raycast contra un volumen invisible, <code>highlight()</code>, vuelo a la planta y ficha anclada al 3D.</p><span class="l"><a href="three-interaccion.html">3D·5</a></span></li>
+        <li><b>La residencia</b><p><strong>La maqueta del piso con números anclados a cada estancia.</strong> Se carga al acercarte y comparte Three.js con la torre.</p><span class="l"><a href="three-modelos.html">3D·4</a></span></li>
+        <li><b>Una tarde</b><p><strong>Tres horas, tres imágenes.</strong> Retícula editorial alterna y revelado con <code>animation-timeline: view()</code>.</p><span class="l"><a href="06-scroll-css.html">06</a></span></li>
+        <li><b>Frase</b><p><strong>Una banda champán que corta el ritmo.</strong> El único bloque de color plano de la página.</p><span class="l"><a href="color-acento.html">Color</a></span></li>
+        <li><b>Visita</b><p><strong>Formulario de una columna</strong> con la planta que hayas elegido ya seleccionada.</p><span class="l"><a href="12-rendimiento.html">12</a></span></li>
+      </ol>
+
+      <script type="text/x-code" data-lang="txt" data-label="Archivos de proyectos/torre-3d/">
+        index.html          estructura, textos e import map de Three
+        css/torre.css       paleta, tipografía, escenario fijo, ficha y móvil
+        js/main.js          modo, scroll, capítulos, selector, residencia y formulario
+        js/vuelo.js         la torre: recorrido de cámara, raycast, vuelo y proyección
+        js/fotogramas.js    respaldo sin WebGL: la secuencia y los polígonos del proyecto 3
+        js/datos.js         plantas, precios y estancias (lo comparten los tres modos)
+
+        Reutiliza (rutas relativas):
+        ../../assets/js/torre3d.js     la escena (cielo, agua, ciudad, 30 plantas, bloom)
+        ../../landing/src/residencia.js la maqueta 3D del piso
+        ../../landing/frames/desk|mob  los 120 fotogramas, solo en el respaldo
+      </script>
+
+      <h3>El modo se decide antes de descargar nada</h3>
+      <p>Lo primero que hace <code>main.js</code> es elegir entre tres modos. Lo importante es el orden: decide y <em>después</em> importa. Three.js pesa 731 KB sin comprimir; si el equipo no tiene WebGL, no tiene sentido descargarlo para luego tirarlo.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="js/main.js (extracto)">
+        let mode = params.get('modo');               // ?modo=completo|ligero|fotogramas para probar
+        if (!['completo', 'ligero', 'fotogramas'].includes(mode)) {
+          if (!webglOK() || saveData) mode = 'fotogramas';
+          else if (coarse || innerWidth < 760 || navigator.hardwareConcurrency <= 4) mode = 'ligero';
+          else mode = 'completo';
+        }
+        document.documentElement.dataset.mode = mode;  // el CSS también se entera
+
+        // Three.js solo viaja si se va a usar; si algo falla, la secuencia toma el relevo
+        (mode === 'fotogramas' ? startFallback() : start3D()).catch(startFallback);
+
+        async function start3D() {
+          const { createVuelo } = await import('./vuelo.js');
+          vuelo = createVuelo(canvas, { lite: mode === 'ligero', reduce, onFrame });
+          canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); startFallback(); });
+        }
+      </script>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La sonda de WebGL crea un canvas, pide el contexto y lo libera con <code>WEBGL_lose_context</code>. Si no lo liberas, la sonda ocupa uno de los pocos contextos que el navegador permite y, en algunos móviles, la torre no llega a arrancar. Y el parámetro <code>?modo=</code> no es un truco de desarrollo que se olvida: es como vas a enseñarle al cliente las tres versiones sin cambiar de teléfono.</p>
+      </div>
+
+      <h2>Un recorrido de cámara con criterio de encuadre</h2>
+      <p><code>torre3d.js</code> trae un recorrido por defecto, pero acepta una función <code>path(progress, camera, look)</code> que lo sustituye. La de Lucero define siete planos clave. Lo interesante es cómo se describen: no dicen «mira al punto (−38, 46, 0)», dicen <strong>«pon el centro de la torre en el tercio derecho»</strong>.</p>
+
+      <div class="split">
+        <div>
+          <p>Cada plano tiene una posición de cámara <code>C</code>, un punto que importa <code>T</code> y dónde quieres que caiga ese punto en pantalla, <code>sx</code> y <code>sy</code>, de −1 a 1. La función <code>lookFor</code> desplaza el punto de mira lo justo para que <code>T</code> acabe ahí con el campo de visión y la proporción de ese momento.</p>
+          <p>Así el mismo plano funciona a 1440 × 900 y a 390 × 844. Aun así, en vertical hay un segundo juego de planos (<code>tall</code>): la torre centrada y alta, porque abajo están los textos.</p>
+          <div class="callout movil"><span class="t">En el móvil</span>
+            <p>El vertical no es el horizontal recortado. Con fov 55 y la torre centrada en la mitad superior (<code>sy: 0.22</code>), el pulgar y los textos tienen la mitad de abajo para ellos. Prueba siempre el plano final en un teléfono: es el que más tiempo se ve.</p>
+          </div>
+        </div>
+        <div class="stick">
+          <script type="text/x-code" data-lang="js" data-label="js/vuelo.js">
+            const KEYS = { wide: [
+              { C: [74, 4, 360], T: [0, 46, 0], sx: 0.18, sy: 0.05 }, // llegada
+              { C: [-46, 36, 48], T: [0, 44, 0], sx: 0.3, sy: 0 },    // fachada
+              { C: [60, 20, 178], T: [0, 52, 0], sx: 0.24, sy: -0.03 } // elegir
+            ] };
+            function lookFor(C, T, sx, sy, cam, out) {
+              const dir = T.clone().sub(C), dist = dir.length();
+              dir.normalize();
+              const right = new Vector3().crossVectors(dir, UP).normalize();
+              const up = new Vector3().crossVectors(right, dir);
+              const tanV = Math.tan(degToRad(cam.fov / 2));
+              const tanH = tanV * cam.aspect;
+              return out.copy(T)
+                .addScaledVector(right, -sx * dist * tanH)
+                .addScaledVector(up, -sy * dist * tanV);
+            }
+          </script>
+        </div>
+      </div>
+
+      <p>Las posiciones y los puntos de mira van en dos <code>CatmullRomCurve3</code> en modo <code>'centripetal'</code>, que no hace bucles raros cuando dos puntos están muy cerca. El suavizado no lo pones tú: la torre ya persigue el progreso con un lerp del 8 % por fotograma, así que no hace falta el <code>scrub</code> de GSAP. Juega con el encuadre en esta versión reducida:</p>
+
+      <figure class="lab" data-three data-title="Encuadrar con sx: la torre deja sitio al texto" data-hint="Mueve el recorrido y el encuadre" data-height="440" data-height-mobile="520" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas id="c"></canvas>
+          <div class="copy"><p>Lucero</p><small>El texto vive aquí. La torre, en el tercio que le dejes.</small></div>
+          <form class="ui">
+            <label>Recorrido <input id="t" type="range" min="0" max="1" step="0.01" value="1"></label>
+            <label>sx <output id="o">0.24</output><input id="sx" type="range" min="-0.6" max="0.6" step="0.01" value="0.24"></label>
+          </form>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #2a1838; color: #f6efe4; font-family: var(--f-sans); height: 100vh; overflow: hidden; }
+          #c { position: fixed; inset: 0; width: 100%; height: 100%; }
+          .copy { position: fixed; left: 24px; bottom: 120px; max-width: 40%; pointer-events: none; }
+          .copy p { font: italic 500 clamp(2.6rem, 9vw, 4.6rem)/.8 "Cormorant", var(--f-serif); margin: 0 0 .6rem; }
+          .copy small { color: #d9cdbd; font-size: .85rem; }
+          .ui { position: fixed; left: 24px; right: 24px; bottom: 18px; display: flex; gap: 1.5rem; font-size: .8rem; }
+          .ui label { flex: 1; display: grid; gap: .3rem; }
+          input { width: 100%; accent-color: #f3c070; min-height: 32px; }
+          @media (max-width: 500px) { .copy { max-width: 70%; bottom: 200px; } .ui { flex-direction: column; gap: .4rem; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          const canvas = document.getElementById('c');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#5b3566');
+          scene.fog = new THREE.Fog('#b0607a', 150, 520);
+          const cam = new THREE.PerspectiveCamera(35, 1, 0.5, 2000);
+          // La torre, en versión maqueta: 30 losas y 30 núcleos de vidrio
+          const slab = new THREE.MeshStandardMaterial({ color: '#e6d6c4', roughness: .7 });
+          const glass = new THREE.MeshStandardMaterial({ color: '#2a1c3c', emissive: '#ff9a4a', emissiveIntensity: .35 });
+          for (let f = 0; f < 30; f++) {
+            const s = new THREE.Mesh(new THREE.BoxGeometry(26, .45, 18), slab); s.position.y = f * 3.2; scene.add(s);
+            const g = new THREE.Mesh(new THREE.BoxGeometry(22, 2.7, 14), glass); g.position.y = f * 3.2 + 1.6; scene.add(g);
+          }
+          const sea = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({ color: '#1c1230' }));
+          sea.rotation.x = -Math.PI / 2; scene.add(sea);
+          scene.add(new THREE.HemisphereLight('#c9a8ff', '#20142c', 1.4));
+          const sun = new THREE.DirectionalLight('#ffb08a', 2); sun.position.set(-80, 60, 120); scene.add(sun);
+
+          // Dos planos clave: llegada desde el agua y la torre entera
+          const P = new THREE.CatmullRomCurve3([new THREE.Vector3(70, 4, 360), new THREE.Vector3(-40, 40, 70), new THREE.Vector3(60, 20, 178)]);
+          const T = new THREE.Vector3(0, 50, 0), UP = new THREE.Vector3(0, 1, 0);
+          function lookFor(C, T, sx, sy) {   // la misma cuenta que en vuelo.js
+            const dir = T.clone().sub(C), dist = dir.length(); dir.normalize();
+            const right = new THREE.Vector3().crossVectors(dir, UP).normalize();
+            const up = new THREE.Vector3().crossVectors(right, dir);
+            const tanV = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)), tanH = tanV * cam.aspect;
+            return T.clone().addScaledVector(right, -sx * dist * tanH).addScaledVector(up, -sy * dist * tanV);
+          }
+          const $ = (id) => document.getElementById(id);
+          function render() {
+            const w = innerWidth, h = innerHeight;
+            renderer.setSize(w, h, false); cam.aspect = w / h; cam.fov = w / h < .8 ? 55 : 35; cam.updateProjectionMatrix();
+            const sx = +$('sx').value; $('o').value = sx.toFixed(2);
+            const C = P.getPoint(+$('t').value);
+            cam.position.copy(C); cam.lookAt(lookFor(C, T, sx, 0));
+            renderer.render(scene, cam);         // solo se pinta cuando algo cambia
+          }
+          $('t').oninput = $('sx').oninput = render; addEventListener('resize', render); render();
+        </script>
+        <figcaption>Con <code>sx</code> en 0 la torre queda centrada y el titular choca con ella. A partir de 0.2 se aparta sola, y si cambias el tamaño de la ventana sigue en su sitio: la cuenta usa el fov y la proporción de cada momento. No hay bucle de animación: se pinta solo cuando mueves un control.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Siete planos, no veinte. Cada plano clave es un «momento» con su texto: llegada, la torre crece, al pie, la fachada, las últimas plantas, la azotea y la torre entera. Si un tramo del recorrido no tiene nada que contar, sobra. Y el último plano es el más importante: es donde la cámara se para y el usuario empieza a tocar, así que se diseña como una portada, con aire para el panel.</p>
+      </div>
+
+      <h2>Plantas que se iluminan</h2>
+      <p>Para saber qué planta tocas no hace falta un objeto por planta. Basta un volumen invisible con la forma de la torre y una cuenta: la altura del impacto dividida por la altura de planta.</p>
+
+      <script type="text/x-code" data-lang="js" data-label="js/vuelo.js: raycast por altura">
+        // Un único volumen con la planta redondeada de la torre, 30 × 3,2 m de alto.
+        // material.visible = false: no se pinta, pero el rayo sí lo toca.
+        const hitbox = new THREE.Mesh(hitGeo, new THREE.MeshBasicMaterial({ visible: false }));
+        scene.add(hitbox);
+
+        function pickAt(clientX, clientY) {
+          const b = canvas.getBoundingClientRect();
+          ndc.set(((clientX - b.left) / b.width) * 2 - 1, -((clientY - b.top) / b.height) * 2 + 1);
+          ray.setFromCamera(ndc, camera);
+          const hit = ray.intersectObject(hitbox, false)[0];
+          return hit ? Math.min(29, Math.max(0, Math.floor(hit.point.y / 3.2))) : -1;
+        }
+      </script>
+
+      <p>El resaltado tiene dos capas. <code>highlight(f, f)</code> enciende todas las ventanas de esa planta desde el shader de la torre. Pero con la torre a 200 metros eso son cuatro píxeles más cálidos, y no se lee. Por eso Lucero añade un anillo: dos contornos con color por encima de 1 (que el bloom convierte en halo) y una banda translúcida aditiva. Las plantas vendidas se resaltan a media luz y con un contorno frío: se ven, pero no invitan.</p>
+
+      <figure class="lab" data-three data-title="Planta por altura y etiqueta anclada" data-hint="Pasa el ratón o toca la torre" data-height="460" data-height-mobile="540" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <canvas id="c"></canvas>
+          <p class="count"><small>Planta</small><b id="n">--</b></p>
+          <p class="tag" id="tag" hidden></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #2a1838; color: #f6efe4; font-family: var(--f-sans); height: 100vh; overflow: hidden; }
+          #c { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: pan-y; cursor: crosshair; }
+          .count { position: fixed; left: 24px; top: 16px; margin: 0; display: grid; pointer-events: none; }
+          .count small { font-size: .8rem; color: #d9cdbd; }
+          .count b { font: 200 4.4rem/1 var(--f-sans); color: #f3c070; font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+          .tag { position: fixed; left: 0; top: 0; margin: 0; padding: .45rem .7rem; border-radius: 6px; background: #f6efe4; color: #1c1230; font-size: .8rem; white-space: nowrap; pointer-events: none; }
+          .tag::before { content: ""; position: absolute; right: 100%; top: 50%; width: 28px; height: 1px; background: #f3c070; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          const canvas = document.getElementById('c');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+          const scene = new THREE.Scene(); scene.background = new THREE.Color('#4a2c5a');
+          const cam = new THREE.PerspectiveCamera(35, 1, 1, 1000);
+          const glass = [];
+          for (let f = 0; f < 30; f++) {
+            const s = new THREE.Mesh(new THREE.BoxGeometry(26, .45, 18), new THREE.MeshStandardMaterial({ color: '#e6d6c4' }));
+            const g = new THREE.Mesh(new THREE.BoxGeometry(22, 2.7, 14), new THREE.MeshStandardMaterial({ color: '#2a1c3c', emissive: '#ff9a4a', emissiveIntensity: .15 }));
+            s.position.y = f * 3.2; g.position.y = f * 3.2 + 1.6; scene.add(s, g); glass.push(g);
+          }
+          scene.add(new THREE.HemisphereLight('#c9a8ff', '#20142c', 1.4));
+          // El volumen invisible: un solo objeto para las 30 plantas
+          const hitbox = new THREE.Mesh(new THREE.BoxGeometry(26, 96, 18), new THREE.MeshBasicMaterial({ visible: false }));
+          hitbox.position.y = 48; scene.add(hitbox);
+          const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), tag = document.getElementById('tag');
+          let active = -1;
+          function render() {
+            renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight;
+            cam.fov = cam.aspect < .8 ? 55 : 35; cam.position.set(52, 34, 112); cam.lookAt(-12, 44, 0); cam.updateProjectionMatrix();
+            renderer.render(scene, cam);
+            if (active < 0) { tag.hidden = true; return; }
+            // Proyectar a pantalla el borde de la planta: ahí se ancla la etiqueta
+            const p = new THREE.Vector3(13, active * 3.2 + 1.6, 9).project(cam);
+            tag.style.transform = `translate(${(p.x + 1) / 2 * innerWidth + 30}px, ${(1 - p.y) / 2 * innerHeight - 14}px)`;
+            tag.textContent = `Planta ${active}, 2 de 3 libres`; tag.hidden = false;
+          }
+          function pick(e) {
+            ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+            ray.setFromCamera(ndc, cam);
+            const hit = ray.intersectObject(hitbox)[0];
+            const f = hit ? Math.floor(hit.point.y / 3.2) : -1;   // la planta sale de la altura
+            if (f === active) return;
+            glass.forEach((g, i) => (g.material.emissiveIntensity = i === f ? 1.4 : .15));
+            active = f; document.getElementById('n').textContent = f < 0 ? '--' : String(f).padStart(2, '0');
+            render();
+          }
+          canvas.addEventListener('pointermove', pick); canvas.addEventListener('click', pick);
+          addEventListener('resize', render); render();
+        </script>
+        <figcaption>Un solo objeto invisible sirve para las 30 plantas. La etiqueta es HTML normal: se proyecta el borde de la planta con <code>vector.project(camera)</code> y se pasa de −1…1 a píxeles. En la landing la ficha hace lo mismo, pero eligiendo el punto más a la derecha del contorno para que la línea guía salga de la fachada.</figcaption>
+      </figure>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">En el móvil, ¿qué pasa si escuchas <code>pointerdown</code> en el canvas para elegir planta?</p>
+        <ol>
+          <li>Nada: <code>pointerdown</code> y <code>click</code> son lo mismo en táctil.</li>
+          <li>Cada vez que el usuario empieza a hacer scroll con el dedo sobre la torre, elige una planta sin querer.</li>
+          <li>El raycast no funciona con eventos táctiles.</li>
+        </ol>
+        <p class="why">El escenario ocupa toda la pantalla, así que el dedo se apoya en la torre para hacer scroll. <code>click</code> solo llega si el dedo no se ha movido: un toque es un toque y un arrastre es scroll. Por eso Lucero usa <code>click</code> para elegir y <code>pointermove</code> solo con <code>pointerType === 'mouse'</code> para el hover.</p>
+      </div>
+
+      <h2>Volar a la planta y anclar la ficha</h2>
+      <p>Al elegir una planta, la cámara deja el recorrido y vuela hacia su fachada. El truco es no tener dos sistemas de cámara peleándose: la misma función <code>path</code> calcula siempre la pose del recorrido y, si hay un vuelo activo, mezcla entre «de dónde vengo» y «a dónde voy».</p>
+
+      <script type="text/x-code" data-lang="js" data-label="js/vuelo.js: el vuelo vive dentro del recorrido">
+        function path(t, cam, look) {
+          curves.C.getPoint(u, baseC); curves.L.getPoint(u, baseL);       // pose del scroll
+          let C = baseC, L = baseL;
+          if (fly.active) {
+            const e = ease(Math.min(1, (performance.now() - fly.t0) / (fly.dur * 1000)));
+            const fromC = fly.from ? fly.from.C : baseC;                 // null = el recorrido en vivo
+            if (fly.to != null) floorPose(fly.to, cam, flyC, flyL); else flyC.copy(baseC);
+            C = tmp.lerpVectors(fromC, flyC, e);
+          }
+          cam.position.copy(C); cam.lookAt(look.copy(L));
+          onFrame();                                                      // el HTML sigue a la cámara
+        }
+      </script>
+
+      <p>Tres detalles que hacen que se sienta bien:</p>
+      <ol>
+        <li><strong>Un bucle propio solo mientras dura el vuelo.</strong> La torre pinta bajo demanda; durante el segundo y medio del vuelo, un <code>requestAnimationFrame</code> llama a <code>invalidate()</code> y se apaga al llegar.</li>
+        <li><strong>La ficha entra cuando la cámara casi ha llegado</strong> (950 ms), no al hacer clic. Si aparece antes, el ojo no sabe si mirar la tarjeta o el viaje.</li>
+        <li><strong>La ficha se recoloca en cada fotograma pintado</strong> con <code>project()</code>: si cambias el tamaño de la ventana o la cámara aún se mueve, la línea guía sigue saliendo de la planta.</li>
+      </ol>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Nada de fichas flotantes: en vertical la ficha es una hoja inferior a todo el ancho y la cámara coloca la planta en la mitad superior (<code>sy: 0.32</code>). El contador de la derecha se oculta mientras la ficha está abierta, porque la ficha ya lleva el número. Los botones «Planta inferior» y «Planta superior» miden 44 px de alto: así recorres la torre sin volver a apuntar.</p>
+      </div>
+
+      <h2>La residencia y el presupuesto de contextos</h2>
+      <p>El proyecto 3 cargaba <code>landing/js/residencia.min.js</code>: un paquete de 579 KB que trae su propia copia de Three.js, porque allí no había otra. En Lucero la torre ya ha cargado Three, así que importamos el código fuente, <code>landing/src/residencia.js</code>, y el import map hace que su <code>import 'three'</code> apunte a la misma copia.</p>
+
+      <div class="figures">
+        <div><b>579<small>KB</small></b><p>residencia.min.js en el proyecto 3 (148 KB comprimido)</p></div>
+        <div><b>16<small>KB</small></b><p>residencia.js en Lucero: el mismo código, sin Three dentro</p></div>
+        <div><b>1</b><p>copia de Three.js en la página (con el paquete eran 2 y la consola avisaba)</p></div>
+        <div><b>2</b><p>contextos WebGL como máximo: la torre y la residencia, y nunca pintan a la vez</p></div>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un paquete con todo dentro es lo correcto cuando el 3D es una pieza aislada. En cuanto la página tiene su propio Three, el paquete es peso duplicado y dos instancias que no se entienden (Three avisa con «Multiple instances of Three.js being imported»). Regla: una página, un Three, un import map.</p>
+      </div>
+
+      <p>Cada canvas se pausa solo: la torre con un <code>IntersectionObserver</code> sobre el escenario y con <code>visibilitychange</code>; la residencia, con el suyo. Sobre la maqueta hay seis números HTML anclados con <code>residence.project(id)</code>, que se recolocan en cada fotograma mientras la sección se ve. En el móvil son los objetivos de toque: un círculo de 44 px es mucho más fácil de acertar que una estancia de dos centímetros.</p>
+
+      <h2>Decisiones de diseño</h2>
+      <p>Lucero es pariente de Vésper, no su copia. Comparten lo que hace que una torre al atardecer se sienta cara (noche violeta, crema, luz cálida, una serif elegante), y cambian lo suficiente para ser otra marca.</p>
+
+      <div class="swatches">
+        <div class="swatch" style="--s: oklch(14% 0.04 285)"><i></i><span><b>Noche</b><small>oklch(14% .04 285)</small></span></div>
+        <div class="swatch" style="--s: oklch(95% 0.016 78)"><i></i><span><b>Crema</b><small>oklch(95% .016 78)</small></span></div>
+        <div class="swatch" style="--s: oklch(85% 0.12 75)"><i></i><span><b>Champán</b><small>oklch(85% .12 75)</small></span></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>Vésper (proyecto 3)</th><th>Lucero (proyecto 4)</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Fondo</td><td>Noche <code>17% .05 292</code></td><td>Noche más honda <code>14% .04 285</code></td><td>El 3D trae su propio color; un fondo más oscuro deja que el cielo sea el protagonista</td></tr>
+            <tr><td>Acento</td><td>Ámbar <code>80% .13 68</code></td><td>Champán <code>85% .12 75</code></td><td>Más claro y menos naranja: se separa del ámbar de las ventanas del shader</td></tr>
+            <tr><td>Voz</td><td>Instrument Serif recta</td><td>Cormorant cursiva</td><td>Más caligráfica, más «hotel»; con el 3D detrás pide trazos finos que no compitan</td></tr>
+            <tr><td>Cifras</td><td>Newsreader 300</td><td>Inter Tight 200, tabulares</td><td>Números de instrumento: el contador se lee como un altímetro</td></tr>
+            <tr><td>Momento</td><td>La llegada (fotogramas)</td><td>Tocar una planta</td><td>Lo que el tiempo real permite y la película no</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El champán solo aparece en lo que cuenta: el número de planta, el anillo de la planta activa, el botón principal y las palabras en cursiva que rematan cada frase. La banda champán de la frase es la única vez que el acento se convierte en superficie, y por eso funciona como pausa. Si el acento estuviera en los enlaces, las líneas y los iconos, la planta encendida dejaría de destacar.</p>
+      </div>
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Texto sobre 3D siempre con un velo diseñado, no con una sombra de texto a ciegas: un degradado lateral en escritorio (donde vive el texto) y uno inferior en vertical, más uno superior suave para que el menú se lea sobre una losa blanca. El 3D se mueve y cambia de brillo: el contraste tiene que aguantar en el peor fotograma, no en la captura bonita.</p>
+      </div>
+
+      <section class="band mobile"><div class="inner">
+        <h2>Escritorio frente a móvil</h2>
+        <p>La tabla de siempre, con una fila nueva que en el proyecto 3 no existía: la calidad del render. Una escena en tiempo real que «se encoge» en el móvil va a tirones; una que toma decisiones distintas, va fina.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Pieza</th><th>Escritorio</th><th>Móvil</th><th>Por qué</th></tr></thead>
+            <tbody>
+              <tr><td>Calidad</td><td>Modo completo: agua con reflejo, bloom 0,3, antialias, DPR hasta 1,75</td><td>Modo ligero: agua mate, bloom 0,22, sin antialias, DPR hasta 1,25</td><td>El reflejo pinta la escena dos veces: es casi la mitad del coste</td></tr>
+              <tr><td>Recorrido</td><td>460vh de vuelo y 140vh de selector</td><td>300vh y 120vh</td><td>Menos pulgar para llegar a lo que se toca</td></tr>
+              <tr><td>Encuadre</td><td>Planos <code>wide</code>, torre en el tercio derecho</td><td>Planos <code>tall</code>, torre centrada arriba, fov 55</td><td>El texto y los botones viven abajo</td></tr>
+              <tr><td>Textos</td><td>A la izquierda, velo lateral</td><td>Abajo, velo inferior</td><td>El velo va donde va el texto</td></tr>
+              <tr><td>Contador</td><td>Grande a la derecha, escala de 42vh</td><td>Arriba a la derecha, escala de 24svh; se oculta con la ficha</td><td>No compite con la torre ni con la hoja inferior</td></tr>
+              <tr><td>Elegir planta</td><td>Hover con etiqueta, clic para volar</td><td>Toque directo; botones de subir y bajar de 46 px</td><td>No hay hover; apuntar a una losa de 10 px con el dedo falla</td></tr>
+              <tr><td>Ficha</td><td>Anclada a la fachada con línea guía</td><td>Hoja inferior a todo el ancho</td><td>En vertical no hay sitio al lado de la torre</td></tr>
+              <tr><td>Paralaje</td><td>La cámara sigue un poco al ratón en el vuelo</td><td>No</td><td>Cada movimiento es un fotograma más que pagar</td></tr>
+              <tr><td>Residencia</td><td>Maqueta y panel lado a lado</td><td>Maqueta de 58svh y lista debajo; números de 44 px</td><td>La lista y los números no fallan</td></tr>
+              <tr><td>Sin WebGL</td><td>Fotogramas 16:9 y polígonos sobre el render</td><td>Fotogramas 9:16 y polígonos verticales</td><td>El respaldo también tiene su encuadre</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout movil"><span class="t">En el móvil</span>
+          <p>El umbral de <code>hardwareConcurrency &lt;= 4</code> manda al modo ligero a muchos portátiles de oficina, y está bien: nadie echa de menos el reflejo, pero todos notan los tirones. Lo que no debes hacer es mandar a los fotogramas a un móvil solo por ser móvil: el ligero va bien en cualquier teléfono de los últimos años y es el único modo en el que se puede tocar la torre de verdad.</p>
+        </div>
+      </div></section>
+
+      <div class="phones">
+        <figure><img src="../proyectos/torre-3d/media/movil-ligero.webp" width="390" height="844" alt="Lucero en un móvil: la torre centrada arriba y el selector de planta abajo" loading="lazy" decoding="async"><figcaption>Modo ligero: la torre arriba, el selector abajo.</figcaption></figure>
+        <figure><img src="../proyectos/torre-3d/media/movil-ficha.webp" width="390" height="844" alt="Lucero en un móvil: la planta 18 iluminada y su ficha como hoja inferior" loading="lazy" decoding="async"><figcaption>Planta elegida: hoja inferior y planta encendida.</figcaption></figure>
+        <figure><img src="../proyectos/torre-3d/media/movil-fotogramas.webp" width="390" height="844" alt="Lucero sin WebGL: el render fijo de la torre con las plantas como polígonos" loading="lazy" decoding="async"><figcaption>Sin WebGL: el render fijo y los polígonos del proyecto 3.</figcaption></figure>
+      </div>
+
+      <h2>Rendimiento medido</h2>
+      <p>Medido con <code>tools/medir4.py</code> en el Chrome de pruebas: dos núcleos y <strong>sin GPU</strong> (WebGL por software con SwiftShader). Los pesos y los draw calls son reales y valen para cualquier equipo; los fotogramas por segundo, no: ahí cada fotograma lo calcula la CPU, y en un móvil real con GPU el mismo trabajo va decenas de veces más rápido. Sirven para comparar modos entre sí.</p>
+
+      <div class="figures">
+        <div><b>1,0<small>MB</small></b><p>descargado hasta que la torre está en pantalla (731 KB son Three.js). Unos 235 KB comprimido</p></div>
+        <div><b>193</b><p>draw calls por fotograma en modo ligero; 353 en el completo, porque el reflejo pinta la escena dos veces</p></div>
+        <div><b>70<small>mil</small></b><p>triángulos por fotograma en ligero; 132 mil en el completo</p></div>
+        <div><b>15</b><p>pasadas de render por fotograma: escena, bloom (umbral, desenfoque en cinco tamaños, mezcla) y salida</p></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Medida</th><th>Completo 1440</th><th>Ligero 1440</th><th>Ligero 390</th><th>Fotogramas 390</th></tr></thead>
+          <tbody>
+            <tr><td>Hasta «lista»</td><td>1,85 s</td><td>1,33 s</td><td>1,43 s</td><td>0,29 s</td></tr>
+            <tr><td>Descarga hasta «lista»</td><td>1023 KB</td><td>1023 KB</td><td>1018 KB</td><td>3719 KB</td></tr>
+            <tr><td>Descarga total (toda la página)</td><td>1147 KB</td><td>1147 KB</td><td>1197 KB</td><td>3916 KB</td></tr>
+            <tr><td>Draw calls por fotograma</td><td>353</td><td>193</td><td>177</td><td>0</td></tr>
+            <tr><td>Triángulos por fotograma</td><td>131 768</td><td>69 712</td><td>68 880</td><td>0</td></tr>
+            <tr><td>Fotogramas pintados por segundo al hacer scroll, sin GPU</td><td>2,4</td><td>3,5</td><td>5,2</td><td>sin coste de GPU</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Tres lecturas. El modo ligero <strong>no ahorra descarga</strong> (el código es el mismo) pero sí casi la mitad del trabajo por fotograma, que es lo que se nota en un móvil. El respaldo arranca antes (solo espera a 16 fotogramas) pero acaba bajando más del triple. Y la descarga del 3D se paga una vez: después, mover la cámara, cambiar de planta o volar no cuesta ni un byte.</p>
+
+      <details class="more">
+        <summary>Entender más: de dónde salen los 193 draw calls y qué quitaría después</summary>
+        <p>Cada malla con su material es un draw call. La torre son 30 plantas con losa, núcleo de vidrio y barandilla (89 mallas), las farolas del paseo son 25 esferas y 25 postes (50 mallas), y el resto es cielo, agua, tierra, paseo, orilla, la ciudad (una sola <code>InstancedMesh</code> con 420 edificios) y la coronación. Unas 150 por pasada de escena, más los cuadros a pantalla completa del bloom. El siguiente paso sería convertir farolas y plantas en <code>InstancedMesh</code> (de 139 mallas a 5) y bajar el DPR sobre la marcha si el tiempo por fotograma pasa de 20 ms. No está hecho porque <code>torre3d.js</code> es compartido por todo el nivel y la escena ya va fina en GPU real.</p>
+      </details>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Mide en un teléfono de verdad antes de entregar: <code>chrome://inspect</code> con el móvil por USB, pestaña Performance, y graba un scroll por el vuelo. Si ves fotogramas de más de 16,7 ms en el modo ligero, el orden de recortes es: DPR a 1, bloom fuera, y solo después tocar la geometría.</p>
+      </div>
+
+      <h2>Fotogramas frente a tiempo real</h2>
+      <p>La misma torre, la misma página, tres formas de pintarla. De izquierda a derecha: modo completo, modo ligero y la secuencia de fotogramas del proyecto 3.</p>
+
+      <div class="modes bleed">
+        <figure><img src="../proyectos/torre-3d/media/modo-completo.webp" width="960" height="600" alt="Modo completo: la torre con el agua reflejándola" loading="lazy" decoding="async"><figcaption><b>Completo</b>Agua con reflejo y bloom. El más bonito y el más caro: la escena se pinta dos veces.</figcaption></figure>
+        <figure><img src="../proyectos/torre-3d/media/modo-ligero.webp" width="960" height="600" alt="Modo ligero: la misma torre con el agua mate" loading="lazy" decoding="async"><figcaption><b>Ligero</b>Agua mate y menos DPR. Mismo encuadre, misma interacción, la mitad de trabajo.</figcaption></figure>
+        <figure><img src="../proyectos/torre-3d/media/modo-fotogramas.webp" width="960" height="600" alt="Respaldo: el primer fotograma de la secuencia pre-renderizada" loading="lazy" decoding="async"><figcaption><b>Fotogramas</b>Render de 2560 px reducido a WebP. Máxima nitidez, recorrido fijo.</figcaption></figure>
+      </div>
+
+      <div class="versus wide">
+        <p class="h"></p><p class="h">Fotogramas (proyecto 3)</p><p class="h">Tiempo real (proyecto 4)</p>
+        <p class="k">Peso</p><p class="v">3,5 MB de fotogramas en móvil (3,1 MB en escritorio), sin comprimir más: ya son WebP</p><p class="v"><strong>1,0 MB</strong> (unos 235 KB comprimido) y vale para cualquier pantalla</p>
+        <p class="k">Calidad</p><p class="v"><strong>La del render final</strong>, con todo el antialias y el tiempo de cálculo que quieras; un render de IA o de Blender encaja igual</p><p class="v">La que la GPU del usuario pueda pintar 60 veces por segundo; depende del equipo</p>
+        <p class="k">Recorrido</p><p class="v">Fijo: dos encuadres (16:9 y 9:16) renderizados aparte</p><p class="v"><strong>Cualquiera</strong>: siete planos que se recalculan para cada proporción</p>
+        <p class="k">Interacción</p><p class="v">Capas encima de una imagen fija (polígonos SVG); la cámara no puede ir a la planta que tocas</p><p class="v"><strong>La cámara vuela a cualquier planta</strong>, la ficha se ancla al 3D, el resaltado es luz de verdad</p>
+        <p class="k">Cambios</p><p class="v">Cambiar un color o una planta es volver a renderizar 240 fotogramas</p><p class="v"><strong>Cambiar un número</strong> en el código y recargar</p>
+        <p class="k">Riesgo</p><p class="v"><strong>Casi ninguno</strong>: una imagen se ve en cualquier navegador</p><p class="v">WebGL puede faltar o perderse; por eso existe el respaldo</p>
+      </div>
+
+      <section class="band claim"><div class="inner">
+        <p>Pre-renderiza lo que solo se mira. Deja en tiempo real lo que se toca.</p>
+      </div></section>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Lucero no tira el proyecto 3: lo usa como red. Si el cliente quiere un fotorrealismo que la GPU no da (materiales generados con IA, vegetación, gente en las terrazas), la llegada puede volver a ser una secuencia y el selector seguir en tiempo real con la escena simplificada. Lo que decide no es la técnica que te apetece, es qué parte de la web tiene que responder al usuario.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Un cliente quiere la torre con un recorrido fijo, calidad de anuncio y ninguna interacción, y la mayoría de sus visitas llegan desde el móvil por redes. ¿Qué haces?</p>
+        <ol>
+          <li>Tiempo real en modo completo, porque pesa menos.</li>
+          <li>Tiempo real en modo ligero para todos.</li>
+          <li>Secuencia de fotogramas (o vídeo) con versión vertical propia; el tiempo real no aporta nada si no hay nada que tocar.</li>
+        </ol>
+        <p class="why">Sin interacción, el tiempo real solo añade riesgo y una calidad limitada por la GPU del teléfono. La secuencia da la calidad del render final; el peso se controla con el número de fotogramas y una versión 9:16 propia, como en la lección 09.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">¿Por qué el modo ligero tarda casi lo mismo en descargar que el completo?</p>
+        <ol>
+          <li>Porque el código es el mismo: la diferencia está en cuánto trabajo hace la GPU en cada fotograma, no en los bytes.</li>
+          <li>Porque el modo ligero descarga fotogramas de respaldo por si acaso.</li>
+          <li>Porque el agua con reflejo está en un archivo aparte que siempre se descarga.</li>
+        </ol>
+        <p class="why">El reflejo, el antialias y el DPR son opciones del renderizador. Cambian los draw calls (353 frente a 193) y los píxeles por fotograma, que es lo que hace ir a tirones a un móvil.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Decide el modo antes de descargar: completo, ligero o fotogramas, con <code>import()</code> diferido y un respaldo que también se activa si se pierde el contexto.</li>
+          <li>Diseña la cámara como un encuadre (<code>sx</code>, <code>sy</code>) y no como coordenadas: el mismo plano sirve en cualquier proporción, y el vertical tiene sus propios planos.</li>
+          <li>Interacción barata: un volumen invisible y la altura del impacto para la planta, un anillo con bloom para que se lea, y HTML anclado con <code>project()</code> para la ficha y las estancias.</li>
+          <li>Una página, un Three y dos contextos como máximo, cada uno pausado fuera de pantalla.</li>
+          <li>Pre-renderiza lo que solo se mira; tiempo real para lo que se toca.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto final</h3>
+        <p>Haz tu versión con otro edificio: un hotel en el Maestrazgo de tres alas o una bodega con naves en hilera. Escribe sus siete planos clave con <code>sx</code> y <code>sy</code>, haz que cada ala o nave se pueda tocar con un volumen invisible y que la cámara vuele hacia ella con su ficha anclada. Antes de enseñárselo a nadie, pásalo por <code>?modo=ligero</code> y <code>?modo=fotogramas</code> en tu teléfono y rellena tu propia tabla de escritorio frente a móvil.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+
+<script type="module">
+  /* Portada: la escena de Lucero (vuelo.js) importada tal cual.
+     Empieza en la azotea y se aleja hasta la torre entera; después, tocar una planta vuela hacia ella. */
+  const hero = document.querySelector('.hero');
+  const canvas = hero.querySelector('[data-hero-canvas]');
+  const $ = (s) => hero.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  const lite = coarse || innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+  const pad = (n) => String(n).padStart(2, '0');
+
+  function webglOK() {
+    try { const c = document.createElement('canvas'); const gl = c.getContext('webgl2') || c.getContext('webgl'); if (!gl) return false; gl.getExtension('WEBGL_lose_context')?.loseContext(); return true; } catch { return false; }
+  }
+  function still() {
+    // sin WebGL: el render fijo de la torre y la telemetría a cero
+    canvas.remove();
+    const img = new Image(); img.className = 'still'; img.alt = ''; img.src = '../landing/media/torre-plantas.webp';
+    hero.prepend(img); $('[data-t-mode]').textContent = 'Sin WebGL'; $('[data-hint]').hidden = true;
+  }
+
+  if (!webglOK()) still();
+  else Promise.all([import('../proyectos/torre-3d/js/vuelo.js'), import('../proyectos/torre-3d/js/datos.js')]).then(([{ createVuelo }, { FLOORS }]) => {
+    let frames = 0, info = null;
+    const out = { floor: $('[data-t-floor]'), label: $('[data-t-label]'), calls: $('[data-t-calls]'), tris: $('[data-t-tris]'), frames: $('[data-t-frames]') };
+    const v = createVuelo(canvas, {
+      lite, reduce,
+      onFrame() {
+        // renderer.info acumula entre fotogramas (autoReset desactivado): leemos y ponemos a cero
+        if (info) { out.calls.textContent = info.render.calls; out.tris.textContent = info.render.triangles.toLocaleString('es-ES'); info.reset(); }
+        out.frames.textContent = ++frames;
+      },
+    });
+    info = v.tower.renderer.info; info.autoReset = false;
+    $('[data-t-mode]').textContent = lite ? 'Ligero' : 'Completo';
+    // Los mismos datos que la landing: libres encendidas, vendidas y zonas comunes a media luz
+    const sold = (f) => !FLOORS[f].residential || !FLOORS[f].avail;
+    v.setDimmed(sold);
+    v.tower.setProgress(0.93, true);
+    v.setProgress(1);
+    v.select(18);
+
+    let hovered = -1, focused = null;
+    const show = (f, label = 'Planta') => { out.floor.textContent = pad(f); out.label.textContent = label; };
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const f = v.pickAt(e.clientX, e.clientY);
+      if (f === hovered) return;
+      hovered = f; v.hover(f); canvas.style.cursor = f >= 0 ? 'pointer' : '';
+      show(f >= 0 ? f : (focused ?? 18), f >= 0 && sold(f) ? 'Vendida' : 'Planta');
+    });
+    canvas.addEventListener('click', (e) => {
+      const f = v.pickAt(e.clientX, e.clientY);
+      if (f < 0) { focused = null; v.unfocus(); v.select(18); show(18); return; }
+      focused = f; v.hover(-1); v.select(f); v.focus(f); show(f, sold(f) ? 'Vendida' : 'Planta');
+    });
+    // fuera de pantalla no pinta
+    new IntersectionObserver(([en]) => (en.isIntersecting ? v.resume() : v.pause())).observe(hero);
+  }).catch(still);
+</script>
+</body>
+</html>

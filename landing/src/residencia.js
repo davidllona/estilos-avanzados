@@ -243,7 +243,7 @@ export function createResidencia(canvas, { onHover, onFocus, interactive = true 
   raf = requestAnimationFrame(tick);
 
   return {
-    rooms: ROOMS, focus, reset,
+    rooms: ROOMS, focus, reset, scene, root,
     renderOnce() { resize(); camera.position.copy(cur.pos); camera.lookAt(cur.look); renderer.render(scene, camera); },
     project(id) { // posición en pantalla (0..1) del centro de una estancia: para colocar etiquetas HTML
       const r = ROOMS.find((x) => x.id === id); const v = new THREE.Vector3((r.x[0] + r.x[1]) / 2, 0.2, (r.z[0] + r.z[1]) / 2);

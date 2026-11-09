@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Una cámara que vuela con el scroll | Hora azul</title>
+<meta name="description" content="La torre en 3D en tiempo real recorrida con el scroll: progreso, curvas CatmullRom, suavizado, paradas con texto sincronizado, GSAP ScrollTrigger y cuándo usar fotogramas.">
+<meta name="theme-color" content="#1c1233">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Plano secuencia».
+     La misma noche violeta de la torre, crema y el ámbar de las ventanas. Instrument Serif cursiva + Inter Tight. */
+  :root {
+    --bg: oklch(18% 0.05 292);
+    --bg-2: oklch(22% 0.055 292);
+    --bg-3: oklch(27% 0.06 292);
+    --fg: oklch(95% 0.016 78);
+    --muted: oklch(77% 0.03 75);
+    --faint: oklch(63% 0.04 290);
+    --accent: oklch(80% 0.13 68);
+    --on-accent: oklch(18% 0.05 292);
+    --code-bg: oklch(13% 0.04 292);
+    --scheme: dark;
+    --f-display: "Instrument Serif", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 400;
+    --display-tracking: -0.015em;
+  }
+  body { font-size: clamp(1rem, 0.97rem + 0.18vw, 1.1rem); line-height: 1.62; }
+  .prose h2 { font-size: clamp(2.7rem, 1.9rem + 3.4vw, 5.4rem); line-height: .95; font-style: italic; }
+  .prose h2 .n { font-style: normal; }
+  .prose h2 .n::before { content: "Tramo "; color: var(--faint); }
+  .split > * { min-width: 0; }
+  .prose h2 em, .statement em, .band em { color: var(--accent); }
+  .quiz .q { font-style: italic; font-size: var(--step-2); }
+
+  /* ================= Portada: la torre en 3D, recorrida con el scroll ================= */
+  .vuelo { height: 300vh; min-height: 0; overflow: visible; background: var(--bg); color: var(--fg); --p: 0; }
+  .vuelo .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+  .vuelo .poster img, .vuelo canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .vuelo .poster img { object-fit: cover; }
+  .vuelo .veil { position: absolute; inset: 0; pointer-events: none; background:
+      linear-gradient(90deg, oklch(15% 0.05 292 / .8), oklch(15% 0.05 292 / .25) 42%, transparent 62%),
+      linear-gradient(0deg, oklch(13% 0.05 292 / .8), transparent 30%),
+      linear-gradient(180deg, oklch(13% 0.05 292 / .55), transparent 18%); }
+  .phase { position: absolute; left: var(--gutter); bottom: calc(5.6rem + 3vh); margin: 0; max-width: min(40rem, 50vw); }
+  .ph1 { opacity: clamp(0, 1 - (var(--p) - .1) * 9, 1); translate: 0 calc(max(0, var(--p) - .1) * -260px); }
+  .ph1 [data-kicker] { margin: 0 0 1rem; font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .vuelo h1 { margin: 0; font-size: clamp(3.4rem, 1rem + 7.2vw, 8.6rem); line-height: .86; letter-spacing: -0.025em; }
+  .vuelo h1 em { color: var(--accent); }
+  .ph1 .lede { margin: 1.4rem 0 0; max-width: 34ch; font-size: var(--step-1); line-height: 1.38; color: oklch(88% 0.02 78); }
+  .ph2, .ph3, .ph4 { font: italic 400 clamp(2.4rem, 1rem + 4.2vw, 5.4rem)/.95 var(--f-display); letter-spacing: -0.015em; max-width: 13ch; text-wrap: balance; }
+  .ph2 em, .ph3 em, .ph4 em { font-style: normal; color: var(--accent); }
+  .ph2 { opacity: clamp(0, min((var(--p) - .26) * 10, (.5 - var(--p)) * 10), 1); translate: 0 calc((.38 - var(--p)) * 140px); }
+  .ph3 { opacity: clamp(0, min((var(--p) - .58) * 10, (.8 - var(--p)) * 10), 1); translate: 0 calc((.69 - var(--p)) * 140px); }
+  .ph4 { opacity: clamp(0, (var(--p) - .88) * 10, 1); translate: 0 calc(max(0, .96 - var(--p)) * 140px); }
+  .phase small { display: block; margin-top: 1rem; max-width: 34ch; font: 500 var(--step--1)/1.45 var(--f-ui); font-style: normal; color: var(--muted); letter-spacing: 0; }
+  /* Instrumentos: plano cenital del recorrido y planta actual */
+  .hud { position: absolute; right: var(--gutter); bottom: calc(5.6rem + 3vh); display: grid; justify-items: end; gap: .8rem; margin: 0; }
+  .plan { width: clamp(120px, 11vw, 168px); height: auto; overflow: visible; }
+  .plan .ruta { fill: none; stroke: oklch(95% 0.016 78 / .45); stroke-width: 2.2; stroke-dasharray: 5 4; }
+  .plan .hecha { fill: none; stroke: var(--accent); stroke-width: 3; }
+  .plan .torre { fill: oklch(95% 0.016 78 / .25); stroke: var(--fg); stroke-width: 1.6; }
+  .plan .mira { stroke: var(--accent); stroke-width: 1.6; opacity: .8; }
+  .plan .cam { fill: var(--accent); }
+  .plan text { font: 500 15px var(--f-ui); fill: var(--muted); }
+  .floor { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .floor b { display: block; font: 400 clamp(4.4rem, 2rem + 7vw, 10rem)/.8 var(--f-display); letter-spacing: -0.03em; color: var(--accent); }
+  .floor span { font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .rail { position: absolute; left: var(--gutter); right: var(--gutter); bottom: 1.4rem; display: flex; align-items: center; gap: 1rem; font: 500 .8rem/1 var(--f-ui); color: var(--muted); }
+  .rail .bar { position: relative; flex: 1; height: 2px; background: oklch(100% 0 0 / .16); }
+  .rail .bar i { position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--p)); background: var(--accent); }
+  .rail .bar s { position: absolute; top: -4px; width: 1px; height: 10px; background: oklch(100% 0 0 / .4); }
+  .rail code { background: none; padding: 0; color: var(--fg); font-variant-numeric: tabular-nums; min-width: 7ch; }
+  .rail .chip { opacity: 1; }
+  .en-portada .topbar.solid { background: transparent; border-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  @media (max-width: 760px) {
+    .vuelo { height: 240vh; }
+    .vuelo .veil { background:
+        linear-gradient(180deg, oklch(14% 0.05 292 / .88), oklch(14% 0.05 292 / .35) 40%, transparent 56%),
+        linear-gradient(0deg, oklch(13% 0.05 292 / .85), transparent 28%); }
+    .phase { top: 5.2rem; bottom: auto; right: var(--gutter); max-width: none; }
+    .vuelo h1 { font-size: clamp(2.9rem, 1rem + 9.6vw, 4rem); }
+    .ph1 .lede { font-size: 1.02rem; max-width: 30ch; margin-top: 1rem; }
+    .ph2, .ph3, .ph4 { font-size: clamp(2.2rem, 1rem + 6.6vw, 2.9rem); }
+    .hud { bottom: 4.2rem; }
+    .plan { display: none; }
+    .floor b { font-size: 4.6rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vuelo { height: auto; }
+    .vuelo .stage { position: relative; }
+    .ph1 { opacity: 1; translate: none; }
+    .ph2, .ph3, .ph4 { display: none; }
+  }
+
+  /* ================= Cuerpo ================= */
+  .statement.big { font-size: clamp(2.6rem, 1.6rem + 4.4vw, 6rem); line-height: .94; font-style: italic; max-width: 16ch !important; margin: 4.5rem 0 1rem; }
+  .statement.big em { font-style: normal; }
+  .band.ambar { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.ambar .inner { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem 4rem; align-items: end; }
+  .band.ambar p { margin: 0; max-width: 14ch; font: italic 400 clamp(2.8rem, 1.4rem + 5.4vw, 6.8rem)/.9 var(--f-display); letter-spacing: -0.02em; }
+  .band.ambar p em { font-style: normal; color: inherit; }
+  .band.ambar small { font: 500 var(--step--1)/1.5 var(--f-ui); max-width: 36ch; }
+  .band.ambar code { background: oklch(18% 0.05 292 / .12); }
+  @media (max-width: 760px) { .band.ambar .inner { grid-template-columns: 1fr; } }
+
+  /* Guion de cámara: la portada contada como un plan de rodaje */
+  .guion { margin: 2.6rem 0; border-top: 1px solid var(--fg); }
+  .guion > div { display: grid; grid-template-columns: 5.5rem 7rem 1fr 1fr 1.2fr; gap: .4rem 1.4rem; padding: 1.1rem 0; border-bottom: 1px solid var(--line-2); align-items: baseline; }
+  .guion .hd { padding: .7rem 0; font: 600 .74rem/1.2 var(--f-ui); color: var(--faint); }
+  .guion b { font: italic 400 clamp(2.4rem, 1.6rem + 2vw, 3.4rem)/.8 var(--f-display); color: var(--accent); }
+  .guion code { font-size: .82rem; }
+  .guion span { font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  .guion span:last-child { font: italic 400 var(--step-1)/1.2 var(--f-display); color: var(--fg); }
+  @media (max-width: 760px) {
+    .guion .hd { display: none; }
+    .guion > div { grid-template-columns: 4rem 1fr; }
+    .guion b { grid-row: span 4; }
+  }
+
+  /* Balanza: tiempo real frente a fotogramas */
+  .balanza { display: grid; grid-template-columns: 1fr 1fr; margin: 2.6rem 0 1rem; border-top: 1px solid var(--fg); }
+  .balanza > div { padding: 1.4rem 1.6rem 1.6rem 0; }
+  .balanza > div + div { padding: 1.4rem 0 1.6rem 1.6rem; border-left: 1px solid var(--line-2); }
+  .balanza h3 { margin: 0 0 .9rem; font: italic 400 var(--step-3)/1 var(--f-display); }
+  .balanza img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; margin-bottom: 1.1rem; }
+  .balanza dl { display: grid; grid-template-columns: auto 1fr; gap: .55rem 1rem; margin: 0; font: 400 var(--step--1)/1.4 var(--f-ui); }
+  .balanza dt { color: var(--faint); }
+  .balanza dd { margin: 0; }
+  .balanza .peso { display: block; margin-bottom: 1rem; font: 400 clamp(3.4rem, 2rem + 4vw, 6rem)/.85 var(--f-display); letter-spacing: -0.03em; color: var(--accent); }
+  .balanza .peso small { font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); letter-spacing: 0; }
+  /* El «archivo» del tiempo real: el recorrido entero cabe en doce líneas */
+  .vivo { position: relative; aspect-ratio: 16 / 9; margin-bottom: 1.1rem; padding: 2.2rem 1.1rem 1rem; border-radius: 6px; overflow: hidden; background: var(--code-bg);
+    display: grid; grid-template-columns: repeat(2, auto 1fr); grid-auto-flow: column; grid-template-rows: repeat(6, 1fr); gap: 0 .9rem; align-content: center; }
+  .vivo span { grid-row: 1 / span 6; writing-mode: vertical-rl; rotate: 180deg; font: italic 400 1.1rem/1 var(--f-display); color: var(--accent); }
+  .vivo code { background: none; padding: 0; white-space: pre; font-size: clamp(.68rem, .5rem + .5vw, .86rem); color: var(--fg); align-self: center; }
+  .vivo::after { content: "Todo el recorrido: 36 números"; position: absolute; right: .7rem; top: .6rem; padding: .25rem .5rem; border-radius: 4px; font: 500 .7rem/1.2 var(--f-ui); color: var(--on-accent); background: var(--accent); }
+  @media (max-width: 760px) {
+    .balanza { grid-template-columns: 1fr; }
+    .balanza > div, .balanza > div + div { padding: 1.4rem 0; border-left: 0; }
+    .balanza > div + div { border-top: 1px solid var(--line-2); }
+  }
+  @media (min-width: 1600px) { .toc { padding: .9rem 1rem; border-radius: 10px; background: color-mix(in oklab, var(--bg) 86%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); } }
+</style>
+<script type="importmap">{"imports":{"three":"../vendor/three/three.module.min.js","three/addons/":"../vendor/three/addons/"}}</script>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="three-scroll">
+<main id="main">
+  <header class="hero vuelo" aria-labelledby="t">
+    <div class="stage">
+      <picture class="poster" aria-hidden="true">
+        <source media="(max-aspect-ratio: 1/1)" srcset="../landing/frames/mob/0001.webp" width="720" height="1280">
+        <img src="../landing/frames/desk/0001.webp" alt="" width="1280" height="720" fetchpriority="high">
+      </picture>
+      <canvas aria-hidden="true"></canvas>
+      <div class="veil" aria-hidden="true"></div>
+      <div class="phase ph1">
+        <p data-kicker>Lección 26</p>
+        <h1 id="t">Una cámara que <em>vuela</em> con el scroll</h1>
+        <p class="lede">La torre de la lección 09, pero ahora sin fotos: se calcula en tu GPU mientras bajas. Desliza despacio: el número grande es la planta a la que ha llegado la cámara.</p>
+      </div>
+      <p class="phase ph2" aria-hidden="true">Del agua a la <em>planta 18.</em><small>La cámara frena aquí a propósito: el texto necesita su tiempo para leerse. La planta se enciende mientras pasas.</small></p>
+      <p class="phase ph3" aria-hidden="true">Cada tramo del scroll, <em>una parada.</em><small>Seis puntos en una CatmullRomCurve3 para la cámara y otra curva para dónde mira.</small></p>
+      <p class="phase ph4" aria-hidden="true">La azotea. <em>Fin del plano.</em><small>Sigue bajando: así se construye, tramo a tramo.</small></p>
+      <div class="hud" aria-hidden="true">
+        <svg class="plan" viewBox="-84 -40 160 290">
+          <path class="ruta" d=""/><path class="hecha" d=""/>
+          <rect class="torre" x="-12.6" y="-8.6" width="25.2" height="17.2" rx="6"/>
+          <line class="mira" x1="0" y1="0" x2="0" y2="0"/><circle class="cam" r="7" cx="0" cy="0"/>
+          <text x="-82" y="246">plano cenital</text>
+        </svg>
+        <p class="floor"><b data-floor>01</b><span>planta, a <i data-alt>5</i> m del agua</span></p>
+      </div>
+      <div class="rail">
+        <span class="chip" data-meta>25 min</span>
+        <span class="bar"><i></i><s style="left:26%"></s><s style="left:58%"></s><s style="left:88%"></s></span>
+        <code data-p>p = 0,00</code>
+      </div>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En la <a href="09-secuencias.html">lección 09</a> la torre «volaba» con 120 fotos numeradas. Aquí vuela de verdad: la escena es la de <code>assets/js/torre3d.js</code> (cielo con shader, agua con reflejo, 30 plantas con ventanas en shader y bloom) y la cámara se mueve en tiempo real según cuánto has bajado. El resultado se parece, pero las reglas cambian: la cámara puede ir donde quieras, puedes encender una planta mientras pasas y el recorrido se edita cambiando seis números, no volviendo a renderizar.</p>
+      <p>El precio es la GPU del usuario. Por eso esta lección es mitad técnica y mitad criterio: cómo convertir el scroll en un plano de cine y cuándo merece la pena hacerlo en vivo.</p>
+
+      <p class="statement big">El scroll no mueve la cámara: <em>mueve un número</em> entre 0 y 1.</p>
+
+      <h2>Del scroll a la cámara</h2>
+      <p>Todo empieza igual que con los fotogramas: una sección alta que da recorrido, un escenario <code>sticky</code> que se queda fijo y un progreso de 0 a 1. La diferencia está en qué haces con ese número. Con fotogramas lo conviertes en un índice; aquí, en una posición de cámara.</p>
+      <p>Separar las dos cosas es la decisión de diseño más importante de la lección. El código que lee el scroll no sabe nada de 3D, y el que mueve la cámara no sabe nada del scroll: solo recibe <code>p</code>. Así puedes cambiar el recorrido, el suavizado o pasar a GSAP sin tocar la otra mitad.</p>
+
+      <figure class="lab" data-three data-title="Progreso a cámara" data-hint="Desliza dentro de la demo" data-height="460" data-height-mobile="600" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="track">
+            <div class="stage">
+              <canvas></canvas>
+              <p class="hud">p = <b id="pv">0,00</b><br>cámara z = <span id="zv">12</span></p>
+              <p class="cue">Desliza dentro de la demo</p>
+            </div>
+          </section>
+          <p class="end">Fin del claustro</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #241a36; color: #f3ece0; }
+          .track { height: 400vh; }
+          .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+          canvas { width: 100%; height: 100%; display: block; }
+          .hud { position: absolute; left: 16px; bottom: 12px; margin: 0; font: 12px/1.5 var(--f-mono); }
+          .hud b { color: #ffc46b; font-weight: 500; }
+          .cue { position: absolute; right: 16px; bottom: 12px; margin: 0; font-size: 13px; opacity: .7; }
+          .end { height: 50vh; display: grid; place-items: center; margin: 0; font: italic 28px var(--f-serif); }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const canvas = document.querySelector('canvas'), track = document.querySelector('.track');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#241a36');
+          scene.fog = new THREE.Fog('#241a36', 10, 70);
+          scene.add(new THREE.HemisphereLight('#ffd9a8', '#3a2a55', 2.4));
+          const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+
+          // Un claustro: dos filas de columnas y un suelo
+          const stone = new THREE.MeshLambertMaterial({ color: '#efe2cf' });
+          const col = new THREE.CylinderGeometry(0.35, 0.4, 5, 16), beam = new THREE.BoxGeometry(1, 0.6, 6);
+          for (let i = 0; i < 16; i++) for (const x of [-3.5, 3.5]) {
+            const c = new THREE.Mesh(col, stone); c.position.set(x, 2.5, -i * 7); scene.add(c);
+            const b = new THREE.Mesh(beam, stone); b.position.set(x, 5.2, -i * 7 - 3.5); scene.add(b);
+          }
+          const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 160), new THREE.MeshLambertMaterial({ color: '#5a4470' }));
+          floor.rotation.x = -Math.PI / 2; floor.position.z = -50; scene.add(floor);
+
+          // 1. El scroll se convierte en un número de 0 a 1
+          function progress() {
+            const r = track.getBoundingClientRect();
+            return Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+          }
+          // 2. El número se convierte en una cámara (esta función no sabe nada del scroll)
+          function place(p) {
+            camera.position.set(0, 1.7, THREE.MathUtils.lerp(12, -95, p));
+            camera.lookAt(0, 1.9, camera.position.z - 10);
+          }
+          function render() {
+            const p = progress();
+            place(p);
+            renderer.render(scene, camera);
+            pv.textContent = p.toFixed(2).replace('.', ',');
+            zv.textContent = camera.position.z.toFixed(1);
+          }
+          function size() {
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.fov = camera.aspect < 0.8 ? 70 : 50; camera.updateProjectionMatrix(); render();   // en vertical, más campo
+          }
+          // Solo pinta cuando hay scroll: si no te mueves, la GPU descansa
+          addEventListener('scroll', () => requestAnimationFrame(render), { passive: true });
+          new ResizeObserver(size).observe(canvas);
+        </script>
+        <figcaption>Fíjate en que no hay bucle de animación: solo se pinta cuando haces scroll. Con la rueda notarás saltos, porque la rueda mueve el scroll a golpes. Eso se arregla en el tramo 03.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un recorrido con scroll es un plano secuencia, y el usuario lleva el ritmo. Eso quiere decir que tú no controlas la velocidad, solo el espacio: cuántas pantallas dura cada movimiento. Regla de rodaje que funciona: un movimiento de cámara importante (acercarse, girar, subir) por cada 80–100vh de scroll. Si en 100vh la cámara cruza media ciudad, marea; si en 300vh avanza dos metros, aburre.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el teléfono el scroll llega por inercia: un gesto del pulgar puede recorrer dos pantallas en medio segundo. No pelees con eso (nada de bloquear el scroll ni de «secuestrarlo»). Diseña el recorrido para que también se entienda pasando rápido: los momentos clave tienen que quedarse quietos un rato, y eso lo verás en el tramo 04.</p>
+      </div>
+
+      <h2>Recorridos con curvas</h2>
+      <p>Un <code>lerp</code> entre dos puntos sirve para un pasillo. Para rodear una torre, subir y acercarte a una ventana necesitas una curva que pase por varios puntos. <code>THREE.CatmullRomCurve3</code> es la herramienta: le das una lista de puntos y te devuelve una curva suave que pasa exactamente por todos. Con <code>curve.getPoint(u)</code> sacas la posición para cualquier <code>u</code> entre 0 y 1.</p>
+      <p>El truco profesional es usar <strong>dos curvas</strong>: una para la posición de la cámara y otra para el punto al que mira. Si la cámara siempre mira al centro de la torre, el plano es de vigilancia; si el objetivo se adelanta o se retrasa respecto a la cámara, aparece la intención: la cámara «busca» la planta 18 antes de llegar.</p>
+
+      <figure class="lab" data-three data-title="Editor de recorrido" data-hint="Arrastra los puntos blancos y mueve el recorrido" data-height="520" data-height-mobile="640" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <canvas></canvas>
+          <div class="shot"><span>Lo que ve la cámara</span></div>
+          <div class="ui">
+            <label>Recorrido <input id="time" type="range" min="0" max="1000" value="300"></label>
+            <label>Altura del punto <input id="height" type="range" min="2" max="120" value="24"></label>
+            <button id="play">Reproducir</button>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          html, body { height: 100%; }
+          body { background: #1b1430; color: #f3ece0; overflow: hidden; font-size: 13px; }
+          canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+          .shot { position: absolute; right: 12px; bottom: 12px; width: 38%; aspect-ratio: 16 / 9; border: 1px solid #ffb35c; border-radius: 4px; pointer-events: none; }
+          .shot span { position: absolute; left: 6px; top: -20px; color: #ffb35c; }
+          .ui { position: absolute; left: 12px; top: 12px; display: grid; gap: 6px; }
+          label { display: grid; gap: 2px; }
+          button { justify-self: start; min-height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: #ffb35c; color: #1b1430; font-weight: 600; cursor: pointer; }
+          @media (max-width: 560px) { .shot { width: calc(100% - 24px); } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const canvas = document.querySelector('canvas'), shotBox = document.querySelector('.shot');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#1b1430');
+          scene.add(new THREE.HemisphereLight('#d9c8ff', '#2a1d3a', 2.4));
+          // La torre simplificada: 30 losas y 30 franjas de ventanas
+          const slab = new THREE.BoxGeometry(22, 0.5, 14), win = new THREE.BoxGeometry(19, 2.7, 11);
+          const mSlab = new THREE.MeshLambertMaterial({ color: '#e8d9c6' }), mWin = new THREE.MeshLambertMaterial({ color: '#ffb35c', emissive: '#6a2f0c' });
+          for (let f = 0; f < 30; f++) { const a = new THREE.Mesh(slab, mSlab), b = new THREE.Mesh(win, mWin); a.position.y = f * 3.2; b.position.y = f * 3.2 + 1.6; scene.add(a, b); }
+          const water = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), new THREE.MeshBasicMaterial({ color: '#120d22' }));
+          water.rotation.x = -Math.PI / 2; scene.add(water);
+
+          // El recorrido: cinco puntos que pasan por la curva
+          const pts = [[-60, 6, 140], [-40, 24, 60], [30, 40, 50], [45, 62, -10], [0, 104, -40]].map((p) => new THREE.Vector3(...p));
+          const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+          const line = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: '#ffb35c' }));
+          const handles = pts.map(() => new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial()));
+          const marker = new THREE.Mesh(new THREE.ConeGeometry(3, 8, 4).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff5d8f' }));
+          scene.add(line, marker, ...handles);
+
+          const overview = new THREE.PerspectiveCamera(40, 1, 1, 3000), shot = new THREE.PerspectiveCamera(42, 16 / 9, 0.5, 3000);
+          let sel = 1, visible = true;
+
+          function update() {
+            line.geometry.setFromPoints(curve.getPoints(160));
+            handles.forEach((h, i) => { h.position.copy(pts[i]); h.material.color.set(i === sel ? '#ffb35c' : '#ffffff'); });
+            curve.getPoint(time.value / 1000, shot.position);
+            const look = new THREE.Vector3(0, shot.position.y * 0.85, 0);     // mira a la torre, algo por debajo
+            shot.lookAt(look); marker.position.copy(shot.position); marker.lookAt(look);
+            draw();
+          }
+          function draw() {
+            if (!visible) return;
+            const w = canvas.clientWidth, h = canvas.clientHeight;
+            renderer.setSize(w, h, false);
+            overview.aspect = w / h; overview.updateProjectionMatrix();
+            overview.position.set(170, 190, 230).multiplyScalar(Math.max(1, 1.25 / overview.aspect)); overview.lookAt(0, 40, 30);
+            // Un solo renderer, dos vistas: la general y la de la cámara (scissor)
+            renderer.setScissorTest(true);
+            renderer.setViewport(0, 0, w, h); renderer.setScissor(0, 0, w, h); renderer.render(scene, overview);
+            const r = shotBox.getBoundingClientRect(), y = h - r.bottom;
+            marker.visible = line.visible = false; handles.forEach((m) => (m.visible = false));
+            renderer.setViewport(r.left, y, r.width, r.height); renderer.setScissor(r.left, y, r.width, r.height); renderer.render(scene, shot);
+            marker.visible = line.visible = true; handles.forEach((m) => (m.visible = true));
+            renderer.setScissorTest(false);
+          }
+
+          // Arrastrar un punto: lo movemos sobre un plano horizontal a su altura
+          const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0)), hit = new THREE.Vector3();
+          let dragging = false;
+          const aim = (e) => { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, overview); };
+          canvas.onpointerdown = (e) => {
+            aim(e); const i = ray.intersectObjects(handles)[0]; if (!i) return;
+            sel = handles.indexOf(i.object); height.value = pts[sel].y; plane.constant = -pts[sel].y;
+            dragging = true; canvas.setPointerCapture(e.pointerId); update();
+          };
+          canvas.onpointermove = (e) => { if (dragging && (aim(e), ray.ray.intersectPlane(plane, hit))) { pts[sel].x = hit.x; pts[sel].z = hit.z; update(); } };
+          canvas.onpointerup = () => (dragging = false);
+          height.oninput = () => { pts[sel].y = +height.value; plane.constant = -pts[sel].y; update(); };
+          time.oninput = update;
+          play.onclick = () => { const t0 = performance.now(); requestAnimationFrame(function run(now) { const k = Math.min(1, (now - t0) / 6000); time.value = k * 1000; update(); if (k < 1) requestAnimationFrame(run); }); };
+          new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) draw(); }).observe(canvas);
+          new ResizeObserver(update).observe(canvas);
+        </script>
+        <figcaption>La línea ámbar es la curva; el cono rosa, la cámara; el recuadro, lo que ve. Arrastra el segundo punto hacia la torre y reproduce: la cámara pasa rozando las losas. Todo con un solo renderer y dos vistas (<code>setScissor</code>), así que la demo usa un único contexto WebGL.</figcaption>
+      </figure>
+
+      <script type="text/x-code" data-lang="js" data-label="El recorrido de la portada: seis puntos y otros seis para la mirada">
+        const V = (x, y, z) => new THREE.Vector3(x, y, z);
+        const camCurve = new THREE.CatmullRomCurve3([
+          V(-70, 5, 230), V(-58, 12, 140), V(-38, 56, 62),   // del agua hacia la planta 18
+          V(10, 60, 52), V(52, 82, 40), V(30, 118, 46),     // la fachada, el giro y la azotea
+        ], false, 'centripetal');
+        const lookCurve = new THREE.CatmullRomCurve3([
+          V(-18, 40, 0), V(-8, 34, 0), V(0, 57, 0), V(0, 58, 0), V(0, 80, 0), V(0, 96, 0),
+        ], false, 'centripetal');
+
+        // createTower acepta un path propio: recibe el progreso y coloca la cámara
+        const torre = createTower(canvas, { lite, path(u, camera) {
+          camera.position.copy(camCurve.getPoint(u));
+          camera.lookAt(lookCurve.getPoint(u));
+        } });
+      </script>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Usa <code>'centripetal'</code> como tipo de curva. La variante por defecto (<code>'catmullrom'</code> con tensión 0,5) hace bucles y pasadas raras cuando dos puntos están muy cerca o muy lejos entre sí; la centrípeta nunca se enrosca. Y usa <code>getPoint</code> (no <code>getPointAt</code>) en las dos curvas: así el punto 3 de la cámara coincide con el punto 3 de la mirada, aunque los tramos midan distinto.</p>
+      </div>
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Los recorridos caros se parecen a la cámara de un dron bien pilotado: siempre hay algo en primer término que pasa más rápido que el fondo (una esquina de la torre, una barandilla), la cámara nunca va en línea recta hacia el objeto y casi nunca mira en la misma dirección en la que avanza. Un recorrido barato es un zoom: la cámara va recta al centro de la torre. En la portada, la cámara se desliza en diagonal por la fachada mientras mira la planta 18.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En vertical caben menos cosas a los lados. La misma curva funciona, pero aleja un poco la cámara del eje de la torre (en la portada, un 12 % más) y abre el campo de visión: <code>torre3d.js</code> ya pasa de 35° a 55° cuando la pantalla es más alta que ancha. Evita los puntos que pasan muy cerca de un objeto: en una pantalla estrecha, ese objeto ocupa todo el plano y se pierde la referencia.</p>
+      </div>
+
+      <h2>Easing y suavizado</h2>
+      <p>La rueda del ratón mueve el scroll a golpes de unos 100 píxeles. Si la cámara sigue el scroll al instante, también va a golpes. Hay dos herramientas distintas, y conviene no mezclarlas:</p>
+      <ul>
+        <li><strong>Suavizado</strong> (lo que hace el <code>scrub</code> de GSAP o un <code>lerp</code> propio): la cámara no salta al progreso nuevo, se acerca a él poco a poco. Arregla los golpes de la rueda.</li>
+        <li><strong>Easing del recorrido</strong>: la relación entre el progreso y el punto de la curva no es lineal. Sirve para que la cámara acelere, frene y se pare donde tú quieras.</li>
+      </ul>
+
+      <figure class="lab" data-title="Crudo, lerp y lerp doble" data-hint="Pulsa «Simular rueda» o arrastra el control" data-height="420" data-height-mobile="520" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <div class="tracks">
+            <div class="tr"><span>Crudo</span><i id="a"></i></div>
+            <div class="tr"><span>Lerp</span><i id="b"></i></div>
+            <div class="tr"><span>Lerp doble</span><i id="c"></i></div>
+          </div>
+          <canvas id="g"></canvas>
+          <div class="ui"><button id="wheel">Simular rueda</button><input id="manual" type="range" min="0" max="1000" value="0" aria-label="Scroll"></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #1b1430; color: #f3ece0; padding: 14px; font-size: 13px; }
+          .tr { position: relative; display: grid; grid-template-columns: 90px 1fr; align-items: center; height: 34px; }
+          .tr::after { content: ""; position: absolute; left: 90px; right: 0; height: 1px; background: #ffffff22; }
+          .tr i { position: absolute; left: 90px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; z-index: 1; }
+          #a { background: #8f88b8; } #b { background: #ffb35c; } #c { background: #ff5d8f; }
+          #g { width: 100%; height: 190px; margin-top: 10px; border-top: 1px solid #ffffff22; }
+          .ui { display: flex; gap: 14px; align-items: center; margin-top: 8px; }
+          .ui input { flex: 1; }
+          button { min-height: 40px; padding: 0 16px; border: 0; border-radius: 99px; background: #ffb35c; color: #1b1430; font-weight: 600; cursor: pointer; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const g = document.querySelector('#g'), ctx = g.getContext('2d');
+          let target = 0, v1 = 0, v2 = 0, last = performance.now();
+          const hist = [];
+
+          // La rueda: seis golpes de 0,12 y vuelta atrás
+          wheel.onclick = () => {
+            let n = 0; const dir = target > 0.5 ? -1 : 1;
+            const id = setInterval(() => { target = Math.min(1, Math.max(0, target + dir * 0.13)); manual.value = target * 1000; if (++n === 6) clearInterval(id); }, 160);
+          };
+          manual.oninput = () => (target = manual.value / 1000);
+
+          (function loop(now) {
+            const dt = Math.min(0.05, (now - last) / 1000); last = now;
+            const k = 1 - Math.pow(1 - 0.12, dt * 60);   // 0,12 por fotograma a 60 fps, igual a 120 Hz
+            v1 += (target - v1) * k;                     // lerp: se acerca al objetivo
+            v2 += (v1 - v2) * k;                         // lerp doble: persigue al primero, arranca suave
+            const W = innerWidth - 28 - 90;
+            a.style.translate = target * W + 'px'; b.style.translate = v1 * W + 'px'; c.style.translate = v2 * W + 'px';
+            hist.push([target, v1, v2]); if (hist.length > 300) hist.shift();
+            // Gráfica: el tiempo hacia la derecha, el progreso hacia arriba
+            g.width = g.clientWidth * devicePixelRatio; g.height = g.clientHeight * devicePixelRatio;
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+            ['#8f88b8', '#ffb35c', '#ff5d8f'].forEach((col, j) => {
+              ctx.beginPath(); ctx.strokeStyle = col; ctx.lineWidth = 2;
+              hist.forEach((h, i) => ctx.lineTo(i / 300 * g.clientWidth, (1 - h[j]) * (g.clientHeight - 8) + 4));
+              ctx.stroke();
+            });
+            requestAnimationFrame(loop);
+          })(last);
+        </script>
+        <figcaption>La línea gris es lo que da la rueda: escalones. La ámbar (lerp) arranca de golpe y frena suave. La rosa (lerp doble) arranca y frena suave: es la que se siente como una grúa de cine. El factor se corrige con <code>dt</code> para que en una pantalla de 120 Hz vaya igual de rápido que en una de 60.</figcaption>
+      </figure>
+
+      <div class="split">
+        <div>
+          <p>El suavizado tiene un coste: <strong>retraso</strong>. Con un factor de 0,12 por fotograma, la cámara tarda casi medio segundo en alcanzar al scroll. En un recorrido largo se nota como peso, como si la cámara tuviera masa, y eso queda caro. En una interfaz (un menú, un botón) sería un desastre.</p>
+          <p>El easing del recorrido se hace con una tabla de «paradas»: pares de progreso y posición en la curva, y entre cada par una <code>smoothstep</code>. Como <code>smoothstep</code> empieza y termina con velocidad cero, la cámara frena al llegar a cada parada y arranca suave al salir. Es lo que pasa en la portada al llegar a la planta 18.</p>
+          <div class="callout movil"><span class="t">En el móvil</span>
+            <p>El scroll táctil ya llega suavizado por la inercia del sistema. Encima de eso, un lerp fuerte se siente como si la página fuese con retraso respecto al dedo. En táctil baja el suavizado (en la portada, 0,2 en vez de 0,12) o quítalo: deja solo el easing del recorrido.</p>
+          </div>
+        </div>
+        <div class="stick">
+          <script type="text/x-code" data-lang="js" data-label="Paradas: el progreso frena en cada par">
+            // [progreso del scroll, punto de la curva]
+            const STOPS = [[0, 0], [0.16, 0.08], [0.3, 0.4],
+                           [0.48, 0.58], [0.6, 0.76], [0.78, 0.84],
+                           [0.9, 1], [1, 1]];
+            const smooth = (x) => x * x * (3 - 2 * x);
+
+            function along(p) {
+              for (let i = 1; i < STOPS.length; i++) {
+                const [p1, u1] = STOPS[i];
+                if (p <= p1) {
+                  const [p0, u0] = STOPS[i - 1];
+                  return u0 + (u1 - u0) * smooth((p - p0) / (p1 - p0));
+                }
+              }
+              return 1;
+            }
+          </script>
+        </div>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Suavizas la cámara con <code>p += (target - p) * 0.1</code> en cada fotograma. Un usuario con un monitor de 144 Hz, ¿cómo lo verá comparado con uno de 60 Hz?</p>
+        <ol>
+          <li>Igual, porque el factor es el mismo.</li>
+          <li>Más rápido: hay más fotogramas por segundo, así que se acerca al objetivo más veces por segundo.</li>
+          <li>Más lento, porque cada fotograma dura menos.</li>
+        </ol>
+        <p class="why">Un lerp por fotograma depende de los fotogramas por segundo. A 144 Hz se aplica 2,4 veces más a menudo y la cámara alcanza al scroll mucho antes. Por eso el laboratorio calcula el factor con el tiempo real: <code>1 - Math.pow(1 - 0.12, dt * 60)</code>.</p>
+      </div>
+
+      <div class="band ambar"><div class="inner"><p>Donde la cámara se para, <em>el texto habla.</em></p><small>El usuario no puede leer mientras la cámara vuela. Las paradas del recorrido son los huecos para el texto: frena, aparece la frase, se lee, y la cámara arranca otra vez. Un solo progreso gobierna las dos cosas.</small></div></div>
+
+      <h2>Paradas y texto sincronizado</h2>
+      <p>La portada está escrita como un plan de rodaje. Antes de tocar código, apunta los tramos: dónde está la cámara, a qué mira y qué dice el texto en cada parada. Con esa tabla delante, el código es casi una transcripción.</p>
+
+      <div class="guion wide" role="table" aria-label="Plan de rodaje de la portada">
+        <div class="hd" role="row"><span role="columnheader">Tramo</span><span role="columnheader">Scroll</span><span role="columnheader">Cámara</span><span role="columnheader">Mira a</span><span role="columnheader">Texto</span></div>
+        <div role="row"><b role="cell">1</b><span role="cell"><code>0 – 0,16</code></span><span role="cell">Sobre el agua, lejos, casi quieta</span><span role="cell">La torre entera, ligeramente a la derecha</span><span role="cell">Título y entradilla</span></div>
+        <div role="row"><b role="cell">2</b><span role="cell"><code>0,26 – 0,5</code></span><span role="cell">Pegada a la fachada, se desliza en diagonal</span><span role="cell">La planta 18, que se enciende</span><span role="cell">«Del agua a la planta 18»</span></div>
+        <div role="row"><b role="cell">3</b><span role="cell"><code>0,58 – 0,8</code></span><span role="cell">Rodea la esquina y sube</span><span role="cell">Las plantas altas</span><span role="cell">«Cada tramo, una parada»</span></div>
+        <div role="row"><b role="cell">4</b><span role="cell"><code>0,88 – 1</code></span><span role="cell">Por encima de la azotea</span><span role="cell">La piscina iluminada</span><span role="cell">«Fin del plano»</span></div>
+      </div>
+
+      <p>En el código, el texto no se anima con su propio temporizador: lee el mismo progreso suavizado que la cámara, a través de una variable CSS. La portada escribe <code>--p</code> en el <code>header</code> en cada fotograma y cada frase calcula su opacidad con <code>clamp()</code>. Si la cámara va con retraso por el suavizado, el texto va con el mismo retraso, y nunca se desincronizan.</p>
+
+      <script type="text/x-code" data-lang="css" data-label="La frase del tramo 2 aparece y desaparece con el progreso">
+        .ph2 {
+          /* sube de 0 a 1 a partir de p = 0,26 y baja a 0 al llegar a 0,5 */
+          opacity: clamp(0, min((var(--p) - .26) * 10, (.5 - var(--p)) * 10), 1);
+          translate: 0 calc((.38 - var(--p)) * 140px);
+        }
+      </script>
+
+      <figure class="lab" data-three data-title="Tres paradas con texto" data-hint="Desliza dentro de la demo" data-height="500" data-height-mobile="620" data-open="js" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="track">
+            <div class="stage">
+              <canvas></canvas>
+              <p class="cap">La llegada, desde el agua.</p>
+              <p class="cap">Planta 18: <em>vistas al puerto.</em></p>
+              <p class="cap">La azotea, <em>con piscina.</em></p>
+              <ol class="dots"><li></li><li></li><li></li></ol>
+            </div>
+          </section>
+          <p class="end">Fin del recorrido</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #1b1430; color: #f3ece0; }
+          .track { height: 450vh; }
+          .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+          canvas { width: 100%; height: 100%; display: block; }
+          .cap { position: absolute; left: 6%; bottom: 12%; margin: 0; max-width: 12ch; font: italic 400 clamp(30px, 6vw, 58px)/.95 var(--f-serif); opacity: 0; }
+          .cap em { font-style: normal; color: #ffb35c; }
+          .dots { position: absolute; right: 16px; top: 50%; translate: 0 -50%; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+          .dots li { width: 8px; height: 8px; border-radius: 50%; background: #ffffff40; transition: background .3s; }
+          .dots li.on { background: #ffb35c; }
+          .end { height: 50vh; display: grid; place-items: center; margin: 0; font: italic 28px var(--f-serif); }
+          @media (max-width: 560px) { .cap { top: 10%; bottom: auto; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+
+          const canvas = document.querySelector('canvas'), track = document.querySelector('.track');
+          const caps = document.querySelectorAll('.cap'), dots = document.querySelectorAll('.dots li');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+          const scene = new THREE.Scene();
+          scene.background = new THREE.Color('#1b1430'); scene.fog = new THREE.Fog('#1b1430', 120, 420);
+          scene.add(new THREE.HemisphereLight('#d9c8ff', '#2a1d3a', 2.4));
+          const camera = new THREE.PerspectiveCamera(40, 1, 0.5, 2000);
+          const slab = new THREE.BoxGeometry(22, 0.5, 14), win = new THREE.BoxGeometry(19, 2.7, 11);
+          const mSlab = new THREE.MeshLambertMaterial({ color: '#e8d9c6' }), mWin = new THREE.MeshLambertMaterial({ color: '#7a5aa0' }), mOn = new THREE.MeshLambertMaterial({ color: '#ffb35c', emissive: '#ff8a1f' });
+          for (let f = 0; f < 30; f++) { const a = new THREE.Mesh(slab, mSlab), b = new THREE.Mesh(win, f === 17 ? mOn : mWin); a.position.y = f * 3.2; b.position.y = f * 3.2 + 1.6; scene.add(a, b); }
+          const pool = new THREE.Mesh(new THREE.BoxGeometry(9, 0.6, 4), new THREE.MeshBasicMaterial({ color: '#5fe3f0' })); pool.position.set(5, 96.4, 4); scene.add(pool);
+
+          // Tres paradas: dónde está la cámara y a qué mira
+          const V = (x, y, z) => new THREE.Vector3(x, y, z);
+          const camPath = new THREE.CatmullRomCurve3([V(-80, 24, 190), V(-30, 58, 44), V(32, 116, 40)], false, 'centripetal');
+          const lookPath = new THREE.CatmullRomCurve3([V(0, 50, 0), V(0, 57, 0), V(0, 96, 0)], false, 'centripetal');
+          const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+          function render() {
+            const r = track.getBoundingClientRect();
+            const p = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
+            const x = p * 2, i = Math.min(1, Math.floor(x));           // en qué tramo estamos (0 o 1)
+            const u = (i + smoothstep(0.3, 0.7, x - i)) / 2;           // quieta el 30 % al principio y al final de cada tramo
+            camera.position.copy(camPath.getPoint(u));
+            camera.lookAt(lookPath.getPoint(u));
+            renderer.render(scene, camera);
+            // El texto usa el mismo progreso: visible cerca de cada parada
+            caps.forEach((c, k) => (c.style.opacity = 1 - smoothstep(0.12, 0.28, Math.abs(x - k))));
+            dots.forEach((d, k) => d.classList.toggle('on', Math.round(x) === k));
+          }
+          function size() {
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.fov = camera.aspect < 0.8 ? 58 : 40; camera.updateProjectionMatrix(); render();
+          }
+          addEventListener('scroll', () => requestAnimationFrame(render), { passive: true });
+          new ResizeObserver(size).observe(canvas);
+        </script>
+        <figcaption>Baja despacio y fíjate en los puntos de la derecha: la cámara se queda quieta alrededor de cada parada y el texto solo aparece entonces. La línea clave es la <code>smoothstep(0.3, 0.7, …)</code>: cuanto más separes esos dos números, más corto es el vuelo y más larga la parada.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una frase por parada, corta, y en una zona del encuadre donde la cámara deje cielo o sombra. Si el texto aparece mientras la cámara se mueve, el ojo tiene que elegir entre leer y mirar, y pierde las dos cosas. Por eso en la portada el velo oscuro de la izquierda es fijo: el 3D se mueve detrás, pero el hueco del texto siempre está ahí.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En vertical el texto va arriba y la torre debajo, con un velo de arriba abajo en lugar de lateral. Tres paradas son el máximo razonable en un teléfono: cada una pide su tramo de scroll y, a partir de 250vh, el pulgar se cansa. Si tienes cinco mensajes, junta dos o pásalos a la sección siguiente, en HTML normal.</p>
+      </div>
+
+      <h2>GSAP ScrollTrigger y Three</h2>
+      <p>Para un recorrido con tres paradas, el código propio basta. Cuando la coreografía crece (la cámara gira mientras un objeto se despieza, aparecen etiquetas, cambia la luz), ScrollTrigger te ahorra trabajo: una timeline con <code>scrub</code> te da el suavizado gratis y te deja colocar cada cosa en su momento con números legibles.</p>
+      <p>La regla para mezclarlo con Three: <strong>GSAP anima objetos JavaScript normales</strong> (un «rig» con el ángulo de la cámara, la separación de las piezas, la intensidad de una luz) y en <code>onUpdate</code> trasladas esos valores a la escena y pintas. Podrías animar directamente <code>camera.position</code>, pero entonces cada propiedad va por su lado y el render no sabe cuándo pintar.</p>
+
+      <figure class="lab" data-three data-title="Una lámpara que se despieza" data-hint="Desliza dentro de la demo" data-height="500" data-height-mobile="620" data-libs="gsap scrolltrigger" data-open="js">
+        <script type="text/x-demo" data-lang="html">
+          <section class="pin">
+            <div class="stage">
+              <canvas></canvas>
+              <h1>Lámpara <em>Faro</em></h1>
+              <p class="lab l1"><b>Pantalla</b> lino crudo cosido a mano</p>
+              <p class="lab l2"><b>Bombilla</b> filamento de 2.200 K</p>
+              <p class="lab l3"><b>Base</b> hierro fundido en Onda</p>
+            </div>
+          </section>
+          <p class="end">Desde 189 €</p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #efe8dd; color: #2a221c; }
+          .pin { height: 400vh; }
+          .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+          canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+          h1 { position: absolute; left: 6%; top: 8%; margin: 0; font: 400 clamp(34px, 7vw, 64px)/.9 var(--f-serif); }
+          h1 em { color: #b5532b; }
+          .lab { position: absolute; right: 6%; margin: 0; max-width: 18ch; font-size: 13px; line-height: 1.35; opacity: 0; }
+          .lab b { display: block; font: italic 400 24px/1 var(--f-serif); color: #b5532b; }
+          .l1 { top: 22%; } .l2 { top: 44%; } .l3 { top: 70%; }
+          .end { height: 60vh; display: grid; place-items: center; margin: 0; font: italic 34px var(--f-serif); }
+          @media (max-width: 560px) { .lab { right: auto; left: 6%; } .l1 { top: 62%; } .l2 { top: 72%; } .l3 { top: 82%; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          import * as THREE from 'three';
+          gsap.registerPlugin(ScrollTrigger);
+
+          const canvas = document.querySelector('canvas');
+          const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+          renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+          const scene = new THREE.Scene();
+          scene.add(new THREE.HemisphereLight('#fff6ea', '#b8a990', 2));
+          const key = new THREE.DirectionalLight('#ffffff', 2); key.position.set(4, 6, 5); scene.add(key);
+          const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+
+          // Las piezas
+          const iron = new THREE.MeshStandardMaterial({ color: '#2f2a27', roughness: 0.6, metalness: 0.4 });
+          const base = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 0.3, 48), iron);
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 16), iron); stem.position.y = 1.45;
+          const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.32, 32, 16), new THREE.MeshStandardMaterial({ color: '#ffd9a0', emissive: '#ffb05c', emissiveIntensity: 1.4 }));
+          const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.4, 1.3, 48, 1, true), new THREE.MeshStandardMaterial({ color: '#e6d8c2', roughness: 0.95, side: THREE.DoubleSide }));
+          scene.add(base, stem, bulb, shade);
+
+          // El rig: GSAP anima estos números y render() los lleva a la escena
+          const rig = { angle: -0.7, explode: 0, lift: 1.4 };
+          function render() {
+            const d = (camera.aspect < 0.8 ? 13 : 9) + rig.explode * 4.5;     // al despiezar, la cámara retrocede
+            camera.position.set(Math.sin(rig.angle) * d, rig.lift + 1.4, Math.cos(rig.angle) * d);
+            camera.lookAt(camera.aspect < 0.8 ? 0 : -0.9, rig.lift + (camera.aspect < 0.8 ? 0.6 : 0), 0);
+            base.position.y = -rig.explode * 0.7;
+            bulb.position.y = 2.85 + rig.explode * 0.9;
+            shade.position.y = 3.05 + rig.explode * 2;
+            renderer.render(scene, camera);
+          }
+
+          gsap.timeline({ defaults: { ease: 'none' }, onUpdate: render,
+            scrollTrigger: { trigger: '.pin', start: 'top top', end: 'bottom bottom', scrub: 0.8 } })
+            .to(rig, { angle: 0.8, duration: 1 }, 0)                                // la cámara gira todo el rato
+            .to(rig, { explode: 1, lift: 2.5, duration: 0.35, ease: 'power2.inOut' }, 0.25)
+            .to('.l1', { autoAlpha: 1, duration: 0.08 }, 0.5)
+            .to('.l2', { autoAlpha: 1, duration: 0.08 }, 0.58)
+            .to('.l3', { autoAlpha: 1, duration: 0.08 }, 0.66)
+            .to('.lab', { autoAlpha: 0, duration: 0.08 }, 0.85)
+            .to(rig, { explode: 0, lift: 1.4, duration: 0.15, ease: 'power2.inOut' }, 0.85);
+
+          new ResizeObserver(() => {
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+            camera.aspect = canvas.clientWidth / canvas.clientHeight; camera.updateProjectionMatrix(); render();
+          }).observe(canvas);
+        </script>
+        <figcaption>Una timeline de duración 1 se lee como porcentajes del scroll: la lámpara se abre al 25 %, las etiquetas entran al 50, 58 y 66 %, y todo se cierra al 85 %. No hay bucle: GSAP llama a <code>render()</code> solo cuando el progreso cambia, incluido el suavizado del <code>scrub</code>.</figcaption>
+      </figure>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Si usas <code>pin: true</code> de ScrollTrigger con un canvas de Three dentro, el canvas cambia de contenedor al fijarse y puede medir mal su tamaño un instante. Un escenario <code>position: sticky</code> dentro de una sección alta (como en todas las demos de esta lección) evita el problema y no necesita JavaScript para fijarse. Usa <code>pin</code> cuando necesites que el contenido de después espere.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Con <code>gsap.matchMedia()</code> creas una timeline distinta para táctil: menos recorrido (<code>end: '+=200%'</code> en vez de 400 %), un <code>scrub</code> más corto (0,3) y menos movimiento de cámara. En la lámpara, en vertical la cámara se aleja y las etiquetas bajan bajo el objeto en vez de ir a su lado: prueba «Ver en móvil».</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">En una timeline con <code>scrub</code> animas <code>camera.position.x</code> y <code>camera.position.z</code> por separado y pintas en un bucle continuo. ¿Cuál es el problema principal?</p>
+        <ol>
+          <li>Que GSAP no puede animar propiedades de objetos de Three.</li>
+          <li>Que <code>scrub</code> no funciona con números, solo con elementos HTML.</li>
+          <li>Que la cámara se mueve en línea recta entre valores y el bucle pinta aunque no cambie nada. Mejor un rig (ángulo, distancia, altura) y pintar en <code>onUpdate</code>.</li>
+        </ol>
+        <p class="why">GSAP anima cualquier número de cualquier objeto, también los de Three. Pero animar x y z por separado da trayectorias rectas, no arcos, y el bucle continuo gasta GPU en reposo. Con un rig, un ángulo produce un arco perfecto alrededor del objeto y <code>onUpdate</code> pinta solo cuando hace falta.</p>
+      </div>
+
+      <h2>Tiempo real o fotogramas</h2>
+      <p>La portada de esta lección y la de la lección 09 cuentan casi lo mismo. Una con 120 imágenes, la otra con una escena viva. Ninguna es mejor en general: cada una gana en cosas distintas, y elegir bien es parte del criterio que se le explica a un cliente.</p>
+
+      <div class="balanza wide">
+        <div>
+          <h3>Fotogramas</h3>
+          <img src="../landing/frames/desk/0060.webp" alt="Fotograma 60 de la secuencia: la cámara frente a las plantas medias de la torre" width="1280" height="720" loading="lazy">
+          <span class="peso">3,3 MB <small>120 WebP de 1280 × 720</small></span>
+          <dl>
+            <dt>Calidad</dt><dd>La que quieras: render offline, IA, vídeo real. Sin límite de GPU.</dd>
+            <dt>Equipos</dt><dd>Igual en todos: dibujar una imagen es casi gratis.</dd>
+            <dt>Interacción</dt><dd>Solo adelante y atrás. Para cambiar el recorrido, renderizar otra vez.</dd>
+            <dt>Móvil</dt><dd>Secuencia vertical propia (otros 3,7 MB) y cuidado con la memoria.</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>Tiempo real</h3>
+          <div class="vivo" aria-label="El recorrido completo de la portada: seis puntos de cámara y seis de mirada">
+            <span>cámara</span><code>−70  5 230</code><code>−58 12 140</code><code>−38 54  62</code><code> 10 57  52</code><code> 52 82  40</code><code> 30 118 46</code>
+            <span>mira a</span><code>−18 40 0</code><code> −8 34 0</code><code>  0 57 0</code><code>  0 57 0</code><code>  0 80 0</code><code>  0 96 0</code>
+          </div>
+          <span class="peso">≈ 210 KB <small>three.js, complementos y torre3d.js, con gzip</small></span>
+          <dl>
+            <dt>Calidad</dt><dd>La que permita la GPU más modesta de tu público. Nada de sombras de render.</dd>
+            <dt>Equipos</dt><dd>Muy desigual: fluido en un portátil, justo en un Android de gama media.</dd>
+            <dt>Interacción</dt><dd>Total: encender plantas, cambiar el recorrido, tocar, elegir.</dd>
+            <dt>Móvil</dt><dd>Modo ligero y respaldo a fotogramas en equipos modestos.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Pregunta qué tiene que hacer el usuario además de mirar. Si solo recorre (llegar a la torre, ver la azotea), los fotogramas dan más calidad con menos riesgo, y el peso se reparte con la carga por pasadas. Si tiene que <em>elegir</em> (una planta, una estancia, un acabado), el tiempo real se gana su coste, porque los fotogramas no pueden enseñar una combinación que no renderizaste. Muchas webs premium mezclan las dos: fotogramas en la llegada y 3D vivo en la parte interactiva. Es justo lo que harás en el proyecto final.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Aquí el móvil inclina la balanza. Los fotogramas pesan más en datos pero cuestan poca batería; el tiempo real pesa poco en datos pero calienta el teléfono. Para una llegada de 30 segundos, cualquiera de los dos vale. Para una sección que el usuario explora un par de minutos, el 3D en tiempo real necesita sí o sí su modo ligero.</p>
+      </div>
+
+      <h2>El móvil</h2>
+      <p>La portada hace tres cosas distintas según el equipo, y las tres se deciden antes de crear la escena:</p>
+      <ol>
+        <li><strong>Modo ligero</strong> con cualquiera de tres señales: puntero táctil, menos de 760 px de ancho o 4 núcleos o menos. En ligero, <code>torre3d.js</code> cambia el agua con reflejo por un plano liso (el reflejo obliga a pintar la escena dos veces), baja el bloom y limita el DPR a 1,25.</li>
+        <li><strong>Menos recorrido</strong>: 240vh en vez de 300vh, el texto arriba, el plano cenital oculto y un poco más de distancia a la torre.</li>
+        <li><strong>Respaldo</strong>: sin WebGL, con ahorro de datos o con movimiento reducido, se queda el póster (el primer fotograma de la secuencia de la lección 09). En equipos muy modestos, en vez del 3D se puede montar la secuencia de fotogramas completa con el mismo progreso.</li>
+      </ol>
+
+      <script type="text/x-code" data-lang="js" data-label="La decisión, antes de crear nada">
+        const reduce   = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const saveData = navigator.connection?.saveData === true;
+        const cores    = navigator.hardwareConcurrency || 8;
+        const lite     = matchMedia('(pointer: coarse)').matches || innerWidth < 760 || cores <= 4;
+
+        if (saveData) {
+          // nada: el póster ya está en el HTML
+        } else if (cores <= 2) {
+          const { playFrames } = await import('./secuencia.js');   // la técnica de la lección 09
+          playFrames(canvas, { set: 'mob', progress: () => p });
+        } else {
+          try { torre = createTower(canvas, { lite, path }); }
+          catch { /* sin WebGL: se queda el póster */ }
+        }
+      </script>
+
+      <div class="callout soporte"><span class="t">Soporte</span>
+        <p><code>navigator.hardwareConcurrency</code> y <code>navigator.connection</code> no están en todos los navegadores (Safari no expone <code>connection</code>). <!-- verificar soporte --> Por eso el código usa <code>?.</code> y un valor por defecto: si el navegador no dice nada, se asume un equipo normal y se decide por el ancho y el tipo de puntero.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Prueba siempre en un teléfono real de gama media, no solo en el modo dispositivo del navegador: el modo dispositivo simula el tamaño, no la GPU. Mira tres cosas: que el primer fotograma llegue rápido (el póster ayuda), que el scroll no vaya a tirones al pasar la planta 18 y que, tras un minuto subiendo y bajando, el teléfono no esté caliente.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Un cliente quiere que en su web de un hotel rural en el Maestrazgo la cámara recorra el valle hasta la masía con el scroll, sin más interacción. Su público reserva sobre todo desde el móvil. ¿Qué propones?</p>
+        <ol>
+          <li>Una secuencia de fotogramas (o vídeo) con versión vertical propia: el recorrido es fijo, la calidad es mayor y funciona igual en cualquier teléfono.</li>
+          <li>Three.js en tiempo real, porque es más moderno.</li>
+          <li>Three.js con un valle modelado a mano y sombras en tiempo real en el móvil.</li>
+        </ol>
+        <p class="why">Sin interacción, el tiempo real no aporta nada que los fotogramas no den mejor, y el público es móvil. Un paisaje entero en 3D en vivo sería caro de producir y de pintar. Los fotogramas, con carga por pasadas, son la opción profesional aquí.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>El scroll produce un número de 0 a 1; otra función, que no sabe nada del scroll, lo convierte en cámara. Separadas, cada mitad se cambia sin romper la otra.</li>
+          <li>Dos <code>CatmullRomCurve3</code> centrípetas, una para la posición y otra para la mirada, dan recorridos con intención; una tabla de paradas con <code>smoothstep</code> hace que la cámara frene donde habla el texto.</li>
+          <li>Suaviza con un lerp corregido por el tiempo (o el <code>scrub</code> de GSAP), sincroniza el texto con el mismo progreso y, si usas GSAP, anima un rig y pinta en <code>onUpdate</code>.</li>
+          <li>Tiempo real cuando hay que elegir o tocar; fotogramas cuando solo se recorre. En el móvil, modo ligero, menos recorrido y respaldo.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Escribe el plan de rodaje de una llegada para una web de la agencia (una bodega de la Plana, una fábrica o un estudio de arquitectura) con cuatro tramos: dónde está la cámara, a qué mira y qué dice el texto. Móntalo con <code>createTower</code> y tu propio <code>path</code> (o con la torre simplificada del editor si el edificio es otro), con dos curvas centrípetas, paradas con <code>smoothstep</code>, texto sincronizado por <code>--p</code> y una versión vertical con menos recorrido. Al final, decide por escrito si para ese cliente lo harías en tiempo real o en fotogramas, y por qué.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script type="module">
+  // Portada «Plano secuencia»: torre3d.js con un recorrido propio (dos CatmullRomCurve3 y paradas),
+  // un único progreso suavizado para la cámara, los textos y los instrumentos,
+  // modo ligero en el móvil, pausa fuera de pantalla y póster como respaldo.
+  import * as THREE from 'three';
+  import { createTower } from '../assets/js/torre3d.js';
+
+  const hero = document.querySelector('.vuelo');
+  const canvas = hero.querySelector('canvas');
+  const root = document.documentElement;
+  const $ = (s) => hero.querySelector(s);
+  const out = { floor: $('[data-floor]'), alt: $('[data-alt]'), p: $('[data-p]') };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = navigator.connection?.saveData === true;
+  const coarse = matchMedia('(pointer: coarse)').matches;
+  const lite = coarse || innerWidth < 760 || (navigator.hardwareConcurrency || 8) <= 4;
+
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const camCurve = new THREE.CatmullRomCurve3([V(-70, 5, 230), V(-58, 12, 140), V(-38, 54, 62), V(10, 57, 52), V(52, 82, 40), V(30, 118, 46)], false, 'centripetal');
+  const lookCurve = new THREE.CatmullRomCurve3([V(-18, 40, 0), V(-8, 34, 0), V(0, 57, 0), V(0, 58, 0), V(0, 80, 0), V(0, 96, 0)], false, 'centripetal');
+  // Paradas: [progreso del scroll, punto de la curva]. Entre cada par, smoothstep: frena y arranca suave
+  const STOPS = [[0, 0], [0.16, 0.08], [0.3, 0.4], [0.48, 0.58], [0.6, 0.76], [0.78, 0.84], [0.9, 1], [1, 1]];
+  const smooth = (x) => x * x * (3 - 2 * x);
+  function along(p) {
+    for (let i = 1; i < STOPS.length; i++) {
+      const [p1, u1] = STOPS[i];
+      if (p <= p1) { const [p0, u0] = STOPS[i - 1]; return u0 + (u1 - u0) * smooth((p - p0) / (p1 - p0)); }
+    }
+    return 1;
+  }
+
+  const pos = new THREE.Vector3(), look = new THREE.Vector3();
+  function shotAt(p) {
+    const u = along(p);
+    camCurve.getPoint(u, pos); lookCurve.getPoint(u, look);
+    if (canvas.clientWidth / canvas.clientHeight < 0.8) { pos.x *= 1.12; pos.z *= 1.12; }   // en vertical, algo más lejos
+    return u;
+  }
+  // El path que recibe torre3d.js: coloca la cámara y desplaza el encuadre para dejar sitio al texto
+  function path(p, camera) {
+    shotAt(p);
+    camera.position.copy(pos); camera.lookAt(look);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (w / h >= 0.8) camera.setViewOffset(w, h, -w * 0.16, 0, w, h);   // la torre a la derecha, sin mover la cámara
+    else camera.setViewOffset(w, h, 0, -h * 0.1, w, h);                // en vertical, la torre baja y deja sitio arriba
+  }
+
+  // Plano cenital: la curva dibujada una vez y el punto de la cámara en cada fotograma
+  const svgPts = camCurve.getPoints(80);
+  const d = (list) => list.map((v, i) => (i ? 'L' : 'M') + v.x.toFixed(1) + ' ' + v.z.toFixed(1)).join(' ');
+  $('.plan .ruta').setAttribute('d', d(svgPts));
+  const done = $('.plan .hecha'), cam = $('.plan .cam'), mira = $('.plan .mira');
+  function instruments(p) {
+    const u = shotAt(p);
+    const floor = Math.min(30, Math.max(1, Math.floor(pos.y / 3.2) + 1));
+    out.floor.textContent = String(floor).padStart(2, '0');
+    out.alt.textContent = Math.max(0, Math.round(pos.y));
+    out.p.textContent = 'p = ' + p.toFixed(2).replace('.', ',');
+    cam.setAttribute('cx', pos.x.toFixed(1)); cam.setAttribute('cy', pos.z.toFixed(1));
+    mira.setAttribute('x1', pos.x.toFixed(1)); mira.setAttribute('y1', pos.z.toFixed(1));
+    mira.setAttribute('x2', look.x.toFixed(1)); mira.setAttribute('y2', look.z.toFixed(1));
+    done.setAttribute('d', d(svgPts.slice(0, Math.max(2, Math.round(u * 80) + 1))));
+  }
+
+  // Sin WebGL, con ahorro de datos o con movimiento reducido sin 3D: se queda el póster
+  let torre = null;
+  if (!saveData) {
+    try { torre = createTower(canvas, { lite, path }); }
+    catch (err) { torre = null; }
+  }
+
+  // Un único progreso suavizado gobierna la cámara, los textos (--p) y los instrumentos
+  let target = 0, p = 0, running = false, last = performance.now(), lit = false;
+  const ease = coarse ? 0.2 : 0.12;   // en táctil la inercia ya suaviza: menos retraso
+  function progress() {
+    const r = hero.getBoundingClientRect();
+    return Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+  }
+  function tick(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    p += (target - p) * (1 - Math.pow(1 - ease, dt * 60));
+    if (Math.abs(target - p) < 0.0004) p = target;
+    hero.style.setProperty('--p', p.toFixed(4));
+    instruments(p);
+    if (torre) {
+      torre.setProgress(p, true);                          // instantáneo: el suavizado ya lo hacemos aquí
+      const inside = p > 0.24 && p < 0.52;                 // tramo 2: la planta 18 se enciende
+      if (inside !== lit) { lit = inside; torre.highlight(17, 17, inside ? 1 : 0); }
+    }
+    if (p !== target) requestAnimationFrame(tick); else running = false;
+  }
+  function kick() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(tick); } }
+  function onScroll() {
+    root.classList.toggle('en-portada', hero.getBoundingClientRect().bottom > innerHeight * 0.5);
+    if (reduce) return;                                    // movimiento reducido: plano fijo
+    target = progress(); kick();
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll(); instruments(0);
+  if (torre) torre.setProgress(reduce ? 0.02 : progress(), true);
+
+  // Fuera de pantalla, la torre no pinta
+  if (torre) new IntersectionObserver(([e]) => (e.isIntersecting ? torre.resume() : torre.pause())).observe(hero);
+  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); torre?.pause(); canvas.style.visibility = 'hidden'; });
+</script>
+</body>
+</html>
