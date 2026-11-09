@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo de paletas explicadas | Hora azul</title>
+<meta name="description" content="Veintisiete paletas agrupadas por emoción, cada una con sus roles, valores HEX y OKLCH, por qué funciona, qué transmite, sectores ideales, tipografía sugerida, contraste comprobado y una maqueta para probarla.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Muestrario».
+     Gris carbón de galería, blanco y un amarillo pálido de etiqueta. Archivo comprimida para titulares. */
+  :root {
+    --bg: oklch(27% 0.006 260);
+    --bg-2: oklch(31% 0.007 260);
+    --bg-3: oklch(36% 0.008 260);
+    --fg: oklch(96% 0.003 260);
+    --muted: oklch(78% 0.006 260);
+    --faint: oklch(70% 0.008 260);
+    --accent: oklch(86% 0.11 90);
+    --on-accent: oklch(22% 0.01 90);
+    --code-bg: oklch(20% 0.006 260);
+    --scheme: dark;
+    --f-display: "Archivo", "Inter Tight", system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 750;
+    --display-tracking: -0.02em;
+  }
+  body { font-size: clamp(1.06rem, 1rem + 0.25vw, 1.2rem); }
+  h1, h2, h3, .statement, .pager b, .quiz .q { font-stretch: 75%; }
+  .prose h2 { font-size: clamp(2.6rem, 1.4rem + 4.4vw, 5.4rem); line-height: .9; letter-spacing: -0.025em; max-width: 14ch; }
+  .prose h2 .n { font-stretch: 100%; }
+  .prose h3 { font-size: clamp(1.7rem, 1.3rem + 1.4vw, 2.4rem); letter-spacing: -0.015em; }
+
+  /* =========================================================
+     Portada: el muro de muestras. Al tocar una, la portada entera
+     (fondo, texto, acento y la tipografía del nombre) adopta esa paleta.
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: clamp(1.5rem, 4vw, 4rem); align-items: center;
+    padding: 6rem var(--gutter) 2.4rem; background: var(--hb, var(--bg)); color: var(--hf, var(--fg));
+    transition: background-color .6s var(--ease-out), color .6s var(--ease-out); }
+  .hero-copy { display: grid; gap: 1.1rem; align-content: center; min-width: 0; }
+  .hero [data-kicker] { margin: 0; font: 600 var(--step--1)/1 var(--f-ui); opacity: .78; }
+  .hero h1 { margin: 0; font-size: clamp(3.4rem, 1rem + 6.6vw, 8.8rem); font-weight: 800; line-height: .82; letter-spacing: -0.03em; text-wrap: balance; }
+  .hero h1 span { display: block; color: var(--ha, var(--accent)); transition: color .6s var(--ease-out); }
+  .hero .lede { margin: 0; max-width: 40ch; font-size: var(--step-0); line-height: 1.45; opacity: .82; }
+  .readout { display: grid; gap: .6rem; padding: 1.1rem 0 0; border-top: 1px solid color-mix(in oklab, currentColor 24%, transparent); }
+  .ro-name { margin: 0; font: 800 clamp(1.9rem, 1.2rem + 2vw, 3rem)/1 var(--ro-f, var(--f-display)); font-weight: var(--ro-w, 800); font-stretch: var(--ro-s, 75%); letter-spacing: -0.01em; }
+  .ro-t { margin: 0; font: 400 var(--step-0)/1.4 var(--f-ui); max-width: 44ch; }
+  .ro-t b { font-weight: 650; }
+  .ro-chips { display: flex; gap: 4px; margin: .2rem 0 0; }
+  .ro-chips span { flex: 1; min-width: 0; padding: .45rem .5rem; border-radius: 4px; font: 500 .7rem/1.25 var(--f-code); box-shadow: inset 0 0 0 1px color-mix(in oklab, currentColor 18%, transparent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: background-color .6s, color .6s; }
+  .ro-chips span b { display: block; font: 600 .72rem/1.2 var(--f-ui); }
+  .ro-act { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .3rem; }
+  .ro-act .btn { min-height: 44px; }
+  .ro-act .btn.primary { background: var(--ha, var(--accent)); color: var(--hon, var(--on-accent)); border-color: var(--ha, var(--accent)); transition: background-color .6s, color .6s, border-color .6s; }
+  .ro-act .chip { margin-left: auto; }
+  .ro-act [hidden] { display: none; }
+
+  .wall { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; align-self: stretch; max-height: 78vh; min-width: 0; }
+  .wall button { position: relative; display: grid; grid-template-rows: 46fr 18fr 18fr 10fr 8fr; padding: 0; border: 0; border-radius: 6px; overflow: hidden; cursor: pointer; background: none; min-height: 0;
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--hf, var(--fg)) 14%, transparent); transition: transform .35s var(--ease-out), box-shadow .35s; -webkit-tap-highlight-color: transparent; }
+  .wall button i { display: block; }
+  .wall button[aria-pressed="true"] { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--hf, var(--fg)), 0 16px 28px -14px rgb(0 0 0 / .55); z-index: 1; }
+  .wall button:focus-visible { outline: 3px solid var(--hf, var(--fg)); outline-offset: 2px; }
+  @media (hover: hover) { .wall button:not([aria-pressed="true"]):hover { transform: translateY(-3px); } }
+  .wall-hint { grid-column: 1 / -1; margin: .2rem 0 0; font: 500 var(--step--1)/1.3 var(--f-ui); opacity: .75; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; align-content: start; gap: 1rem; padding: 4.6rem var(--gutter) 1.4rem; }
+    .hero h1 { font-size: clamp(2.8rem, 1rem + 9vw, 4.4rem); }
+    .hero h1 span { display: inline; }
+    .hero .lede { display: none; }
+    .wall { order: 2; max-height: none; height: 15.5rem; gap: 4px; }
+    .hero-copy { display: contents; }
+    .hero [data-kicker] { order: 0; } .hero h1 { order: 1; } .readout { order: 3; }
+    .ro-t { font-size: .95rem; }
+    .ro-chips span { font-size: .6rem; padding: .35rem .3rem; } .ro-chips span b { font-size: .64rem; }
+    .ro-act .chip { margin-left: 0; }
+  }
+  @media (max-width: 900px) and (max-height: 760px) { .wall { height: 12rem; } .ro-t { display: none; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  .callout .t, .quiz .kind { font-stretch: 100%; }
+  .statement { font-size: clamp(2.4rem, 1.2rem + 4.6vw, 5.6rem); line-height: .9; font-weight: 800; letter-spacing: -0.02em; max-width: 17ch !important; }
+  .statement em { font-style: normal; color: var(--accent); }
+
+  /* Diales de cada emoción */
+  .dials { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 1.4rem 0 2rem; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--line-2); }
+  .dials div { padding: .8rem 1rem .9rem 0; font: 400 .9rem/1.35 var(--f-ui); }
+  .dials div + div { padding-left: 1rem; border-left: 1px solid var(--line-2); }
+  .dials dt { color: var(--faint); font-size: .78rem; margin-bottom: .2rem; }
+  .dials dd { margin: 0; }
+  @media (max-width: 640px) { .dials { grid-template-columns: 1fr 1fr; } .dials div:nth-child(3) { padding-left: 0; border-left: 0; } .dials div:nth-child(n+3) { border-top: 1px solid var(--line-2); } }
+
+  /* Fichas */
+  .pal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; margin: 1.5rem 0 3rem; }
+  .pal { display: grid; grid-template-rows: auto 1fr; border-radius: var(--radius-m); overflow: hidden; background: var(--bg-2); box-shadow: 0 0 0 1px var(--line); scroll-margin-top: 5rem; transition: box-shadow .4s; }
+  .pal.flash { box-shadow: 0 0 0 3px var(--accent); }
+  .spec { position: relative; display: grid; grid-template-columns: 1fr 34%; min-height: 10.5rem; background: var(--c1); color: var(--c3); }
+  .spec .aa { display: flex; flex-direction: column; justify-content: space-between; gap: .8rem; padding: 1rem 1.1rem 1.1rem; min-width: 0; }
+  .spec .aa b { font: var(--fw) clamp(2.6rem, 2rem + 2vw, 3.6rem)/.9 var(--ff); font-stretch: var(--fs); letter-spacing: -0.02em; }
+  .spec .aa small { font: 500 .8rem/1.35 var(--f-ui); max-width: 26ch; opacity: .9; }
+  .spec .btnx { align-self: flex-start; padding: .45rem .9rem; border-radius: 99px; background: var(--c5); color: var(--on5); font: 650 .8rem/1 var(--f-ui); }
+  .spec .mk { display: grid; grid-template-rows: 1fr auto; background: var(--c4); color: var(--on4); }
+  .spec .mk span { align-self: end; padding: .7rem .8rem; font: 600 .78rem/1.2 var(--f-ui); }
+  .spec .mk i { display: block; height: 26%; background: var(--c2); }
+  .spec .prop { position: absolute; left: 0; right: 0; bottom: 0; display: flex; height: 6px; }
+  .pal-body { display: grid; gap: .9rem; align-content: start; padding: 1.1rem 1.2rem 1.3rem; font: 400 .95rem/1.5 var(--f-ui); }
+  .pal-body h3 { margin: 0 !important; font-size: clamp(1.8rem, 1.4rem + 1vw, 2.3rem); line-height: .95; }
+  .pal-t { margin: -.4rem 0 0; color: var(--accent); font-weight: 600; }
+  .cols { list-style: none; margin: 0; padding: 0 !important; display: grid; gap: 0; border-top: 1px solid var(--line); }
+  .cols li { display: grid; grid-template-columns: 1.2rem 5.6rem 4.6rem 1fr auto; gap: .55rem; align-items: center; margin: 0; padding: .38rem 0; border-bottom: 1px solid var(--line); font-size: .84rem; }
+  .cols li i { width: 1.2rem; height: 1.2rem; border-radius: 4px; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .16); }
+  .cols li b { font-weight: 600; }
+  .cols li code { background: none; padding: 0; font-size: .74rem; color: var(--muted); white-space: nowrap; }
+  .cols li .cp { justify-self: end; min-height: 32px; padding: 0 .55rem; border: 1px solid var(--line-2); border-radius: 6px; background: none; color: var(--muted); font: 600 .7rem/1 var(--f-ui); cursor: pointer; }
+  .cols li .cp:hover { color: var(--fg); border-color: var(--fg); }
+  .pal-body p { margin: 0; }
+  .pal-body .lbl { display: block; font-weight: 700; color: var(--fg); }
+  .pal-why { color: var(--fg); }
+  .pal-risk { color: var(--muted); }
+  .meta-row { display: grid; grid-template-columns: 6.4rem 1fr; gap: .35rem .8rem; margin: 0; font-size: .86rem; }
+  .meta-row dt { color: var(--faint); }
+  .meta-row dd { margin: 0; }
+  .meta-row .ts { font-size: 1.15rem; line-height: 1; margin-right: .3rem; }
+  .crs { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .crs span { padding: .2rem .5rem; border-radius: 99px; background: var(--bg-3); font-size: .76rem; font-variant-numeric: tabular-nums; }
+  .crs span::before { content: ""; display: inline-block; width: .45rem; height: .45rem; margin-right: .35rem; border-radius: 50%; background: oklch(76% 0.14 150); }
+  .crs span.lg::before { background: var(--accent); }
+  .acts { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .2rem; }
+  .acts .btn { min-height: 44px; border-color: var(--line-2); }
+  .acts .btn.primary { border-color: var(--accent); }
+  @media (max-width: 1000px) { .pal-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) {
+    .cols li { grid-template-columns: 1.1rem 1fr auto auto; row-gap: .1rem; }
+    .cols li code.ok { grid-column: 2 / 4; grid-row: 2; }
+    .cols li .cp { grid-row: 1 / 3; grid-column: 4; }
+    .spec { min-height: 9rem; }
+    .meta-row { grid-template-columns: 1fr; gap: .1rem; } .meta-row dd { margin-bottom: .5rem; }
+  }
+
+  /* Buscador: índice visual filtrable */
+  .finder { padding: 1.3rem; border-radius: var(--radius-m); background: var(--bg-2); box-shadow: 0 0 0 1px var(--line); margin: 1.6rem 0 2.4rem; font-family: var(--f-ui); }
+  .finder fieldset { border: 0; margin: 0 0 1rem; padding: 0; min-width: 0; }
+  .finder legend { padding: 0; margin-bottom: .5rem; font: 600 .86rem/1.2 var(--f-ui); color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .chips button { min-height: 40px; padding: 0 .85rem; border-radius: 99px; border: 1px solid var(--line-2); background: none; color: var(--fg); font: 500 .86rem/1 var(--f-ui); cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 650; }
+  .count { margin: .4rem 0 .8rem; font: 600 .9rem/1.3 var(--f-ui); }
+  .count span { color: var(--muted); font-weight: 400; }
+  .index { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.6rem, 1fr)); gap: .6rem; list-style: none; margin: 0; padding: 0 !important; }
+  .index li { margin: 0; }
+  .index li[hidden] { display: none; }
+  .index a { display: grid; gap: .45rem; padding: .45rem; border-radius: 8px; text-decoration: none; background: var(--bg); box-shadow: 0 0 0 1px var(--line); transition: box-shadow .2s; }
+  .index a:hover, .index a:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+  .index .sw { display: flex; height: 2.6rem; border-radius: 4px; overflow: hidden; }
+  .index .sw i { flex: 1; } .index .sw i:first-child { flex: 2.2; }
+  .index b { font: 650 .86rem/1.15 var(--f-ui); }
+  .index small { display: block; color: var(--muted); font-size: .74rem; }
+  .none { margin: .6rem 0 0; color: var(--muted); font-size: .92rem; }
+  @media (max-width: 640px) {
+    .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -1.3rem; padding: 0 1.3rem 2px; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chips button { white-space: nowrap; flex: none; }
+    .index { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Anatomía de una ficha */
+  .anat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 1.8rem 0 2.2rem; border-top: 1px solid var(--fg); list-style: none; padding: 0 !important; counter-reset: a; }
+  .anat li { counter-increment: a; margin: 0; padding: 1rem 1.2rem 1.2rem 0; border-bottom: 1px solid var(--line-2); font: 400 .92rem/1.45 var(--f-ui); color: var(--muted); }
+  .anat li:not(:nth-child(3n+1)) { padding-left: 1.2rem; border-left: 1px solid var(--line-2); }
+  .anat li::before { content: counter(a, decimal-leading-zero); display: block; font: 800 2.2rem/1 var(--f-display); font-stretch: 75%; color: var(--accent); margin-bottom: .4rem; }
+  .anat li b { display: block; color: var(--fg); font-weight: 650; margin-bottom: .15rem; }
+  @media (max-width: 760px) { .anat { grid-template-columns: 1fr; } .anat li, .anat li:not(:nth-child(3n+1)) { padding: .9rem 0; border-left: 0; display: grid; grid-template-columns: 3.2rem 1fr; } .anat li::before { grid-row: span 2; } .anat li b, .anat li span { grid-column: 2; } }
+
+  /* Adaptar una paleta: antes y después */
+  .adapt { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0; }
+  .adapt figure { margin: 0; min-width: 0; }
+  .adapt figcaption { margin-bottom: .6rem; font: 600 .9rem/1.3 var(--f-ui); }
+  .adapt figcaption span { display: block; font-weight: 400; color: var(--muted); }
+  .adapt .row5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+  .adapt .row5 div { min-height: 6rem; padding: .5rem; display: flex; flex-direction: column; justify-content: flex-end; font: 500 .66rem/1.3 var(--f-code); overflow-wrap: anywhere; }
+  .adapt .row5 div b { font: 650 .74rem/1.2 var(--f-ui); }
+  .adapt .row5 .kept { outline: 2px dashed currentColor; outline-offset: -6px; }
+  @media (max-width: 640px) { .adapt { grid-template-columns: 1fr; } .adapt .row5 div { min-height: 7.4rem; padding: .4rem; font-size: .58rem; } }
+
+  .sum-t table { min-width: 700px; }
+  .anat li b + span { display: block; }
+  .band.yellow { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.yellow p { margin: 0; max-width: 18ch; font: 800 clamp(2.3rem, 1rem + 5vw, 6rem)/.88 var(--f-display); font-stretch: 75%; letter-spacing: -0.02em; }
+
+  /* =========================================================
+     Probador: panel con una web de ejemplo que adopta la paleta
+     ========================================================= */
+  .tryon { position: fixed; z-index: 60; inset: 0 0 0 auto; width: min(560px, 46vw); height: 100%; max-height: none; margin: 0; padding: 0; border: 0; border-left: 1px solid var(--line-2);
+    background: var(--bg); color: var(--fg); box-shadow: -30px 0 60px -30px rgb(0 0 0 / .6); display: grid; grid-template-rows: auto 1fr auto; font-family: var(--f-ui);
+    transform: translateX(105%); transition: transform .45s var(--ease-out), visibility 0s .45s; visibility: hidden; }
+  .tryon.open { transform: none; visibility: visible; transition: transform .45s var(--ease-out); }
+  .tr-head { display: flex; align-items: center; gap: .5rem; padding: .8rem 1rem; border-bottom: 1px solid var(--line); }
+  .tr-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 1.5rem; font-stretch: 75%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr-head h2 small { display: block; font: 500 .78rem/1.2 var(--f-ui); color: var(--muted); }
+  .tr-head .btn { min-height: 44px; min-width: 44px; padding: 0 .8rem; border-color: var(--line-2); }
+  .tr-scroll { overflow: auto; overscroll-behavior: contain; padding: 1rem; }
+  .tr-foot { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .8rem 1rem; border-top: 1px solid var(--line); }
+  .tr-foot .crs { flex: 1 1 100%; }
+  .tr-foot .btn { min-height: 44px; border-color: var(--line-2); }
+  @media (max-width: 760px) {
+    .tryon { inset: auto 0 0 0; width: 100%; height: 86dvh; border-left: 0; border-top: 1px solid var(--line-2); border-radius: 16px 16px 0 0; transform: translateY(105%); }
+  }
+
+  /* La web de ejemplo */
+  .pv { --pf: "Inter Tight"; container-type: inline-size; border-radius: 10px; overflow: hidden; background: var(--p1); color: var(--p3); box-shadow: 0 0 0 1px var(--line); font-family: var(--pb), system-ui, sans-serif; }
+  .pv nav { display: flex; align-items: center; gap: 1rem; padding: .9rem 1.1rem; font-size: .8rem; border-bottom: 1px solid color-mix(in oklab, var(--p3) 12%, transparent); }
+  .pv nav b { margin-right: auto; font: var(--pw) 1.15rem/1 var(--pf); font-stretch: var(--ps); color: var(--plogo); }
+  .pv nav .n2 { padding: .45rem .8rem; border-radius: 99px; border: 1px solid currentColor; }
+  .pv .ph { padding: 2.2rem 1.1rem 1.8rem; }
+  .pv .pk { margin: 0 0 .8rem; font-size: .8rem; font-weight: 600; opacity: .85; }
+  .pv h3 { margin: 0 0 1rem; font: var(--pw) clamp(1.9rem, 9cqi, 2.9rem)/.98 var(--pf); font-stretch: var(--ps); letter-spacing: -0.02em; text-wrap: balance; }
+  .pv .pp { margin: 0 0 1.3rem; max-width: 38ch; font-size: .95rem; line-height: 1.5; }
+  .pv .pc { display: inline-block; padding: .8rem 1.2rem; border-radius: 99px; background: var(--p5); color: var(--pon5); font-weight: 650; font-size: .9rem; margin: 0 .6rem .6rem 0; }
+  .pv .ps2 { font-weight: 600; font-size: .9rem; text-decoration: underline; text-decoration-color: var(--p4u); text-underline-offset: .25em; text-decoration-thickness: 2px; }
+  .pv .pband { padding: 1.6rem 1.1rem; background: var(--p4); color: var(--pon4); }
+  .pv .pband q { display: block; font: var(--pw) clamp(1.2rem, 5cqi, 1.6rem)/1.15 var(--pf); font-stretch: var(--ps); quotes: "«" "»"; }
+  .pv .pband small { display: block; margin-top: .6rem; font-size: .8rem; opacity: .9; }
+  .pv .pcards { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; padding: 1.1rem; }
+  .pv .pcards div { padding: .9rem; border-radius: 8px; background: var(--p2); font-size: .82rem; line-height: 1.4; }
+  .pv .pcards b { display: block; margin-bottom: .3rem; font-size: .92rem; }
+  .pv .pcards .tag { display: inline-block; margin-top: .6rem; padding: .2rem .55rem; border-radius: 99px; background: var(--p5); color: var(--pon5); font-size: .72rem; font-weight: 650; }
+  .pv footer { padding: 1rem 1.1rem 1.2rem; font-size: .76rem; border-top: 1px solid color-mix(in oklab, var(--p3) 12%, transparent); display: flex; justify-content: space-between; gap: 1rem; }
+  @container (max-width: 420px) { .pv .pcards { grid-template-columns: 1fr; } .pv nav .n1 { display: none; } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="color-catalogo">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="hero-copy">
+      <p data-kicker>Lección</p>
+      <h1 id="t">Catálogo de paletas <span>explicadas</span></h1>
+      <p class="lede">27 paletas agrupadas por emoción. Cada una con sus colores, su porqué y una web para probarla. Toca una muestra del muro: la portada se viste con ella.</p>
+      <div class="readout" aria-live="polite">
+        <p class="ro-name" data-ro-name>Muestrario</p>
+        <p class="ro-t" data-ro-t><b>La piel de esta lección.</b> Gris carbón de galería para que cualquier color se vea tal cual, y un amarillo pálido de etiqueta.</p>
+        <div class="ro-chips" data-ro-chips aria-hidden="true">
+          <span style="background:#252729;color:#F0F2F4"><b>Fondo</b>#252729</span><span style="background:#2E3034;color:#F0F2F4"><b>Superficie</b>#2E3034</span><span style="background:#F0F2F4;color:#252729"><b>Texto</b>#F0F2F4</span><span style="background:#3A3D42;color:#F0F2F4"><b>Marca</b>#3A3D42</span><span style="background:#EDCE79;color:#1C1A15"><b>Acento</b>#EDCE79</span>
+        </div>
+        <div class="ro-act">
+          <a class="btn primary" href="#buscar" data-ro-link>Ver el índice</a>
+          <button class="btn" type="button" data-ro-try hidden>Probar en una web</button>
+          <span class="chip" data-meta></span>
+        </div>
+      </div>
+    </div>
+    <div class="wall" role="group" aria-label="Muro de paletas: toca una para aplicarla a la portada">
+      <button type="button" data-id="niebla" aria-pressed="false" aria-label="Niebla de mar, calma"><i style="background:#EEF3F2"></i><i style="background:#DCE7E6"></i><i style="background:#46747B"></i><i style="background:#D6A578"></i><i style="background:#1E3238"></i></button>
+      <button type="button" data-id="lavanda" aria-pressed="false" aria-label="Lavanda y salvia, calma"><i style="background:#F5F2F7"></i><i style="background:#E7E1EE"></i><i style="background:#6E5F8A"></i><i style="background:#A9BC9C"></i><i style="background:#2B2533"></i></button>
+      <button type="button" data-id="marino" aria-pressed="false" aria-label="Marino y papel, confianza"><i style="background:#F7F5F0"></i><i style="background:#EAE6DD"></i><i style="background:#1F3A66"></i><i style="background:#C39445"></i><i style="background:#15213B"></i></button>
+      <button type="button" data-id="servicio" aria-pressed="false" aria-label="Azul servicio, confianza"><i style="background:#F6F8FB"></i><i style="background:#E5EBF4"></i><i style="background:#2452C9"></i><i style="background:#FFB547"></i><i style="background:#0F1D33"></i></button>
+      <button type="button" data-id="acero" aria-pressed="false" aria-label="Acero y señal, confianza"><i style="background:#F2F3F4"></i><i style="background:#E1E4E8"></i><i style="background:#2A3949"></i><i style="background:#F2B705"></i><i style="background:#14181D"></i></button>
+      <button type="button" data-id="salida" aria-pressed="false" aria-label="Naranja de salida, energía"><i style="background:#FFF7EF"></i><i style="background:#FFE6CF"></i><i style="background:#F2541B"></i><i style="background:#2433E0"></i><i style="background:#1B1714"></i></button>
+      <button type="button" data-id="carrera" aria-pressed="false" aria-label="Rojo carrera, energía"><i style="background:#F2F1EE"></i><i style="background:#E2E0DB"></i><i style="background:#1C1C1C"></i><i style="background:#D41408"></i><i style="background:#121212"></i></button>
+      <button type="button" data-id="ebano" aria-pressed="false" aria-label="Ébano y champán, lujo"><i style="background:#12110F"></i><i style="background:#1F1C18"></i><i style="background:#4A1622"></i><i style="background:#C9A45E"></i><i style="background:#EEE7DA"></i></button>
+      <button type="button" data-id="marfil" aria-pressed="false" aria-label="Marfil y verde inglés, lujo"><i style="background:#F5F0E6"></i><i style="background:#E9E1D2"></i><i style="background:#1F3B2D"></i><i style="background:#A9864F"></i><i style="background:#1B1E1A"></i></button>
+      <button type="button" data-id="olivar" aria-pressed="false" aria-label="Olivar, naturaleza"><i style="background:#F3F1E6"></i><i style="background:#E4E0CB"></i><i style="background:#5E6A36"></i><i style="background:#A44F26"></i><i style="background:#262A1D"></i></button>
+      <button type="button" data-id="pinar" aria-pressed="false" aria-label="Pinar, naturaleza"><i style="background:#EDF0EA"></i><i style="background:#D8DED3"></i><i style="background:#2C5A45"></i><i style="background:#D3A846"></i><i style="background:#1A2620"></i></button>
+      <button type="button" data-id="vendimia" aria-pressed="false" aria-label="Vendimia, naturaleza"><i style="background:#F5EFE8"></i><i style="background:#E8DCCE"></i><i style="background:#5A1E2C"></i><i style="background:#97A25A"></i><i style="background:#2A1A1F"></i></button>
+      <button type="button" data-id="sobremesa" aria-pressed="false" aria-label="Sobremesa, calidez y cercanía"><i style="background:#F2EADB"></i><i style="background:#E6D9C3"></i><i style="background:#7A4A2E"></i><i style="background:#B8501F"></i><i style="background:#2A211B"></i></button>
+      <button type="button" data-id="barro" aria-pressed="false" aria-label="Barro y miel, calidez y cercanía"><i style="background:#FBF4E9"></i><i style="background:#F2E3CC"></i><i style="background:#A9502C"></i><i style="background:#E5A43A"></i><i style="background:#3A2517"></i></button>
+      <button type="button" data-id="menta" aria-pressed="false" aria-label="Menta y coral, frescura y juventud"><i style="background:#F3FBF7"></i><i style="background:#DBF2E8"></i><i style="background:#2FB58F"></i><i style="background:#FF6A55"></i><i style="background:#10302A"></i></button>
+      <button type="button" data-id="lima" aria-pressed="false" aria-label="Lima y lila, frescura y juventud"><i style="background:#FAFAF5"></i><i style="background:#ECEDE1"></i><i style="background:#B6A3FF"></i><i style="background:#CDF25B"></i><i style="background:#1D1A2C"></i></button>
+      <button type="button" data-id="cartel" aria-pressed="false" aria-label="Cartel de los 70, nostalgia y retro"><i style="background:#F1E4CC"></i><i style="background:#E5D0AA"></i><i style="background:#B9532B"></i><i style="background:#2F6F69"></i><i style="background:#2E2117"></i></button>
+      <button type="button" data-id="azulejo" aria-pressed="false" aria-label="Azulejo, nostalgia y retro"><i style="background:#F6F3EC"></i><i style="background:#E3EAF1"></i><i style="background:#1E4F9C"></i><i style="background:#E2A72E"></i><i style="background:#10284A"></i></button>
+      <button type="button" data-id="polaroid" aria-pressed="false" aria-label="Polaroid, nostalgia y retro"><i style="background:#F3EEE5"></i><i style="background:#E5DDCF"></i><i style="background:#557891"></i><i style="background:#DE8C6B"></i><i style="background:#2B2A33"></i></button>
+      <button type="button" data-id="horaazul" aria-pressed="false" aria-label="Hora azul, sofisticación oscura"><i style="background:#16122A"></i><i style="background:#231D3C"></i><i style="background:#4A3C78"></i><i style="background:#F0B664"></i><i style="background:#F3ECDF"></i></button>
+      <button type="button" data-id="cobre" aria-pressed="false" aria-label="Carbón y cobre, sofisticación oscura"><i style="background:#151515"></i><i style="background:#232221"></i><i style="background:#3A3532"></i><i style="background:#C47A4C"></i><i style="background:#ECE9E3"></i></button>
+      <button type="button" data-id="imprenta" aria-pressed="false" aria-label="Tinta de imprenta, creatividad"><i style="background:#F4F2EC"></i><i style="background:#FFFFFF"></i><i style="background:#2A3BF5"></i><i style="background:#FF4A26"></i><i style="background:#111111"></i></button>
+      <button type="button" data-id="neon" aria-pressed="false" aria-label="Noche eléctrica, creatividad"><i style="background:#0F0E14"></i><i style="background:#1C1A25"></i><i style="background:#6D2CF0"></i><i style="background:#D5FF3F"></i><i style="background:#F4F3EF"></i></button>
+      <button type="button" data-id="clinica" aria-pressed="false" aria-label="Clínica serena, salud"><i style="background:#F6FAFA"></i><i style="background:#E2EFEE"></i><i style="background:#1D7676"></i><i style="background:#EE8B6B"></i><i style="background:#11303A"></i></button>
+      <button type="button" data-id="hoja" aria-pressed="false" aria-label="Hoja y fruta, salud"><i style="background:#FBFAF3"></i><i style="background:#EEF2DE"></i><i style="background:#377D2E"></i><i style="background:#F29B30"></i><i style="background:#1F2E1E"></i></button>
+      <button type="button" data-id="recreo" aria-pressed="false" aria-label="Recreo, infancia"><i style="background:#FFF8EC"></i><i style="background:#FFE8C2"></i><i style="background:#1F78BD"></i><i style="background:#FF6A4D"></i><i style="background:#1F2C4A"></i></button>
+      <button type="button" data-id="algodon" aria-pressed="false" aria-label="Algodón, infancia"><i style="background:#FBF7F4"></i><i style="background:#F2E5E0"></i><i style="background:#9EC5C1"></i><i style="background:#E39586"></i><i style="background:#3A3035"></i></button>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Esta lección es un muestrario para consultar cuando empieces un proyecto. Son 27 paletas completas, agrupadas por la emoción que transmiten. Ninguna es una lista de colores bonitos: cada una explica <strong>por qué funciona</strong> (la relación entre sus colores), qué transmite y dónde encaja, y lleva el contraste del texto comprobado.</p>
+      <p>Úsalas como punto de partida, no como plantilla. La paleta perfecta para un cliente sale del método de la <a href="color-paleta.html">lección anterior</a>; lo que te da este catálogo es vocabulario: ver muchas soluciones razonadas para reconocer qué decisión resolvería tu caso.</p>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Lo que «transmite» un color son asociaciones culturales, no leyes. Están pensadas para el contexto occidental y español de hoy, y cambian con la época, el sector y la competencia: el violeta de una startup no se lee igual que el de una funeraria. Tómalas como un buen punto de partida que siempre hay que contrastar con el cliente, su público y lo que hacen los demás.</p>
+      </div>
+
+      <h2>Cómo leer una ficha</h2>
+      <p>Todas las fichas tienen la misma estructura, para que puedas compararlas de un vistazo:</p>
+      <ol class="anat wide">
+        <li><b>La muestra</b><span>La paleta aplicada en pequeño: fondo, un «Aa» en la tipografía sugerida, el botón en el acento y un bloque de marca. La franja inferior es la proporción recomendada.</span></li>
+        <li><b>Cinco roles</b><span>Fondo, superficie, texto, marca y acento, siempre en ese orden y con su HEX y su OKLCH. Cada valor se copia con un toque.</span></li>
+        <li><b>Por qué funciona</b><span>La relación entre los colores: qué comparten, en qué se oponen y qué papel tiene cada uno.</span></li>
+        <li><b>Cuidado</b><span>El error más probable con esa paleta y cómo evitarlo.</span></li>
+        <li><b>Sectores y tipografía</b><span>Dónde encaja mejor y qué familia tipográfica la acompaña (las tienes todas en <a href="tipo-personalidad.html">qué transmite una tipografía</a>).</span></li>
+        <li><b>Contraste y prueba</b><span>Los contrastes del texto ya medidos, el botón para probarla en una web completa y el de copiar las variables CSS.</span></li>
+      </ol>
+      <p>Cada grupo empieza con su <strong>receta</strong>: cuatro diales (tono, luz, saturación y contraste) que explican qué tienen en común las paletas de esa emoción. Es lo más útil del catálogo, porque te permite crear paletas nuevas para esa emoción sin copiar ninguna.</p>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El probador se abre como una hoja desde abajo y la web de ejemplo se adapta a una columna, como la verías en un teléfono. Es la mejor forma de juzgar una paleta oscura o muy clara: en pantalla pequeña, el color de fondo ocupa casi todo y el acento se reduce a un botón.</p>
+      </div>
+
+      <h2 id="buscar">Buscar por emoción o por sector</h2>
+      <p>Elige una emoción, un sector o los dos. El índice se queda solo con las paletas que encajan; toca una para ir a su ficha.</p>
+      <div class="finder wide">
+        <fieldset><legend>Emoción</legend><div class="chips" data-filter="emo"><button type="button" data-v="todas" aria-pressed="true">Todas</button><button type="button" data-v="calma" aria-pressed="false">Calma</button><button type="button" data-v="confianza" aria-pressed="false">Confianza</button><button type="button" data-v="energia" aria-pressed="false">Energía</button><button type="button" data-v="lujo" aria-pressed="false">Lujo</button><button type="button" data-v="naturaleza" aria-pressed="false">Naturaleza</button><button type="button" data-v="calidez" aria-pressed="false">Calidez y cercanía</button><button type="button" data-v="frescura" aria-pressed="false">Frescura y juventud</button><button type="button" data-v="nostalgia" aria-pressed="false">Nostalgia y retro</button><button type="button" data-v="oscura" aria-pressed="false">Sofisticación oscura</button><button type="button" data-v="creatividad" aria-pressed="false">Creatividad</button><button type="button" data-v="salud" aria-pressed="false">Salud</button><button type="button" data-v="infancia" aria-pressed="false">Infancia</button></div></fieldset>
+        <fieldset><legend>Sector</legend><div class="chips" data-filter="sec"><button type="button" data-v="todos" aria-pressed="true">Todos</button><button type="button" data-v="hosteleria" aria-pressed="false">Hostelería</button><button type="button" data-v="salud" aria-pressed="false">Salud y bienestar</button><button type="button" data-v="moda" aria-pressed="false">Moda y belleza</button><button type="button" data-v="turismo" aria-pressed="false">Turismo y hoteles</button><button type="button" data-v="inmobiliaria" aria-pressed="false">Inmobiliaria y arquitectura</button><button type="button" data-v="tecnologia" aria-pressed="false">Tecnología y apps</button><button type="button" data-v="educacion" aria-pressed="false">Educación e infancia</button><button type="button" data-v="servicios" aria-pressed="false">Servicios profesionales</button><button type="button" data-v="industria" aria-pressed="false">Industria y B2B</button><button type="button" data-v="creativo" aria-pressed="false">Creatividad y ocio</button><button type="button" data-v="alimentacion" aria-pressed="false">Alimentación y producto</button><button type="button" data-v="deporte" aria-pressed="false">Deporte</button><button type="button" data-v="comercio" aria-pressed="false">Tienda online</button></div></fieldset>
+        <p class="count" aria-live="polite" data-count>27 paletas <span>de 27</span></p>
+        <ul class="index" data-index>
+          <li data-emo="calma" data-tags="salud turismo"><a href="#p-niebla"><span class="sw" aria-hidden="true"><i style="background:#EEF3F2"></i><i style="background:#46747B"></i><i style="background:#D6A578"></i><i style="background:#1E3238"></i></span><span><b>Niebla de mar</b><small>Calma</small></span></a></li>
+          <li data-emo="calma" data-tags="salud moda"><a href="#p-lavanda"><span class="sw" aria-hidden="true"><i style="background:#F5F2F7"></i><i style="background:#6E5F8A"></i><i style="background:#A9BC9C"></i><i style="background:#2B2533"></i></span><span><b>Lavanda y salvia</b><small>Calma</small></span></a></li>
+          <li data-emo="confianza" data-tags="servicios"><a href="#p-marino"><span class="sw" aria-hidden="true"><i style="background:#F7F5F0"></i><i style="background:#1F3A66"></i><i style="background:#C39445"></i><i style="background:#15213B"></i></span><span><b>Marino y papel</b><small>Confianza</small></span></a></li>
+          <li data-emo="confianza" data-tags="tecnologia comercio servicios"><a href="#p-servicio"><span class="sw" aria-hidden="true"><i style="background:#F6F8FB"></i><i style="background:#2452C9"></i><i style="background:#FFB547"></i><i style="background:#0F1D33"></i></span><span><b>Azul servicio</b><small>Confianza</small></span></a></li>
+          <li data-emo="confianza" data-tags="industria"><a href="#p-acero"><span class="sw" aria-hidden="true"><i style="background:#F2F3F4"></i><i style="background:#2A3949"></i><i style="background:#F2B705"></i><i style="background:#14181D"></i></span><span><b>Acero y señal</b><small>Confianza</small></span></a></li>
+          <li data-emo="energia" data-tags="deporte hosteleria"><a href="#p-salida"><span class="sw" aria-hidden="true"><i style="background:#FFF7EF"></i><i style="background:#F2541B"></i><i style="background:#2433E0"></i><i style="background:#1B1714"></i></span><span><b>Naranja de salida</b><small>Energía</small></span></a></li>
+          <li data-emo="energia" data-tags="deporte hosteleria"><a href="#p-carrera"><span class="sw" aria-hidden="true"><i style="background:#F2F1EE"></i><i style="background:#1C1C1C"></i><i style="background:#D41408"></i><i style="background:#121212"></i></span><span><b>Rojo carrera</b><small>Energía</small></span></a></li>
+          <li data-emo="lujo" data-tags="moda hosteleria"><a href="#p-ebano"><span class="sw" aria-hidden="true"><i style="background:#12110F"></i><i style="background:#4A1622"></i><i style="background:#C9A45E"></i><i style="background:#EEE7DA"></i></span><span><b>Ébano y champán</b><small>Lujo</small></span></a></li>
+          <li data-emo="lujo" data-tags="turismo inmobiliaria moda"><a href="#p-marfil"><span class="sw" aria-hidden="true"><i style="background:#F5F0E6"></i><i style="background:#1F3B2D"></i><i style="background:#A9864F"></i><i style="background:#1B1E1A"></i></span><span><b>Marfil y verde inglés</b><small>Lujo</small></span></a></li>
+          <li data-emo="naturaleza" data-tags="alimentacion turismo"><a href="#p-olivar"><span class="sw" aria-hidden="true"><i style="background:#F3F1E6"></i><i style="background:#5E6A36"></i><i style="background:#A44F26"></i><i style="background:#262A1D"></i></span><span><b>Olivar</b><small>Naturaleza</small></span></a></li>
+          <li data-emo="naturaleza" data-tags="turismo deporte"><a href="#p-pinar"><span class="sw" aria-hidden="true"><i style="background:#EDF0EA"></i><i style="background:#2C5A45"></i><i style="background:#D3A846"></i><i style="background:#1A2620"></i></span><span><b>Pinar</b><small>Naturaleza</small></span></a></li>
+          <li data-emo="naturaleza" data-tags="alimentacion hosteleria turismo"><a href="#p-vendimia"><span class="sw" aria-hidden="true"><i style="background:#F5EFE8"></i><i style="background:#5A1E2C"></i><i style="background:#97A25A"></i><i style="background:#2A1A1F"></i></span><span><b>Vendimia</b><small>Naturaleza</small></span></a></li>
+          <li data-emo="calidez" data-tags="hosteleria alimentacion tecnologia"><a href="#p-sobremesa"><span class="sw" aria-hidden="true"><i style="background:#F2EADB"></i><i style="background:#7A4A2E"></i><i style="background:#B8501F"></i><i style="background:#2A211B"></i></span><span><b>Sobremesa</b><small>Calidez y cercanía</small></span></a></li>
+          <li data-emo="calidez" data-tags="alimentacion comercio hosteleria"><a href="#p-barro"><span class="sw" aria-hidden="true"><i style="background:#FBF4E9"></i><i style="background:#A9502C"></i><i style="background:#E5A43A"></i><i style="background:#3A2517"></i></span><span><b>Barro y miel</b><small>Calidez y cercanía</small></span></a></li>
+          <li data-emo="frescura" data-tags="alimentacion tecnologia moda"><a href="#p-menta"><span class="sw" aria-hidden="true"><i style="background:#F3FBF7"></i><i style="background:#2FB58F"></i><i style="background:#FF6A55"></i><i style="background:#10302A"></i></span><span><b>Menta y coral</b><small>Frescura y juventud</small></span></a></li>
+          <li data-emo="frescura" data-tags="tecnologia creativo"><a href="#p-lima"><span class="sw" aria-hidden="true"><i style="background:#FAFAF5"></i><i style="background:#B6A3FF"></i><i style="background:#CDF25B"></i><i style="background:#1D1A2C"></i></span><span><b>Lima y lila</b><small>Frescura y juventud</small></span></a></li>
+          <li data-emo="nostalgia" data-tags="hosteleria creativo comercio"><a href="#p-cartel"><span class="sw" aria-hidden="true"><i style="background:#F1E4CC"></i><i style="background:#B9532B"></i><i style="background:#2F6F69"></i><i style="background:#2E2117"></i></span><span><b>Cartel de los 70</b><small>Nostalgia y retro</small></span></a></li>
+          <li data-emo="nostalgia" data-tags="hosteleria alimentacion turismo"><a href="#p-azulejo"><span class="sw" aria-hidden="true"><i style="background:#F6F3EC"></i><i style="background:#1E4F9C"></i><i style="background:#E2A72E"></i><i style="background:#10284A"></i></span><span><b>Azulejo</b><small>Nostalgia y retro</small></span></a></li>
+          <li data-emo="nostalgia" data-tags="creativo hosteleria comercio"><a href="#p-polaroid"><span class="sw" aria-hidden="true"><i style="background:#F3EEE5"></i><i style="background:#557891"></i><i style="background:#DE8C6B"></i><i style="background:#2B2A33"></i></span><span><b>Polaroid</b><small>Nostalgia y retro</small></span></a></li>
+          <li data-emo="oscura" data-tags="inmobiliaria turismo hosteleria"><a href="#p-horaazul"><span class="sw" aria-hidden="true"><i style="background:#16122A"></i><i style="background:#4A3C78"></i><i style="background:#F0B664"></i><i style="background:#F3ECDF"></i></span><span><b>Hora azul</b><small>Sofisticación oscura</small></span></a></li>
+          <li data-emo="oscura" data-tags="inmobiliaria hosteleria moda"><a href="#p-cobre"><span class="sw" aria-hidden="true"><i style="background:#151515"></i><i style="background:#3A3532"></i><i style="background:#C47A4C"></i><i style="background:#ECE9E3"></i></span><span><b>Carbón y cobre</b><small>Sofisticación oscura</small></span></a></li>
+          <li data-emo="creatividad" data-tags="creativo comercio"><a href="#p-imprenta"><span class="sw" aria-hidden="true"><i style="background:#F4F2EC"></i><i style="background:#2A3BF5"></i><i style="background:#FF4A26"></i><i style="background:#111111"></i></span><span><b>Tinta de imprenta</b><small>Creatividad</small></span></a></li>
+          <li data-emo="creatividad" data-tags="creativo tecnologia"><a href="#p-neon"><span class="sw" aria-hidden="true"><i style="background:#0F0E14"></i><i style="background:#6D2CF0"></i><i style="background:#D5FF3F"></i><i style="background:#F4F3EF"></i></span><span><b>Noche eléctrica</b><small>Creatividad</small></span></a></li>
+          <li data-emo="salud" data-tags="salud"><a href="#p-clinica"><span class="sw" aria-hidden="true"><i style="background:#F6FAFA"></i><i style="background:#1D7676"></i><i style="background:#EE8B6B"></i><i style="background:#11303A"></i></span><span><b>Clínica serena</b><small>Salud</small></span></a></li>
+          <li data-emo="salud" data-tags="salud alimentacion comercio"><a href="#p-hoja"><span class="sw" aria-hidden="true"><i style="background:#FBFAF3"></i><i style="background:#377D2E"></i><i style="background:#F29B30"></i><i style="background:#1F2E1E"></i></span><span><b>Hoja y fruta</b><small>Salud</small></span></a></li>
+          <li data-emo="infancia" data-tags="educacion comercio"><a href="#p-recreo"><span class="sw" aria-hidden="true"><i style="background:#FFF8EC"></i><i style="background:#1F78BD"></i><i style="background:#FF6A4D"></i><i style="background:#1F2C4A"></i></span><span><b>Recreo</b><small>Infancia</small></span></a></li>
+          <li data-emo="infancia" data-tags="educacion moda comercio"><a href="#p-algodon"><span class="sw" aria-hidden="true"><i style="background:#FBF7F4"></i><i style="background:#9EC5C1"></i><i style="background:#E39586"></i><i style="background:#3A3035"></i></span><span><b>Algodón</b><small>Infancia</small></span></a></li>
+        </ul>
+        <p class="none" data-none hidden>Ninguna paleta combina esa emoción con ese sector. Prueba con «Todas» en emoción: verás qué emociones suelen usarse en ese sector.</p>
+      </div>
+
+      <h2 id="e-calma">Calma</h2>
+      <p>Poca diferencia de tono, saturación baja, mucha luz y pasos suaves entre colores. Nada salta, así que el ojo descansa.</p>
+      <dl class="dials wide" aria-label="Receta de calma"><div><dt>Tono</dt><dd>fríos o neutros, de una misma familia</dd></div><div><dt>Luz</dt><dd>alta</dd></div><div><dt>Saturación</dt><dd>baja</dd></div><div><dt>Contraste</dt><dd>suave salvo en el texto</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-niebla" style="--c1:#EEF3F2;--c2:#DCE7E6;--c3:#1E3238;--c4:#46747B;--c5:#D6A578;--on4:#FFFFFF;--on5:#1E3238;--ff:&quot;Jost&quot;;--fw:300;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Tu espalda, en buenas manos.</small><span class="btnx">Pedir cita</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#EEF3F2"></i><i style="flex:20;background:#DCE7E6"></i><i style="flex:13;background:#46747B"></i><i style="flex:7;background:#D6A578"></i><i style="flex:5;background:#1E3238"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Niebla de mar</h3>
+            <p class="pal-t">Calma, aire y cuidado sin frialdad.</p>
+            <ul class="cols" aria-label="Colores de Niebla de mar"><li><i style="background:#EEF3F2"></i><b>Fondo</b><code>#EEF3F2</code><code class="ok">oklch(96.0% 0.005 183)</code><button type="button" class="cp" data-copyval="#EEF3F2" aria-label="Copiar #EEF3F2">Copiar</button></li><li><i style="background:#DCE7E6"></i><b>Superficie</b><code>#DCE7E6</code><code class="ok">oklch(91.9% 0.012 190)</code><button type="button" class="cp" data-copyval="#DCE7E6" aria-label="Copiar #DCE7E6">Copiar</button></li><li><i style="background:#1E3238"></i><b>Texto</b><code>#1E3238</code><code class="ok">oklch(30.3% 0.028 219)</code><button type="button" class="cp" data-copyval="#1E3238" aria-label="Copiar #1E3238">Copiar</button></li><li><i style="background:#46747B"></i><b>Marca</b><code>#46747B</code><code class="ok">oklch(52.9% 0.052 208)</code><button type="button" class="cp" data-copyval="#46747B" aria-label="Copiar #46747B">Copiar</button></li><li><i style="background:#D6A578"></i><b>Acento</b><code>#D6A578</code><code class="ok">oklch(75.7% 0.083 64)</code><button type="button" class="cp" data-copyval="#D6A578" aria-label="Copiar #D6A578">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Cuatro de los cinco colores salen de la misma familia azul verdosa y solo cambian de luz: el ojo no encuentra ningún salto brusco y descansa. Es casi monocromática, y eso es lo que la hace tranquila. El acento arena es cálido y apagado, el opuesto suave del azul verdoso: rompe la frialdad clínica (sin él parecería un hospital) sin levantar la voz.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Con tan poco contraste de tono, la jerarquía depende de la luz: mantén el texto muy oscuro o la página se vuelve borrosa.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Fisioterapia, yoga y pilates, psicología, spa, apartamentos de playa.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Jost&quot;;font-weight:300;font-stretch:normal">Aa</span>Jost ligera con Newsreader para leer. La geométrica ligera tiene tanto aire como la paleta.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 11,9:1</span><span class="">Texto sobre superficie 10,6:1</span><span class="">Botón 6,1:1</span><span class="">Sobre marca 5,2:1</span><span class="lg">Marca como titular 4,6:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="niebla">Probar en una web</button><button class="btn" type="button" data-copy="niebla">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-lavanda" style="--c1:#F5F2F7;--c2:#E7E1EE;--c3:#2B2533;--c4:#6E5F8A;--c5:#A9BC9C;--on4:#FFFFFF;--on5:#2B2533;--ff:&quot;Cormorant&quot;;--fw:500;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Un lugar para respirar despacio.</small><span class="btnx">Reservar sesión</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F5F2F7"></i><i style="flex:20;background:#E7E1EE"></i><i style="flex:13;background:#6E5F8A"></i><i style="flex:7;background:#A9BC9C"></i><i style="flex:5;background:#2B2533"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Lavanda y salvia</h3>
+            <p class="pal-t">Serenidad, introspección, cuidado delicado.</p>
+            <ul class="cols" aria-label="Colores de Lavanda y salvia"><li><i style="background:#F5F2F7"></i><b>Fondo</b><code>#F5F2F7</code><code class="ok">oklch(96.5% 0.007 312)</code><button type="button" class="cp" data-copyval="#F5F2F7" aria-label="Copiar #F5F2F7">Copiar</button></li><li><i style="background:#E7E1EE"></i><b>Superficie</b><code>#E7E1EE</code><code class="ok">oklch(91.8% 0.019 307)</code><button type="button" class="cp" data-copyval="#E7E1EE" aria-label="Copiar #E7E1EE">Copiar</button></li><li><i style="background:#2B2533"></i><b>Texto</b><code>#2B2533</code><code class="ok">oklch(27.7% 0.027 304)</code><button type="button" class="cp" data-copyval="#2B2533" aria-label="Copiar #2B2533">Copiar</button></li><li><i style="background:#6E5F8A"></i><b>Marca</b><code>#6E5F8A</code><code class="ok">oklch(51.7% 0.069 300)</code><button type="button" class="cp" data-copyval="#6E5F8A" aria-label="Copiar #6E5F8A">Copiar</button></li><li><i style="background:#A9BC9C"></i><b>Acento</b><code>#A9BC9C</code><code class="ok">oklch(77.2% 0.049 133)</code><button type="button" class="cp" data-copyval="#A9BC9C" aria-label="Copiar #A9BC9C">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El lavanda grisáceo es un violeta con muy poca saturación: conserva la asociación del violeta con lo íntimo y lo espiritual, pero sin el dramatismo del morado intenso. La salvia está casi enfrente en el círculo (violeta y verde amarillento son casi complementarios), pero los dos están tan apagados que no chocan, se equilibran: los dos hablan en el mismo volumen bajo.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Si subes la saturación de cualquiera de los dos, pasa a parecer una tienda de chucherías o de esoterismo.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Psicología y terapia, cosmética natural, matronas y crianza, herbolario.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Cormorant&quot;;font-weight:500;font-stretch:normal">Aa</span>Cormorant con Inter Tight para leer. Una serif fina y suave, de trazo casi caligráfico, como un susurro.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,4:1</span><span class="">Texto sobre superficie 11,6:1</span><span class="">Botón 7,3:1</span><span class="">Sobre marca 5,7:1</span><span class="lg">Marca como titular 5,2:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="lavanda">Probar en una web</button><button class="btn" type="button" data-copy="lavanda">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-confianza">Confianza</h2>
+      <p>Azules y colores oscuros y estables, contraste claro y pocas sorpresas. Lo fiable es lo que no cambia y se entiende a la primera.</p>
+      <dl class="dials wide" aria-label="Receta de confianza"><div><dt>Tono</dt><dd>azules, grises, verdes oscuros</dd></div><div><dt>Luz</dt><dd>marca oscura sobre fondo claro</dd></div><div><dt>Saturación</dt><dd>media</dd></div><div><dt>Contraste</dt><dd>alto y ordenado</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-marino" style="--c1:#F7F5F0;--c2:#EAE6DD;--c3:#15213B;--c4:#1F3A66;--c5:#C39445;--on4:#FFFFFF;--on5:#15213B;--ff:&quot;Newsreader&quot;;--fw:400;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Tus cuentas, al día y sin sustos.</small><span class="btnx">Pedir cita</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F7F5F0"></i><i style="flex:20;background:#EAE6DD"></i><i style="flex:13;background:#1F3A66"></i><i style="flex:7;background:#C39445"></i><i style="flex:5;background:#15213B"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Marino y papel</h3>
+            <p class="pal-t">Autoridad, solvencia, trato humano.</p>
+            <ul class="cols" aria-label="Colores de Marino y papel"><li><i style="background:#F7F5F0"></i><b>Fondo</b><code>#F7F5F0</code><code class="ok">oklch(97.0% 0.007 89)</code><button type="button" class="cp" data-copyval="#F7F5F0" aria-label="Copiar #F7F5F0">Copiar</button></li><li><i style="background:#EAE6DD"></i><b>Superficie</b><code>#EAE6DD</code><code class="ok">oklch(92.6% 0.013 87)</code><button type="button" class="cp" data-copyval="#EAE6DD" aria-label="Copiar #EAE6DD">Copiar</button></li><li><i style="background:#15213B"></i><b>Texto</b><code>#15213B</code><code class="ok">oklch(25.1% 0.052 264)</code><button type="button" class="cp" data-copyval="#15213B" aria-label="Copiar #15213B">Copiar</button></li><li><i style="background:#1F3A66"></i><b>Marca</b><code>#1F3A66</code><code class="ok">oklch(35.1% 0.084 260)</code><button type="button" class="cp" data-copyval="#1F3A66" aria-label="Copiar #1F3A66">Copiar</button></li><li><i style="background:#C39445"></i><b>Acento</b><code>#C39445</code><code class="ok">oklch(69.6% 0.112 78)</code><button type="button" class="cp" data-copyval="#C39445" aria-label="Copiar #C39445">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El marino es azul oscurecido: el azul aporta calma y fiabilidad, y la oscuridad añade autoridad (uniformes, trajes, togas). Sobre blanco puro sería frío y burocrático; sobre papel cálido gana cercanía, como un documento bien impreso. El oro viejo es casi el complementario del marino (azul frente a naranja amarillento), pero apagado: no grita, sella, como un lacre o una firma.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El oro, solo en detalles (filetes, iconos, una cifra). En superficies grandes se vuelve mostaza y pierde la seriedad.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Asesoría y gestoría, abogados, notaría, seguros, consultoría.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Newsreader&quot;;font-weight:400;font-stretch:normal">Aa</span>Newsreader con Inter Tight para leer. Una serif de lectura transmite oficio y rigor sin parecer antigua.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 14,7:1</span><span class="">Texto sobre superficie 12,8:1</span><span class="">Botón 5,8:1</span><span class="">Sobre marca 11,3:1</span><span class="lg">Marca como titular 10,4:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="marino">Probar en una web</button><button class="btn" type="button" data-copy="marino">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-servicio" style="--c1:#F6F8FB;--c2:#E5EBF4;--c3:#0F1D33;--c4:#2452C9;--c5:#FFB547;--on4:#FFFFFF;--on5:#0F1D33;--ff:&quot;Inter Tight&quot;;--fw:700;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Facturas en dos minutos, también desde el móvil.</small><span class="btnx">Probar gratis</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F6F8FB"></i><i style="flex:20;background:#E5EBF4"></i><i style="flex:13;background:#2452C9"></i><i style="flex:7;background:#FFB547"></i><i style="flex:5;background:#0F1D33"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Azul servicio</h3>
+            <p class="pal-t">Eficacia, claridad, tecnología que funciona.</p>
+            <ul class="cols" aria-label="Colores de Azul servicio"><li><i style="background:#F6F8FB"></i><b>Fondo</b><code>#F6F8FB</code><code class="ok">oklch(97.8% 0.005 258)</code><button type="button" class="cp" data-copyval="#F6F8FB" aria-label="Copiar #F6F8FB">Copiar</button></li><li><i style="background:#E5EBF4"></i><b>Superficie</b><code>#E5EBF4</code><code class="ok">oklch(93.8% 0.014 258)</code><button type="button" class="cp" data-copyval="#E5EBF4" aria-label="Copiar #E5EBF4">Copiar</button></li><li><i style="background:#0F1D33"></i><b>Texto</b><code>#0F1D33</code><code class="ok">oklch(23.1% 0.047 259)</code><button type="button" class="cp" data-copyval="#0F1D33" aria-label="Copiar #0F1D33">Copiar</button></li><li><i style="background:#2452C9"></i><b>Marca</b><code>#2452C9</code><code class="ok">oklch(48.4% 0.192 264)</code><button type="button" class="cp" data-copyval="#2452C9" aria-label="Copiar #2452C9">Copiar</button></li><li><i style="background:#FFB547"></i><b>Acento</b><code>#FFB547</code><code class="ok">oklch(82.4% 0.149 73)</code><button type="button" class="cp" data-copyval="#FFB547" aria-label="Copiar #FFB547">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Un azul medio y bastante saturado es el color de la interfaz por excelencia (enlaces, botones, sistemas operativos), por eso se lee como «esto funciona». Los neutros son fríos, con un punto de azul, para que todo pertenezca a la misma familia. El ámbar es el complementario del azul y además es mucho más claro: salta por tono y por luz, perfecto para ofertas, avisos o una novedad.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Es la paleta más vista de internet: si la usas, el carácter tiene que venir de la tipografía, la imagen o el tono del texto.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>SaaS, banca online, telecomunicaciones, tienda online generalista.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Inter Tight&quot;;font-weight:700;font-stretch:normal">Aa</span>Inter Tight para todo. Una sola sans neutra en varios pesos: claridad de interfaz.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 15,9:1</span><span class="">Texto sobre superficie 14,1:1</span><span class="">Botón 9,6:1</span><span class="">Sobre marca 6,7:1</span><span class="lg">Marca como titular 6,3:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="servicio">Probar en una web</button><button class="btn" type="button" data-copy="servicio">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-acero" style="--c1:#F2F3F4;--c2:#E1E4E8;--c3:#14181D;--c4:#2A3949;--c5:#F2B705;--on4:#FFFFFF;--on5:#14181D;--ff:&quot;Archivo&quot;;--fw:800;--fs:125%">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Inyección de plástico técnico para la industria.</small><span class="btnx">Pedir presupuesto</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F2F3F4"></i><i style="flex:20;background:#E1E4E8"></i><i style="flex:13;background:#2A3949"></i><i style="flex:7;background:#F2B705"></i><i style="flex:5;background:#14181D"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Acero y señal</h3>
+            <p class="pal-t">Solidez industrial, precisión, seguridad.</p>
+            <ul class="cols" aria-label="Colores de Acero y señal"><li><i style="background:#F2F3F4"></i><b>Fondo</b><code>#F2F3F4</code><code class="ok">oklch(96.4% 0.002 248)</code><button type="button" class="cp" data-copyval="#F2F3F4" aria-label="Copiar #F2F3F4">Copiar</button></li><li><i style="background:#E1E4E8"></i><b>Superficie</b><code>#E1E4E8</code><code class="ok">oklch(91.8% 0.006 255)</code><button type="button" class="cp" data-copyval="#E1E4E8" aria-label="Copiar #E1E4E8">Copiar</button></li><li><i style="background:#14181D"></i><b>Texto</b><code>#14181D</code><code class="ok">oklch(20.7% 0.012 254)</code><button type="button" class="cp" data-copyval="#14181D" aria-label="Copiar #14181D">Copiar</button></li><li><i style="background:#2A3949"></i><b>Marca</b><code>#2A3949</code><code class="ok">oklch(33.8% 0.035 250)</code><button type="button" class="cp" data-copyval="#2A3949" aria-label="Copiar #2A3949">Copiar</button></li><li><i style="background:#F2B705"></i><b>Acento</b><code>#F2B705</code><code class="ok">oklch(81.1% 0.166 85)</code><button type="button" class="cp" data-copyval="#F2B705" aria-label="Copiar #F2B705">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Grises azulados como el acero y el hormigón: materiales de fábrica, sin adornos. El amarillo señal es literalmente el de la seguridad industrial (bandas de peligro, carretillas, cascos) y junto al acero oscuro forma el contraste de luz más fuerte que pueden dar dos colores: amarillo muy claro frente a gris azulado muy oscuro. Por eso se ve desde lejos y dice «atención» sin sonar a juguete.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Amarillo solo en el botón y en datos clave; en bandas grandes parece una obra o un taller de coches.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Industria y fábricas (plásticos, cerámica, metal), logística, maquinaria, B2B.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Archivo&quot;;font-weight:800;font-stretch:125%">Aa</span>Archivo ancha con Inter Tight para leer. Una grotesca ancha y pesada: estable como una máquina.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 16,0:1</span><span class="">Texto sobre superficie 14,0:1</span><span class="">Botón 9,8:1</span><span class="">Sobre marca 11,8:1</span><span class="lg">Marca como titular 10,6:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="acero">Probar en una web</button><button class="btn" type="button" data-copy="acero">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-energia">Energía</h2>
+      <p>Colores cálidos y saturados que avanzan hacia ti, contrastes fuertes y un fondo que deja respirar para que la energía no se convierta en ruido.</p>
+      <dl class="dials wide" aria-label="Receta de energía"><div><dt>Tono</dt><dd>rojos y naranjas</dd></div><div><dt>Luz</dt><dd>media</dd></div><div><dt>Saturación</dt><dd>alta</dd></div><div><dt>Contraste</dt><dd>fuerte, con un opuesto en pequeño</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-salida" style="--c1:#FFF7EF;--c2:#FFE6CF;--c3:#1B1714;--c4:#F2541B;--c5:#2433E0;--on4:#1B1714;--on5:#FFFFFF;--ff:&quot;Big Shoulders&quot;;--fw:800;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Entrena fuerte. Sal mejor.</small><span class="btnx">Primera clase gratis</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#FFF7EF"></i><i style="flex:20;background:#FFE6CF"></i><i style="flex:13;background:#F2541B"></i><i style="flex:7;background:#2433E0"></i><i style="flex:5;background:#1B1714"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Naranja de salida</h3>
+            <p class="pal-t">Energía, movimiento, entusiasmo.</p>
+            <ul class="cols" aria-label="Colores de Naranja de salida"><li><i style="background:#FFF7EF"></i><b>Fondo</b><code>#FFF7EF</code><code class="ok">oklch(98.0% 0.014 68)</code><button type="button" class="cp" data-copyval="#FFF7EF" aria-label="Copiar #FFF7EF">Copiar</button></li><li><i style="background:#FFE6CF"></i><b>Superficie</b><code>#FFE6CF</code><code class="ok">oklch(93.9% 0.041 65)</code><button type="button" class="cp" data-copyval="#FFE6CF" aria-label="Copiar #FFE6CF">Copiar</button></li><li><i style="background:#1B1714"></i><b>Texto</b><code>#1B1714</code><code class="ok">oklch(20.8% 0.009 59)</code><button type="button" class="cp" data-copyval="#1B1714" aria-label="Copiar #1B1714">Copiar</button></li><li><i style="background:#F2541B"></i><b>Marca</b><code>#F2541B</code><code class="ok">oklch(65.5% 0.204 38)</code><button type="button" class="cp" data-copyval="#F2541B" aria-label="Copiar #F2541B">Copiar</button></li><li><i style="background:#2433E0"></i><b>Acento</b><code>#2433E0</code><code class="ok">oklch(45.7% 0.252 268)</code><button type="button" class="cp" data-copyval="#2433E0" aria-label="Copiar #2433E0">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El naranja combina la urgencia del rojo y la alegría del amarillo, y es de los colores que más avanzan hacia ti. Para que no canse, el fondo es un blanco cálido muy luminoso y el naranja ocupa poco. El azul eléctrico es su complementario: juntos al máximo serían agotadores, pero aquí el azul aparece en pequeño (un dato, un icono, el botón) como una chispa.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Nunca pongas texto azul sobre naranja ni al revés: complementarios con luz parecida vibran.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Gimnasios, entrenadores personales, carreras populares, reparto a domicilio.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Big Shoulders&quot;;font-weight:800;font-stretch:normal">Aa</span>Big Shoulders con Inter Tight para leer. Una condensada pesada: impacto y ritmo, como un dorsal.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 16,8:1</span><span class="">Texto sobre superficie 14,8:1</span><span class="">Botón 8,0:1</span><span class="">Sobre marca 5,1:1</span><span class="lg">Marca como titular 3,3:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="salida">Probar en una web</button><button class="btn" type="button" data-copy="salida">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-carrera" style="--c1:#F2F1EE;--c2:#E2E0DB;--c3:#121212;--c4:#1C1C1C;--c5:#D41408;--on4:#FFFFFF;--on5:#FFFFFF;--ff:&quot;Archivo&quot;;--fw:850;--fs:75%">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Revisión, potencia y circuito.</small><span class="btnx">Reservar taller</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F2F1EE"></i><i style="flex:20;background:#E2E0DB"></i><i style="flex:13;background:#1C1C1C"></i><i style="flex:7;background:#D41408"></i><i style="flex:5;background:#121212"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Rojo carrera</h3>
+            <p class="pal-t">Velocidad, potencia, adrenalina.</p>
+            <ul class="cols" aria-label="Colores de Rojo carrera"><li><i style="background:#F2F1EE"></i><b>Fondo</b><code>#F2F1EE</code><code class="ok">oklch(95.8% 0.004 91)</code><button type="button" class="cp" data-copyval="#F2F1EE" aria-label="Copiar #F2F1EE">Copiar</button></li><li><i style="background:#E2E0DB"></i><b>Superficie</b><code>#E2E0DB</code><code class="ok">oklch(90.7% 0.007 89)</code><button type="button" class="cp" data-copyval="#E2E0DB" aria-label="Copiar #E2E0DB">Copiar</button></li><li><i style="background:#121212"></i><b>Texto</b><code>#121212</code><code class="ok">oklch(18.2% 0 0)</code><button type="button" class="cp" data-copyval="#121212" aria-label="Copiar #121212">Copiar</button></li><li><i style="background:#1C1C1C"></i><b>Marca</b><code>#1C1C1C</code><code class="ok">oklch(22.6% 0 0)</code><button type="button" class="cp" data-copyval="#1C1C1C" aria-label="Copiar #1C1C1C">Copiar</button></li><li><i style="background:#D41408"></i><b>Acento</b><code>#D41408</code><code class="ok">oklch(55.2% 0.219 30)</code><button type="button" class="cp" data-copyval="#D41408" aria-label="Copiar #D41408">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Rojo, negro y blanco tiza: el contraste máximo, la estética de las carreras y de los deportes de contacto. El rojo acelera el pulso (lo asociamos al fuego, a la sangre y a las señales de peligro), el negro asfalto le da peso y seriedad, y el blanco tiza es la pausa que evita que todo sea agresivo. Tres colores, cada uno con un trabajo claro.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Rojo sobre negro tiene poco contraste de luz y se lee mal: el texto sobre rojo va en blanco (5,4:1) y nunca al revés.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Talleres de motos, boxeo y artes marciales, eventos de motor, hamburgueserías.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Archivo&quot;;font-weight:850;font-stretch:75%">Aa</span>Archivo comprimida con Inter Tight para leer. Archivo comprimida y muy negra: velocidad, cartel de carrera.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 16,6:1</span><span class="">Texto sobre superficie 14,2:1</span><span class="">Botón 5,4:1</span><span class="">Sobre marca 17,0:1</span><span class="lg">Marca como titular 15,1:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="carrera">Probar en una web</button><button class="btn" type="button" data-copy="carrera">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-lujo">Lujo</h2>
+      <p>Oscuridad o marfil, muy pocos colores, saturación contenida y un brillo metálico en poca cantidad. El lujo no grita: se reconoce por lo que no tiene.</p>
+      <dl class="dials wide" aria-label="Receta de lujo"><div><dt>Tono</dt><dd>negro cálido, verdes y burdeos profundos, oro</dd></div><div><dt>Luz</dt><dd>muy baja o muy alta</dd></div><div><dt>Saturación</dt><dd>baja</dd></div><div><dt>Contraste</dt><dd>de luz, no de color</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-ebano" style="--c1:#12110F;--c2:#1F1C18;--c3:#EEE7DA;--c4:#4A1622;--c5:#C9A45E;--on4:#FFFFFF;--on5:#12110F;--ff:&quot;Bodoni Moda&quot;;--fw:500;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Joyas hechas una a una.</small><span class="btnx">Pedir cita privada</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#12110F"></i><i style="flex:20;background:#1F1C18"></i><i style="flex:13;background:#4A1622"></i><i style="flex:7;background:#C9A45E"></i><i style="flex:5;background:#EEE7DA"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Ébano y champán</h3>
+            <p class="pal-t">Lujo nocturno, exclusividad, celebración.</p>
+            <ul class="cols" aria-label="Colores de Ébano y champán"><li><i style="background:#12110F"></i><b>Fondo</b><code>#12110F</code><code class="ok">oklch(17.8% 0.004 85)</code><button type="button" class="cp" data-copyval="#12110F" aria-label="Copiar #12110F">Copiar</button></li><li><i style="background:#1F1C18"></i><b>Superficie</b><code>#1F1C18</code><code class="ok">oklch(22.8% 0.009 75)</code><button type="button" class="cp" data-copyval="#1F1C18" aria-label="Copiar #1F1C18">Copiar</button></li><li><i style="background:#EEE7DA"></i><b>Texto</b><code>#EEE7DA</code><code class="ok">oklch(93.0% 0.019 83)</code><button type="button" class="cp" data-copyval="#EEE7DA" aria-label="Copiar #EEE7DA">Copiar</button></li><li><i style="background:#4A1622"></i><b>Marca</b><code>#4A1622</code><code class="ok">oklch(28.8% 0.079 10)</code><button type="button" class="cp" data-copyval="#4A1622" aria-label="Copiar #4A1622">Copiar</button></li><li><i style="background:#C9A45E"></i><b>Acento</b><code>#C9A45E</code><code class="ok">oklch(73.7% 0.099 82)</code><button type="button" class="cp" data-copyval="#C9A45E" aria-label="Copiar #C9A45E">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El fondo casi negro (con un punto cálido: es un marrón muy oscuro, no el negro digital) funciona como el terciopelo de un joyero: todo lo que se pone encima parece más valioso. El oro champán es la luz: poca cantidad, mucho efecto. El burdeos profundo añade una tercera capa de riqueza (vino, terciopelo, teatro) sin romper la oscuridad, porque su luminosidad es casi tan baja como la del fondo.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Más oro del necesario y se vuelve hortera, de casino. Una línea, una cifra, un botón.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Joyería, coctelería, alta cocina, bodega premium, eventos.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Bodoni Moda&quot;;font-weight:500;font-stretch:normal">Aa</span>Bodoni Moda con Inter Tight para leer. La didona, con su contraste extremo de trazo, es el idioma del lujo y la moda.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 15,3:1</span><span class="">Texto sobre superficie 13,8:1</span><span class="">Botón 8,1:1</span><span class="">Sobre marca 14,7:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="ebano">Probar en una web</button><button class="btn" type="button" data-copy="ebano">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-marfil" style="--c1:#F5F0E6;--c2:#E9E1D2;--c3:#1B1E1A;--c4:#1F3B2D;--c5:#A9864F;--on4:#FFFFFF;--on5:#1B1E1A;--ff:&quot;Cormorant&quot;;--fw:500;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Un hotel de doce habitaciones entre olivos.</small><span class="btnx">Consultar fechas</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F5F0E6"></i><i style="flex:20;background:#E9E1D2"></i><i style="flex:13;background:#1F3B2D"></i><i style="flex:7;background:#A9864F"></i><i style="flex:5;background:#1B1E1A"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Marfil y verde inglés</h3>
+            <p class="pal-t">Lujo tranquilo, tradición, discreción.</p>
+            <ul class="cols" aria-label="Colores de Marfil y verde inglés"><li><i style="background:#F5F0E6"></i><b>Fondo</b><code>#F5F0E6</code><code class="ok">oklch(95.6% 0.014 85)</code><button type="button" class="cp" data-copyval="#F5F0E6" aria-label="Copiar #F5F0E6">Copiar</button></li><li><i style="background:#E9E1D2"></i><b>Superficie</b><code>#E9E1D2</code><code class="ok">oklch(91.2% 0.022 83)</code><button type="button" class="cp" data-copyval="#E9E1D2" aria-label="Copiar #E9E1D2">Copiar</button></li><li><i style="background:#1B1E1A"></i><b>Texto</b><code>#1B1E1A</code><code class="ok">oklch(23.0% 0.009 138)</code><button type="button" class="cp" data-copyval="#1B1E1A" aria-label="Copiar #1B1E1A">Copiar</button></li><li><i style="background:#1F3B2D"></i><b>Marca</b><code>#1F3B2D</code><code class="ok">oklch(32.5% 0.043 161)</code><button type="button" class="cp" data-copyval="#1F3B2D" aria-label="Copiar #1F3B2D">Copiar</button></li><li><i style="background:#A9864F"></i><b>Acento</b><code>#A9864F</code><code class="ok">oklch(64.1% 0.084 78)</code><button type="button" class="cp" data-copyval="#A9864F" aria-label="Copiar #A9864F">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El verde inglés, muy oscuro y apagado, es el color de los clubes, las bibliotecas y los coches clásicos británicos: dinero antiguo, nada de nuevo rico. El marfil es un blanco envejecido que suaviza y da calidez. El latón aporta el brillo, pero mate y apagado, como un herraje usado: lujo que no presume.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Con blanco puro en vez de marfil pierde toda la calidez y parece una gasolinera o un banco antiguo.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Hotel boutique, inmobiliaria de lujo, sastrería, golf, destilados.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Cormorant&quot;;font-weight:500;font-stretch:normal">Aa</span>Cormorant con Newsreader para leer. Una garalda elegante de proporciones clásicas: tradición culta.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 14,8:1</span><span class="">Texto sobre superficie 13,0:1</span><span class="">Botón 5,0:1</span><span class="">Sobre marca 12,2:1</span><span class="lg">Marca como titular 10,7:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="marfil">Probar en una web</button><button class="btn" type="button" data-copy="marfil">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <p class="statement">El lujo no se nota por lo que tiene, <em>sino por lo que le falta.</em></p>
+
+      <h2 id="e-naturaleza">Naturaleza</h2>
+      <p>Verdes y tierras apagados, como los pigmentos que salen de la tierra y las plantas. Si un verde parece de plástico, deja de ser natural.</p>
+      <dl class="dials wide" aria-label="Receta de naturaleza"><div><dt>Tono</dt><dd>verdes amarillentos, tierras, ocres</dd></div><div><dt>Luz</dt><dd>media</dd></div><div><dt>Saturación</dt><dd>baja o media</dd></div><div><dt>Contraste</dt><dd>de temperatura (verde frente a tierra)</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-olivar" style="--c1:#F3F1E6;--c2:#E4E0CB;--c3:#262A1D;--c4:#5E6A36;--c5:#A44F26;--on4:#FFFFFF;--on5:#FFFFFF;--ff:&quot;Fraunces&quot;;--fw:500;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Aceite de oliveras milenarias.</small><span class="btnx">Comprar aceite</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F3F1E6"></i><i style="flex:20;background:#E4E0CB"></i><i style="flex:13;background:#5E6A36"></i><i style="flex:7;background:#A44F26"></i><i style="flex:5;background:#262A1D"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Olivar</h3>
+            <p class="pal-t">Campo, tierra, producto auténtico.</p>
+            <ul class="cols" aria-label="Colores de Olivar"><li><i style="background:#F3F1E6"></i><b>Fondo</b><code>#F3F1E6</code><code class="ok">oklch(95.7% 0.015 98)</code><button type="button" class="cp" data-copyval="#F3F1E6" aria-label="Copiar #F3F1E6">Copiar</button></li><li><i style="background:#E4E0CB"></i><b>Superficie</b><code>#E4E0CB</code><code class="ok">oklch(90.4% 0.028 98)</code><button type="button" class="cp" data-copyval="#E4E0CB" aria-label="Copiar #E4E0CB">Copiar</button></li><li><i style="background:#262A1D"></i><b>Texto</b><code>#262A1D</code><code class="ok">oklch(27.7% 0.024 122)</code><button type="button" class="cp" data-copyval="#262A1D" aria-label="Copiar #262A1D">Copiar</button></li><li><i style="background:#5E6A36"></i><b>Marca</b><code>#5E6A36</code><code class="ok">oklch(50.1% 0.076 120)</code><button type="button" class="cp" data-copyval="#5E6A36" aria-label="Copiar #5E6A36">Copiar</button></li><li><i style="background:#A44F26"></i><b>Acento</b><code>#A44F26</code><code class="ok">oklch(52.7% 0.125 44)</code><button type="button" class="cp" data-copyval="#A44F26" aria-label="Copiar #A44F26">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El oliva es un verde amarillento y apagado: el de las hojas al sol y el del aceite. Como inclina hacia el amarillo es un verde cálido, y por eso se lleva bien con la terracota, el color del barro y de la tierra roja. Verde y rojo anaranjado son casi complementarios, pero los dos están apagados y a distinta luz, así que no vibran: parecen un campo en septiembre.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El verde oliva oscuro con texto negro encima no se lee: sobre él, siempre texto claro.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Almazaras y aceite, agroturismo, productos ecológicos, cocina de huerta.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Fraunces&quot;;font-weight:500;font-stretch:normal">Aa</span>Fraunces con Inter Tight para leer. Una serif con curvas blandas y algo de carácter, como hecha a mano.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 12,9:1</span><span class="">Texto sobre superficie 11,1:1</span><span class="">Botón 5,6:1</span><span class="">Sobre marca 5,8:1</span><span class="lg">Marca como titular 5,2:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="olivar">Probar en una web</button><button class="btn" type="button" data-copy="olivar">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-pinar" style="--c1:#EDF0EA;--c2:#D8DED3;--c3:#1A2620;--c4:#2C5A45;--c5:#D3A846;--on4:#FFFFFF;--on5:#1A2620;--ff:&quot;Zilla Slab&quot;;--fw:700;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Despierta con el monte a tus pies.</small><span class="btnx">Reservar estancia</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#EDF0EA"></i><i style="flex:20;background:#D8DED3"></i><i style="flex:13;background:#2C5A45"></i><i style="flex:7;background:#D3A846"></i><i style="flex:5;background:#1A2620"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Pinar</h3>
+            <p class="pal-t">Montaña, aire libre, aventura tranquila.</p>
+            <ul class="cols" aria-label="Colores de Pinar"><li><i style="background:#EDF0EA"></i><b>Fondo</b><code>#EDF0EA</code><code class="ok">oklch(95.1% 0.009 129)</code><button type="button" class="cp" data-copyval="#EDF0EA" aria-label="Copiar #EDF0EA">Copiar</button></li><li><i style="background:#D8DED3"></i><b>Superficie</b><code>#D8DED3</code><code class="ok">oklch(89.3% 0.016 130)</code><button type="button" class="cp" data-copyval="#D8DED3" aria-label="Copiar #D8DED3">Copiar</button></li><li><i style="background:#1A2620"></i><b>Texto</b><code>#1A2620</code><code class="ok">oklch(25.5% 0.020 163)</code><button type="button" class="cp" data-copyval="#1A2620" aria-label="Copiar #1A2620">Copiar</button></li><li><i style="background:#2C5A45"></i><b>Marca</b><code>#2C5A45</code><code class="ok">oklch(42.8% 0.062 162)</code><button type="button" class="cp" data-copyval="#2C5A45" aria-label="Copiar #2C5A45">Copiar</button></li><li><i style="background:#D3A846"></i><b>Acento</b><code>#D3A846</code><code class="ok">oklch(75.3% 0.125 85)</code><button type="button" class="cp" data-copyval="#D3A846" aria-label="Copiar #D3A846">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El verde pino es frío y profundo, el de los bosques de montaña. El fondo es un gris verdoso como la niebla o el liquen, de la misma familia pero muy claro, así que todo respira. El amarillo retama, la flor del monte, es la nota cálida: contrapunto de temperatura y de luz, como el sol entre los árboles.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El amarillo sobre el fondo claro no se lee: úsalo como fondo de botón con texto oscuro, nunca como color de texto.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Hotel rural, turismo activo, senderismo, camping, marcas de montaña.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Zilla Slab&quot;;font-weight:700;font-stretch:normal">Aa</span>Zilla Slab con Inter Tight para leer. Una slab robusta: madera, señalética de sendero, equipo que aguanta.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,6:1</span><span class="">Texto sobre superficie 11,4:1</span><span class="">Botón 7,0:1</span><span class="">Sobre marca 7,9:1</span><span class="lg">Marca como titular 6,9:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="pinar">Probar en una web</button><button class="btn" type="button" data-copy="pinar">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-vendimia" style="--c1:#F5EFE8;--c2:#E8DCCE;--c3:#2A1A1F;--c4:#5A1E2C;--c5:#97A25A;--on4:#FFFFFF;--on5:#2A1A1F;--ff:&quot;Cormorant&quot;;--fw:500;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Vinos de altura, hechos sin prisa.</small><span class="btnx">Reservar cata</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F5EFE8"></i><i style="flex:20;background:#E8DCCE"></i><i style="flex:13;background:#5A1E2C"></i><i style="flex:7;background:#97A25A"></i><i style="flex:5;background:#2A1A1F"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Vendimia</h3>
+            <p class="pal-t">Tradición, cosecha, sobremesa larga.</p>
+            <ul class="cols" aria-label="Colores de Vendimia"><li><i style="background:#F5EFE8"></i><b>Fondo</b><code>#F5EFE8</code><code class="ok">oklch(95.5% 0.011 72)</code><button type="button" class="cp" data-copyval="#F5EFE8" aria-label="Copiar #F5EFE8">Copiar</button></li><li><i style="background:#E8DCCE"></i><b>Superficie</b><code>#E8DCCE</code><code class="ok">oklch(90.0% 0.023 72)</code><button type="button" class="cp" data-copyval="#E8DCCE" aria-label="Copiar #E8DCCE">Copiar</button></li><li><i style="background:#2A1A1F"></i><b>Texto</b><code>#2A1A1F</code><code class="ok">oklch(24.0% 0.027 359)</code><button type="button" class="cp" data-copyval="#2A1A1F" aria-label="Copiar #2A1A1F">Copiar</button></li><li><i style="background:#5A1E2C"></i><b>Marca</b><code>#5A1E2C</code><code class="ok">oklch(33.2% 0.089 9)</code><button type="button" class="cp" data-copyval="#5A1E2C" aria-label="Copiar #5A1E2C">Copiar</button></li><li><i style="background:#97A25A"></i><b>Acento</b><code>#97A25A</code><code class="ok">oklch(68.7% 0.097 116)</code><button type="button" class="cp" data-copyval="#97A25A" aria-label="Copiar #97A25A">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El burdeos es el color del vino tinto: así de oscuro ya no es rojo de alarma, es profundidad y tiempo. El verde de hoja de parra es su complementario, pero más claro y apagado: la oposición de tono da vida y la diferencia de luz evita la vibración de rojo y verde. Los neutros son tierra y piedra, como una bodega excavada.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El verde parra, solo en detalles: en grande, junto al burdeos, recuerda a la Navidad.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Bodegas, enoturismo, restaurante tradicional, embutidos y quesos.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Cormorant&quot;;font-weight:500;font-stretch:normal">Aa</span>Cormorant con Inter Tight para leer. Serif clásica y fina, como una etiqueta de vino de toda la vida.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 14,5:1</span><span class="">Texto sobre superficie 12,3:1</span><span class="">Botón 6,0:1</span><span class="">Sobre marca 12,7:1</span><span class="lg">Marca como titular 11,1:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="vendimia">Probar en una web</button><button class="btn" type="button" data-copy="vendimia">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-calidez">Calidez y cercanía</h2>
+      <p>Paletas análogas en la zona cálida del círculo, neutros crema y texto marrón en lugar de negro. Es la luz de una cocina por la tarde.</p>
+      <dl class="dials wide" aria-label="Receta de calidez y cercanía"><div><dt>Tono</dt><dd>rojos, naranjas, amarillos</dd></div><div><dt>Luz</dt><dd>media y clara</dd></div><div><dt>Saturación</dt><dd>media</dd></div><div><dt>Contraste</dt><dd>suave, salvo el acento</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-sobremesa" style="--c1:#F2EADB;--c2:#E6D9C3;--c3:#2A211B;--c4:#7A4A2E;--c5:#B8501F;--on4:#FFFFFF;--on5:#FFFFFF;--ff:&quot;Instrument Serif&quot;;--fw:400;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>El café de siempre, tostado cada martes.</small><span class="btnx">Ver la carta</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F2EADB"></i><i style="flex:20;background:#E6D9C3"></i><i style="flex:13;background:#7A4A2E"></i><i style="flex:7;background:#B8501F"></i><i style="flex:5;background:#2A211B"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Sobremesa</h3>
+            <p class="pal-t">Cercanía, hogar, conversación.</p>
+            <ul class="cols" aria-label="Colores de Sobremesa"><li><i style="background:#F2EADB"></i><b>Fondo</b><code>#F2EADB</code><code class="ok">oklch(93.9% 0.022 83)</code><button type="button" class="cp" data-copyval="#F2EADB" aria-label="Copiar #F2EADB">Copiar</button></li><li><i style="background:#E6D9C3"></i><b>Superficie</b><code>#E6D9C3</code><code class="ok">oklch(89.0% 0.033 81)</code><button type="button" class="cp" data-copyval="#E6D9C3" aria-label="Copiar #E6D9C3">Copiar</button></li><li><i style="background:#2A211B"></i><b>Texto</b><code>#2A211B</code><code class="ok">oklch(25.6% 0.018 55)</code><button type="button" class="cp" data-copyval="#2A211B" aria-label="Copiar #2A211B">Copiar</button></li><li><i style="background:#7A4A2E"></i><b>Marca</b><code>#7A4A2E</code><code class="ok">oklch(45.8% 0.077 50)</code><button type="button" class="cp" data-copyval="#7A4A2E" aria-label="Copiar #7A4A2E">Copiar</button></li><li><i style="background:#B8501F"></i><b>Acento</b><code>#B8501F</code><code class="ok">oklch(55.8% 0.148 43)</code><button type="button" class="cp" data-copyval="#B8501F" aria-label="Copiar #B8501F">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Toda la paleta es cálida: crema, marrón tostado y naranja quemado salen de la misma zona del círculo y solo cambian de luz y de saturación. Es una paleta análoga, por eso se siente coherente y acogedora, como una cocina con luz de tarde. El naranja es el único color vivo; todo lo demás está apagado para que él mande.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Con texto negro puro, la calidez se rompe: usa siempre la tinta marrón muy oscura.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Cafeterías, panaderías, restaurantes de barrio, SaaS que quiere sonar humano.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Instrument Serif&quot;;font-weight:400;font-stretch:normal">Aa</span>Instrument Serif con Inter Tight para leer. Una serif editorial con cursiva preciosa: conversación, no folleto.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,2:1</span><span class="">Texto sobre superficie 11,3:1</span><span class="">Botón 5,0:1</span><span class="">Sobre marca 7,4:1</span><span class="lg">Marca como titular 6,2:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="sobremesa">Probar en una web</button><button class="btn" type="button" data-copy="sobremesa">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-barro" style="--c1:#FBF4E9;--c2:#F2E3CC;--c3:#3A2517;--c4:#A9502C;--c5:#E5A43A;--on4:#FFFFFF;--on5:#3A2517;--ff:&quot;Bricolage&quot;;--fw:700;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Cerámica torneada en el taller de casa.</small><span class="btnx">Ver la tienda</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#FBF4E9"></i><i style="flex:20;background:#F2E3CC"></i><i style="flex:13;background:#A9502C"></i><i style="flex:7;background:#E5A43A"></i><i style="flex:5;background:#3A2517"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Barro y miel</h3>
+            <p class="pal-t">Artesanía, mano, sabor.</p>
+            <ul class="cols" aria-label="Colores de Barro y miel"><li><i style="background:#FBF4E9"></i><b>Fondo</b><code>#FBF4E9</code><code class="ok">oklch(97.0% 0.016 79)</code><button type="button" class="cp" data-copyval="#FBF4E9" aria-label="Copiar #FBF4E9">Copiar</button></li><li><i style="background:#F2E3CC"></i><b>Superficie</b><code>#F2E3CC</code><code class="ok">oklch(92.2% 0.035 79)</code><button type="button" class="cp" data-copyval="#F2E3CC" aria-label="Copiar #F2E3CC">Copiar</button></li><li><i style="background:#3A2517"></i><b>Texto</b><code>#3A2517</code><code class="ok">oklch(28.7% 0.040 54)</code><button type="button" class="cp" data-copyval="#3A2517" aria-label="Copiar #3A2517">Copiar</button></li><li><i style="background:#A9502C"></i><b>Marca</b><code>#A9502C</code><code class="ok">oklch(53.6% 0.127 42)</code><button type="button" class="cp" data-copyval="#A9502C" aria-label="Copiar #A9502C">Copiar</button></li><li><i style="background:#E5A43A"></i><b>Acento</b><code>#E5A43A</code><code class="ok">oklch(76.3% 0.140 75)</code><button type="button" class="cp" data-copyval="#E5A43A" aria-label="Copiar #E5A43A">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>La terracota es el color del barro cocido: cerámica, tejas, cántaros. La asociamos al trabajo manual y al Mediterráneo. La miel es su vecina en el círculo (análoga) pero mucho más clara, por eso dulcifica sin desentonar. Y el texto es marrón chocolate en vez de negro, para que no haya nada frío en toda la página.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Todo cálido puede empalagar: deja respirar con mucho fondo claro y fotos con algo de verde o azul.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Cerámica artesana, producto local, cocina de mercado, pastelería.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Bricolage&quot;;font-weight:700;font-stretch:normal">Aa</span>Bricolage con Newsreader para leer. Una grotesca con carácter, algo irregular, como una pieza hecha a mano.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,2:1</span><span class="">Texto sobre superficie 11,4:1</span><span class="">Botón 6,7:1</span><span class="">Sobre marca 5,4:1</span><span class="lg">Marca como titular 5,0:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="barro">Probar en una web</button><button class="btn" type="button" data-copy="barro">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Las paletas cálidas y claras sufren con el modo nocturno del teléfono (el filtro de luz azul, que amarillea toda la pantalla): la crema se vuelve más amarilla y el naranja se acerca al marrón. Revisa que el acento siga separándose del fondo con ese filtro activado; si no, oscurécelo un punto.</p>
+      </div>
+
+      <h2 id="e-frescura">Frescura y juventud</h2>
+      <p>Colores claros y limpios, algún frío luminoso y combinaciones casi complementarias usadas con desenfado sobre fondos muy blancos.</p>
+      <dl class="dials wide" aria-label="Receta de frescura y juventud"><div><dt>Tono</dt><dd>menta, lila, lima, coral</dd></div><div><dt>Luz</dt><dd>alta</dd></div><div><dt>Saturación</dt><dd>media o alta</dd></div><div><dt>Contraste</dt><dd>de tono, con mucho blanco</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-menta" style="--c1:#F3FBF7;--c2:#DBF2E8;--c3:#10302A;--c4:#2FB58F;--c5:#FF6A55;--on4:#10302A;--on5:#10302A;--ff:&quot;Unbounded&quot;;--fw:700;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Helado de fruta de verdad, sin trampas.</small><span class="btnx">Ver sabores</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F3FBF7"></i><i style="flex:20;background:#DBF2E8"></i><i style="flex:13;background:#2FB58F"></i><i style="flex:7;background:#FF6A55"></i><i style="flex:5;background:#10302A"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Menta y coral</h3>
+            <p class="pal-t">Frescor, verano, desenfado.</p>
+            <ul class="cols" aria-label="Colores de Menta y coral"><li><i style="background:#F3FBF7"></i><b>Fondo</b><code>#F3FBF7</code><code class="ok">oklch(98.1% 0.010 165)</code><button type="button" class="cp" data-copyval="#F3FBF7" aria-label="Copiar #F3FBF7">Copiar</button></li><li><i style="background:#DBF2E8"></i><b>Superficie</b><code>#DBF2E8</code><code class="ok">oklch(94.2% 0.028 168)</code><button type="button" class="cp" data-copyval="#DBF2E8" aria-label="Copiar #DBF2E8">Copiar</button></li><li><i style="background:#10302A"></i><b>Texto</b><code>#10302A</code><code class="ok">oklch(28.3% 0.039 179)</code><button type="button" class="cp" data-copyval="#10302A" aria-label="Copiar #10302A">Copiar</button></li><li><i style="background:#2FB58F"></i><b>Marca</b><code>#2FB58F</code><code class="ok">oklch(69.3% 0.126 169)</code><button type="button" class="cp" data-copyval="#2FB58F" aria-label="Copiar #2FB58F">Copiar</button></li><li><i style="background:#FF6A55"></i><b>Acento</b><code>#FF6A55</code><code class="ok">oklch(70.7% 0.186 30)</code><button type="button" class="cp" data-copyval="#FF6A55" aria-label="Copiar #FF6A55">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>La menta es un verde azulado claro: fría (agua, hielo, hierbabuena) y luminosa (juventud). El coral está justo enfrente en el círculo, un rojo anaranjado rebajado con blanco. Son complementarios, pero el coral es claro y alegre, no un rojo agresivo, y el fondo es casi blanco: la oposición se lee como juego, no como pelea.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Coral sobre menta (y al revés) se lee fatal: el texto siempre en la tinta verde oscura.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Heladerías, zumos y bebidas, apps jóvenes, moda de baño.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Unbounded&quot;;font-weight:700;font-stretch:normal">Aa</span>Unbounded con Inter Tight para leer. Una display ancha y redondeada: joven, simpática, de etiqueta de bebida.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,5:1</span><span class="">Texto sobre superficie 12,1:1</span><span class="">Botón 5,0:1</span><span class="">Sobre marca 5,5:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="menta">Probar en una web</button><button class="btn" type="button" data-copy="menta">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-lima" style="--c1:#FAFAF5;--c2:#ECEDE1;--c3:#1D1A2C;--c4:#B6A3FF;--c5:#CDF25B;--on4:#1D1A2C;--on5:#1D1A2C;--ff:&quot;Syne&quot;;--fw:800;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Planes con tus amigos, sin grupos infinitos.</small><span class="btnx">Descargar la app</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#FAFAF5"></i><i style="flex:20;background:#ECEDE1"></i><i style="flex:13;background:#B6A3FF"></i><i style="flex:7;background:#CDF25B"></i><i style="flex:5;background:#1D1A2C"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Lima y lila</h3>
+            <p class="pal-t">Juventud, tecnología desenfadada, novedad.</p>
+            <ul class="cols" aria-label="Colores de Lima y lila"><li><i style="background:#FAFAF5"></i><b>Fondo</b><code>#FAFAF5</code><code class="ok">oklch(98.4% 0.007 107)</code><button type="button" class="cp" data-copyval="#FAFAF5" aria-label="Copiar #FAFAF5">Copiar</button></li><li><i style="background:#ECEDE1"></i><b>Superficie</b><code>#ECEDE1</code><code class="ok">oklch(94.2% 0.016 111)</code><button type="button" class="cp" data-copyval="#ECEDE1" aria-label="Copiar #ECEDE1">Copiar</button></li><li><i style="background:#1D1A2C"></i><b>Texto</b><code>#1D1A2C</code><code class="ok">oklch(23.0% 0.035 291)</code><button type="button" class="cp" data-copyval="#1D1A2C" aria-label="Copiar #1D1A2C">Copiar</button></li><li><i style="background:#B6A3FF"></i><b>Marca</b><code>#B6A3FF</code><code class="ok">oklch(76.7% 0.130 293)</code><button type="button" class="cp" data-copyval="#B6A3FF" aria-label="Copiar #B6A3FF">Copiar</button></li><li><i style="background:#CDF25B"></i><b>Acento</b><code>#CDF25B</code><code class="ok">oklch(90.6% 0.179 122)</code><button type="button" class="cp" data-copyval="#CDF25B" aria-label="Copiar #CDF25B">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Dos colores que la cultura digital ha hecho suyos: el lila claro, suave y algo onírico, y la lima ácida, eléctrica y nueva. Son casi complementarios (violeta frente a amarillo verdoso) y los dos son muy claros, así que conviven como dos pegatinas sobre papel. La tinta violeta muy oscura, en vez de negro, ata la paleta al lila.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Está muy de moda y envejecerá rápido. Úsala con marcas que puedan cambiar de piel en tres años.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Startups, apps de consumo, bebidas, eventos universitarios, agencias jóvenes.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Syne&quot;;font-weight:800;font-stretch:normal">Aa</span>Syne con Inter Tight para leer. Una display con formas raras y anchas: creativa y de su tiempo.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 16,2:1</span><span class="">Texto sobre superficie 14,4:1</span><span class="">Botón 13,3:1</span><span class="">Sobre marca 7,8:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="lima">Probar en una web</button><button class="btn" type="button" data-copy="lima">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-nostalgia">Nostalgia y retro</h2>
+      <p>Colores ligeramente apagados y desplazados, como desvaídos por el sol o impresos con tintas antiguas, sobre fondos amarillentos.</p>
+      <dl class="dials wide" aria-label="Receta de nostalgia y retro"><div><dt>Tono</dt><dd>naranja óxido, mostaza, petróleo, cobalto</dd></div><div><dt>Luz</dt><dd>media</dd></div><div><dt>Saturación</dt><dd>media rebajada</dd></div><div><dt>Contraste</dt><dd>cálido con un frío de contrapunto</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-cartel" style="--c1:#F1E4CC;--c2:#E5D0AA;--c3:#2E2117;--c4:#B9532B;--c5:#2F6F69;--on4:#FFFFFF;--on5:#FFFFFF;--ff:&quot;Fraunces&quot;;--fw:900;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Cerveza artesana, como antes.</small><span class="btnx">Visitar la fábrica</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F1E4CC"></i><i style="flex:20;background:#E5D0AA"></i><i style="flex:13;background:#B9532B"></i><i style="flex:7;background:#2F6F69"></i><i style="flex:5;background:#2E2117"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Cartel de los 70</h3>
+            <p class="pal-t">Calidez retro, carretera, vinilo.</p>
+            <ul class="cols" aria-label="Colores de Cartel de los 70"><li><i style="background:#F1E4CC"></i><b>Fondo</b><code>#F1E4CC</code><code class="ok">oklch(92.3% 0.035 83)</code><button type="button" class="cp" data-copyval="#F1E4CC" aria-label="Copiar #F1E4CC">Copiar</button></li><li><i style="background:#E5D0AA"></i><b>Superficie</b><code>#E5D0AA</code><code class="ok">oklch(86.5% 0.055 82)</code><button type="button" class="cp" data-copyval="#E5D0AA" aria-label="Copiar #E5D0AA">Copiar</button></li><li><i style="background:#2E2117"></i><b>Texto</b><code>#2E2117</code><code class="ok">oklch(26.0% 0.027 59)</code><button type="button" class="cp" data-copyval="#2E2117" aria-label="Copiar #2E2117">Copiar</button></li><li><i style="background:#B9532B"></i><b>Marca</b><code>#B9532B</code><code class="ok">oklch(56.5% 0.143 41)</code><button type="button" class="cp" data-copyval="#B9532B" aria-label="Copiar #B9532B">Copiar</button></li><li><i style="background:#2F6F69"></i><b>Acento</b><code>#2F6F69</code><code class="ok">oklch(49.8% 0.066 187)</code><button type="button" class="cp" data-copyval="#2F6F69" aria-label="Copiar #2F6F69">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Son los colores de los pigmentos y las tintas de la época (naranja óxido, mostaza, verde petróleo), todos algo apagados, como desvaídos por el sol: ese apagado es lo que el ojo lee como «antiguo». El papel amarillento refuerza la idea de impreso viejo. El verde petróleo es el contrapunto frío del naranja y evita que todo se funda en marrón.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Sin el color frío la paleta parece sucia; sin contraste de luz, borrosa.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Cervecería artesana, barbería, tienda de vinilos y vintage, food truck.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Fraunces&quot;;font-weight:900;font-stretch:normal">Aa</span>Fraunces Black con Jost para leer. Fraunces en su peso más negro recuerda a las tipografías gordas y blandas de los setenta.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 12,4:1</span><span class="">Texto sobre superficie 10,3:1</span><span class="">Botón 5,8:1</span><span class="">Sobre marca 4,8:1</span><span class="lg">Marca como titular 3,9:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="cartel">Probar en una web</button><button class="btn" type="button" data-copy="cartel">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-azulejo" style="--c1:#F6F3EC;--c2:#E3EAF1;--c3:#10284A;--c4:#1E4F9C;--c5:#E2A72E;--on4:#FFFFFF;--on5:#10284A;--ff:&quot;Newsreader&quot;;--fw:400;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Arroces a leña desde 1952.</small><span class="btnx">Reservar mesa</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F6F3EC"></i><i style="flex:20;background:#E3EAF1"></i><i style="flex:13;background:#1E4F9C"></i><i style="flex:7;background:#E2A72E"></i><i style="flex:5;background:#10284A"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Azulejo</h3>
+            <p class="pal-t">Mediterráneo, tradición, casa de pueblo.</p>
+            <ul class="cols" aria-label="Colores de Azulejo"><li><i style="background:#F6F3EC"></i><b>Fondo</b><code>#F6F3EC</code><code class="ok">oklch(96.5% 0.010 87)</code><button type="button" class="cp" data-copyval="#F6F3EC" aria-label="Copiar #F6F3EC">Copiar</button></li><li><i style="background:#E3EAF1"></i><b>Superficie</b><code>#E3EAF1</code><code class="ok">oklch(93.4% 0.012 248)</code><button type="button" class="cp" data-copyval="#E3EAF1" aria-label="Copiar #E3EAF1">Copiar</button></li><li><i style="background:#10284A"></i><b>Texto</b><code>#10284A</code><code class="ok">oklch(27.8% 0.070 258)</code><button type="button" class="cp" data-copyval="#10284A" aria-label="Copiar #10284A">Copiar</button></li><li><i style="background:#1E4F9C"></i><b>Marca</b><code>#1E4F9C</code><code class="ok">oklch(44.0% 0.136 259)</code><button type="button" class="cp" data-copyval="#1E4F9C" aria-label="Copiar #1E4F9C">Copiar</button></li><li><i style="background:#E2A72E"></i><b>Acento</b><code>#E2A72E</code><code class="ok">oklch(76.5% 0.145 80)</code><button type="button" class="cp" data-copyval="#E2A72E" aria-label="Copiar #E2A72E">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El azul cobalto sobre blanco es el de la cerámica y el azulejo de toda la vida, el de las cocinas de nuestras abuelas y las fábricas de Onda y Manises. El amarillo es el otro gran color de la cerámica popular y casi el complementario del azul: juntos dan esa alegría de la vajilla pintada a mano. El fondo es un blanco esmaltado, no puro, con un punto de calidez.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El amarillo tiene que ser ocre y algo apagado; un amarillo limón lo convierte en marca de supermercado.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Restaurante de arroces, tienda de cerámica, hostal de pueblo, conservas gourmet.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Newsreader&quot;;font-weight:400;font-stretch:normal">Aa</span>Newsreader con Inter Tight para leer. Una serif de lectura con aire de rótulo antiguo pintado.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,3:1</span><span class="">Texto sobre superficie 12,2:1</span><span class="">Botón 6,9:1</span><span class="">Sobre marca 7,9:1</span><span class="lg">Marca como titular 7,1:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="azulejo">Probar en una web</button><button class="btn" type="button" data-copy="azulejo">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-polaroid" style="--c1:#F3EEE5;--c2:#E5DDCF;--c3:#2B2A33;--c4:#557891;--c5:#DE8C6B;--on4:#FFFFFF;--on5:#2B2A33;--ff:&quot;Instrument Serif&quot;;--fw:400;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Bodas contadas como un álbum de familia.</small><span class="btnx">Consultar fecha</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F3EEE5"></i><i style="flex:20;background:#E5DDCF"></i><i style="flex:13;background:#557891"></i><i style="flex:7;background:#DE8C6B"></i><i style="flex:5;background:#2B2A33"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Polaroid</h3>
+            <p class="pal-t">Recuerdo, ternura, verano de hace años.</p>
+            <ul class="cols" aria-label="Colores de Polaroid"><li><i style="background:#F3EEE5"></i><b>Fondo</b><code>#F3EEE5</code><code class="ok">oklch(95.1% 0.013 82)</code><button type="button" class="cp" data-copyval="#F3EEE5" aria-label="Copiar #F3EEE5">Copiar</button></li><li><i style="background:#E5DDCF"></i><b>Superficie</b><code>#E5DDCF</code><code class="ok">oklch(90.0% 0.021 82)</code><button type="button" class="cp" data-copyval="#E5DDCF" aria-label="Copiar #E5DDCF">Copiar</button></li><li><i style="background:#2B2A33"></i><b>Texto</b><code>#2B2A33</code><code class="ok">oklch(29.0% 0.016 290)</code><button type="button" class="cp" data-copyval="#2B2A33" aria-label="Copiar #2B2A33">Copiar</button></li><li><i style="background:#557891"></i><b>Marca</b><code>#557891</code><code class="ok">oklch(55.6% 0.056 240)</code><button type="button" class="cp" data-copyval="#557891" aria-label="Copiar #557891">Copiar</button></li><li><i style="background:#DE8C6B"></i><b>Acento</b><code>#DE8C6B</code><code class="ok">oklch(71.7% 0.111 43)</code><button type="button" class="cp" data-copyval="#DE8C6B" aria-label="Copiar #DE8C6B">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Imita una foto antigua: los colores se apagan y se desplazan (los azules se vuelven grisáceos, los rojos se vuelven melocotón) y todo queda bajo un velo crema. El azul desvaído y el melocotón son casi complementarios, pero los dos están rebajados al mismo nivel suave, por eso se acompañan sin chocar.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Como todo es suave, el texto necesita la tinta oscura de verdad o la web se lee como una foto movida.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Fotografía de bodas, brunch, papelería, floristería.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Instrument Serif&quot;;font-weight:400;font-stretch:normal">Aa</span>Instrument Serif con Inter Tight para leer. Serif editorial suave; si quieres un toque personal, Caveat solo en una nota manuscrita.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 12,3:1</span><span class="">Texto sobre superficie 10,5:1</span><span class="">Botón 5,5:1</span><span class="">Sobre marca 4,7:1</span><span class="lg">Marca como titular 4,0:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="polaroid">Probar en una web</button><button class="btn" type="button" data-copy="polaroid">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-oscura">Sofisticación oscura</h2>
+      <p>Fondos casi negros con un punto de color, texto crema y un único acento cálido que parece luz. Exclusivo, nocturno, pensado.</p>
+      <dl class="dials wide" aria-label="Receta de sofisticación oscura"><div><dt>Tono</dt><dd>negros tintados, violetas, carbón</dd></div><div><dt>Luz</dt><dd>muy baja</dd></div><div><dt>Saturación</dt><dd>baja en la base, media en el acento</dd></div><div><dt>Contraste</dt><dd>de luz</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-horaazul" style="--c1:#16122A;--c2:#231D3C;--c3:#F3ECDF;--c4:#4A3C78;--c5:#F0B664;--on4:#FFFFFF;--on5:#16122A;--ff:&quot;Instrument Serif&quot;;--fw:400;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Treinta plantas sobre el Mediterráneo.</small><span class="btnx">Agendar visita</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#16122A"></i><i style="flex:20;background:#231D3C"></i><i style="flex:13;background:#4A3C78"></i><i style="flex:7;background:#F0B664"></i><i style="flex:5;background:#F3ECDF"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Hora azul</h3>
+            <p class="pal-t">Sofisticación nocturna, misterio, deseo.</p>
+            <ul class="cols" aria-label="Colores de Hora azul"><li><i style="background:#16122A"></i><b>Fondo</b><code>#16122A</code><code class="ok">oklch(20.1% 0.047 289)</code><button type="button" class="cp" data-copyval="#16122A" aria-label="Copiar #16122A">Copiar</button></li><li><i style="background:#231D3C"></i><b>Superficie</b><code>#231D3C</code><code class="ok">oklch(25.5% 0.057 291)</code><button type="button" class="cp" data-copyval="#231D3C" aria-label="Copiar #231D3C">Copiar</button></li><li><i style="background:#F3ECDF"></i><b>Texto</b><code>#F3ECDF</code><code class="ok">oklch(94.5% 0.019 83)</code><button type="button" class="cp" data-copyval="#F3ECDF" aria-label="Copiar #F3ECDF">Copiar</button></li><li><i style="background:#4A3C78"></i><b>Marca</b><code>#4A3C78</code><code class="ok">oklch(40.1% 0.099 292)</code><button type="button" class="cp" data-copyval="#4A3C78" aria-label="Copiar #4A3C78">Copiar</button></li><li><i style="background:#F0B664"></i><b>Acento</b><code>#F0B664</code><code class="ok">oklch(81.3% 0.120 74)</code><button type="button" class="cp" data-copyval="#F0B664" aria-label="Copiar #F0B664">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Violeta muy oscuro: el cielo justo después del atardecer. Lo oscuro da exclusividad y el violeta añade misterio y algo de lujo (durante siglos fue el tinte más caro). El ámbar es la luz de una ventana encendida: complementario cálido y muy claro, así que destaca con muy poca superficie. El texto crema, no blanco, continúa esa luz cálida.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>En oscuro las letras finas se rompen: el texto de lectura, un punto más grueso y con más interlineado.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Inmobiliaria de lujo, hotel urbano, coctelería, arquitectura, eventos nocturnos.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Instrument Serif&quot;;font-weight:400;font-stretch:normal">Aa</span>Instrument Serif con Inter Tight para leer. Serif editorial grande y fina: elegancia de revista de arquitectura.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 15,5:1</span><span class="">Texto sobre superficie 13,6:1</span><span class="">Botón 10,0:1</span><span class="">Sobre marca 9,5:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="horaazul">Probar en una web</button><button class="btn" type="button" data-copy="horaazul">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-cobre" style="--c1:#151515;--c2:#232221;--c3:#ECE9E3;--c4:#3A3532;--c5:#C47A4C;--on4:#FFFFFF;--on5:#151515;--ff:&quot;Archivo&quot;;--fw:800;--fs:125%">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Espacios que se tocan.</small><span class="btnx">Ver proyectos</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#151515"></i><i style="flex:20;background:#232221"></i><i style="flex:13;background:#3A3532"></i><i style="flex:7;background:#C47A4C"></i><i style="flex:5;background:#ECE9E3"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Carbón y cobre</h3>
+            <p class="pal-t">Diseño, materia, sobriedad cara.</p>
+            <ul class="cols" aria-label="Colores de Carbón y cobre"><li><i style="background:#151515"></i><b>Fondo</b><code>#151515</code><code class="ok">oklch(19.6% 0 0)</code><button type="button" class="cp" data-copyval="#151515" aria-label="Copiar #151515">Copiar</button></li><li><i style="background:#232221"></i><b>Superficie</b><code>#232221</code><code class="ok">oklch(25.3% 0.002 68)</code><button type="button" class="cp" data-copyval="#232221" aria-label="Copiar #232221">Copiar</button></li><li><i style="background:#ECE9E3"></i><b>Texto</b><code>#ECE9E3</code><code class="ok">oklch(93.5% 0.009 85)</code><button type="button" class="cp" data-copyval="#ECE9E3" aria-label="Copiar #ECE9E3">Copiar</button></li><li><i style="background:#3A3532"></i><b>Marca</b><code>#3A3532</code><code class="ok">oklch(33.3% 0.009 53)</code><button type="button" class="cp" data-copyval="#3A3532" aria-label="Copiar #3A3532">Copiar</button></li><li><i style="background:#C47A4C"></i><b>Acento</b><code>#C47A4C</code><code class="ok">oklch(64.9% 0.111 52)</code><button type="button" class="cp" data-copyval="#C47A4C" aria-label="Copiar #C47A4C">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Grises carbón con un punto cálido (no grises de ordenador), como el acero pavonado o la pizarra. El cobre es un naranja apagado y metálico: aporta la única temperatura de la paleta y suena a material noble trabajado a mano. Al haber un solo color, todo lo que lleva cobre se vuelve importante.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El cobre como texto pequeño sobre carbón se queda justo; para leer, el crema.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Estudio de arquitectura e interiorismo, restaurante de autor, relojería, cocinas a medida.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Archivo&quot;;font-weight:800;font-stretch:125%">Aa</span>Archivo ancha con Inter Tight para leer. Una grotesca ancha: arquitectura, planos, rotulación precisa.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 15,1:1</span><span class="">Texto sobre superficie 13,1:1</span><span class="">Botón 5,4:1</span><span class="">Sobre marca 12,1:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="cobre">Probar en una web</button><button class="btn" type="button" data-copy="cobre">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En pantallas OLED (la mayoría de móviles de gama media y alta), los fondos oscuros de estas paletas ahorran batería y se ven profundísimos, pero el negro absoluto <code>#000</code> provoca un arrastre morado al hacer scroll. Por eso aquí ningún fondo es negro puro: todos tienen entre un 12 y un 16 % de luz y un punto de color.</p>
+      </div>
+
+      <h2 id="e-creatividad">Creatividad</h2>
+      <p>Colores puros y atrevidos, contrastes que no piden permiso y una estructura muy ordenada que hace que el atrevimiento parezca intencionado.</p>
+      <dl class="dials wide" aria-label="Receta de creatividad"><div><dt>Tono</dt><dd>azul eléctrico, rojo, violeta, lima</dd></div><div><dt>Luz</dt><dd>variable</dd></div><div><dt>Saturación</dt><dd>máxima en poca superficie</dd></div><div><dt>Contraste</dt><dd>de tono y de luz</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-imprenta" style="--c1:#F4F2EC;--c2:#FFFFFF;--c3:#111111;--c4:#2A3BF5;--c5:#FF4A26;--on4:#FFFFFF;--on5:#111111;--ff:&quot;Archivo&quot;;--fw:850;--fs:75%">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Flyers mañana. Carteles pasado.</small><span class="btnx">Pedir presupuesto</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F4F2EC"></i><i style="flex:20;background:#FFFFFF"></i><i style="flex:13;background:#2A3BF5"></i><i style="flex:7;background:#FF4A26"></i><i style="flex:5;background:#111111"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Tinta de imprenta</h3>
+            <p class="pal-t">Atrevimiento, oficio gráfico, impacto.</p>
+            <ul class="cols" aria-label="Colores de Tinta de imprenta"><li><i style="background:#F4F2EC"></i><b>Fondo</b><code>#F4F2EC</code><code class="ok">oklch(96.1% 0.008 91)</code><button type="button" class="cp" data-copyval="#F4F2EC" aria-label="Copiar #F4F2EC">Copiar</button></li><li><i style="background:#FFFFFF"></i><b>Superficie</b><code>#FFFFFF</code><code class="ok">oklch(100.0% 0 0)</code><button type="button" class="cp" data-copyval="#FFFFFF" aria-label="Copiar #FFFFFF">Copiar</button></li><li><i style="background:#111111"></i><b>Texto</b><code>#111111</code><code class="ok">oklch(17.8% 0 0)</code><button type="button" class="cp" data-copyval="#111111" aria-label="Copiar #111111">Copiar</button></li><li><i style="background:#2A3BF5"></i><b>Marca</b><code>#2A3BF5</code><code class="ok">oklch(49.2% 0.268 268)</code><button type="button" class="cp" data-copyval="#2A3BF5" aria-label="Copiar #2A3BF5">Copiar</button></li><li><i style="background:#FF4A26"></i><b>Acento</b><code>#FF4A26</code><code class="ok">oklch(66.6% 0.222 33)</code><button type="button" class="cp" data-copyval="#FF4A26" aria-label="Copiar #FF4A26">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Colores de tinta pura: un azul eléctrico, casi azul Klein, y un rojo anaranjado de cartel. Vivos los dos y separados en el círculo, pero no exactamente opuestos, así que llaman la atención sin vibrar como lo harían rojo y verde. El papel y la tinta negra los ordenan: con tanto color vivo, el blanco y la retícula son los que dan seriedad.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Dos colores vivos ya es el máximo; con un tercero parece un parque infantil.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Imprenta y flyers, agencia creativa, estudio de diseño, festival de música.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Archivo&quot;;font-weight:850;font-stretch:75%">Aa</span>Archivo comprimida con Inter Tight para leer. Archivo comprimida y muy negra: titular de cartel que llena el formato.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 16,9:1</span><span class="">Texto sobre superficie 18,9:1</span><span class="">Botón 5,6:1</span><span class="">Sobre marca 6,9:1</span><span class="lg">Marca como titular 6,2:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="imprenta">Probar en una web</button><button class="btn" type="button" data-copy="imprenta">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-neon" style="--c1:#0F0E14;--c2:#1C1A25;--c3:#F4F3EF;--c4:#6D2CF0;--c5:#D5FF3F;--on4:#FFFFFF;--on5:#0F0E14;--ff:&quot;Unbounded&quot;;--fw:700;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Techno los viernes hasta que salga el sol.</small><span class="btnx">Comprar entradas</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#0F0E14"></i><i style="flex:20;background:#1C1A25"></i><i style="flex:13;background:#6D2CF0"></i><i style="flex:7;background:#D5FF3F"></i><i style="flex:5;background:#F4F3EF"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Noche eléctrica</h3>
+            <p class="pal-t">Fiesta, futuro, cultura digital.</p>
+            <ul class="cols" aria-label="Colores de Noche eléctrica"><li><i style="background:#0F0E14"></i><b>Fondo</b><code>#0F0E14</code><code class="ok">oklch(16.8% 0.013 293)</code><button type="button" class="cp" data-copyval="#0F0E14" aria-label="Copiar #0F0E14">Copiar</button></li><li><i style="background:#1C1A25"></i><b>Superficie</b><code>#1C1A25</code><code class="ok">oklch(22.5% 0.021 293)</code><button type="button" class="cp" data-copyval="#1C1A25" aria-label="Copiar #1C1A25">Copiar</button></li><li><i style="background:#F4F3EF"></i><b>Texto</b><code>#F4F3EF</code><code class="ok">oklch(96.4% 0.005 95)</code><button type="button" class="cp" data-copyval="#F4F3EF" aria-label="Copiar #F4F3EF">Copiar</button></li><li><i style="background:#6D2CF0"></i><b>Marca</b><code>#6D2CF0</code><code class="ok">oklch(51.6% 0.261 288)</code><button type="button" class="cp" data-copyval="#6D2CF0" aria-label="Copiar #6D2CF0">Copiar</button></li><li><i style="background:#D5FF3F"></i><b>Acento</b><code>#D5FF3F</code><code class="ok">oklch(93.8% 0.208 122)</code><button type="button" class="cp" data-copyval="#D5FF3F" aria-label="Copiar #D5FF3F">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Sobre un fondo casi negro los colores saturados parecen emitir luz, como neones. El violeta eléctrico es el color «digital» por excelencia (pantallas, videojuegos, música electrónica) y la lima ácida es casi su complementaria: la combinación más luminosa posible sobre negro. El negro con un punto violeta mantiene la familia.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Violeta y lima juntos en grande vibran: el violeta en bloques, la lima solo en puntos y botones.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Salas y discotecas, gaming, festivales, agencia digital, bebidas energéticas.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Unbounded&quot;;font-weight:700;font-stretch:normal">Aa</span>Unbounded con Inter Tight para leer. Una display ancha y geométrica: futurista sin ser fría.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 17,3:1</span><span class="">Texto sobre superficie 15,4:1</span><span class="">Botón 16,6:1</span><span class="">Sobre marca 6,4:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="neon">Probar en una web</button><button class="btn" type="button" data-copy="neon">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-salud">Salud</h2>
+      <p>Blancos con un punto frío o vegetal, verdes azulados que mezclan ciencia y vida, y un toque cálido que recuerda que hay personas detrás.</p>
+      <dl class="dials wide" aria-label="Receta de salud"><div><dt>Tono</dt><dd>verdes azulados, verdes hoja</dd></div><div><dt>Luz</dt><dd>alta</dd></div><div><dt>Saturación</dt><dd>media</dd></div><div><dt>Contraste</dt><dd>limpio, sin dramatismo</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-clinica" style="--c1:#F6FAFA;--c2:#E2EFEE;--c3:#11303A;--c4:#1D7676;--c5:#EE8B6B;--on4:#FFFFFF;--on5:#11303A;--ff:&quot;Jost&quot;;--fw:300;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Tu sonrisa, sin miedo.</small><span class="btnx">Pedir cita</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#F6FAFA"></i><i style="flex:20;background:#E2EFEE"></i><i style="flex:13;background:#1D7676"></i><i style="flex:7;background:#EE8B6B"></i><i style="flex:5;background:#11303A"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Clínica serena</h3>
+            <p class="pal-t">Higiene, calma, trato humano.</p>
+            <ul class="cols" aria-label="Colores de Clínica serena"><li><i style="background:#F6FAFA"></i><b>Fondo</b><code>#F6FAFA</code><code class="ok">oklch(98.2% 0.004 197)</code><button type="button" class="cp" data-copyval="#F6FAFA" aria-label="Copiar #F6FAFA">Copiar</button></li><li><i style="background:#E2EFEE"></i><b>Superficie</b><code>#E2EFEE</code><code class="ok">oklch(94.2% 0.014 191)</code><button type="button" class="cp" data-copyval="#E2EFEE" aria-label="Copiar #E2EFEE">Copiar</button></li><li><i style="background:#11303A"></i><b>Texto</b><code>#11303A</code><code class="ok">oklch(29.1% 0.041 222)</code><button type="button" class="cp" data-copyval="#11303A" aria-label="Copiar #11303A">Copiar</button></li><li><i style="background:#1D7676"></i><b>Marca</b><code>#1D7676</code><code class="ok">oklch(51.6% 0.080 195)</code><button type="button" class="cp" data-copyval="#1D7676" aria-label="Copiar #1D7676">Copiar</button></li><li><i style="background:#EE8B6B"></i><b>Acento</b><code>#EE8B6B</code><code class="ok">oklch(73.5% 0.129 39)</code><button type="button" class="cp" data-copyval="#EE8B6B" aria-label="Copiar #EE8B6B">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>El verde azulado (teal) está a medio camino entre el azul (confianza, ciencia) y el verde (salud, vida): por eso es el color de los uniformes de quirófano y de tantas clínicas. Mucho blanco con un punto frío da sensación de limpieza. El coral suave es el contrapunto humano: cálido y amable, recuerda que detrás hay personas, no solo protocolos.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El coral es para un detalle (pedir cita, un icono). Si invade, la clínica parece una tienda de cosmética.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Clínica dental, fisioterapia, veterinaria, centro médico, óptica.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Jost&quot;;font-weight:300;font-stretch:normal">Aa</span>Jost ligera con Inter Tight para leer. Una geométrica limpia y precisa, de trazo uniforme: orden sin frialdad.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,2:1</span><span class="">Texto sobre superficie 11,8:1</span><span class="">Botón 5,7:1</span><span class="">Sobre marca 5,4:1</span><span class="lg">Marca como titular 5,1:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="clinica">Probar en una web</button><button class="btn" type="button" data-copy="clinica">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-hoja" style="--c1:#FBFAF3;--c2:#EEF2DE;--c3:#1F2E1E;--c4:#377D2E;--c5:#F29B30;--on4:#FFFFFF;--on5:#1F2E1E;--ff:&quot;Bricolage&quot;;--fw:700;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>La fruta del campo, en tu casa mañana.</small><span class="btnx">Hacer pedido</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#FBFAF3"></i><i style="flex:20;background:#EEF2DE"></i><i style="flex:13;background:#377D2E"></i><i style="flex:7;background:#F29B30"></i><i style="flex:5;background:#1F2E1E"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Hoja y fruta</h3>
+            <p class="pal-t">Vitalidad, comida sana, energía natural.</p>
+            <ul class="cols" aria-label="Colores de Hoja y fruta"><li><i style="background:#FBFAF3"></i><b>Fondo</b><code>#FBFAF3</code><code class="ok">oklch(98.4% 0.009 100)</code><button type="button" class="cp" data-copyval="#FBFAF3" aria-label="Copiar #FBFAF3">Copiar</button></li><li><i style="background:#EEF2DE"></i><b>Superficie</b><code>#EEF2DE</code><code class="ok">oklch(95.3% 0.027 116)</code><button type="button" class="cp" data-copyval="#EEF2DE" aria-label="Copiar #EEF2DE">Copiar</button></li><li><i style="background:#1F2E1E"></i><b>Texto</b><code>#1F2E1E</code><code class="ok">oklch(28.2% 0.035 143)</code><button type="button" class="cp" data-copyval="#1F2E1E" aria-label="Copiar #1F2E1E">Copiar</button></li><li><i style="background:#377D2E"></i><b>Marca</b><code>#377D2E</code><code class="ok">oklch(52.6% 0.134 141)</code><button type="button" class="cp" data-copyval="#377D2E" aria-label="Copiar #377D2E">Copiar</button></li><li><i style="background:#F29B30"></i><b>Acento</b><code>#F29B30</code><code class="ok">oklch(76.1% 0.153 66)</code><button type="button" class="cp" data-copyval="#F29B30" aria-label="Copiar #F29B30">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Verde hoja y naranja fruta son colores que asociamos a comida fresca: verdura, cítricos, zanahoria. Están separados en el círculo (forman parte de una tríada con el violeta) y los dos son vivos, así que la paleta es enérgica; el fondo crema verdoso y la tinta verde oscura la calman.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>El verde vivo sobre el naranja no se lee; y un verde demasiado amarillo parece de producto químico.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Nutricionista, frutería online, comida saludable, herbolario.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Bricolage&quot;;font-weight:700;font-stretch:normal">Aa</span>Bricolage con Inter Tight para leer. Una grotesca con carácter y redondeces: vitalidad sin infantilizar.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,7:1</span><span class="">Texto sobre superficie 12,5:1</span><span class="">Botón 6,5:1</span><span class="">Sobre marca 5,1:1</span><span class="lg">Marca como titular 4,8:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="hoja">Probar en una web</button><button class="btn" type="button" data-copy="hoja">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <h2 id="e-infancia">Infancia</h2>
+      <p>Primarios suavizados o pasteles empolvados, nunca negro puro y formas amables. Para los niños, alegría; para los padres, que pagan, cuidado.</p>
+      <dl class="dials wide" aria-label="Receta de infancia"><div><dt>Tono</dt><dd>primarios rebajados o pasteles</dd></div><div><dt>Luz</dt><dd>alta</dd></div><div><dt>Saturación</dt><dd>media</dd></div><div><dt>Contraste</dt><dd>suave, texto en tinta de color</dd></div></dl>
+      <div class="pal-grid wide">
+        <article class="pal" id="p-recreo" style="--c1:#FFF8EC;--c2:#FFE8C2;--c3:#1F2C4A;--c4:#1F78BD;--c5:#FF6A4D;--on4:#FFFFFF;--on5:#1F2C4A;--ff:&quot;Nunito&quot;;--fw:850;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Tardes de juego, merienda incluida.</small><span class="btnx">Apuntar a mi hijo</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#FFF8EC"></i><i style="flex:20;background:#FFE8C2"></i><i style="flex:13;background:#1F78BD"></i><i style="flex:7;background:#FF6A4D"></i><i style="flex:5;background:#1F2C4A"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Recreo</h3>
+            <p class="pal-t">Juego, alegría, seguridad.</p>
+            <ul class="cols" aria-label="Colores de Recreo"><li><i style="background:#FFF8EC"></i><b>Fondo</b><code>#FFF8EC</code><code class="ok">oklch(98.1% 0.018 81)</code><button type="button" class="cp" data-copyval="#FFF8EC" aria-label="Copiar #FFF8EC">Copiar</button></li><li><i style="background:#FFE8C2"></i><b>Superficie</b><code>#FFE8C2</code><code class="ok">oklch(94.0% 0.055 80)</code><button type="button" class="cp" data-copyval="#FFE8C2" aria-label="Copiar #FFE8C2">Copiar</button></li><li><i style="background:#1F2C4A"></i><b>Texto</b><code>#1F2C4A</code><code class="ok">oklch(29.7% 0.058 265)</code><button type="button" class="cp" data-copyval="#1F2C4A" aria-label="Copiar #1F2C4A">Copiar</button></li><li><i style="background:#1F78BD"></i><b>Marca</b><code>#1F78BD</code><code class="ok">oklch(55.7% 0.134 247)</code><button type="button" class="cp" data-copyval="#1F78BD" aria-label="Copiar #1F78BD">Copiar</button></li><li><i style="background:#FF6A4D"></i><b>Acento</b><code>#FF6A4D</code><code class="ok">oklch(70.6% 0.188 33)</code><button type="button" class="cp" data-copyval="#FF6A4D" aria-label="Copiar #FF6A4D">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Primarios suavizados: azul cielo, amarillo (en el fondo y las superficies) y rojo coral. Los primarios son los colores de los juguetes clásicos, por eso suenan a infancia. Pero están rebajados (el amarillo es crema, el rojo es coral) para que los padres, que son quienes pagan, vean cuidado y no estridencia. El texto azul tinta es más amable que el negro.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Añadir un verde y un violeta «porque son niños» convierte la web en un arcoíris sin jerarquía.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Ludoteca, escuela infantil, tienda de juguetes, extraescolares.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Nunito&quot;;font-weight:850;font-stretch:normal">Aa</span>Nunito para todo. Una redondeada en peso muy negro: amable, cercana, sin esquinas.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 13,1:1</span><span class="">Texto sobre superficie 11,6:1</span><span class="">Botón 4,9:1</span><span class="">Sobre marca 4,7:1</span><span class="lg">Marca como titular 4,4:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="recreo">Probar en una web</button><button class="btn" type="button" data-copy="recreo">Copiar variables CSS</button></div>
+          </div>
+        </article>
+        <article class="pal" id="p-algodon" style="--c1:#FBF7F4;--c2:#F2E5E0;--c3:#3A3035;--c4:#9EC5C1;--c5:#E39586;--on4:#3A3035;--on5:#3A3035;--ff:&quot;Fraunces&quot;;--fw:500;--fs:normal">
+          <div class="spec" aria-hidden="true">
+            <div class="aa"><b>Aa</b><small>Ropa de algodón orgánico de 0 a 6 años.</small><span class="btnx">Ver colección</span></div>
+            <div class="mk"><span>Marca</span><i></i></div>
+            <div class="prop"><i style="flex:55;background:#FBF7F4"></i><i style="flex:20;background:#F2E5E0"></i><i style="flex:13;background:#9EC5C1"></i><i style="flex:7;background:#E39586"></i><i style="flex:5;background:#3A3035"></i></div>
+          </div>
+          <div class="pal-body">
+            <h3>Algodón</h3>
+            <p class="pal-t">Ternura, delicadeza, calidad.</p>
+            <ul class="cols" aria-label="Colores de Algodón"><li><i style="background:#FBF7F4"></i><b>Fondo</b><code>#FBF7F4</code><code class="ok">oklch(97.8% 0.006 60)</code><button type="button" class="cp" data-copyval="#FBF7F4" aria-label="Copiar #FBF7F4">Copiar</button></li><li><i style="background:#F2E5E0"></i><b>Superficie</b><code>#F2E5E0</code><code class="ok">oklch(93.1% 0.016 42)</code><button type="button" class="cp" data-copyval="#F2E5E0" aria-label="Copiar #F2E5E0">Copiar</button></li><li><i style="background:#3A3035"></i><b>Texto</b><code>#3A3035</code><code class="ok">oklch(32.2% 0.017 346)</code><button type="button" class="cp" data-copyval="#3A3035" aria-label="Copiar #3A3035">Copiar</button></li><li><i style="background:#9EC5C1"></i><b>Marca</b><code>#9EC5C1</code><code class="ok">oklch(79.4% 0.042 189)</code><button type="button" class="cp" data-copyval="#9EC5C1" aria-label="Copiar #9EC5C1">Copiar</button></li><li><i style="background:#E39586"></i><b>Acento</b><code>#E39586</code><code class="ok">oklch(74.4% 0.097 31)</code><button type="button" class="cp" data-copyval="#E39586" aria-label="Copiar #E39586">Copiar</button></li></ul>
+            <p class="pal-why"><span class="lbl">Por qué funciona</span>Pasteles empolvados (rosa melocotón y verde agua) en lugar de rosa chicle y azul bebé: siguen sonando a bebé, pero con un punto adulto y de diseño, que es lo que busca quien compra ropa infantil de calidad. Son complementarios muy rebajados, el mismo truco que en «Lavanda y salvia». La tinta es un marrón ciruela suave, nunca negro.</p>
+            <p class="pal-risk"><span class="lbl">Cuidado</span>Con tantos claros, el contraste del texto es lo primero que falla: compruébalo siempre.</p>
+            <dl class="meta-row">
+              <dt>Sectores</dt><dd>Tienda online de moda infantil, canastillas, fotografía de recién nacidos, decoración infantil.</dd>
+              <dt>Tipografía</dt><dd><span class="ts" style="font-family:&quot;Fraunces&quot;;font-weight:500;font-stretch:normal">Aa</span>Fraunces con Nunito para leer. Una serif blanda con curvas suaves y una redondeada para leer: ternura con criterio.</dd>
+              <dt>Contraste</dt><dd class="crs"><span class="">Texto sobre fondo 11,9:1</span><span class="">Texto sobre superficie 10,3:1</span><span class="">Botón 5,4:1</span><span class="">Sobre marca 6,8:1</span></dd>
+            </dl>
+            <div class="acts"><button class="btn primary" type="button" data-try="algodon">Probar en una web</button><button class="btn" type="button" data-copy="algodon">Copiar variables CSS</button></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="band yellow"><div class="inner"><p>Una paleta del catálogo es un punto de partida, no un uniforme.</p></div></div>
+
+      <h2>Adaptar una paleta a tu cliente</h2>
+      <p>Lo normal es que una paleta del catálogo encaje en el fondo pero no en el detalle: el cliente ya tiene un logo verde, o su competencia usa justo ese azul. La solución no es buscar otra paleta, es <strong>girar el tono conservando la estructura</strong>. Lo que hace funcionar una paleta es la relación de luces y saturaciones entre sus colores; el tono se puede cambiar si mantienes esa relación.</p>
+      <p>En OKLCH es muy fácil, porque la luz y la saturación son números independientes del tono. El método:</p>
+      <ol>
+        <li><strong>Copia la L y la C de cada rol</strong> y cambia solo la H de la marca (y del texto, si el texto lleva tono de marca).</li>
+        <li><strong>Decide qué neutros conservar.</strong> Si el fondo cálido era el que daba cercanía, se queda aunque la marca cambie.</li>
+        <li><strong>Revisa el acento</strong>: si el nuevo tono de marca queda demasiado cerca de él, el acento deja de saltar y hay que moverlo.</li>
+        <li><strong>Vuelve a comprobar el contraste.</strong> Con la misma L debería mantenerse, pero el recorte de gama en algunos tonos lo puede mover un poco.</li>
+      </ol>
+      <p>Ejemplo: una notaría de Castellón con logo verde quiere la sensación de «Marino y papel». Giramos la marca y el texto de azul a verde conservando su luz y su saturación, y dejamos el papel y el oro como estaban:</p>
+      <div class="adapt wide">
+        <figure><figcaption>Marino y papel<span>La paleta del catálogo, sin tocar.</span></figcaption><div class="row5"><div style="background:#F7F5F0;color:#15213B"><b>Papel</b>#F7F5F0<br>oklch(97.0% 0.007 89)</div><div style="background:#EAE6DD;color:#15213B"><b>Superficie</b>#EAE6DD<br>oklch(92.6% 0.013 87)</div><div style="background:#15213B;color:#F7F5F0"><b>Texto</b>#15213B<br>oklch(25.1% 0.052 264)</div><div style="background:#1F3A66;color:#F7F5F0"><b>Marino</b>#1F3A66<br>oklch(35.1% 0.084 260)</div><div style="background:#C39445;color:#15213B"><b>Oro viejo</b>#C39445<br>oklch(69.6% 0.112 78)</div></div></figure>
+        <figure><figcaption>Verde notaría<span>Marca y texto girados a verde con la misma L y C; papel, superficie y oro se quedan (recuadro discontinuo).</span></figcaption><div class="row5"><div style="background:#F7F5F0;color:#15213B" class="kept"><b>Papel</b>#F7F5F0<br>oklch(97.0% 0.007 89)</div><div style="background:#EAE6DD;color:#15213B" class="kept"><b>Superficie</b>#EAE6DD<br>oklch(92.6% 0.013 87)</div><div style="background:#0C281C;color:#F7F5F0"><b>Texto</b>#0C281C<br>oklch(25.1% 0.041 163)</div><div style="background:#07472B;color:#F7F5F0"><b>Verde notaría</b>#07472B<br>oklch(35.2% 0.078 158)</div><div style="background:#C39445;color:#15213B" class="kept"><b>Oro viejo</b>#C39445<br>oklch(69.6% 0.112 78)</div></div></figure>
+      </div>
+      <p>Comprobación: el texto verde sobre el papel da 14,4:1 (el original, 14,7:1) y la marca, 9,9:1 (antes, 10,4:1). Casi idénticos, porque la luz no ha cambiado.</p>
+      <p>La notaría conserva todo lo que hacía funcionar la paleta original (marca oscura y solvente, papel cálido, oro como sello) y ahora encaja con su logo. El verde muy oscuro sigue diciendo autoridad, igual que el marino, porque lo que la transmitía era sobre todo la luz baja, no el tono azul.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Antes de girar, pregúntate qué hacía el tono original. En «Marino y papel», el azul aporta confianza, pero la autoridad viene de la oscuridad: por eso el giro a verde funciona. En «Azul servicio», en cambio, el azul medio es lo que dice «interfaz que funciona»: girarlo a rosa cambia el mensaje entero, por mucho que conserves la luz.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">Una clínica veterinaria quiere «Clínica serena», pero su competencia directa usa exactamente ese verde azulado. ¿Qué cambias primero?</p>
+        <ol>
+          <li>Toda la paleta: si la competencia usa el teal, hay que buscar otra emoción.</li>
+          <li>El acento coral por otro color más llamativo.</li>
+          <li>El tono de la marca (por ejemplo, hacia un azul más profundo), conservando su luz y su saturación y manteniendo el blanco y el coral.</li>
+        </ol>
+        <p class="why">La emoción que buscan sigue siendo la misma; lo que hay que cambiar es el tono que los confunde con la competencia. Girando la marca y manteniendo luces, saturaciones y neutros, conservas lo que hacía funcionar la paleta.</p>
+      </div>
+
+      <h2>Resumen por emoción</h2>
+      <p>La tabla para tener a mano: la receta de cada emoción y sus paletas del catálogo.</p>
+      <div class="table-wrap sum-t">
+        <table>
+          <thead><tr><th>Emoción</th><th>Receta</th><th>Paletas</th><th>Sectores típicos</th></tr></thead>
+          <tbody>
+            <tr><td><a href="#e-calma">Calma</a></td><td>Fríos o neutros, de una misma familia; luz alta; saturación baja</td><td>Niebla de mar, Lavanda y salvia</td><td>Salud y bienestar, Turismo y hoteles, Moda y belleza</td></tr>
+            <tr><td><a href="#e-confianza">Confianza</a></td><td>Azules, grises, verdes oscuros; luz marca oscura sobre fondo claro; saturación media</td><td>Marino y papel, Azul servicio, Acero y señal</td><td>Servicios profesionales, Tecnología y apps, Tienda online</td></tr>
+            <tr><td><a href="#e-energia">Energía</a></td><td>Rojos y naranjas; luz media; saturación alta</td><td>Naranja de salida, Rojo carrera</td><td>Deporte, Hostelería</td></tr>
+            <tr><td><a href="#e-lujo">Lujo</a></td><td>Negro cálido, verdes y burdeos profundos, oro; luz muy baja o muy alta; saturación baja</td><td>Ébano y champán, Marfil y verde inglés</td><td>Moda y belleza, Hostelería, Turismo y hoteles</td></tr>
+            <tr><td><a href="#e-naturaleza">Naturaleza</a></td><td>Verdes amarillentos, tierras, ocres; luz media; saturación baja o media</td><td>Olivar, Pinar, Vendimia</td><td>Alimentación y producto, Turismo y hoteles, Deporte</td></tr>
+            <tr><td><a href="#e-calidez">Calidez y cercanía</a></td><td>Rojos, naranjas, amarillos; luz media y clara; saturación media</td><td>Sobremesa, Barro y miel</td><td>Hostelería, Alimentación y producto, Tecnología y apps</td></tr>
+            <tr><td><a href="#e-frescura">Frescura y juventud</a></td><td>Menta, lila, lima, coral; luz alta; saturación media o alta</td><td>Menta y coral, Lima y lila</td><td>Alimentación y producto, Tecnología y apps, Moda y belleza</td></tr>
+            <tr><td><a href="#e-nostalgia">Nostalgia y retro</a></td><td>Naranja óxido, mostaza, petróleo, cobalto; luz media; saturación media rebajada</td><td>Cartel de los 70, Azulejo, Polaroid</td><td>Hostelería, Creatividad y ocio, Tienda online</td></tr>
+            <tr><td><a href="#e-oscura">Sofisticación oscura</a></td><td>Negros tintados, violetas, carbón; luz muy baja; saturación baja en la base, media en el acento</td><td>Hora azul, Carbón y cobre</td><td>Inmobiliaria y arquitectura, Turismo y hoteles, Hostelería</td></tr>
+            <tr><td><a href="#e-creatividad">Creatividad</a></td><td>Azul eléctrico, rojo, violeta, lima; luz variable; saturación máxima en poca superficie</td><td>Tinta de imprenta, Noche eléctrica</td><td>Creatividad y ocio, Tienda online, Tecnología y apps</td></tr>
+            <tr><td><a href="#e-salud">Salud</a></td><td>Verdes azulados, verdes hoja; luz alta; saturación media</td><td>Clínica serena, Hoja y fruta</td><td>Salud y bienestar, Alimentación y producto, Tienda online</td></tr>
+            <tr><td><a href="#e-infancia">Infancia</a></td><td>Primarios rebajados o pasteles; luz alta; saturación media</td><td>Recreo, Algodón</td><td>Educación e infancia, Tienda online, Moda y belleza</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">«Ébano y champán» y «Carbón y cobre» son oscuras, pero una suena a joyería y la otra a estudio de arquitectura. ¿De dónde sale la diferencia?</p>
+        <ol>
+          <li>De la luz del fondo: una es más oscura que la otra.</li>
+          <li>Del acento y la temperatura: oro champán con burdeos (celebración, riqueza) frente a un único cobre apagado sobre grises (material, sobriedad).</li>
+          <li>De que una tiene más colores que la otra.</li>
+        </ol>
+        <p class="why">Las dos tienen fondos casi negros y cinco colores. Lo que cambia el mensaje es qué brilla encima: el oro y el burdeos hablan de lujo y fiesta; el cobre solo, sobre grises carbón, habla de materia trabajada.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Cada emoción tiene una receta de tono, luz, saturación y contraste; conocerla te deja crear paletas nuevas sin copiar.</li>
+          <li>Una paleta funciona por la relación entre sus colores: qué comparten (tono, luz o saturación) y en qué se oponen de forma controlada.</li>
+          <li>Los neutros y la proporción importan tanto como los colores vivos: casi todas las paletas del catálogo son 60 % neutro.</li>
+          <li>Para adaptar una paleta a un cliente, gira el tono y conserva la luz y la saturación de cada rol; después, vuelve a comprobar el contraste.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge tres clientes reales de la agencia de sectores distintos (por ejemplo, una tienda PrestaShop, un restaurante y una empresa industrial). Para cada uno, filtra el catálogo por su sector y elige la paleta que mejor encaje con sus tres palabras. Después adáptala: gira el tono hacia el color de su logo conservando la L y la C de cada rol, comprueba el contraste en el banco de pruebas de la lección anterior y pruébala en el probador. Escribe en una frase por qué esa paleta y no otra, y otra frase con lo que has cambiado y por qué.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+
+<aside class="tryon" id="tryon" role="dialog" aria-modal="false" aria-labelledby="tr-name" aria-hidden="true">
+  <div class="tr-head">
+    <h2 id="tr-name"><small data-tr-emo></small><span data-tr-name></span></h2>
+    <button class="btn" type="button" data-tr-prev aria-label="Paleta anterior">Ant.</button>
+    <button class="btn" type="button" data-tr-next aria-label="Paleta siguiente">Sig.</button>
+    <button class="btn" type="button" data-tr-close aria-label="Cerrar el probador">Cerrar</button>
+  </div>
+  <div class="tr-scroll">
+    <div class="pv" data-pv>
+      <nav><b data-pv-logo></b><span class="n1">Inicio</span><span class="n1">Servicios</span><span class="n2" data-pv-nav></span></nav>
+      <section class="ph"><p class="pk" data-pv-k></p><h3 data-pv-h></h3><p class="pp" data-pv-p></p><span class="pc" data-pv-cta></span><span class="ps2">Saber más</span></section>
+      <section class="pband"><q>Desde el primer día nos sentimos en casa. Se nota que les importa.</q><small>Opinión de un cliente</small></section>
+      <section class="pcards"><div><b>Hecho aquí</b>Trabajamos con gente de la zona y lo contamos todo.<span class="tag">Nuevo</span></div><div><b>Sin sorpresas</b>Precios claros desde el primer día.</div><div><b>Cerca de ti</b>En la Plana, a diez minutos del centro.</div></section>
+      <footer><span data-pv-logo2></span><span>Aviso legal</span></footer>
+    </div>
+  </div>
+  <div class="tr-foot">
+    <div class="crs" data-tr-crs></div>
+    <button class="btn primary" type="button" data-tr-copy>Copiar variables CSS</button>
+    <a class="btn" href="#" data-tr-card>Ir a la ficha</a>
+  </div>
+</aside>
+
+<script id="pal-data" type="application/json">[{"id": "niebla", "name": "Niebla de mar", "emo": "calma", "emoName": "Calma", "t": "Calma, aire y cuidado sin frialdad.", "c": [{"name": "Fondo", "hex": "#EEF3F2", "ok": "oklch(96.0% 0.005 183)", "on": "#111111"}, {"name": "Superficie", "hex": "#DCE7E6", "ok": "oklch(91.9% 0.012 190)", "on": "#111111"}, {"name": "Texto", "hex": "#1E3238", "ok": "oklch(30.3% 0.028 219)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#46747B", "ok": "oklch(52.9% 0.052 208)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#D6A578", "ok": "oklch(75.7% 0.083 64)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#1E3238", "logo": "#46747B", "underline": "#46747B", "heroAcc": "#46747B", "heroOn": "#FFFFFF", "font": {"f": "\"Jost\"", "w": 300, "s": "normal"}, "body": "\"Newsreader\"", "biz": ["Mar Blau Fisioterapia", "Tu espalda, en buenas manos.", "Pedir cita", "Sesiones de 50 minutos, sin prisas"], "sectShort": "Fisioterapia y más", "crs": [["Texto sobre fondo", 11.95, ""], ["Texto sobre superficie", 10.59, ""], ["Botón", 6.06, ""], ["Sobre marca", 5.19, ""], ["Marca como titular", 4.63, "lg"]], "tags": ["salud", "turismo"]}, {"id": "lavanda", "name": "Lavanda y salvia", "emo": "calma", "emoName": "Calma", "t": "Serenidad, introspección, cuidado delicado.", "c": [{"name": "Fondo", "hex": "#F5F2F7", "ok": "oklch(96.5% 0.007 312)", "on": "#111111"}, {"name": "Superficie", "hex": "#E7E1EE", "ok": "oklch(91.8% 0.019 307)", "on": "#111111"}, {"name": "Texto", "hex": "#2B2533", "ok": "oklch(27.7% 0.027 304)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#6E5F8A", "ok": "oklch(51.7% 0.069 300)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#A9BC9C", "ok": "oklch(77.2% 0.049 133)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#2B2533", "logo": "#6E5F8A", "underline": "#6E5F8A", "heroAcc": "#6E5F8A", "heroOn": "#FFFFFF", "font": {"f": "\"Cormorant\"", "w": 500, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Espai Lila", "Un lugar para respirar despacio.", "Reservar sesión", "Terapia individual y de pareja"], "sectShort": "Psicología y terapia y más", "crs": [["Texto sobre fondo", 13.37, ""], ["Texto sobre superficie", 11.59, ""], ["Botón", 7.32, ""], ["Sobre marca", 5.73, ""], ["Marca como titular", 5.16, "lg"]], "tags": ["salud", "moda"]}, {"id": "marino", "name": "Marino y papel", "emo": "confianza", "emoName": "Confianza", "t": "Autoridad, solvencia, trato humano.", "c": [{"name": "Fondo", "hex": "#F7F5F0", "ok": "oklch(97.0% 0.007 89)", "on": "#111111"}, {"name": "Superficie", "hex": "#EAE6DD", "ok": "oklch(92.6% 0.013 87)", "on": "#111111"}, {"name": "Texto", "hex": "#15213B", "ok": "oklch(25.1% 0.052 264)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#1F3A66", "ok": "oklch(35.1% 0.084 260)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#C39445", "ok": "oklch(69.6% 0.112 78)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#15213B", "logo": "#1F3A66", "underline": "#1F3A66", "heroAcc": "#1F3A66", "heroOn": "#FFFFFF", "font": {"f": "\"Newsreader\"", "w": 400, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Ribes Assessors", "Tus cuentas, al día y sin sustos.", "Pedir cita", "Gestoría para autónomos y pymes desde 1987"], "sectShort": "Asesoría y gestoría y más", "crs": [["Texto sobre fondo", 14.68, ""], ["Texto sobre superficie", 12.85, ""], ["Botón", 5.82, ""], ["Sobre marca", 11.32, ""], ["Marca como titular", 10.39, "lg"]], "tags": ["servicios"]}, {"id": "servicio", "name": "Azul servicio", "emo": "confianza", "emoName": "Confianza", "t": "Eficacia, claridad, tecnología que funciona.", "c": [{"name": "Fondo", "hex": "#F6F8FB", "ok": "oklch(97.8% 0.005 258)", "on": "#111111"}, {"name": "Superficie", "hex": "#E5EBF4", "ok": "oklch(93.8% 0.014 258)", "on": "#111111"}, {"name": "Texto", "hex": "#0F1D33", "ok": "oklch(23.1% 0.047 259)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#2452C9", "ok": "oklch(48.4% 0.192 264)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#FFB547", "ok": "oklch(82.4% 0.149 73)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#0F1D33", "logo": "#2452C9", "underline": "#2452C9", "heroAcc": "#2452C9", "heroOn": "#FFFFFF", "font": {"f": "\"Inter Tight\"", "w": 700, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Factura Clara", "Facturas en dos minutos, también desde el móvil.", "Probar gratis", "Para autónomos que no quieren pelearse con Hacienda"], "sectShort": "SaaS y más", "crs": [["Texto sobre fondo", 15.87, ""], ["Texto sobre superficie", 14.09, ""], ["Botón", 9.61, ""], ["Sobre marca", 6.72, ""], ["Marca como titular", 6.32, "lg"]], "tags": ["tecnologia", "comercio", "servicios"]}, {"id": "acero", "name": "Acero y señal", "emo": "confianza", "emoName": "Confianza", "t": "Solidez industrial, precisión, seguridad.", "c": [{"name": "Fondo", "hex": "#F2F3F4", "ok": "oklch(96.4% 0.002 248)", "on": "#111111"}, {"name": "Superficie", "hex": "#E1E4E8", "ok": "oklch(91.8% 0.006 255)", "on": "#111111"}, {"name": "Texto", "hex": "#14181D", "ok": "oklch(20.7% 0.012 254)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#2A3949", "ok": "oklch(33.8% 0.035 250)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#F2B705", "ok": "oklch(81.1% 0.166 85)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#14181D", "logo": "#2A3949", "underline": "#2A3949", "heroAcc": "#2A3949", "heroOn": "#FFFFFF", "font": {"f": "\"Archivo\"", "w": 800, "s": "125%"}, "body": "\"Inter Tight\"", "biz": ["Plàstics Millars", "Inyección de plástico técnico para la industria.", "Pedir presupuesto", "Series desde 5.000 piezas, plazo garantizado"], "sectShort": "Industria y fábricas y más", "crs": [["Texto sobre fondo", 16.04, ""], ["Texto sobre superficie", 13.97, ""], ["Botón", 9.8, ""], ["Sobre marca", 11.8, ""], ["Marca como titular", 10.62, "lg"]], "tags": ["industria"]}, {"id": "salida", "name": "Naranja de salida", "emo": "energia", "emoName": "Energía", "t": "Energía, movimiento, entusiasmo.", "c": [{"name": "Fondo", "hex": "#FFF7EF", "ok": "oklch(98.0% 0.014 68)", "on": "#111111"}, {"name": "Superficie", "hex": "#FFE6CF", "ok": "oklch(93.9% 0.041 65)", "on": "#111111"}, {"name": "Texto", "hex": "#1B1714", "ok": "oklch(20.8% 0.009 59)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#F2541B", "ok": "oklch(65.5% 0.204 38)", "on": "#111111"}, {"name": "Acento", "hex": "#2433E0", "ok": "oklch(45.7% 0.252 268)", "on": "#FFFFFF"}], "on4": "#1B1714", "on5": "#FFFFFF", "logo": "#F2541B", "underline": "#F2541B", "heroAcc": "#2433E0", "heroOn": "#FFFFFF", "font": {"f": "\"Big Shoulders\"", "w": 800, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Box Rambla", "Entrena fuerte. Sal mejor.", "Primera clase gratis", "Grupos reducidos de 6:30 a 22:00"], "sectShort": "Gimnasios y más", "crs": [["Texto sobre fondo", 16.79, ""], ["Texto sobre superficie", 14.82, ""], ["Botón", 8.0, ""], ["Sobre marca", 5.14, ""], ["Marca como titular", 3.27, "lg"]], "tags": ["deporte", "hosteleria"]}, {"id": "carrera", "name": "Rojo carrera", "emo": "energia", "emoName": "Energía", "t": "Velocidad, potencia, adrenalina.", "c": [{"name": "Fondo", "hex": "#F2F1EE", "ok": "oklch(95.8% 0.004 91)", "on": "#111111"}, {"name": "Superficie", "hex": "#E2E0DB", "ok": "oklch(90.7% 0.007 89)", "on": "#111111"}, {"name": "Texto", "hex": "#121212", "ok": "oklch(18.2% 0 0)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#1C1C1C", "ok": "oklch(22.6% 0 0)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#D41408", "ok": "oklch(55.2% 0.219 30)", "on": "#FFFFFF"}], "on4": "#FFFFFF", "on5": "#FFFFFF", "logo": "#1C1C1C", "underline": "#1C1C1C", "heroAcc": "#D41408", "heroOn": "#FFFFFF", "font": {"f": "\"Archivo\"", "w": 850, "s": "75%"}, "body": "\"Inter Tight\"", "biz": ["Moto Racing Vila", "Revisión, potencia y circuito.", "Reservar taller", "Especialistas en deportivas desde 2004"], "sectShort": "Talleres de motos y más", "crs": [["Texto sobre fondo", 16.59, ""], ["Texto sobre superficie", 14.2, ""], ["Botón", 5.38, ""], ["Sobre marca", 17.04, ""], ["Marca como titular", 15.09, "lg"]], "tags": ["deporte", "hosteleria"]}, {"id": "ebano", "name": "Ébano y champán", "emo": "lujo", "emoName": "Lujo", "t": "Lujo nocturno, exclusividad, celebración.", "c": [{"name": "Fondo", "hex": "#12110F", "ok": "oklch(17.8% 0.004 85)", "on": "#FFFFFF"}, {"name": "Superficie", "hex": "#1F1C18", "ok": "oklch(22.8% 0.009 75)", "on": "#FFFFFF"}, {"name": "Texto", "hex": "#EEE7DA", "ok": "oklch(93.0% 0.019 83)", "on": "#111111"}, {"name": "Marca", "hex": "#4A1622", "ok": "oklch(28.8% 0.079 10)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#C9A45E", "ok": "oklch(73.7% 0.099 82)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#12110F", "logo": "#EEE7DA", "underline": "#C9A45E", "heroAcc": "#C9A45E", "heroOn": "#12110F", "font": {"f": "\"Bodoni Moda\"", "w": 500, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Atelier Moré", "Joyas hechas una a una.", "Pedir cita privada", "Taller en Valencia, piezas únicas por encargo"], "sectShort": "Joyería y más", "crs": [["Texto sobre fondo", 15.35, ""], ["Texto sobre superficie", 13.8, ""], ["Botón", 8.05, ""], ["Sobre marca", 14.7, ""]], "tags": ["moda", "hosteleria"]}, {"id": "marfil", "name": "Marfil y verde inglés", "emo": "lujo", "emoName": "Lujo", "t": "Lujo tranquilo, tradición, discreción.", "c": [{"name": "Fondo", "hex": "#F5F0E6", "ok": "oklch(95.6% 0.014 85)", "on": "#111111"}, {"name": "Superficie", "hex": "#E9E1D2", "ok": "oklch(91.2% 0.022 83)", "on": "#111111"}, {"name": "Texto", "hex": "#1B1E1A", "ok": "oklch(23.0% 0.009 138)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#1F3B2D", "ok": "oklch(32.5% 0.043 161)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#A9864F", "ok": "oklch(64.1% 0.084 78)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#1B1E1A", "logo": "#1F3B2D", "underline": "#1F3B2D", "heroAcc": "#1F3B2D", "heroOn": "#FFFFFF", "font": {"f": "\"Cormorant\"", "w": 500, "s": "normal"}, "body": "\"Newsreader\"", "biz": ["Mas de la Serra", "Un hotel de doce habitaciones entre olivos.", "Consultar fechas", "Masía del siglo XVIII restaurada en el Maestrazgo"], "sectShort": "Hotel boutique y más", "crs": [["Texto sobre fondo", 14.82, ""], ["Texto sobre superficie", 12.96, ""], ["Botón", 4.98, ""], ["Sobre marca", 12.2, ""], ["Marca como titular", 10.74, "lg"]], "tags": ["turismo", "inmobiliaria", "moda"]}, {"id": "olivar", "name": "Olivar", "emo": "naturaleza", "emoName": "Naturaleza", "t": "Campo, tierra, producto auténtico.", "c": [{"name": "Fondo", "hex": "#F3F1E6", "ok": "oklch(95.7% 0.015 98)", "on": "#111111"}, {"name": "Superficie", "hex": "#E4E0CB", "ok": "oklch(90.4% 0.028 98)", "on": "#111111"}, {"name": "Texto", "hex": "#262A1D", "ok": "oklch(27.7% 0.024 122)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#5E6A36", "ok": "oklch(50.1% 0.076 120)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#A44F26", "ok": "oklch(52.7% 0.125 44)", "on": "#FFFFFF"}], "on4": "#FFFFFF", "on5": "#FFFFFF", "logo": "#5E6A36", "underline": "#5E6A36", "heroAcc": "#A44F26", "heroOn": "#FFFFFF", "font": {"f": "\"Fraunces\"", "w": 500, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Oli de la Tinença", "Aceite de oliveras milenarias.", "Comprar aceite", "Cosecha temprana, prensado en frío"], "sectShort": "Almazaras y aceite y más", "crs": [["Texto sobre fondo", 12.95, ""], ["Texto sobre superficie", 11.05, ""], ["Botón", 5.64, ""], ["Sobre marca", 5.85, ""], ["Marca como titular", 5.16, "lg"]], "tags": ["alimentacion", "turismo"]}, {"id": "pinar", "name": "Pinar", "emo": "naturaleza", "emoName": "Naturaleza", "t": "Montaña, aire libre, aventura tranquila.", "c": [{"name": "Fondo", "hex": "#EDF0EA", "ok": "oklch(95.1% 0.009 129)", "on": "#111111"}, {"name": "Superficie", "hex": "#D8DED3", "ok": "oklch(89.3% 0.016 130)", "on": "#111111"}, {"name": "Texto", "hex": "#1A2620", "ok": "oklch(25.5% 0.020 163)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#2C5A45", "ok": "oklch(42.8% 0.062 162)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#D3A846", "ok": "oklch(75.3% 0.125 85)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#1A2620", "logo": "#2C5A45", "underline": "#2C5A45", "heroAcc": "#2C5A45", "heroOn": "#FFFFFF", "font": {"f": "\"Zilla Slab\"", "w": 700, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Refugi del Penyagolosa", "Despierta con el monte a tus pies.", "Reservar estancia", "Rutas guiadas y cocina de montaña"], "sectShort": "Hotel rural y más", "crs": [["Texto sobre fondo", 13.6, ""], ["Texto sobre superficie", 11.41, ""], ["Botón", 7.05, ""], ["Sobre marca", 7.91, ""], ["Marca como titular", 6.87, "lg"]], "tags": ["turismo", "deporte"]}, {"id": "vendimia", "name": "Vendimia", "emo": "naturaleza", "emoName": "Naturaleza", "t": "Tradición, cosecha, sobremesa larga.", "c": [{"name": "Fondo", "hex": "#F5EFE8", "ok": "oklch(95.5% 0.011 72)", "on": "#111111"}, {"name": "Superficie", "hex": "#E8DCCE", "ok": "oklch(90.0% 0.023 72)", "on": "#111111"}, {"name": "Texto", "hex": "#2A1A1F", "ok": "oklch(24.0% 0.027 359)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#5A1E2C", "ok": "oklch(33.2% 0.089 9)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#97A25A", "ok": "oklch(68.7% 0.097 116)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#2A1A1F", "logo": "#5A1E2C", "underline": "#5A1E2C", "heroAcc": "#5A1E2C", "heroOn": "#FFFFFF", "font": {"f": "\"Cormorant\"", "w": 500, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Bodegas Penyeta", "Vinos de altura, hechos sin prisa.", "Reservar cata", "Visitas los sábados a las 11 h"], "sectShort": "Bodegas y más", "crs": [["Texto sobre fondo", 14.53, ""], ["Texto sobre superficie", 12.29, ""], ["Botón", 6.03, ""], ["Sobre marca", 12.67, ""], ["Marca como titular", 11.1, "lg"]], "tags": ["alimentacion", "hosteleria", "turismo"]}, {"id": "sobremesa", "name": "Sobremesa", "emo": "calidez", "emoName": "Calidez y cercanía", "t": "Cercanía, hogar, conversación.", "c": [{"name": "Fondo", "hex": "#F2EADB", "ok": "oklch(93.9% 0.022 83)", "on": "#111111"}, {"name": "Superficie", "hex": "#E6D9C3", "ok": "oklch(89.0% 0.033 81)", "on": "#111111"}, {"name": "Texto", "hex": "#2A211B", "ok": "oklch(25.6% 0.018 55)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#7A4A2E", "ok": "oklch(45.8% 0.077 50)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#B8501F", "ok": "oklch(55.8% 0.148 43)", "on": "#FFFFFF"}], "on4": "#FFFFFF", "on5": "#FFFFFF", "logo": "#7A4A2E", "underline": "#7A4A2E", "heroAcc": "#B8501F", "heroOn": "#FFFFFF", "font": {"f": "\"Instrument Serif\"", "w": 400, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Café Ravalet", "El café de siempre, tostado cada martes.", "Ver la carta", "Desayunos, tostadas y bizcocho casero"], "sectShort": "Cafeterías y más", "crs": [["Texto sobre fondo", 13.19, ""], ["Texto sobre superficie", 11.32, ""], ["Botón", 4.99, ""], ["Sobre marca", 7.38, ""], ["Marca como titular", 6.17, "lg"]], "tags": ["hosteleria", "alimentacion", "tecnologia"]}, {"id": "barro", "name": "Barro y miel", "emo": "calidez", "emoName": "Calidez y cercanía", "t": "Artesanía, mano, sabor.", "c": [{"name": "Fondo", "hex": "#FBF4E9", "ok": "oklch(97.0% 0.016 79)", "on": "#111111"}, {"name": "Superficie", "hex": "#F2E3CC", "ok": "oklch(92.2% 0.035 79)", "on": "#111111"}, {"name": "Texto", "hex": "#3A2517", "ok": "oklch(28.7% 0.040 54)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#A9502C", "ok": "oklch(53.6% 0.127 42)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#E5A43A", "ok": "oklch(76.3% 0.140 75)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#3A2517", "logo": "#A9502C", "underline": "#A9502C", "heroAcc": "#A9502C", "heroOn": "#FFFFFF", "font": {"f": "\"Bricolage\"", "w": 700, "s": "normal"}, "body": "\"Newsreader\"", "biz": ["Terrisses del Mas", "Cerámica torneada en el taller de casa.", "Ver la tienda", "Piezas únicas, envío a toda España"], "sectShort": "Cerámica artesana y más", "crs": [["Texto sobre fondo", 13.19, ""], ["Texto sobre superficie", 11.42, ""], ["Botón", 6.66, ""], ["Sobre marca", 5.43, ""], ["Marca como titular", 4.97, "lg"]], "tags": ["alimentacion", "comercio", "hosteleria"]}, {"id": "menta", "name": "Menta y coral", "emo": "frescura", "emoName": "Frescura y juventud", "t": "Frescor, verano, desenfado.", "c": [{"name": "Fondo", "hex": "#F3FBF7", "ok": "oklch(98.1% 0.010 165)", "on": "#111111"}, {"name": "Superficie", "hex": "#DBF2E8", "ok": "oklch(94.2% 0.028 168)", "on": "#111111"}, {"name": "Texto", "hex": "#10302A", "ok": "oklch(28.3% 0.039 179)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#2FB58F", "ok": "oklch(69.3% 0.126 169)", "on": "#111111"}, {"name": "Acento", "hex": "#FF6A55", "ok": "oklch(70.7% 0.186 30)", "on": "#111111"}], "on4": "#10302A", "on5": "#10302A", "logo": "#10302A", "underline": "#2FB58F", "heroAcc": "#10302A", "heroOn": "#FFFFFF", "font": {"f": "\"Unbounded\"", "w": 700, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Gelat Fresc", "Helado de fruta de verdad, sin trampas.", "Ver sabores", "Abrimos de 12 a 24 h todo el verano"], "sectShort": "Heladerías y más", "crs": [["Texto sobre fondo", 13.5, ""], ["Texto sobre superficie", 12.09, ""], ["Botón", 5.04, ""], ["Sobre marca", 5.5, ""]], "tags": ["alimentacion", "tecnologia", "moda"]}, {"id": "lima", "name": "Lima y lila", "emo": "frescura", "emoName": "Frescura y juventud", "t": "Juventud, tecnología desenfadada, novedad.", "c": [{"name": "Fondo", "hex": "#FAFAF5", "ok": "oklch(98.4% 0.007 107)", "on": "#111111"}, {"name": "Superficie", "hex": "#ECEDE1", "ok": "oklch(94.2% 0.016 111)", "on": "#111111"}, {"name": "Texto", "hex": "#1D1A2C", "ok": "oklch(23.0% 0.035 291)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#B6A3FF", "ok": "oklch(76.7% 0.130 293)", "on": "#111111"}, {"name": "Acento", "hex": "#CDF25B", "ok": "oklch(90.6% 0.179 122)", "on": "#111111"}], "on4": "#1D1A2C", "on5": "#1D1A2C", "logo": "#1D1A2C", "underline": "#B6A3FF", "heroAcc": "#1D1A2C", "heroOn": "#FFFFFF", "font": {"f": "\"Syne\"", "w": 800, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Quedem", "Planes con tus amigos, sin grupos infinitos.", "Descargar la app", "Gratis para iPhone y Android"], "sectShort": "Startups y más", "crs": [["Texto sobre fondo", 16.22, ""], ["Texto sobre superficie", 14.37, ""], ["Botón", 13.3, ""], ["Sobre marca", 7.82, ""]], "tags": ["tecnologia", "creativo"]}, {"id": "cartel", "name": "Cartel de los 70", "emo": "nostalgia", "emoName": "Nostalgia y retro", "t": "Calidez retro, carretera, vinilo.", "c": [{"name": "Fondo", "hex": "#F1E4CC", "ok": "oklch(92.3% 0.035 83)", "on": "#111111"}, {"name": "Superficie", "hex": "#E5D0AA", "ok": "oklch(86.5% 0.055 82)", "on": "#111111"}, {"name": "Texto", "hex": "#2E2117", "ok": "oklch(26.0% 0.027 59)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#B9532B", "ok": "oklch(56.5% 0.143 41)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#2F6F69", "ok": "oklch(49.8% 0.066 187)", "on": "#FFFFFF"}], "on4": "#FFFFFF", "on5": "#FFFFFF", "logo": "#B9532B", "underline": "#B9532B", "heroAcc": "#2F6F69", "heroOn": "#FFFFFF", "font": {"f": "\"Fraunces\"", "w": 900, "s": "normal"}, "body": "\"Jost\"", "biz": ["Cervesa Rovell", "Cerveza artesana, como antes.", "Visitar la fábrica", "Fábrica y bar de catas en el polígono"], "sectShort": "Cervecería artesana y más", "crs": [["Texto sobre fondo", 12.41, ""], ["Texto sobre superficie", 10.35, ""], ["Botón", 5.84, ""], ["Sobre marca", 4.84, ""], ["Marca como titular", 3.85, "lg"]], "tags": ["hosteleria", "creativo", "comercio"]}, {"id": "azulejo", "name": "Azulejo", "emo": "nostalgia", "emoName": "Nostalgia y retro", "t": "Mediterráneo, tradición, casa de pueblo.", "c": [{"name": "Fondo", "hex": "#F6F3EC", "ok": "oklch(96.5% 0.010 87)", "on": "#111111"}, {"name": "Superficie", "hex": "#E3EAF1", "ok": "oklch(93.4% 0.012 248)", "on": "#111111"}, {"name": "Texto", "hex": "#10284A", "ok": "oklch(27.8% 0.070 258)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#1E4F9C", "ok": "oklch(44.0% 0.136 259)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#E2A72E", "ok": "oklch(76.5% 0.145 80)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#10284A", "logo": "#1E4F9C", "underline": "#1E4F9C", "heroAcc": "#1E4F9C", "heroOn": "#FFFFFF", "font": {"f": "\"Newsreader\"", "w": 400, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Casa Amparín", "Arroces a leña desde 1952.", "Reservar mesa", "Paella valenciana los domingos"], "sectShort": "Restaurante de arroces y más", "crs": [["Texto sobre fondo", 13.3, ""], ["Texto sobre superficie", 12.15, ""], ["Botón", 6.88, ""], ["Sobre marca", 7.91, ""], ["Marca como titular", 7.14, "lg"]], "tags": ["hosteleria", "alimentacion", "turismo"]}, {"id": "polaroid", "name": "Polaroid", "emo": "nostalgia", "emoName": "Nostalgia y retro", "t": "Recuerdo, ternura, verano de hace años.", "c": [{"name": "Fondo", "hex": "#F3EEE5", "ok": "oklch(95.1% 0.013 82)", "on": "#111111"}, {"name": "Superficie", "hex": "#E5DDCF", "ok": "oklch(90.0% 0.021 82)", "on": "#111111"}, {"name": "Texto", "hex": "#2B2A33", "ok": "oklch(29.0% 0.016 290)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#557891", "ok": "oklch(55.6% 0.056 240)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#DE8C6B", "ok": "oklch(71.7% 0.111 43)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#2B2A33", "logo": "#557891", "underline": "#557891", "heroAcc": "#557891", "heroOn": "#FFFFFF", "font": {"f": "\"Instrument Serif\"", "w": 400, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Laia Foto", "Bodas contadas como un álbum de familia.", "Consultar fecha", "Reportajes en Castellón y Valencia"], "sectShort": "Fotografía de bodas y más", "crs": [["Texto sobre fondo", 12.26, ""], ["Texto sobre superficie", 10.51, ""], ["Botón", 5.45, ""], ["Sobre marca", 4.69, ""], ["Marca como titular", 4.05, "lg"]], "tags": ["creativo", "hosteleria", "comercio"]}, {"id": "horaazul", "name": "Hora azul", "emo": "oscura", "emoName": "Sofisticación oscura", "t": "Sofisticación nocturna, misterio, deseo.", "c": [{"name": "Fondo", "hex": "#16122A", "ok": "oklch(20.1% 0.047 289)", "on": "#FFFFFF"}, {"name": "Superficie", "hex": "#231D3C", "ok": "oklch(25.5% 0.057 291)", "on": "#FFFFFF"}, {"name": "Texto", "hex": "#F3ECDF", "ok": "oklch(94.5% 0.019 83)", "on": "#111111"}, {"name": "Marca", "hex": "#4A3C78", "ok": "oklch(40.1% 0.099 292)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#F0B664", "ok": "oklch(81.3% 0.120 74)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#16122A", "logo": "#F3ECDF", "underline": "#4A3C78", "heroAcc": "#F0B664", "heroOn": "#16122A", "font": {"f": "\"Instrument Serif\"", "w": 400, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Torre Marina", "Treinta plantas sobre el Mediterráneo.", "Agendar visita", "Áticos con terraza desde la planta 24"], "sectShort": "Inmobiliaria de lujo y más", "crs": [["Texto sobre fondo", 15.49, ""], ["Texto sobre superficie", 13.62, ""], ["Botón", 10.03, ""], ["Sobre marca", 9.51, ""]], "tags": ["inmobiliaria", "turismo", "hosteleria"]}, {"id": "cobre", "name": "Carbón y cobre", "emo": "oscura", "emoName": "Sofisticación oscura", "t": "Diseño, materia, sobriedad cara.", "c": [{"name": "Fondo", "hex": "#151515", "ok": "oklch(19.6% 0 0)", "on": "#FFFFFF"}, {"name": "Superficie", "hex": "#232221", "ok": "oklch(25.3% 0.002 68)", "on": "#FFFFFF"}, {"name": "Texto", "hex": "#ECE9E3", "ok": "oklch(93.5% 0.009 85)", "on": "#111111"}, {"name": "Marca", "hex": "#3A3532", "ok": "oklch(33.3% 0.009 53)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#C47A4C", "ok": "oklch(64.9% 0.111 52)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#151515", "logo": "#ECE9E3", "underline": "#C47A4C", "heroAcc": "#C47A4C", "heroOn": "#151515", "font": {"f": "\"Archivo\"", "w": 800, "s": "125%"}, "body": "\"Inter Tight\"", "biz": ["Fosc Interiorisme", "Espacios que se tocan.", "Ver proyectos", "Cocinas y salones a medida en acero y madera"], "sectShort": "Estudio de arquitectura e interiorismo y más", "crs": [["Texto sobre fondo", 15.07, ""], ["Texto sobre superficie", 13.11, ""], ["Botón", 5.42, ""], ["Sobre marca", 12.1, ""]], "tags": ["inmobiliaria", "hosteleria", "moda"]}, {"id": "imprenta", "name": "Tinta de imprenta", "emo": "creatividad", "emoName": "Creatividad", "t": "Atrevimiento, oficio gráfico, impacto.", "c": [{"name": "Fondo", "hex": "#F4F2EC", "ok": "oklch(96.1% 0.008 91)", "on": "#111111"}, {"name": "Superficie", "hex": "#FFFFFF", "ok": "oklch(100.0% 0 0)", "on": "#111111"}, {"name": "Texto", "hex": "#111111", "ok": "oklch(17.8% 0 0)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#2A3BF5", "ok": "oklch(49.2% 0.268 268)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#FF4A26", "ok": "oklch(66.6% 0.222 33)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#111111", "logo": "#2A3BF5", "underline": "#2A3BF5", "heroAcc": "#2A3BF5", "heroOn": "#FFFFFF", "font": {"f": "\"Archivo\"", "w": 850, "s": "75%"}, "body": "\"Inter Tight\"", "biz": ["Impremta Ràpida", "Flyers mañana. Carteles pasado.", "Pedir presupuesto", "Imprenta digital y offset en Castelló"], "sectShort": "Imprenta y flyers y más", "crs": [["Texto sobre fondo", 16.87, ""], ["Texto sobre superficie", 18.88, ""], ["Botón", 5.63, ""], ["Sobre marca", 6.9, ""], ["Marca como titular", 6.17, "lg"]], "tags": ["creativo", "comercio"]}, {"id": "neon", "name": "Noche eléctrica", "emo": "creatividad", "emoName": "Creatividad", "t": "Fiesta, futuro, cultura digital.", "c": [{"name": "Fondo", "hex": "#0F0E14", "ok": "oklch(16.8% 0.013 293)", "on": "#FFFFFF"}, {"name": "Superficie", "hex": "#1C1A25", "ok": "oklch(22.5% 0.021 293)", "on": "#FFFFFF"}, {"name": "Texto", "hex": "#F4F3EF", "ok": "oklch(96.4% 0.005 95)", "on": "#0F0E14"}, {"name": "Marca", "hex": "#6D2CF0", "ok": "oklch(51.6% 0.261 288)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#D5FF3F", "ok": "oklch(93.8% 0.208 122)", "on": "#0F0E14"}], "on4": "#FFFFFF", "on5": "#0F0E14", "logo": "#F4F3EF", "underline": "#6D2CF0", "heroAcc": "#D5FF3F", "heroOn": "#0F0E14", "font": {"f": "\"Unbounded\"", "w": 700, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Sala Pols", "Techno los viernes hasta que salga el sol.", "Comprar entradas", "Aforo de 600 personas, puerta a las 0:00"], "sectShort": "Salas y discotecas y más", "crs": [["Texto sobre fondo", 17.3, ""], ["Texto sobre superficie", 15.45, ""], ["Botón", 16.65, ""], ["Sobre marca", 6.42, ""]], "tags": ["creativo", "tecnologia"]}, {"id": "clinica", "name": "Clínica serena", "emo": "salud", "emoName": "Salud", "t": "Higiene, calma, trato humano.", "c": [{"name": "Fondo", "hex": "#F6FAFA", "ok": "oklch(98.2% 0.004 197)", "on": "#111111"}, {"name": "Superficie", "hex": "#E2EFEE", "ok": "oklch(94.2% 0.014 191)", "on": "#111111"}, {"name": "Texto", "hex": "#11303A", "ok": "oklch(29.1% 0.041 222)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#1D7676", "ok": "oklch(51.6% 0.080 195)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#EE8B6B", "ok": "oklch(73.5% 0.129 39)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#11303A", "logo": "#1D7676", "underline": "#1D7676", "heroAcc": "#1D7676", "heroOn": "#FFFFFF", "font": {"f": "\"Jost\"", "w": 300, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Clínica Dental Riu Sec", "Tu sonrisa, sin miedo.", "Pedir cita", "Primera visita y revisión gratuitas"], "sectShort": "Clínica dental y más", "crs": [["Texto sobre fondo", 13.25, ""], ["Texto sobre superficie", 11.82, ""], ["Botón", 5.66, ""], ["Sobre marca", 5.38, ""], ["Marca como titular", 5.11, "lg"]], "tags": ["salud"]}, {"id": "hoja", "name": "Hoja y fruta", "emo": "salud", "emoName": "Salud", "t": "Vitalidad, comida sana, energía natural.", "c": [{"name": "Fondo", "hex": "#FBFAF3", "ok": "oklch(98.4% 0.009 100)", "on": "#111111"}, {"name": "Superficie", "hex": "#EEF2DE", "ok": "oklch(95.3% 0.027 116)", "on": "#111111"}, {"name": "Texto", "hex": "#1F2E1E", "ok": "oklch(28.2% 0.035 143)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#377D2E", "ok": "oklch(52.6% 0.134 141)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#F29B30", "ok": "oklch(76.1% 0.153 66)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#1F2E1E", "logo": "#377D2E", "underline": "#377D2E", "heroAcc": "#377D2E", "heroOn": "#FFFFFF", "font": {"f": "\"Bricolage\"", "w": 700, "s": "normal"}, "body": "\"Inter Tight\"", "biz": ["Fruites del Camí", "La fruta del campo, en tu casa mañana.", "Hacer pedido", "Naranjas y verdura de temporada de la Plana"], "sectShort": "Nutricionista y más", "crs": [["Texto sobre fondo", 13.67, ""], ["Texto sobre superficie", 12.53, ""], ["Botón", 6.48, ""], ["Sobre marca", 5.08, ""], ["Marca como titular", 4.85, "lg"]], "tags": ["salud", "alimentacion", "comercio"]}, {"id": "recreo", "name": "Recreo", "emo": "infancia", "emoName": "Infancia", "t": "Juego, alegría, seguridad.", "c": [{"name": "Fondo", "hex": "#FFF8EC", "ok": "oklch(98.1% 0.018 81)", "on": "#111111"}, {"name": "Superficie", "hex": "#FFE8C2", "ok": "oklch(94.0% 0.055 80)", "on": "#111111"}, {"name": "Texto", "hex": "#1F2C4A", "ok": "oklch(29.7% 0.058 265)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#1F78BD", "ok": "oklch(55.7% 0.134 247)", "on": "#FFFFFF"}, {"name": "Acento", "hex": "#FF6A4D", "ok": "oklch(70.6% 0.188 33)", "on": "#111111"}], "on4": "#FFFFFF", "on5": "#1F2C4A", "logo": "#1F78BD", "underline": "#1F78BD", "heroAcc": "#1F78BD", "heroOn": "#FFFFFF", "font": {"f": "\"Nunito\"", "w": 850, "s": "normal"}, "body": "\"Nunito\"", "biz": ["Ludoteca Tirititi", "Tardes de juego, merienda incluida.", "Apuntar a mi hijo", "De 3 a 10 años, de lunes a viernes"], "sectShort": "Ludoteca y más", "crs": [["Texto sobre fondo", 13.11, ""], ["Texto sobre superficie", 11.58, ""], ["Botón", 4.89, ""], ["Sobre marca", 4.69, ""], ["Marca como titular", 4.44, "lg"]], "tags": ["educacion", "comercio"]}, {"id": "algodon", "name": "Algodón", "emo": "infancia", "emoName": "Infancia", "t": "Ternura, delicadeza, calidad.", "c": [{"name": "Fondo", "hex": "#FBF7F4", "ok": "oklch(97.8% 0.006 60)", "on": "#111111"}, {"name": "Superficie", "hex": "#F2E5E0", "ok": "oklch(93.1% 0.016 42)", "on": "#111111"}, {"name": "Texto", "hex": "#3A3035", "ok": "oklch(32.2% 0.017 346)", "on": "#FFFFFF"}, {"name": "Marca", "hex": "#9EC5C1", "ok": "oklch(79.4% 0.042 189)", "on": "#111111"}, {"name": "Acento", "hex": "#E39586", "ok": "oklch(74.4% 0.097 31)", "on": "#111111"}], "on4": "#3A3035", "on5": "#3A3035", "logo": "#3A3035", "underline": "#9EC5C1", "heroAcc": "#3A3035", "heroOn": "#FFFFFF", "font": {"f": "\"Fraunces\"", "w": 500, "s": "normal"}, "body": "\"Nunito\"", "biz": ["Cotonet", "Ropa de algodón orgánico de 0 a 6 años.", "Ver colección", "Envío gratis a partir de 40 €"], "sectShort": "Tienda online de moda infantil y más", "crs": [["Texto sobre fondo", 11.92, ""], ["Texto sobre superficie", 10.31, ""], ["Botón", 5.39, ""], ["Sobre marca", 6.78, ""]], "tags": ["educacion", "moda", "comercio"]}]</script>
+<script>
+  (() => {
+    const DATA = JSON.parse(document.getElementById('pal-data').textContent);
+    const byId = Object.fromEntries(DATA.map((p) => [p.id, p]));
+    const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const n = (x) => x.toFixed(1).replace('.', ',');
+    const ROLES = ['Fondo', 'Superficie', 'Texto', 'Marca', 'Acento'];
+
+    /* ---------- Variables CSS listas para copiar ---------- */
+    function cssVars(p) {
+      const names = ['fondo', 'superficie', 'texto', 'marca', 'acento'];
+      const lines = p.c.map((c, i) => `  --${names[i]}:${' '.repeat(12 - names[i].length)}${c.hex}; /* ${c.name.toLowerCase()}, ${c.ok} */`);
+      return `/* ${p.name}: ${p.t} */\n:root {\n${lines.join('\n')}\n  --sobre-marca:  ${p.on4};\n  --sobre-acento: ${p.on5};\n}`;
+    }
+    async function copy(text, btn) {
+      const old = btn.textContent;
+      try { await navigator.clipboard.writeText(text); btn.textContent = 'Copiado'; }
+      catch {
+        const ta = Object.assign(document.createElement('textarea'), { value: text });
+        document.body.append(ta); ta.select();
+        try { document.execCommand('copy'); btn.textContent = 'Copiado'; } catch { btn.textContent = 'No se pudo copiar'; }
+        ta.remove();
+      }
+      setTimeout(() => (btn.textContent = old), 1500);
+    }
+    document.addEventListener('click', (e) => {
+      const c = e.target.closest('[data-copy]'); if (c) copy(cssVars(byId[c.dataset.copy]), c);
+      const v = e.target.closest('[data-copyval]'); if (v) copy(v.dataset.copyval, v);
+      const t = e.target.closest('[data-try]'); if (t) openTry(t.dataset.try, t);
+    });
+
+    /* ---------- Portada: el muro re-tematiza la portada ---------- */
+    const hero = $('.hero'), root = document.documentElement;
+    let heroId = null;
+    function applyHero(id) {
+      const p = byId[id]; heroId = id;
+      const [b, s, f, m, a] = p.c.map((c) => c.hex);
+      Object.entries({ '--hb': b, '--hf': f, '--ha': p.heroAcc, '--hon': p.heroOn }).forEach(([k, v]) => hero.style.setProperty(k, v));
+      root.style.setProperty('--top-fg', f);
+      $('[data-ro-name]').textContent = p.name;
+      $('[data-ro-name]').style.cssText = `--ro-f:${p.font.f};--ro-w:${p.font.w};--ro-s:${p.font.s}`;
+      $('[data-ro-t]').innerHTML = `<b>${p.emoName}.</b> ${p.t} ${p.sectShort}.`;
+      $('[data-ro-chips]').innerHTML = p.c.map((c, i) => `<span style="background:${c.hex};color:${c.on}"><b>${ROLES[i]}</b>${c.hex}</span>`).join('');
+      const link = $('[data-ro-link]'); link.href = '#p-' + id; link.textContent = 'Ver la ficha';
+      const tb = $('[data-ro-try]'); tb.hidden = false; tb.dataset.try = id;
+      $$('.wall button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.id === id)));
+      let meta = document.querySelector('meta[name="theme-color"]');
+      if (!meta) { meta = document.createElement('meta'); meta.name = 'theme-color'; document.head.append(meta); }
+      meta.content = b;
+    }
+    $$('.wall button').forEach((btn) => btn.addEventListener('click', () => applyHero(btn.dataset.id)));
+    // Cuando la portada sale de la vista, la barra superior vuelve a los colores de la lección
+    new IntersectionObserver((e) => { if (heroId) root.style.setProperty('--top-fg', e[0].isIntersecting ? byId[heroId].c[2].hex : 'var(--fg)'); }, { threshold: 0.15 }).observe(hero);
+
+    /* ---------- Buscador ---------- */
+    const state = { emo: 'todas', sec: 'todos' };
+    function filter() {
+      let k = 0;
+      $$('[data-index] li').forEach((li) => {
+        const ok = (state.emo === 'todas' || li.dataset.emo === state.emo) && (state.sec === 'todos' || li.dataset.tags.split(' ').includes(state.sec));
+        li.hidden = !ok; if (ok) k++;
+      });
+      $('[data-count]').innerHTML = `${k} ${k === 1 ? 'paleta' : 'paletas'} <span>de ${DATA.length}</span>`;
+      $('[data-none]').hidden = k > 0;
+    }
+    $$('[data-filter]').forEach((group) => group.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      state[group.dataset.filter] = b.dataset.v;
+      $$('button', group).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      filter();
+    }));
+    // Al saltar a una ficha, se marca un momento para encontrarla
+    function flash(id) { const el = document.getElementById('p-' + id); if (!el) return; el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); }
+    addEventListener('hashchange', () => { if (location.hash.startsWith('#p-')) flash(location.hash.slice(3)); });
+
+    /* ---------- Probador ---------- */
+    const tr = $('#tryon'), pv = $('[data-pv]');
+    let cur = 0, opener = null;
+    function paintTry(id) {
+      const p = byId[id]; cur = DATA.indexOf(p);
+      const [b, s, f, m, a] = p.c.map((c) => c.hex);
+      Object.entries({ '--p1': b, '--p2': s, '--p3': f, '--p4': m, '--p5': a, '--pon4': p.on4, '--pon5': p.on5, '--plogo': p.logo, '--p4u': p.underline,
+        '--pf': p.font.f, '--pw': p.font.w, '--ps': p.font.s, '--pb': p.body }).forEach(([k, v]) => pv.style.setProperty(k, v));
+      $('[data-tr-name]').textContent = p.name; $('[data-tr-emo]').textContent = p.emoName;
+      $('[data-pv-logo]').textContent = p.biz[0]; $('[data-pv-logo2]').textContent = p.biz[0];
+      $('[data-pv-h]').textContent = p.biz[1]; $('[data-pv-cta]').textContent = p.biz[2]; $('[data-pv-nav]').textContent = p.biz[2];
+      $('[data-pv-k]').textContent = p.biz[3]; $('[data-pv-p]').textContent = `Una web de ejemplo con la paleta ${p.name}: ${p.t.charAt(0).toLowerCase() + p.t.slice(1)}`;
+      $('[data-tr-crs]').innerHTML = p.crs.map((c) => `<span class="${c[2] || ''}">${c[0]} ${n(c[1])}:1</span>`).join('');
+      $('[data-tr-copy]').dataset.copy = id;
+      $('[data-tr-card]').href = '#p-' + id;
+      $('.tr-scroll').scrollTop = 0;
+    }
+    function openTry(id, from) {
+      opener = from || opener; paintTry(id);
+      tr.classList.add('open'); tr.setAttribute('aria-hidden', 'false');
+      setTimeout(() => $('[data-tr-close]').focus({ preventScroll: true }), reduce ? 0 : 300);
+    }
+    function closeTry() {
+      tr.classList.remove('open'); tr.setAttribute('aria-hidden', 'true');
+      if (opener) opener.focus({ preventScroll: true });
+    }
+    $('[data-tr-close]').addEventListener('click', closeTry);
+    $('[data-tr-card]').addEventListener('click', () => { closeTry(); setTimeout(() => flash(DATA[cur].id), 50); });
+    $('[data-tr-prev]').addEventListener('click', () => paintTry(DATA[(cur - 1 + DATA.length) % DATA.length].id));
+    $('[data-tr-next]').addEventListener('click', () => paintTry(DATA[(cur + 1) % DATA.length].id));
+    addEventListener('keydown', (e) => { if (e.key === 'Escape' && tr.classList.contains('open')) closeTry(); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cómo se piensa una web | Hora azul</title>
+<meta name="description" content="Del brief a las decisiones: objetivo, público, competencia, los tres segundos, tres palabras que deciden color, letra, estructura y movimiento, y un caso completo de imprenta de flyers.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Brief».
+     Papel blanco, tinta negra y magenta: los colores de una hoja de encargo y de la cuatricromía.
+     Archivo 850 para titular, Inter Tight para leer, JetBrains Mono para las etiquetas de la hoja. */
+  :root {
+    --bg: oklch(99% 0 0);
+    --bg-2: oklch(96.5% 0 0);
+    --bg-3: oklch(92% 0 0);
+    --fg: oklch(16% 0 0);
+    --muted: oklch(42% 0 0);
+    --faint: oklch(52% 0 0);
+    --accent: oklch(62% 0.22 340);
+    --accent-ink: oklch(52% 0.22 340);   /* el magenta para texto pequeño: 6,2:1 sobre blanco */
+    --on-accent: oklch(16% 0 0);         /* negro sobre este magenta: 5,1:1 (blanco daría 4,1:1) */
+    --code-bg: oklch(17% 0 0);
+    --scheme: light;
+    --f-display: "Archivo", "Inter Tight", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, monospace;
+    --display-weight: 850;
+    --display-tracking: -0.04em;
+  }
+  body { font-size: clamp(1.04rem, 1rem + .2vw, 1.16rem); line-height: 1.62; }
+  .prose h2 { font-size: clamp(2.2rem, 1.3rem + 3.2vw, 4.2rem); line-height: .94; max-width: 14ch; }
+  .prose h2 .n { color: var(--accent-ink); font-family: var(--f-mono); font-weight: 500; }
+  .prose h3 { font-size: var(--step-2); font-weight: 800; letter-spacing: -0.03em; }
+  .prose li::marker { color: var(--accent-ink); }
+  .quiz .q { font-weight: 800; letter-spacing: -0.025em; }
+  .callout.criterio .t { color: var(--accent-ink); }
+
+  /* =========================================================
+     Portada: del brief a la web. Un diagrama que se construye paso a paso
+     (negocio, objetivo, público, emoción, tres palabras, decisiones y la web).
+     Al elegir otro cliente se vuelve a construir con sus respuestas.
+     ========================================================= */
+  .hero { display: grid; grid-template-rows: auto 1fr auto; gap: clamp(1rem, 2.4vh, 1.8rem); padding: 4.8rem var(--gutter) 1.4rem; background: var(--bg); }
+  .h-top { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.2rem clamp(2rem, 5vw, 5rem); align-items: end; }
+  .h-top [data-kicker] { margin: 0 0 1rem; font: 500 .8rem/1.2 var(--f-mono); color: var(--muted); }
+  .hero h1 { font: 850 clamp(3rem, .6rem + 5.6vw, 6.6rem)/.86 var(--f-display); letter-spacing: -0.05em; }
+  .hero h1 span { color: var(--accent); }
+  .hero .lede { margin: 0 0 1.1rem; max-width: 40ch; font-size: var(--step-0); line-height: 1.5; color: var(--muted); }
+  .cases { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .cases button { min-height: 44px; padding: 0 1rem; border: 1.5px solid var(--fg); border-radius: 99px; background: none; color: var(--fg); font: 600 .9rem/1 var(--f-ui); cursor: pointer; }
+  .cases button[aria-selected="true"] { background: var(--fg); color: var(--bg); }
+  .h-meta { display: flex; align-items: center; gap: .6rem; margin-top: .8rem; }
+  .h-meta .btn { min-height: 40px; border-width: 1.5px; }
+
+  .board { position: relative; display: grid; grid-template-columns: 1fr 1fr 1.08fr 1.3fr; gap: 0 clamp(2rem, 4.2vw, 4.6rem); min-height: 0; }
+  .wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 0; }
+  .wires path { fill: none; stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: var(--len); stroke-dashoffset: var(--len); transition: stroke-dashoffset .7s var(--ease-out), stroke .3s; }
+  .wires path.on { stroke-dashoffset: 0; }
+  .wires path.hot { stroke: var(--accent); stroke-width: 2.5; }
+  .col { position: relative; z-index: 1; display: flex; flex-direction: column; gap: .55rem; min-width: 0; }
+  .col-h { display: flex; align-items: baseline; gap: .5rem; margin: 0 0 .2rem; font: 600 .82rem/1.2 var(--f-ui); color: var(--muted); }
+  .col-h b { font: 850 1.4rem/1 var(--f-display); color: var(--accent); letter-spacing: -0.04em; }
+  .col-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: .7rem; }
+  .node { position: relative; display: grid; gap: .25rem; align-content: start; width: 100%; text-align: left; padding: .85rem 1rem .9rem; border: 1.5px dashed color-mix(in oklab, var(--fg) 28%, transparent);
+    border-radius: 6px; background: var(--bg); color: var(--fg); font: 400 .86rem/1.3 var(--f-ui); cursor: pointer; transition: border-color .35s, opacity .35s, translate .5s var(--ease-out), box-shadow .3s; }
+  .node > * { opacity: 0; transition: opacity .4s .1s; }
+  .node.on { border: 1.5px solid var(--fg); }
+  .node.on > * { opacity: 1; }
+  .node.hot { box-shadow: 4px 4px 0 var(--accent); }
+  .node small { font: 500 .7rem/1.2 var(--f-mono); color: var(--muted); }
+  .node b { font: 800 clamp(1rem, .6rem + .6vw, 1.22rem)/1.12 var(--f-display); letter-spacing: -0.02em; }
+  .node .s { color: var(--muted); font-size: .86rem; }
+  .node.big b { font-size: clamp(1.15rem, .6rem + .9vw, 1.5rem); line-height: 1.08; }
+  .chips { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
+  .chips i { font: 700 .8rem/1 var(--f-ui); font-style: normal; padding: .35rem .55rem; border-radius: 99px; background: var(--accent); color: var(--on-accent); }
+  .node.dec { grid-template-columns: 5.4rem 1fr; align-items: center; gap: .1rem .6rem; padding-block: .8rem; }
+  .node.dec small { grid-row: span 1; }
+  .sw { display: flex; gap: 3px; }
+  .sw i { width: 1.15rem; height: 1.15rem; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .18); }
+  .tipo-aa { font-size: 1.5rem !important; line-height: 1 !important; }
+  .why { margin: 0; min-height: 3.1em; padding-top: .8rem; border-top: 1.5px solid var(--fg); font: 500 clamp(1rem, .9rem + .3vw, 1.2rem)/1.45 var(--f-ui); letter-spacing: -0.01em; }
+  .why b { font: 500 .78rem/1 var(--f-mono); color: var(--accent-ink); margin-right: .5rem; }
+
+  /* La web resultante: empieza como boceto gris y se va vistiendo */
+  .mw { --mbg: #F1F1F1; --mfg: #8A8A8A; --mac: #BDBDBD; --monac: #fff; --mf: var(--f-mono); position: relative; flex: 1; min-height: 15rem; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden;
+    border: 1.5px solid var(--fg); border-radius: 8px; background: var(--mbg); color: var(--mfg); transition: background-color .6s, color .6s; box-shadow: 8px 8px 0 color-mix(in oklab, var(--fg) 8%, transparent); }
+  .mw.color { --mbg: var(--cbg); --mfg: var(--cfg); --mac: var(--cac); --monac: var(--conac); }
+  .mw.tipo { --mf: var(--cf); }
+  .mw-nav { display: flex; justify-content: space-between; align-items: center; padding: .7rem .9rem; font: 700 .78rem/1 var(--f-ui); border-bottom: 1px solid color-mix(in oklab, currentColor 18%, transparent); }
+  .mw-nav span { padding: .3rem .55rem; border-radius: 99px; background: var(--mac); color: var(--monac); font-size: .68rem; transition: background-color .6s; }
+  .mw-main { position: relative; display: grid; grid-template-columns: 1.1fr 1fr; gap: .8rem; align-items: stretch; padding: 1.1rem .9rem; }
+  .mw-main > div:first-child { align-self: center; }
+  .mw-h { margin: 0 0 .5rem; font-family: var(--mf); font-weight: var(--cw, 700); font-size: clamp(1.25rem, .4rem + 1.9vw, 2.4rem); line-height: .98; letter-spacing: -0.01em; transition: font-family .3s; }
+  .mw-sub { margin: 0 0 .9rem; font: 400 .8rem/1.4 var(--f-ui); opacity: .85; }
+  .mw-cta { display: inline-block; padding: .55rem .85rem; border-radius: 99px; background: var(--mac); color: var(--monac); font: 700 .8rem/1 var(--f-ui); transition: background-color .6s; }
+  .mw.done .mw-cta { animation: pop .6s var(--ease-out); }
+  @keyframes pop { 50% { scale: 1.12; } }
+  .mw-art { position: relative; height: 100%; min-height: 6.5rem; border-radius: 6px; background: repeating-linear-gradient(45deg, color-mix(in oklab, currentColor 10%, transparent) 0 6px, transparent 6px 12px); overflow: hidden; }
+  .mw-art > * { opacity: 0; transition: opacity .6s, translate .7s var(--ease-out); translate: 0 10px; }
+  .mw.img .mw-art { background: none; }
+  .mw.img .mw-art > * { opacity: 1; translate: 0 0; }
+  .mw-strip { display: flex; gap: .4rem; padding: 0 .9rem .9rem; opacity: .25; transition: opacity .5s; }
+  .mw.struct .mw-strip { opacity: 1; }
+  .mw-strip span { flex: 1; padding: .45rem .5rem; border-radius: 5px; border: 1px solid color-mix(in oklab, currentColor 25%, transparent); font: 600 .66rem/1.2 var(--f-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Arte de cada caso (dibujado con CSS) */
+  .art-fan i { position: absolute; width: 46%; aspect-ratio: 3 / 4; left: 26%; top: 8%; border-radius: 3px; box-shadow: 0 6px 14px rgb(0 0 0 / .18); display: grid; place-items: end start; padding: 6px; font: 900 .7rem/0.9 "Big Shoulders", sans-serif; }
+  .art-fan i:nth-child(1) { background: #FFE500; color: #111; rotate: -14deg; translate: -34% 6% !important; }
+  .art-fan i:nth-child(2) { background: #111; color: #fff; rotate: 9deg; translate: 32% 4% !important; }
+  .art-fan i:nth-child(3) { background: #E6007E; color: #fff; rotate: -2deg; }
+  .art-sun { position: absolute; inset: 0; background: radial-gradient(circle at 70% 30%, #FFE2C4 0 18%, transparent 19%), linear-gradient(160deg, #DCE7EC, #F4E8DD); }
+  .art-sun::after { content: "964 000 000"; position: absolute; left: 8%; bottom: 10%; padding: .35rem .6rem; border-radius: 99px; background: #fff; color: #1F3B4D; font: 700 .66rem/1 var(--f-ui); box-shadow: 0 4px 10px rgb(0 0 0 / .1); }
+  .art-sun i { position: absolute; width: 30%; aspect-ratio: 1; border-radius: 50%; bottom: 8%; right: 12%; background: #E8846B; opacity: .9; }
+  .art-mont { position: absolute; inset: 0; background: linear-gradient(#E9B48F, #F3DCC4 55%); }
+  .art-mont i { position: absolute; inset: auto 0 0 0; height: 70%; background: #8C6E5A; clip-path: polygon(0 60%, 18% 30%, 34% 52%, 55% 12%, 72% 44%, 86% 26%, 100% 48%, 100% 100%, 0 100%); }
+  .art-mont i + i { height: 45%; background: #2F3A2C; clip-path: polygon(0 50%, 22% 25%, 44% 55%, 64% 30%, 100% 60%, 100% 100%, 0 100%); }
+
+  @media (max-width: 860px) {
+    .hero { padding-top: 4.6rem; grid-template-rows: auto auto auto; }
+    .h-top { grid-template-columns: 1fr; }
+    .hero h1 { font-size: clamp(2.7rem, 1rem + 8vw, 4.2rem); }
+    .hero .lede { font-size: .98rem; margin-bottom: .9rem; }
+    .cases { flex-wrap: nowrap; overflow-x: auto; margin: 0 calc(var(--gutter) * -1); padding: 0 var(--gutter); scrollbar-width: none; }
+    .cases button { flex: none; }
+    .board { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 calc(var(--gutter) * -1); padding: 4px var(--gutter) 10px; scroll-padding: 0 var(--gutter); scrollbar-width: none; }
+    .board::-webkit-scrollbar, .cases::-webkit-scrollbar { display: none; }
+    .wires { display: none; }
+    .col { flex: 0 0 84%; scroll-snap-align: start; }
+    .col-body { justify-content: flex-start; }
+    .col:not(:last-of-type)::after { content: ""; position: absolute; right: -10px; top: .7rem; width: 8px; height: 8px; border-top: 1.5px solid var(--fg); border-right: 1.5px solid var(--fg); rotate: 45deg; }
+    .mw { min-height: 17rem; }
+    .why { min-height: 4.6em; font-size: .9rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .node, .node > *, .wires path, .mw, .mw-art > *, .mw-strip { transition: none; } .mw.done .mw-cta { animation: none; } }
+
+  /* ---- Banda negra con la frase de la lección ---- */
+  .band.ink { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.ink p { margin: 0; max-width: 17ch; font: 850 clamp(2.2rem, 1.1rem + 4.4vw, 5.2rem)/.94 var(--f-display); letter-spacing: -0.045em; text-wrap: balance; }
+  .band.ink p em { font-style: normal; color: var(--accent); }
+  .band.ink small { display: block; margin-top: 1.4rem; max-width: 50ch; font: 400 var(--step-0)/1.5 var(--f-ui); color: oklch(82% 0 0); }
+
+  /* ---- Bocetos: la primera pantalla según el objetivo ---- */
+  .bocetos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin: 2.4rem 0 3rem; }
+  .boc { display: grid; gap: .7rem; align-content: start; }
+  .boc .wf { aspect-ratio: 3 / 4; border: 1.5px solid var(--fg); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 6px; background: var(--bg); }
+  .wf i { display: block; border-radius: 3px; background: var(--bg-3); }
+  .wf .l { height: 6px; }
+  .wf .h { height: 14px; background: var(--fg); }
+  .wf .cta { height: 16px; width: 55%; border-radius: 99px; background: var(--accent); }
+  .wf .img { flex: 1; background: repeating-linear-gradient(45deg, var(--bg-3) 0 5px, var(--bg) 5px 10px); border: 1px solid var(--bg-3); }
+  .wf .row { display: flex; gap: 4px; } .wf .row i { flex: 1; height: 26px; }
+  .wf .search { height: 18px; border: 1.5px solid var(--fg); background: none; display: flex; justify-content: flex-end; padding: 2px; } .wf .search::after { content: ""; width: 34%; border-radius: 2px; background: var(--accent); }
+  .wf .tel { height: 18px; width: 70%; border-radius: 99px; background: var(--accent); }
+  .boc b { font: 800 1.05rem/1.1 var(--f-display); letter-spacing: -0.02em; }
+  .boc p { margin: 0; font-size: var(--step--1); line-height: 1.45; color: var(--muted); }
+  @media (max-width: 900px) { .bocetos { grid-template-columns: repeat(5, 62%); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .6rem; } .boc { scroll-snap-align: start; } .boc .wf { aspect-ratio: 4 / 3.6; } }
+
+  /* ---- Escaleras: el orden de la home según el objetivo ---- */
+  .escaleras { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(.8rem, 2vw, 1.6rem); margin: 2.4rem 0 1rem; counter-reset: none; }
+  .esc h4 { margin: 0 0 .7rem; font: 800 1.15rem/1 var(--f-display); letter-spacing: -0.02em; }
+  .esc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: e; }
+  .esc li { counter-increment: e; display: flex; gap: .55rem; align-items: baseline; margin: 0; padding: .55rem .7rem; border: 1.5px solid var(--fg); border-radius: 5px; font: 500 .86rem/1.3 var(--f-ui); }
+  .esc li::before { content: counter(e); font: 500 .72rem/1 var(--f-mono); color: var(--muted); }
+  .esc li.cta { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
+  .esc li.cta::before { color: var(--on-accent); }
+  .esc li.fold { margin-bottom: 26px; position: relative; }
+  .esc li.fold::after { content: "fin de la primera pantalla"; position: absolute; left: 0; right: 0; top: calc(100% + 6px); font: 500 .62rem/1 var(--f-mono); color: var(--accent-ink); border-top: 1.5px dashed var(--accent); padding-top: 4px; }
+  .esc p { margin: .8rem 0 0; font-size: var(--step--1); line-height: 1.45; color: var(--muted); }
+  @media (max-width: 900px) { .escaleras { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .escaleras { grid-template-columns: 1fr; } }
+
+  /* ---- Así sí / Así no (y trío) ---- */
+  .duo, .trio { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(.8rem, 2vw, 1.4rem); margin: 2.8rem 0; }
+  .trio { grid-template-columns: repeat(3, 1fr); }
+  .duo figure, .trio figure { margin: 0; display: grid; gap: .7rem; align-content: start; }
+  .art { position: relative; aspect-ratio: 16 / 11; overflow: hidden; border: 1.5px solid var(--fg); border-radius: 6px; container-type: inline-size; }
+  .duo figcaption, .trio figcaption { font: 400 var(--step--1)/1.5 var(--f-ui); color: var(--muted); }
+  .duo figcaption b, .trio figcaption b { display: inline-block; margin-right: .5rem; padding: .18rem .55rem; border-radius: 99px; font-weight: 700; font-size: .78rem; color: var(--fg); border: 1.5px dashed var(--fg); }
+  .si figcaption b { background: var(--fg); color: var(--bg) !important; border-style: solid !important; }
+  .d-why { grid-column: 1 / -1; margin: 0; font-size: var(--step-0); }
+  .d-why::before { content: ""; display: inline-block; width: 1.4rem; height: 3px; margin-right: .6rem; vertical-align: middle; background: var(--accent); }
+  @media (max-width: 760px) { .duo, .trio { grid-template-columns: 1fr; } }
+  /* Portada saturada frente a portada clara (imprenta) */
+  .ruido { background: linear-gradient(135deg, #2b59c3, #33a1fd); color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 4% 5%; display: flex; flex-direction: column; gap: 4%; }
+  .ruido .nv { display: flex; justify-content: space-between; gap: 2%; font-size: 2.4cqi; background: #fff; color: #333; padding: 1.5% 2%; margin: -4% -5% 0; }
+  .ruido .nv span { white-space: nowrap; }
+  .ruido h5 { margin: 3% 0 0; font-size: 5.2cqi; line-height: 1.15; text-shadow: 0 2px 4px rgb(0 0 0 / .4); }
+  .ruido p { margin: 0; font-size: 2.8cqi; }
+  .ruido .bt { display: flex; justify-content: center; gap: 2%; }
+  .ruido .bt span { padding: 1.5% 3%; border-radius: 6px; font-size: 2.6cqi; font-weight: 700; text-transform: uppercase; }
+  .ruido .bt span:nth-child(1) { background: #ff8c1a; } .ruido .bt span:nth-child(2) { background: #2ecc71; } .ruido .bt span:nth-child(3) { background: #e74c3c; }
+  .ruido .dots { display: flex; justify-content: center; gap: 1.4%; } .ruido .dots i { width: 1.6cqi; aspect-ratio: 1; border-radius: 50%; background: #fff; opacity: .6; }
+  .ruido .ar { position: absolute; top: 50%; font-size: 6cqi; opacity: .8; } .ruido .ar.l { left: 2%; } .ruido .ar.r { right: 2%; }
+  .ruido .bdg { position: absolute; right: 4%; bottom: 8%; background: #ffeb3b; color: #c00; font-weight: 900; font-size: 3cqi; padding: 2% 3%; rotate: -10deg; border-radius: 50%; }
+  .clara { background: #fff; color: #111; display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; gap: 4%; padding: 6%; }
+  .clara h5 { margin: 0 0 4cqi; font: 900 11cqi/.86 "Big Shoulders", sans-serif; text-transform: uppercase; letter-spacing: -0.01em; }
+  .clara h5 em { font-style: normal; color: #E6007E; }
+  .clara p { margin: 0 0 4cqi; font: 400 2.8cqi/1.4 "Inter Tight", sans-serif; color: #444; }
+  .clara span { display: inline-block; padding: 2.2cqi 3.4cqi; border-radius: 99px; background: #E6007E; color: #fff; font: 700 2.6cqi/1 "Inter Tight", sans-serif; }
+  .clara .fan { position: relative; height: 100%; }
+  .clara .fan i { position: absolute; width: 60%; aspect-ratio: 3/4; left: 20%; top: 12%; border-radius: 2px; box-shadow: 0 6px 14px rgb(0 0 0 / .2); }
+  .clara .fan i:nth-child(1) { background: #FFE500; rotate: -12deg; left: 4%; } .clara .fan i:nth-child(2) { background: #111; rotate: 8deg; left: 34%; } .clara .fan i:nth-child(3) { background: #E6007E; }
+  /* El trío del caso: sosa, descontrolada, controlada */
+  .sosa { background: #f4f6f8; color: #2d3e50; font-family: Arial, sans-serif; padding: 7%; display: flex; flex-direction: column; justify-content: center; gap: 4cqi; }
+  .sosa h5 { margin: 0; font-size: 6.5cqi; font-weight: 400; color: #2d6aa0; }
+  .sosa p { margin: 0; font-size: 3.4cqi; color: #6b7a89; }
+  .sosa span { align-self: start; padding: 2.4cqi 4cqi; background: #2d6aa0; color: #fff; font-size: 3cqi; border-radius: 3px; }
+  .loca { background: #1a0033; color: #39ff14; padding: 6%; display: flex; flex-direction: column; justify-content: center; gap: 3cqi; font-family: "Unbounded", sans-serif; }
+  .loca h5 { margin: 0; font-size: 8cqi; line-height: .95; background: linear-gradient(90deg, #ff00e6, #ffe600, #00f0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .loca p { margin: 0; font: 400 4.4cqi/1.2 "Caveat", cursive; color: #ff7a00; }
+  .loca span { align-self: start; padding: 2.4cqi 4cqi; background: #00f0ff; color: #ff00e6; font: 800 3cqi/1 "Bodoni Moda", serif; border-radius: 99px; box-shadow: 0 0 20px #00f0ff; }
+  .control { background: #fff; color: #111; padding: 7%; display: flex; flex-direction: column; justify-content: center; gap: 3.4cqi; }
+  .control h5 { margin: 0; font: 900 11cqi/.86 "Big Shoulders", sans-serif; text-transform: uppercase; }
+  .control h5 em { font-style: normal; color: #E6007E; }
+  .control p { margin: 0; font: 400 3.4cqi/1.4 "Inter Tight", sans-serif; color: #444; }
+  .control span { align-self: start; padding: 2.4cqi 4cqi; background: #E6007E; color: #fff; font: 700 3.2cqi/1 "Inter Tight", sans-serif; border-radius: 99px; }
+
+  .swatches .swatch { width: 122px; }
+  @media (max-width: 480px) { .swatches .swatch { width: calc(50% - .3rem); } }
+
+  /* ---- Ficha fija del caso (dentro de .split) ---- */
+  .ficha { border: 1.5px solid var(--fg); border-radius: 8px; padding: 1.3rem; background: var(--bg); box-shadow: 8px 8px 0 var(--accent); }
+  .ficha .lbl { display: block; margin: 0 0 .35rem; font: 500 .72rem/1.2 var(--f-mono); color: var(--muted); }
+  .ficha .nm { margin: 0 0 1rem; font: 900 2.6rem/.86 "Big Shoulders", sans-serif; text-transform: uppercase; }
+  .ficha .nm em { font-style: normal; color: #E6007E; }
+  .ficha dl { margin: 0; display: grid; grid-template-columns: 6.5rem 1fr; gap: .55rem .8rem; font-size: var(--step--1); line-height: 1.4; }
+  .ficha dt { font: 500 .72rem/1.5 var(--f-mono); color: var(--muted); }
+  .ficha dd { margin: 0; }
+  .ficha .pal { display: flex; height: 2.6rem; margin: 1rem 0 .4rem; border-radius: 4px; overflow: hidden; border: 1px solid var(--line-2); }
+  .ficha .pal i:nth-child(1) { flex: 60; background: #fff; } .ficha .pal i:nth-child(2) { flex: 28; background: #111; } .ficha .pal i:nth-child(3) { flex: 10; background: #E6007E; } .ficha .pal i:nth-child(4) { flex: 2; background: #FFE500; }
+  .ficha .pal-l { display: flex; justify-content: space-between; font: 500 .7rem/1.2 var(--f-mono); color: var(--muted); }
+
+  /* ---- Tabla de palabras ---- */
+  .palabras table { min-width: 940px; }
+  .palabras td:first-child { font: 800 1.05rem/1.2 var(--f-display); letter-spacing: -0.02em; color: var(--fg); white-space: nowrap; }
+  .palabras td:last-child { color: var(--fg); }
+  .palabras .mini { display: inline-flex; gap: 2px; margin-right: .4rem; vertical-align: -2px; }
+  .palabras .mini i { width: .8rem; height: .8rem; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .2); }
+
+  /* ---- Lista de pasos de la home del caso ---- */
+  .orden { list-style: none; padding: 0 !important; counter-reset: o; }
+  .orden li { counter-increment: o; display: grid; grid-template-columns: 2.4rem 1fr; gap: .1rem .9rem; margin: 0; padding: .9rem 0; border-top: 1.5px solid var(--fg); }
+  .orden li::before { content: counter(o, decimal-leading-zero); grid-row: span 2; font: 500 .85rem/1.6 var(--f-mono); color: var(--accent-ink); }
+  .orden b { font-weight: 700; }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="web-pensar">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="h-top">
+      <div>
+        <p data-kicker>Diseño web</p>
+        <h1 id="t">Cómo se piensa <span>una web</span></h1>
+      </div>
+      <div>
+        <p class="lede">Antes del color y de la letra hay un negocio, un objetivo y alguien que entra con prisa. Elige un cliente y mira cómo cada decisión sale de la anterior.</p>
+        <div class="cases" role="tablist" aria-label="Cliente de ejemplo">
+          <button role="tab" type="button" aria-selected="true" data-case="imprenta">Imprenta de flyers</button>
+          <button role="tab" type="button" aria-selected="false" data-case="clinica">Clínica dental</button>
+          <button role="tab" type="button" aria-selected="false" data-case="hotel">Hotel rural</button>
+        </div>
+        <div class="h-meta"><button class="btn" type="button" data-replay>Repetir</button><span class="chip" data-meta>18 min</span></div>
+      </div>
+    </div>
+
+    <div class="board" data-board>
+      <svg class="wires" aria-hidden="true"></svg>
+      <section class="col" aria-label="El negocio">
+        <p class="col-h"><b>1</b>El negocio</p>
+        <div class="col-body">
+          <button class="node" type="button" data-k="negocio"><small>negocio</small><b></b><span class="s"></span></button>
+          <button class="node" type="button" data-k="objetivo"><small>objetivo</small><b></b><span class="s"></span></button>
+          <button class="node" type="button" data-k="publico"><small>público</small><b></b><span class="s"></span></button>
+        </div>
+      </section>
+      <section class="col" aria-label="Tres segundos">
+        <p class="col-h"><b>2</b>Tres segundos</p>
+        <div class="col-body">
+          <button class="node big" type="button" data-k="emocion"><small>tiene que sentir</small><b></b></button>
+          <button class="node" type="button" data-k="palabras"><small>tres palabras</small><span class="chips"></span></button>
+        </div>
+      </section>
+      <section class="col" aria-label="Decisiones">
+        <p class="col-h"><b>3</b>Decisiones</p>
+        <div class="col-body">
+          <button class="node dec" type="button" data-k="color"><small>color</small><span class="sw"></span></button>
+          <button class="node dec" type="button" data-k="tipo"><small>letra</small><b class="tipo-aa"></b></button>
+          <button class="node dec" type="button" data-k="estructura"><small>estructura</small><span class="s"></span></button>
+          <button class="node dec" type="button" data-k="imagen"><small>imagen</small><span class="s"></span></button>
+          <button class="node dec" type="button" data-k="movimiento"><small>movimiento</small><span class="s"></span></button>
+        </div>
+      </section>
+      <section class="col" aria-label="La web">
+        <p class="col-h"><b>4</b>La web</p>
+        <div class="col-body">
+          <div class="mw" data-k="web">
+            <div class="mw-nav"><b class="mw-logo"></b><span class="mw-cta-s"></span></div>
+            <div class="mw-main">
+              <div><p class="mw-h"></p><p class="mw-sub"></p><span class="mw-cta"></span></div>
+              <div class="mw-art"></div>
+            </div>
+            <div class="mw-strip"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <p class="why" aria-live="polite"><b>por qué</b><span data-why>Cada caja sale de las anteriores. Toca cualquiera para ver su razón.</span></p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Una web es una herramienta de un negocio. Antes de ser bonita tiene que conseguir algo: que alguien llame, reserve, compre o pida presupuesto. Una web preciosa que no consigue llamadas es una web mala, y una web correcta que hace sonar el teléfono es un éxito aunque no gane premios.</p>
+      <p>Por eso el diseño empieza antes de abrir Figma, con tres preguntas: <strong>para qué</strong> (el objetivo), <strong>para quién</strong> (el público) y <strong>contra quién</strong> (la competencia). De ahí sale lo que tiene que sentir alguien en los primeros segundos, eso se resume en tres palabras y esas tres palabras deciden el color, la letra, la estructura, la imagen y el movimiento. La portada lo enseña con tres clientes. El resto de la lección lo desmonta paso a paso y termina con un caso completo: una imprenta de flyers.</p>
+      <p>La ventaja de pensar así no es solo acertar más. Es poder <strong>explicar</strong> cada decisión. Cuando el cliente pregunte por qué el magenta, no contestas «porque queda bien», sino «porque vendes impacto y nadie más en Castellón lo usa».</p>
+
+      <div class="band ink"><div class="inner"><p>Primero qué tiene que pasar. <em>Después</em> cómo se ve.</p><small>El estilo es la consecuencia de las respuestas, no el punto de partida. Si empiezas por el estilo, acabas decorando.</small></div></div>
+
+      <h2>Antes del diseño: objetivo, público y competencia</h2>
+
+      <h3>Una acción principal</h3>
+      <p>Cada web tiene que tener <strong>una</strong> acción que importa más que las demás. No porque las otras no valgan, sino porque cada opción que añades compite por la misma atención: cuantas más opciones iguales hay, más tarda la gente en decidir y más se va sin hacer nada (es la idea de la ley de Hick). Una acción principal clara organiza toda la página a su alrededor.</p>
+      <p>Las cinco más habituales en una agencia, y lo que cambian en la primera pantalla:</p>
+
+      <div class="bocetos wide" aria-label="Primera pantalla según el objetivo">
+        <div class="boc"><div class="wf" aria-hidden="true"><i class="l" style="width:40%"></i><i class="img"></i><i class="h" style="width:70%"></i><i class="l" style="width:35%"></i><i class="cta"></i></div><b>Vender</b><p>Producto, precio y botón de compra a la vista. Debajo, envío y devoluciones, porque el miedo de quien compra es pagar y que salga mal.</p></div>
+        <div class="boc"><div class="wf" aria-hidden="true"><i class="img"></i><i class="h" style="width:80%"></i><i class="search"></i><i class="l" style="width:50%"></i></div><b>Reservar</b><p>Foto grande y buscador de fechas en la portada. Quien reserva quiere saber si hay sitio antes de enamorarse.</p></div>
+        <div class="boc"><div class="wf" aria-hidden="true"><i class="h" style="width:85%"></i><i class="l" style="width:60%"></i><i class="tel"></i><i class="img"></i></div><b>Llamar o pedir cita</b><p>Qué hacéis, dónde y el teléfono que se pulsa. Quien llama tiene un problema hoy: el número no puede estar en el pie.</p></div>
+        <div class="boc"><div class="wf" aria-hidden="true"><i class="h" style="width:75%"></i><i class="cta"></i><div class="row"><i></i><i></i><i></i></div><i class="img"></i></div><b>Pedir presupuesto</b><p>Promesa, botón de presupuesto y precios orientativos. El miedo es al precio: enseñarlo, aunque sea «desde», quita la barrera.</p></div>
+        <div class="boc"><div class="wf" aria-hidden="true"><i class="img" style="flex: 2"></i><i class="h" style="width:55%"></i><i class="l" style="width:30%"></i></div><b>Inspirar y captar</b><p>Un trabajo a pantalla completa y poco texto. Un estudio o un fotógrafo venden con lo que enseñan; el contacto va claro, pero después.</p></div>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Si el cliente dice que quiere «que la web sirva para todo», pregúntale: «Si mañana solo pudiera pasar una cosa en la web, ¿cuál querrías?». Esa es la acción principal. Las demás existen, pero en segundo plano: un enlace de texto en vez de un botón, más abajo en vez de arriba.</p>
+      </div>
+
+      <h3>El público</h3>
+      <p>No basta con «clientes de entre 25 y 55 años». Lo útil es saber cinco cosas: <strong>quién es</strong> (el dueño de un bar, una madre que busca dentista), <strong>desde dónde llega</strong> (el móvil desde Instagram o Google Maps, o el ordenador de la oficina), <strong>qué le preocupa</strong> (el precio, el plazo, que duela, que le engañen), <strong>qué palabras usa</strong> (dice «flyers», no «soluciones de impresión») y <strong>qué sabe ya</strong> (¿sabe lo que es un sangrado o un gramaje?).</p>
+      <p>Cada respuesta se convierte en una decisión. Si llega desde el móvil, se diseña primero para el móvil. Si le preocupa el precio, el precio va arriba. Si no sabe lo que es un sangrado, la web se lo resuelve sin que tenga que preguntar. Cuando hay dos públicos (en una imprenta, el bar con prisa y el estudio de diseño exigente), diseñas para el principal y te aseguras de no bloquear al otro: al segundo le basta con encontrar su información, al primero hay que llevarle de la mano.</p>
+
+      <h3>La competencia</h3>
+      <p>Abre las cinco primeras webs que salen al buscar el servicio en la ciudad del cliente y apunta tres listas: lo que <strong>hacen todas</strong>, lo que <strong>no hace ninguna</strong> y lo que <strong>todas hacen mal</strong>.</p>
+      <p>Lo que hacen todas es la convención del sector, y conviene respetarla: es lo que el visitante espera encontrar y le da seguridad (en un hotel, el buscador de fechas; en una tienda, el carrito arriba a la derecha). Lo que no hace ninguna es tu oportunidad de que te recuerden. Lo que todas hacen mal es tu argumento de venta para el cliente.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Parécete al sector en la estructura y diferénciate en la voz, el color y la imagen. Si cambias dónde está el carrito, molestas. Si cambias el color que usan todos, te recuerdan.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Pregunta siempre al cliente (o mira su Google Analytics) qué parte de sus visitas llegan desde el teléfono. En negocios locales y en todo lo que llega desde Instagram suele ser la gran mayoría, y entonces la versión de 390 px es la web de verdad y la de escritorio, la adaptación. Diseña en ese orden.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Un restaurante quiere una web nueva. Te dice que quiere «enseñar la carta, el local, la historia de la familia, los eventos y que la gente reserve». ¿Qué haces primero?</p>
+        <ol>
+          <li>Diseñar cinco secciones del mismo tamaño para que todo tenga su sitio.</li>
+          <li>Empezar por la historia de la familia, porque es lo que le diferencia.</li>
+          <li>Acordar que la acción principal es reservar y ordenar el resto a su servicio.</li>
+        </ol>
+        <p class="why">Todo eso puede estar, pero la web existe para llenar mesas. Con reservar como acción principal, la carta y el local pasan a ser la prueba que convence, y la historia, el detalle que enamora más abajo.</p>
+      </div>
+
+      <h2>Los tres segundos</h2>
+      <p>Quien entra en una web decide muy rápido si se queda. Un estudio de 2006 (Lindgaard y su equipo) vio que la gente forma una opinión sobre el atractivo visual de una página en una fracción de segundo, y que esa primera opinión se mantiene después. Los «tres segundos» no son una cifra medida: son una regla práctica para recordar que la primera pantalla tiene que funcionar <strong>antes de que nadie lea</strong>.</p>
+      <p>En ese tiempo el visitante tiene que poder contestar tres preguntas sin esfuerzo:</p>
+      <ol>
+        <li><strong>¿Qué es esto?</strong> Lo dice el titular y lo confirma la imagen.</li>
+        <li><strong>¿Es para mí?</strong> Lo dicen el tono, la estética y un detalle concreto (la ciudad, el tipo de cliente).</li>
+        <li><strong>¿Qué hago ahora?</strong> Lo dice un único botón que destaca.</li>
+      </ol>
+      <p>Y además tiene que <strong>sentir</strong> algo. Esa emoción es la que hay que escribir en el brief, con palabras del cliente final: «estos imprimen rápido y queda llamativo», «aquí me van a tratar bien», «quiero estar ahí ya».</p>
+
+      <figure class="lab" data-title="La prueba de los tres segundos" data-hint="Mira, y contesta de memoria" data-height="470" data-height-mobile="560">
+        <script type="text/x-demo" data-lang="html">
+          <div class="stage">
+            <div class="web confusa">
+              <nav><b>GráficasPro</b><span>Inicio</span><span>Empresa</span><span>Servicios</span><span>Calidad</span><span>Blog</span><span>Noticias</span><span>Contacto</span></nav>
+              <div class="slide"><span class="ar">‹</span><div><h1>Bienvenidos a nuestra web</h1><p>Soluciones gráficas integrales para empresas y particulares con la máxima calidad y profesionalidad.</p><div class="bts"><a>Saber más</a><a>Servicios</a><a>Contacto</a></div></div><span class="ar">›</span></div>
+              <div class="dots"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <div class="web clara">
+              <nav><b>Rayo<em>.</em></b><a>Pide presupuesto</a></nav>
+              <div class="hero"><div><h1>Tus flyers, <em>mañana.</em></h1><p>Imprenta en Castellón. Pide antes de las 13:00 y recoge mañana.</p><a>Pide presupuesto</a></div><div class="fan"><i></i><i></i><i></i></div></div>
+            </div>
+            <div class="cover" id="cover"><p>Vas a ver una web durante tres segundos.</p><button id="go">Mirar tres segundos</button></div>
+            <div class="ask" id="ask" hidden><p>Sin volver a mirar:</p><ol><li>¿Qué vende?</li><li>¿En cuánto tiempo?</li><li>¿Qué botón había que pulsar?</li></ol><div><button id="ans">Ver la respuesta</button><button id="again">Otra vez</button></div></div>
+            <div class="bar" id="bar"></div>
+          </div>
+          <div class="ui"><button data-v="confusa" aria-pressed="true">Versión confusa</button><button data-v="clara" aria-pressed="false">Versión clara</button></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 12px; background: #fafafa; color: #111; font-family: var(--f-sans); }
+          .stage { position: relative; height: 380px; border: 1.5px solid #111; border-radius: 8px; overflow: hidden; }
+          .web { position: absolute; inset: 0; display: none; }
+          body[data-v="confusa"] .confusa, body[data-v="clara"] .clara { display: flex; flex-direction: column; }
+          nav { display: flex; align-items: center; gap: 12px; padding: 12px 16px; font-size: 12px; flex-wrap: wrap; }
+          /* Versión confusa: todo pesa igual y nada dice qué se vende */
+          .confusa { background: linear-gradient(135deg, #1f4f8f, #3a8fd8); color: #fff; font-family: Arial, sans-serif; }
+          .confusa nav { background: #fff; color: #444; } .confusa nav b { color: #1f4f8f; margin-right: auto; }
+          .slide { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 0 10px; }
+          .slide h1 { font-size: clamp(20px, 4vw, 30px); margin: 0 0 8px; } .slide p { margin: 0 0 14px; font-size: 13px; opacity: .9; }
+          .ar { font-size: 34px; opacity: .7; }
+          .bts { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; } .bts a { padding: 8px 12px; border-radius: 4px; background: #ff8c1a; font-size: 12px; font-weight: 700; } .bts a + a { background: #2ecc71; } .bts a + a + a { background: #e74c3c; }
+          .dots { display: flex; gap: 6px; justify-content: center; padding: 14px; } .dots i { width: 8px; height: 8px; border-radius: 50%; background: #fff; opacity: .6; }
+          /* Versión clara: una promesa, una prueba, un botón */
+          .clara { background: #fff; }
+          .clara nav { justify-content: space-between; border-bottom: 1.5px solid #111; } .clara nav b { font: 900 22px var(--f-shoulders); } .clara em { color: #E6007E; font-style: normal; }
+          .clara nav a, .clara .hero a { background: #E6007E; color: #fff; padding: 9px 14px; border-radius: 99px; font-weight: 700; font-size: 12px; }
+          .hero { flex: 1; display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; padding: 0 20px; gap: 10px; }
+          .hero h1 { margin: 0 0 10px; font: 900 clamp(40px, 9vw, 70px)/.86 var(--f-shoulders); text-transform: uppercase; } .hero p { margin: 0 0 16px; font-size: 13px; color: #444; }
+          .hero a { display: inline-block; font-size: 13px !important; }
+          .fan { position: relative; height: 70%; } .fan i { position: absolute; width: 55%; aspect-ratio: 3/4; top: 10%; left: 22%; box-shadow: 0 8px 16px rgb(0 0 0 / .2); }
+          .fan i:nth-child(1) { background: #FFE500; rotate: -12deg; left: 4%; } .fan i:nth-child(2) { background: #111; rotate: 9deg; left: 38%; } .fan i:nth-child(3) { background: #E6007E; }
+          /* Tapa, preguntas y barra de tiempo */
+          .cover, .ask { position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 12px; background: #111; color: #fff; text-align: center; padding: 20px; }
+          .ask[hidden], .cover[hidden] { display: none; }
+          .ask ol { text-align: left; margin: 0; font-size: 18px; font-weight: 700; line-height: 1.6; }
+          .cover p, .ask > p { margin: 0; color: #bbb; }
+          button { min-height: 44px; padding: 0 16px; border-radius: 99px; border: 1.5px solid currentColor; background: none; color: inherit; font: 600 14px var(--f-sans); cursor: pointer; }
+          #go, #ans { background: #D53DAF; border-color: #D53DAF; color: #111; }
+          .bar { position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: #D53DAF; transform-origin: left; transform: scaleX(0); z-index: 3; }
+          .ui { display: flex; gap: 8px; margin-top: 10px; } .ui button[aria-pressed="true"] { background: #111; color: #fff; }
+          @media (max-width: 520px) { .hero { grid-template-columns: 1fr; padding-top: 16px; } .fan { height: 120px; } .confusa nav span:nth-child(n+5) { display: none; } .stage { height: 440px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const $ = (s) => document.querySelector(s);
+          document.body.dataset.v = 'confusa';
+          function mirar() {
+            $('#cover').hidden = true; $('#ask').hidden = true;
+            const bar = $('#bar');
+            // La barra se vacía en 3 segundos y la web se tapa con las preguntas
+            bar.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 3000 });
+            setTimeout(() => { $('#ask').hidden = false; }, 3000);
+          }
+          $('#go').onclick = mirar;
+          $('#again').onclick = mirar;
+          $('#ans').onclick = () => { $('#ask').hidden = true; };
+          document.querySelectorAll('[data-v]').forEach((b) => b.onclick = () => {
+            document.body.dataset.v = b.dataset.v;
+            document.querySelectorAll('[data-v]').forEach((x) => x.setAttribute('aria-pressed', x === b));
+            $('#cover').hidden = false; $('#ask').hidden = true;
+          });
+        </script>
+        <figcaption>Con la versión confusa casi nadie sabe decir qué vendían: «soluciones gráficas integrales» no es nada, y tres botones de colores distintos no dicen cuál pulsar. Con la clara, las tres respuestas salen solas: flyers, mañana, «Pide presupuesto». Haz esta prueba con compañeros que no conozcan el proyecto.</figcaption>
+      </figure>
+
+      <h3>Cómo se traduce una emoción</h3>
+      <p>Una emoción no se diseña directamente: se consigue moviendo cinco palancas a la vez. Lo importante es que <strong>todas empujen hacia el mismo lado</strong>, porque el visitante no las analiza por separado, las percibe juntas.</p>
+      <ul>
+        <li><strong>Color:</strong> temperatura (cálido acerca, frío distancia), saturación (vivo excita, apagado calma) y cuánta superficie ocupa.</li>
+        <li><strong>Letra:</strong> su personalidad y, sobre todo, su tamaño. Un titular enorme habla alto; uno pequeño con mucho aire habla bajo y seguro.</li>
+        <li><strong>Espacio:</strong> mucho aire se lee como calma o lujo (lo escaso parece caro); mucha densidad, como abundancia, oferta o energía.</li>
+        <li><strong>Imagen:</strong> personas generan confianza y cercanía, el producto genera deseo, el lugar genera ganas de estar ahí.</li>
+        <li><strong>Ritmo y movimiento:</strong> rápido y corto transmite energía y eficacia; lento y fundido, calma y cuidado.</li>
+      </ul>
+      <p>Por ejemplo, la <strong>urgencia</strong> de una imprenta se consigue con contraste alto, una letra condensada grande, densidad media, fotos de producto impreso y un movimiento breve. La <strong>calma</strong> de un hotel rural, con colores apagados y cálidos, una serif ligera, mucho aire, paisaje y fundidos lentos. Si mezclas palancas de las dos, el visitante siente algo raro aunque no sepa decir qué.</p>
+
+      <p class="statement">Si en tres segundos no se sabe qué es, para quién y qué hacer, <em style="font-style: normal; color: var(--accent)">lo demás no se lee.</em></p>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Tus tres segundos en el teléfono son unos 390 × 700 px: caben un titular de dos o tres líneas, una frase, un botón y el principio de una imagen. Nada más. Nada de carruseles (nadie espera a la segunda diapositiva) ni de vídeos de presentación que tardan en cargar: si la primera pantalla del móvil no contesta las tres preguntas, el pulgar ya está volviendo atrás.</p>
+      </div>
+
+      <h2>De tres palabras a decisiones</h2>
+      <p>La emoción se concreta en <strong>tres palabras</strong>: tres adjetivos o conceptos que describen cómo tiene que percibirse la marca. Son el puente entre el negocio y el diseño. Tres, y no una ni cinco, por una razón práctica: con una sola palabra caes en el tópico (solo «impacto» da una web que grita); con cinco no puedes cumplirlas todas y dejan de decidir nada. Tres dan una dirección con matices.</p>
+      <p>Tres condiciones para que sirvan:</p>
+      <ul>
+        <li><strong>Que decidan algo.</strong> «Calidad», «profesionalidad» y «confianza» las diría cualquier empresa del mundo, así que no descartan nada. «Rápida» o «artesana» sí descartan: obligan a elegir.</li>
+        <li><strong>Que tengan algo de tensión.</strong> «Atrevida pero fiable» es mejor que «atrevida y llamativa», porque la segunda palabra frena a la primera y evita la caricatura.</li>
+        <li><strong>Que tengan orden.</strong> La primera manda: decide la base de color, el acento y la letra. La segunda empuja o frena a la primera: decide el ritmo y la estructura. La tercera ajusta: el tono del texto, la imagen, un detalle.</li>
+      </ul>
+
+      <p>Esta tabla es el diccionario: qué pide cada palabra en cada palanca y por qué. No es una receta cerrada, es el punto de partida que luego ajustas al cliente.</p>
+
+      <div class="table-wrap palabras">
+        <table>
+          <thead><tr><th>Palabra</th><th>Color</th><th>Letra</th><th>Estructura</th><th>Movimiento</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Impacto</td><td><span class="mini"><i style="background:#fff"></i><i style="background:#111"></i><i style="background:#E6007E"></i></span>Neutros y un acento saturado</td><td>Condensada o display muy negra</td><td>Titular enorme, pocas piezas grandes</td><td>Rápido y corto, un gesto fuerte</td><td>Lo que se ve de lejos es el contraste máximo y el tamaño, como en un cartel.</td></tr>
+            <tr><td>Rapidez</td><td><span class="mini"><i style="background:#fff"></i><i style="background:#111"></i><i style="background:#FFD000"></i></span>Pocos colores, acento cálido</td><td>Grotesca compacta</td><td>Pocos pasos, acción arriba, precios visibles</td><td>Breve (200–300 ms), nada que haga esperar</td><td>Cada elemento extra o animación lenta contradice la promesa.</td></tr>
+            <tr><td>Confianza</td><td><span class="mini"><i style="background:#F7F8FA"></i><i style="background:#1D2B4A"></i><i style="background:#2F6FDB"></i></span>Azules, neutros fríos limpios</td><td>Sans clara, sin rarezas</td><td>Convenciones del sector, pruebas (opiniones, datos)</td><td>Mínimo y predecible</td><td>La confianza nace de que nada sorprenda: lo esperado tranquiliza.</td></tr>
+            <tr><td>Calma</td><td><span class="mini"><i style="background:#F4F1EA"></i><i style="background:#2E3B36"></i><i style="background:#7F9A8C"></i></span>Apagados, verdes grises, arena</td><td>Serif de lectura o sans ligera</td><td>Mucho aire, una idea por pantalla</td><td>Lento, fundidos de 400–600 ms</td><td>Baja saturación y espacio bajan las pulsaciones; lo contrario de una oferta.</td></tr>
+            <tr><td>Lujo</td><td><span class="mini"><i style="background:#F3EBDD"></i><i style="background:#1C1814"></i><i style="background:#A8824A"></i></span>Crema o negro y un metal</td><td>Didona o serif fina, grande</td><td>Poco texto, imágenes grandes, ritmo pausado</td><td>Lento y preciso</td><td>Lo escaso parece caro: espacio vacío, pocas palabras y un solo metal.</td></tr>
+            <tr><td>Cercanía</td><td><span class="mini"><i style="background:#FBF6EE"></i><i style="background:#3A2A20"></i><i style="background:#D9673F"></i></span>Cálidos, crema, terracota</td><td>Grotesca cálida o humanista</td><td>Caras del equipo, textos en primera persona</td><td>Suave, con algo de juego en los detalles</td><td>Los cálidos acercan y las caras convierten una empresa en personas.</td></tr>
+            <tr><td>Artesanal</td><td><span class="mini"><i style="background:#EFE6D6"></i><i style="background:#2B2118"></i><i style="background:#6F7F35"></i></span>Kraft, tierras, verde oliva</td><td>Slab o serif con carácter</td><td>Proceso y manos, historia del taller</td><td>Pausado</td><td>Materiales sin blanquear y letra de oficio hablan de producto hecho a mano.</td></tr>
+            <tr><td>Técnico</td><td><span class="mini"><i style="background:#0E1A33"></i><i style="background:#CFE0FF"></i><i style="background:#5FD4E8"></i></span>Azul noche, cian</td><td>Mono para datos y una sans</td><td>Datos, especificaciones, diagramas</td><td>Preciso, transiciones lineales</td><td>Pantalla, código y planos: el lenguaje visual de los ingenieros.</td></tr>
+            <tr><td>Divertido</td><td><span class="mini"><i style="background:#FFF4DC"></i><i style="background:#2A1B4A"></i><i style="background:#FF5A36"></i></span>Cálidos saturados, varios acentos</td><td>Display redonda o con volumen</td><td>Bloques de color, formas, ilustración</td><td>Elástico, con rebote</td><td>Color vivo y formas blandas se asocian al juego; el rebote, a lo que tiene vida.</td></tr>
+            <tr><td>Natural</td><td><span class="mini"><i style="background:#F1EEE4"></i><i style="background:#24392B"></i><i style="background:#8FA35A"></i></span>Verdes, tierras, blanco roto</td><td>Geométrica ligera o serif suave</td><td>Fotografía de origen, poca interfaz</td><td>Suave</td><td>Los colores de la tierra y la luz natural; nada artificial ni chillón.</td></tr>
+            <tr><td>Tradición</td><td><span class="mini"><i style="background:#F4EEE2"></i><i style="background:#3B1F1A"></i><i style="background:#8E2A2A"></i></span>Burdeos, crema, marrón</td><td>Serif clásica</td><td>Historia y fechas visibles, sellos</td><td>Casi ninguno</td><td>Los colores y letras de siempre dicen que la marca ya estaba antes.</td></tr>
+            <tr><td>Exclusivo</td><td><span class="mini"><i style="background:#111"></i><i style="background:#F2EDE4"></i><i style="background:#C9A962"></i></span>Oscuro, marfil y oro apagado</td><td>Serif editorial</td><td>Muy poco contenido, acceso «bajo petición»</td><td>Lento, revelados</td><td>Lo que no se enseña entero se desea más: el oscuro y el silencio esconden.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Cómo se combinan las tres</h3>
+      <p>Las palabras chocan, y eso es bueno. En la imprenta del caso son <strong>impacto, rapidez y confianza</strong>. Impacto, la primera, manda: pide color saturado y letra enorme. Rapidez, la segunda, decide el ritmo y la estructura: pocos pasos, precios visibles y movimiento breve. Confianza, la tercera, frena: pide no asustar. La solución sale de esa tensión: base neutra (blanco y negro, que no asustan) con <strong>un solo</strong> color saturado reservado para lo importante. El resultado es atrevido pero controlado, que es justo lo que necesita.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Consigue que el cliente apruebe las tres palabras <strong>antes</strong> de enseñarle ningún diseño. A partir de ahí, cada discusión se convierte en una pregunta objetiva: «¿Esto es impacto, rapidez y confianza?». Dejas de discutir gustos («a mí el rosa no me gusta») y discutes si el diseño cumple lo acordado.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Un cliente te dice que su marca tiene que transmitir «calidad, profesionalidad y confianza». ¿Qué haces?</p>
+        <ol>
+          <li>Perfecto: azul corporativo, sans neutra y fotos de banco de imágenes.</li>
+          <li>Preguntar en qué se diferencia de su competencia, porque esas tres las diría cualquiera.</li>
+          <li>Añadir dos palabras más para tener más información.</li>
+        </ol>
+        <p class="why">Esas palabras no descartan nada, así que no deciden nada. Pregunta qué le dicen sus mejores clientes, por qué le eligen a él y no al de enfrente. Ahí suelen salir las palabras de verdad: «rápido», «de toda la vida», «te lo explican todo».</p>
+      </div>
+
+      <h2>La jerarquía de la portada</h2>
+      <p>La portada es una conversación con el visitante, y las preguntas llegan siempre en el mismo orden: <em>¿qué es esto?</em>, <em>¿me lo creo?</em>, <em>¿cómo lo consigo?</em> y, solo después, <em>¿y si…?</em>. Por eso el orden de una home casi siempre sigue la misma lógica:</p>
+      <ol>
+        <li><strong>Promesa:</strong> el titular dice qué es y para quién, con las palabras del cliente final.</li>
+        <li><strong>Prueba:</strong> la imagen, los trabajos o un dato concreto que hacen creíble la promesa.</li>
+        <li><strong>Acción:</strong> el botón principal, visible sin hacer scroll.</li>
+        <li><strong>Confianza:</strong> opiniones, logos de clientes, garantías.</li>
+        <li><strong>Detalle:</strong> servicios, precios, cómo funciona.</li>
+        <li><strong>Objeciones:</strong> las preguntas frecuentes que frenan la decisión.</li>
+        <li><strong>Cierre:</strong> el botón otra vez y el contacto.</li>
+      </ol>
+      <p>Lo que cambia según el objetivo es qué sube y qué baja. Mira cuatro órdenes reales; el bloque magenta es la acción:</p>
+
+      <div class="escaleras wide" aria-label="Orden de la portada según el objetivo">
+        <div class="esc"><h4>Vender</h4><ol><li>Producto estrella y precio</li><li class="cta fold">Añadir al carrito</li><li>Envío y devoluciones</li><li>Más vendidos</li><li>Opiniones</li><li>Preguntas</li></ol><p>El precio y la compra arriba, porque quien llega a una tienda ya quiere comprar. Las garantías justo después, porque el miedo llega en el momento de pagar.</p></div>
+        <div class="esc"><h4>Reservar</h4><ol><li>Foto que enamora</li><li class="cta fold">Buscador de fechas</li><li>Habitaciones</li><li>El entorno</li><li>Opiniones</li><li>Cómo llegar</li></ol><p>La foto primero, porque se reserva por deseo. El buscador inmediatamente, porque el deseo sin disponibilidad frustra.</p></div>
+        <div class="esc"><h4>Llamar</h4><ol><li>Qué hacéis y dónde</li><li class="cta fold">Teléfono que se pulsa</li><li>Servicios</li><li>Equipo con caras</li><li>Opiniones</li><li>Horario y mapa</li></ol><p>Quien llama tiene prisa y un problema. El equipo sube más que en otros casos: en salud o abogados, se elige a personas.</p></div>
+        <div class="esc"><h4>Presupuesto</h4><ol><li>Promesa concreta</li><li class="cta fold">Pide presupuesto</li><li>Precios «desde»</li><li>Trabajos</li><li>Cómo funciona</li><li>Preguntas</li></ol><p>Los precios orientativos suben al tercer puesto: quitan el miedo número uno, el «esto será carísimo».</p></div>
+      </div>
+
+      <div class="duo wide">
+        <figure class="no">
+          <div class="art" aria-hidden="true"><div class="ruido" style="position:absolute; inset:0"><div class="nv"><span>Inicio</span><span>Empresa</span><span>Servicios</span><span>Calidad</span><span>Ofertas</span><span>Blog</span><span>Contacto</span></div><h5>Bienvenidos a Imprenta Rayo, su imprenta de confianza</h5><p>Soluciones gráficas integrales con la máxima calidad</p><div class="bt"><span>Servicios</span><span>Ofertas</span><span>Contacto</span></div><div class="dots"><i></i><i></i><i></i><i></i><i></i></div><span class="ar l">‹</span><span class="ar r">›</span><span class="bdg">-20%</span></div></div>
+          <figcaption><b>Así no</b>Carrusel, siete enlaces, tres botones y una oferta. Nada dice qué vende ni qué pulsar.</figcaption>
+        </figure>
+        <figure class="si">
+          <div class="art" aria-hidden="true"><div class="clara" style="position:absolute; inset:0"><div><h5>Tus flyers, <em>mañana.</em></h5><p>Imprenta en Castellón. Pide antes de las 13:00 y recoge mañana.</p><span>Pide presupuesto</span></div><div class="fan"><i></i><i></i><i></i></div></div></div>
+          <figcaption><b>Así sí</b>Una promesa, una prueba (los flyers) y un botón.</figcaption>
+        </figure>
+        <p class="d-why">La de la izquierda tiene más cosas y comunica menos, porque todas pesan lo mismo. La de la derecha elige: un titular que contesta las tres preguntas, una imagen que lo prueba y una única acción en el único color vivo de la pantalla.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un botón principal y, como mucho, una acción secundaria en forma de enlace de texto («Ver precios», «Sube tu archivo»). Si hay dos botones iguales, el visitante tiene que pensar cuál pulsar, y pensar en la primera pantalla es perder gente.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El orden se mantiene, pero comprimido: promesa, botón y el principio de la prueba en la primera pantalla. La acción principal nunca vive dentro del menú hamburguesa: en negocios de llamar, reservar o pedir presupuesto, ponla además en una barra fija abajo, al alcance del pulgar. Y todo teléfono va en un enlace <code>tel:</code> que se pulsa.</p>
+      </div>
+
+      <h2>Caso guiado: una imprenta de flyers</h2>
+      <p>Vamos a pensar una web entera de principio a fin con este método. El cliente es inventado, pero el encargo es de los que llegan a cualquier agencia de la zona.</p>
+
+      <div class="split">
+        <div>
+          <h3>El encargo</h3>
+          <p><strong>Imprenta Rayo</strong>, en Castellón. Doce años abiertos, dos máquinas digitales y una de gran formato. Imprimen flyers, carteles, tarjetas, lonas y vinilos, con un plazo de 24 a 48 horas. Sus clientes son bares y restaurantes, comercios, comisiones de fiestas de los pueblos y de la Magdalena, conciertos, asociaciones y academias.</p>
+          <p>Su web actual es una plantilla gris con «Soluciones gráficas integrales», sin precios y con un formulario de doce campos. Casi todos los pedidos les llegan por WhatsApp de gente que ya les conoce. Quieren que la web traiga clientes nuevos.</p>
+
+          <h3>Objetivo y público</h3>
+          <p><strong>Objetivo:</strong> que alguien que no les conoce pida presupuesto en menos de un minuto, o suba su archivo directamente.</p>
+          <p><strong>Público principal:</strong> el dueño de un bar o el organizador de unas fiestas. Llega desde el móvil, buscando «imprenta Castellón» en Google o en Maps. Tiene prisa (el evento es el viernes), le preocupan el precio y el plazo, y no sabe lo que es un sangrado. <strong>Público secundario:</strong> diseñadores y agencias, que quieren saber qué papeles hay y si cumplen los plazos.</p>
+          <p><strong>En tres segundos tiene que sentir:</strong> «estos imprimen rápido y queda llamativo».</p>
+          <p><strong>Tres palabras:</strong> impacto, rapidez y confianza.</p>
+        </div>
+        <div class="stick">
+          <div class="ficha">
+            <span class="lbl">el cliente</span>
+            <p class="nm">Imprenta Rayo<em>.</em></p>
+            <dl>
+              <dt>objetivo</dt><dd>Pedir presupuesto en menos de un minuto</dd>
+              <dt>público</dt><dd>Bares, comercios y fiestas, desde el móvil y con prisa</dd>
+              <dt>3 segundos</dt><dd>«Imprimen rápido y queda llamativo»</dd>
+              <dt>palabras</dt><dd>Impacto, rapidez, confianza</dd>
+              <dt>letra</dt><dd><span style="font: 900 1.2rem/1 'Big Shoulders', sans-serif; text-transform: uppercase">Big Shoulders</span> + Inter Tight</dd>
+            </dl>
+            <div class="pal" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="pal-l"><span>papel 60</span><span>tinta 28</span><span>magenta 10</span><span>2</span></div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Por qué tiene que llamar la atención</h3>
+      <p>Una imprenta de flyers <strong>vende impacto visual</strong>. El trabajo de un flyer es que lo vean entre otros veinte en la barra de un bar. Si su propia web es gris y genérica, contradice lo que vende: es el herrero con cuchillo de palo. Su web es, literalmente, su mejor flyer, y tiene que demostrar que saben llamar la atención.</p>
+      <p>Hay una segunda razón: la competencia. Las imprentas locales suelen usar plantillas corporativas en azul o rojo, y las grandes imprentas online tienen webs de catálogo, eficaces pero impersonales. Diferenciarse aquí sale barato: basta con ser la única con carácter y cercanía.</p>
+      <p>Pero <strong>controlada</strong>. Las protagonistas de la web son las piezas que imprimen para sus clientes, y cada una tiene sus propios colores, imprevisibles. Si la web también tiene cinco colores, compite con ellas y todo se vuelve ruido. La web tiene que ser el marco que hace que los trabajos luzcan, como la pared blanca de una galería. Mira los tres caminos posibles:</p>
+
+      <div class="trio wide">
+        <figure class="no">
+          <div class="art" aria-hidden="true"><div class="sosa" style="position:absolute; inset:0"><h5>Soluciones gráficas integrales</h5><p>Calidad y profesionalidad desde 2012.</p><span>Contactar</span></div></div>
+          <figcaption><b>Sosa</b>Segura y olvidable: no demuestra que sepan llamar la atención.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="art" aria-hidden="true"><div class="loca" style="position:absolute; inset:0"><h5>¡¡Imprimimos TODO!!</h5><p>¡los mejores precios de la galaxia!</p><span>¡Pide YA!</span></div></div>
+          <figcaption><b>Descontrolada</b>Llama la atención y espanta: parece poco fiable y tapa los trabajos.</figcaption>
+        </figure>
+        <figure class="si">
+          <div class="art" aria-hidden="true"><div class="control" style="position:absolute; inset:0"><h5>Tus flyers, <em>mañana.</em></h5><p>Imprenta en Castellón. 24–48 h.</p><span>Pide presupuesto</span></div></div>
+          <figcaption><b>Controlada</b>Impacto con un solo color y una sola letra fuerte: atrevida y fiable.</figcaption>
+        </figure>
+      </div>
+
+      <h3>Paleta atrevida pero controlada</h3>
+      <p>La paleta sale del propio oficio: <strong>los colores de la cuatricromía</strong>, el sistema CMYK con el que imprime cualquier imprenta (cian, magenta, amarillo y negro). Cualquiera que haya impreso algo los reconoce, y conectan la marca con lo que hace sin explicarlo.</p>
+      <div class="swatches">
+        <div class="swatch" style="--s:#FFFFFF"><i></i><span><b>Papel</b><small>#FFFFFF<br>oklch(100% 0 0)</small></span></div>
+        <div class="swatch" style="--s:#111111"><i></i><span><b>Tinta</b><small>#111111<br>oklch(17.8% 0 0)</small></span></div>
+        <div class="swatch" style="--s:#E6007E"><i></i><span><b>Magenta</b><small>#E6007E<br>oklch(60% 0.244 359)</small></span></div>
+        <div class="swatch" style="--s:#FFE500"><i></i><span><b>Amarillo</b><small>#FFE500<br>oklch(91.5% 0.191 101)</small></span></div>
+        <div class="swatch" style="--s:#F2F2F0"><i></i><span><b>Gris papel</b><small>#F2F2F0<br>oklch(96.1% 0.003 106)</small></span></div>
+      </div>
+      <ul>
+        <li><strong>Papel y tinta como base</strong> (más del 85 % de la superficie). Blanco y negro no compiten con los colores de los trabajos y hacen que cualquier flyer luzca encima. Además, dicen «imprenta» sin esfuerzo: papel y tinta.</li>
+        <li><strong>Magenta como único acento</strong> (en torno al 10 %): botón de presupuesto, subrayados del titular, precios destacados. Es el más enérgico y festivo de la cuatricromía, y casi ninguna imprenta de la zona lo usa como color de marca. Blanco sobre este magenta da 4,5:1: vale para el texto del botón, en negrita.</li>
+        <li><strong>Amarillo solo en pegatinas</strong> (menos del 2 %): «24 h», «Nuevo». Es el color de aviso por excelencia y con muy poco basta. Nunca texto amarillo sobre blanco (1,3:1); siempre texto negro sobre amarillo (14,8:1).</li>
+        <li><strong>¿Y el cian?</strong> Se queda fuera a propósito. Dos acentos saturados competirían entre sí; uno solo ya hace el trabajo y el cian aparece de forma natural en las fotos de los trabajos.</li>
+      </ul>
+      <script type="text/x-code" data-lang="css" data-label="Paleta de Imprenta Rayo, lista para copiar">
+        :root {
+          --papel:    #FFFFFF;  /* oklch(100% 0 0)          fondo, 60 % */
+          --gris:     #F2F2F0;  /* oklch(96.1% 0.003 106)   superficies, bandas */
+          --tinta:    #111111;  /* oklch(17.8% 0 0)         texto, bandas oscuras */
+          --magenta:  #E6007E;  /* oklch(60% 0.244 359)     acento: CTA, precios, subrayado */
+          --amarillo: #FFE500;  /* oklch(91.5% 0.191 101)    pegatinas «24 h», solo con texto negro */
+
+          --texto-sobre-magenta: #FFFFFF;  /* 4,5:1, en negrita */
+          --texto-sobre-amarillo: #111111; /* 14,8:1 */
+        }
+      </script>
+
+      <h3>Tipografía condensada</h3>
+      <p>Para los titulares, una <strong>condensada muy negra</strong> (aquí Big Shoulders a 800–900) en mayúsculas. Es la letra de los carteles de feria, de conciertos y de boxeo, y por un motivo físico: al ser estrecha, cabe una palabra más grande en el mismo ancho, y el tamaño es lo que se ve de lejos. Se lee como voz alta, urgencia y cartel, que es justo lo que vende la imprenta. En el móvil tiene una ventaja extra: «Tus flyers, mañana» cabe enorme en 390 px.</p>
+      <p>Para el resto, una sans neutra (Inter Tight): precios, formularios y explicaciones tienen que leerse sin esfuerzo. El contraste entre las dos es la jerarquía: <strong>el titular grita, el resto informa</strong>. Nada de una tercera fuente, ni de manuscritas «para dar cercanía»: la cercanía la ponen las fotos de los trabajos y el tono del texto.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="orden">
+        <li><div><b>Portada.</b> «Tus flyers, mañana.», una línea con ciudad y plazo, el botón «Pide presupuesto», el enlace «Sube tu archivo» y un abanico de flyers reales. Contesta las tres preguntas en tres segundos.</div></li>
+        <li><div><b>Precios «desde».</b> Flyers A5, carteles A3, tarjetas y lonas, con cantidad y precio de partida. Es la objeción número uno de este público, y casi ningún competidor local la resuelve.</div></li>
+        <li><div><b>Trabajos.</b> Un muro de piezas reales por categoría (fiestas, hostelería, conciertos). Es la prueba de que quedan llamativos, y aporta todo el color que la marca no pone.</div></li>
+        <li><div><b>Cómo funciona.</b> Tres pasos: subes el diseño (o te lo hacemos), te enviamos la prueba, recoges o te lo llevamos. Quita el miedo de quien no ha encargado nunca nada.</div></li>
+        <li><div><b>Opiniones.</b> Clientes locales con nombre de negocio y pueblo: genera confianza porque son vecinos, no testimonios genéricos.</div></li>
+        <li><div><b>Preguntas técnicas.</b> Sangrado, formatos, papeles y archivos. Es para el público secundario: está, pero no estorba al principal.</div></li>
+        <li><div><b>Contacto.</b> WhatsApp, teléfono, mapa, horario y recogida en tienda, que es como trabajan muchos de sus clientes.</div></li>
+      </ol>
+
+      <h3>Imagen y movimiento</h3>
+      <p><strong>Imagen:</strong> fotos reales de piezas impresas en manos, sobre la barra de un bar, en pilas recién cortadas, y algún detalle de tinta y máquina. Nada de banco de imágenes con gente sonriendo delante de un portátil: la prueba de que imprimen bien es ver lo que imprimen.</p>
+      <p><strong>Movimiento:</strong> percusivo y breve. Los flyers de la portada caen y se apilan una sola vez al cargar; las tarjetas de trabajos se inclinan un poco al pasar el ratón; un aviso dice «Pide antes de las 13:00 y sale mañana». Nada de intros lentas ni parallax largos: <em>rapidez</em> es una de las tres palabras, y una animación que hace esperar la contradice.</p>
+
+      <h3>El botón de presupuesto</h3>
+      <p>«Pide presupuesto», no «Contacto». Un verbo concreto dice qué pasa al pulsar y suena a resultado, no a trámite. El formulario baja de doce campos a cuatro (producto, cantidad, fecha y archivo opcional), porque cada campo de más es una excusa para dejarlo a medias. Y al lado, siempre, la alternativa que ya usan sus clientes: WhatsApp.</p>
+
+      <figure class="lab" data-title="Imprenta Rayo: la home" data-hint="Desliza dentro de la demo" data-height="560" data-height-mobile="620">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav"><b class="logo">Rayo<em>.</em></b><nav><a>Precios</a><a>Trabajos</a><a>Cómo funciona</a></nav><a class="cta s">Pide presupuesto</a></header>
+          <section class="hero">
+            <div>
+              <p class="tag">Imprenta en Castellón <span class="peg">24 h</span></p>
+              <h1>Tus flyers, <em>mañana.</em></h1>
+              <p class="sub">Pide antes de las 13:00 y recógelo mañana, o te lo llevamos. Flyers, carteles, tarjetas y lonas.</p>
+              <p class="ctas"><a class="cta">Pide presupuesto</a><a class="link">Sube tu archivo</a></p>
+            </div>
+            <div class="fan"><i>Fiestas</i><i>Jazz</i><i>Menú del día 12 €</i></div>
+          </section>
+          <section class="precios"><h2>Precios claros</h2><div class="cards">
+            <article><b>Flyers A5</b><span>1.000 unidades</span><strong>desde 39 €</strong></article>
+            <article><b>Carteles A3</b><span>50 unidades</span><strong>desde 45 €</strong></article>
+            <article><b>Tarjetas</b><span>500 unidades</span><strong>desde 25 €</strong></article>
+            <article><b>Lonas</b><span>1 × 2 m</span><strong>desde 35 €</strong></article>
+          </div></section>
+          <section class="trabajos"><h2>Recién salido de la máquina</h2><div class="muro">
+            <i style="--a:#1E3A8A;--b:#FCD34D">Concierto 14 sept</i><i style="--a:#F97316;--b:#fff">Fiestas San Juan</i><i style="--a:#14532D;--b:#FDE68A">Mercado de la tierra</i>
+            <i style="--a:#FBCFE8;--b:#831843">Clases de salsa</i><i style="--a:#111;--b:#22D3EE">Noche techno</i><i style="--a:#FEF3C7;--b:#92400E">Pan de leña</i>
+          </div></section>
+          <section class="pasos"><h2>Así de fácil</h2><ol><li><b>1</b>Sube tu diseño o pídenos uno</li><li><b>2</b>Te mandamos la prueba en una hora</li><li><b>3</b>Recoges o te lo llevamos</li></ol></section>
+          <section class="op"><blockquote>«Nos imprimieron los carteles de las fiestas en un día y quedaron mejor que el diseño en pantalla.»<cite>Comisión de fiestas, Benicàssim</cite></blockquote></section>
+          <div class="fija"><a class="cta">Presupuesto</a><a class="wa">WhatsApp</a></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          :root { --papel: #fff; --gris: #F2F2F0; --tinta: #111; --magenta: #E6007E; --amarillo: #FFE500; }
+          body { background: var(--papel); color: var(--tinta); font: 400 15px/1.5 var(--f-sans); }
+          a { cursor: pointer; }
+          h1, h2, .logo { font-family: var(--f-shoulders); font-weight: 900; text-transform: uppercase; line-height: .86; margin: 0; }
+          em { font-style: normal; color: var(--magenta); }
+          .cta { display: inline-block; padding: 12px 18px; border-radius: 99px; background: var(--magenta); color: #fff; font-weight: 700; }
+          .nav { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 20px; padding: 12px 24px; background: #fff; border-bottom: 2px solid var(--tinta); }
+          .logo { font-size: 30px; margin-right: auto; } .nav nav { display: flex; gap: 18px; font-size: 14px; font-weight: 600; } .cta.s { padding: 9px 14px; font-size: 13px; }
+          .hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: center; padding: 40px 24px 50px; }
+          .tag { margin: 0 0 14px; font-weight: 600; font-size: 14px; } .peg { background: var(--amarillo); padding: 3px 8px; border-radius: 4px; font-weight: 800; margin-left: 6px; }
+          h1 { font-size: clamp(56px, 11vw, 112px); margin-bottom: 18px; }
+          .sub { max-width: 36ch; margin: 0 0 22px; color: #444; } .ctas { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 0; }
+          .link { font-weight: 700; text-decoration: underline; text-decoration-color: var(--magenta); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+          /* El abanico: tres flyers que caen una vez al cargar */
+          .fan { position: relative; height: 300px; }
+          .fan i { position: absolute; width: min(42%, 200px); aspect-ratio: 3/4; top: 6%; left: 29%; padding: 12px; display: flex; align-items: flex-start; font: 900 22px/.9 var(--f-shoulders); font-style: normal; text-transform: uppercase; box-shadow: 0 12px 24px rgb(0 0 0 / .2); animation: cae .6s cubic-bezier(.2,.9,.3,1.2) backwards; }
+          .fan i:nth-child(1) { background: var(--amarillo); rotate: -12deg; left: 6%; } .fan i:nth-child(2) { background: var(--tinta); color: #fff; rotate: 9deg; left: 52%; justify-content: flex-end; text-align: right; animation-delay: .1s; } .fan i:nth-child(3) { background: var(--magenta); color: #fff; animation-delay: .2s; }
+          @keyframes cae { from { translate: 0 -120px; opacity: 0; } }
+          section > h2 { font-size: 44px; margin-bottom: 18px; }
+          .precios, .pasos { padding: 40px 24px; background: var(--gris); }
+          .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+          .cards article { background: #fff; border: 2px solid var(--tinta); border-radius: 8px; padding: 16px; display: grid; gap: 2px; } .cards span { color: #555; font-size: 13px; } .cards strong { font: 900 30px var(--f-shoulders); color: var(--magenta); margin-top: 8px; }
+          .trabajos { padding: 40px 24px; } .muro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+          .muro i { aspect-ratio: 4/5; background: var(--a); color: var(--b); padding: 12px; display: flex; align-items: flex-end; font: 900 24px/.9 var(--f-shoulders); font-style: normal; text-transform: uppercase; transition: rotate .2s; }
+          .muro i:hover { rotate: -2deg; }
+          .pasos ol { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; } .pasos li { display: grid; gap: 6px; font-weight: 600; } .pasos b { font: 900 48px/1 var(--f-shoulders); color: var(--magenta); }
+          .op { padding: 50px 24px 90px; } blockquote { margin: 0; font: 800 26px/1.15 var(--f-sans); letter-spacing: -.02em; max-width: 30ch; } cite { display: block; margin-top: 12px; font: 500 14px var(--f-sans); color: #555; }
+          .fija { display: none; }
+          /* En el móvil: menú fuera, precios en carrusel y barra fija con las dos acciones */
+          @media (max-width: 560px) {
+            .nav nav, .cta.s { display: none; }
+            .hero { grid-template-columns: 1fr; padding-top: 28px; } .fan { height: 230px; } .fan i { width: 40%; font-size: 19px; }
+            .cards { grid-template-columns: repeat(4, 70%); overflow-x: auto; scroll-snap-type: x mandatory; } .cards article { scroll-snap-align: start; }
+            .muro { grid-template-columns: 1fr 1fr; } .pasos ol { grid-template-columns: 1fr; }
+            .fija { display: flex; gap: 8px; position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 4; }
+            .fija a { flex: 1; text-align: center; } .wa { padding: 12px; border-radius: 99px; background: var(--tinta); color: #fff; font-weight: 700; }
+          }
+        </script>
+        <figcaption>Todo el color fuerte de la página está en los trabajos de los clientes; la marca solo pone el magenta, en el botón y en los precios. Pulsa «Ver en móvil»: el menú desaparece, los precios pasan a carrusel y aparece la barra fija con «Presupuesto» y «WhatsApp» al alcance del pulgar.</figcaption>
+      </figure>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Para este público el móvil no es una versión, es la web. Tres decisiones concretas: barra fija abajo con las dos acciones (presupuesto y WhatsApp), precios en una tira deslizable en vez de una cuadrícula que obliga a hacer scroll largo, y un campo de archivo que acepte la galería del teléfono (<code>&lt;input type="file" accept="image/*,application/pdf"&gt;</code>), porque muchos clientes tienen el diseño como foto o como PDF que les han enviado por WhatsApp.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="1">
+        <p class="q">La imprenta te pide añadir el cian y el amarillo a la paleta «para que se vea más alegre y más de imprenta». ¿Qué le contestas?</p>
+        <ol>
+          <li>Que la alegría la ponen sus trabajos: con más acentos la web competiría con ellos y el botón dejaría de destacar.</li>
+          <li>Que sí, porque más colores siempre transmiten más energía.</li>
+          <li>Que sí, pero solo en los fondos de las secciones.</li>
+        </ol>
+        <p class="why">El magenta funciona porque es lo único vivo de la pantalla: por eso el ojo va al botón. Con tres acentos, el botón es uno más. Y los flyers de los clientes ya traen todo el color que la página necesita.</p>
+      </div>
+
+      <h2>Plantilla de brief para clientes</h2>
+      <p>Úsala en la primera reunión, rellenándola con el cliente (unos 45 minutos), y envíasela después escrita para que la confirme. Las preguntas están ordenadas como la lección: primero el negocio, después las personas y al final el diseño. Cópiala tal cual.</p>
+
+      <script type="text/x-code" data-lang="text" data-label="Brief de web (para copiar)">
+        BRIEF DE WEB
+        Cliente:                        Fecha:
+
+        1. EL NEGOCIO
+        - ¿Qué vendéis o hacéis, en una frase que entendería tu vecino?
+        - ¿Qué os diferencia de la competencia? ¿Por qué os eligen vuestros mejores clientes?
+        - ¿Qué es lo que más dinero os da? ¿Y lo que queréis vender más?
+
+        2. EL OBJETIVO
+        - Si mañana en la web solo pudiera pasar una cosa, ¿cuál sería?
+          (comprar / reservar / llamar o pedir cita / pedir presupuesto / inspirar y contactar)
+        - ¿Cómo sabremos dentro de seis meses que la web funciona? (un número: llamadas, reservas, ventas)
+
+        3. EL PÚBLICO
+        - ¿Quién es vuestro cliente principal? ¿Y el secundario?
+        - ¿Desde dónde llega? (móvil desde Instagram o Google Maps, ordenador en la oficina...)
+        - ¿Qué le preocupa antes de decidirse? (precio, plazo, confianza, miedo...)
+        - ¿Qué palabras usa para pedir lo que vendéis?
+
+        4. LA COMPETENCIA
+        - Tres webs de competidores y qué os gusta y qué no de cada una.
+        - Dos webs de otros sectores que os gusten, y por qué.
+
+        5. LOS TRES SEGUNDOS
+        - ¿Qué tiene que pensar o sentir alguien nada más entrar? (en sus palabras, entre comillas)
+
+        6. TRES PALABRAS
+        - Tres palabras que describan cómo queréis que os perciban, en orden de importancia.
+        - Tres palabras que NO queréis que os describan.
+
+        7. LO QUE YA EXISTE
+        - Logo, colores, tipografías, manual de marca.
+        - Fotos propias (¿de calidad?), textos, vídeos, opiniones de clientes.
+
+        8. TÉCNICA
+        - Plataforma (WordPress, PrestaShop...), idiomas, dominio y hosting.
+        - ¿Quién va a actualizar la web y con qué frecuencia?
+
+        9. PLAZOS Y PRESUPUESTO
+        - Fecha límite real y por qué.
+        - Presupuesto aproximado.
+      </script>
+
+      <p>Las dos preguntas que más trabajo te ahorran son la de «solo una cosa» (fija la acción principal) y la de las tres palabras que <em>no</em> quieren. La segunda descarta caminos enteros en un minuto: si una clínica dice «no queremos parecer fríos ni de cadena», ya sabes que el blanco clínico y el azul corporativo están fuera.</p>
+
+      <p>Y para practicar el método completo, esta hoja hace lo mismo que la portada pero con tus palabras: elige el objetivo y tres palabras en orden, y te propone una dirección razonada.</p>
+
+      <figure class="lab" data-title="Hoja de brief" data-hint="Objetivo y tres palabras, en orden" data-height="560" data-height-mobile="1240">
+        <script type="text/x-demo" data-lang="html">
+          <div class="hoja">
+            <div class="form">
+              <p class="lbl">Objetivo</p><div class="opts" id="obj"></div>
+              <p class="lbl">Tres palabras <span id="cnt"></span></p><div class="opts" id="pal"></div>
+              <div class="prev" id="prev"><p class="ph" id="ph"></p><p class="ps">Así se vería la primera pantalla</p><span class="pc" id="pc"></span></div>
+            </div>
+            <div class="out" id="out" aria-live="polite"></div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 14px; background: #fff; color: #111; font: 400 14px/1.45 var(--f-sans); }
+          .hoja { display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; }
+          .lbl { margin: 0 0 6px; font: 500 12px var(--f-mono); color: #555; }
+          .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+          .opts button { min-height: 38px; padding: 0 12px; border-radius: 99px; border: 1.5px solid #111; background: none; color: #111; font: 600 13px var(--f-sans); cursor: pointer; }
+          .opts button[aria-pressed="true"] { background: #111; color: #fff; }
+          .opts button sup { color: #D53DAF; font-weight: 800; margin-left: 3px; }
+          .prev { border: 1.5px solid #111; border-radius: 8px; padding: 22px 20px; transition: background .4s, color .4s; }
+          .ph { margin: 0 0 6px; font-size: 30px; line-height: 1; }
+          .ps { margin: 0 0 14px; font-size: 13px; opacity: .75; }
+          .pc { display: inline-block; padding: 10px 16px; border-radius: 99px; font: 700 13px var(--f-sans); }
+          .out { border-left: 1.5px solid #111; padding-left: 18px; }
+          .out h4 { margin: 0 0 2px; font: 800 15px var(--f-archivo); }
+          .out p { margin: 0 0 12px; color: #333; }
+          .out ol { margin: 4px 0 12px; padding-left: 18px; }
+          .sw { display: inline-flex; gap: 3px; vertical-align: -3px; margin-right: 6px; } .sw i { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px #0003; }
+          .tension { background: #FBE7F5; padding: 8px 10px; border-radius: 6px; }
+          @media (max-width: 600px) { .hoja { grid-template-columns: 1fr; } .out { border-left: 0; padding-left: 0; border-top: 1.5px solid #111; padding-top: 14px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Cada palabra propone una base (fondo, texto), un acento, una letra y una energía (0 calma, 2 mucha)
+          const W = {
+            Impacto:   { b: ['#FFFFFF','#111111'], a: '#E6007E', f: ['--f-shoulders', 900, 'una condensada de cartel'], e: 2, por: 'el contraste máximo y el tamaño son lo que se ve de lejos', img: 'piezas grandes y recortadas, con mucho contraste' },
+            Rapidez:   { b: ['#FFFFFF','#111111'], a: '#FFD000', f: ['--f-archivo', 800, 'una grotesca compacta'], e: 2, por: 'cuantos menos elementos hay, antes se llega a la acción', img: 'producto directo, sin escenas' },
+            Confianza: { b: ['#F7F8FA','#1D2B4A'], a: '#2F6FDB', f: ['--f-sans', 650, 'una sans clara'], e: 0, por: 'lo esperado tranquiliza: azul y una letra sin rarezas', img: 'personas reales del equipo' },
+            Calma:     { b: ['#F4F1EA','#2E3B36'], a: '#5E7D6E', f: ['--f-read', 400, 'una serif de lectura'], e: 0, por: 'la baja saturación y el aire bajan las pulsaciones', img: 'paisajes y espacios con luz suave' },
+            Lujo:      { b: ['#F3EBDD','#1C1814'], a: '#8C6A36', f: ['--f-bodoni', 500, 'una didona'], e: 0, por: 'lo escaso parece caro: espacio, contraste fino y un metal', img: 'pocas fotos, muy cuidadas, con detalle' },
+            Cercanía:  { b: ['#FBF6EE','#3A2A20'], a: '#C4552F', f: ['--f-grotesk', 650, 'una grotesca cálida'], e: 1, por: 'los cálidos acercan y las formas con mano suenan a persona', img: 'caras y manos, situaciones reales' },
+            Artesanal: { b: ['#EFE6D6','#2B2118'], a: '#5F6E2C', f: ['--f-slab', 700, 'una slab'], e: 1, por: 'los materiales sin blanquear y la letra de oficio hablan de trabajo hecho a mano', img: 'proceso, herramientas y taller' },
+            Técnico:   { b: ['#0E1A33','#CFE0FF'], a: '#5FD4E8', f: ['--f-mono', 500, 'una mono'], e: 1, por: 'el azul de pantalla y la letra de código son el idioma visual de los ingenieros', img: 'diagramas, interfaz y detalle de producto' },
+            Divertido: { b: ['#FFF4DC','#2A1B4A'], a: '#E8401C', f: ['--f-unbounded', 700, 'una display con volumen'], e: 2, por: 'el color cálido saturado y las formas blandas suenan a juego', img: 'ilustración, color y gente en acción' },
+            Natural:   { b: ['#F1EEE4','#24392B'], a: '#5C7A2E', f: ['--f-jost', 400, 'una geométrica ligera'], e: 0, por: 'los colores de la tierra no tienen nada de artificial', img: 'origen del producto, luz natural' },
+            Tradición: { b: ['#F4EEE2','#3B1F1A'], a: '#8E2A2A', f: ['--f-cormorant', 500, 'una serif clásica'], e: 0, por: 'los colores y letras de siempre dicen que la marca ya estaba antes', img: 'archivo, fechas, el local de siempre' },
+          };
+          const O = {
+            Vender:      { cta: 'Comprar', orden: ['Producto estrella y precio', 'Envío y devoluciones', 'Más vendidos', 'Opiniones'], por: 'quien compra necesita ver producto, precio y que pagar es seguro' },
+            Reservar:    { cta: 'Ver disponibilidad', orden: ['Foto y buscador de fechas', 'Habitaciones o servicios', 'El entorno', 'Opiniones'], por: 'se reserva por deseo, pero sin disponibilidad el deseo frustra' },
+            Llamar:      { cta: 'Llamar ahora', orden: ['Qué hacéis y teléfono', 'Servicios', 'Equipo con caras', 'Horario y mapa'], por: 'quien llama tiene prisa y un problema hoy' },
+            Presupuesto: { cta: 'Pide presupuesto', orden: ['Promesa y botón', 'Precios «desde»', 'Trabajos', 'Cómo funciona'], por: 'el miedo número uno es al precio' },
+            Inspirar:    { cta: 'Ver proyectos', orden: ['Un proyecto a pantalla completa', 'Selección de trabajos', 'Quiénes somos', 'Contacto'], por: 'un estudio vende con lo que enseña' },
+          };
+          let obj = 'Presupuesto', sel = ['Impacto', 'Rapidez', 'Confianza'];
+          const lum = (h) => [1,3,5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((s, v, i) => s + v * [.2126,.7152,.0722][i], 0);
+          const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + .05) / (y + .05); };
+          function opts(el, list, isOn, click) {
+            el.innerHTML = list.map((k) => `<button aria-pressed="${isOn(k)}">${k}${sel.includes(k) && el.id === 'pal' ? `<sup>${sel.indexOf(k) + 1}</sup>` : ''}</button>`).join('');
+            [...el.children].forEach((b, i) => b.onclick = () => { click(list[i]); paint(); });
+          }
+          function paint() {
+            opts(document.querySelector('#obj'), Object.keys(O), (k) => k === obj, (k) => obj = k);
+            opts(document.querySelector('#pal'), Object.keys(W), (k) => sel.includes(k), (k) => {
+              sel = sel.includes(k) ? sel.filter((x) => x !== k) : sel.length < 3 ? [...sel, k] : [...sel.slice(0, 2), k]; });
+            cnt.textContent = `(${sel.length} de 3, la primera manda)`;
+            if (!sel.length) { out.innerHTML = '<p>Elige al menos una palabra.</p>'; return; }
+            const [p1, p2, p3] = sel.map((k) => W[k]), o = O[obj];
+            const ac = p1.a, [bg, fg] = p1.b;
+            const onAc = ratio(ac, '#FFFFFF') >= 4.5 ? '#FFFFFF' : '#111111';
+            const e = sel.reduce((s, k) => s + W[k].e, 0) / sel.length;
+            const mov = e > 1.4 ? 'Rápido y percusivo: entradas de 200–300 ms y un gesto memorable en la portada.' : e > .7 ? 'Medio: entradas cortas al hacer scroll y respuestas claras al tocar.' : 'Lento y suave: fundidos de 400–600 ms, nada que salte.';
+            const es = sel.map((k) => W[k].e), tension = Math.max(...es) - Math.min(...es) >= 2;
+            Object.assign(prev.style, { background: bg, color: fg });
+            Object.assign(ph.style, { fontFamily: `var(${p1.f[0]})`, fontWeight: p1.f[1] });
+            ph.textContent = sel.join(', ') + '.';
+            Object.assign(pc.style, { background: ac, color: onAc }); pc.textContent = o.cta;
+            out.innerHTML = `
+              <h4>Color</h4><p><span class="sw"><i style="background:${bg}"></i><i style="background:${fg}"></i><i style="background:${ac}"></i></span>La base y el acento salen de «${sel[0]}» porque ${p1.por}. ${p2 ? `«${sel[1]}» no añade otro color vivo: ${p2.e < p1.e ? 'frena, así que el acento se queda solo en el botón y en un subrayado' : 'empuja en la misma dirección, así que el acento puede ganar algo de superficie'}.` : ''}</p>
+              <h4>Letra</h4><p>${p1.f[2][0].toUpperCase() + p1.f[2].slice(1)} para titulares, porque la primera palabra manda. Para el texto, una sans neutra.</p>
+              <h4>Estructura</h4><p>Para «${obj.toLowerCase()}», porque ${o.por}${p2 && p2.e === 2 ? `, y con «${sel[1].toLowerCase()}» en pocos pasos y sin relleno` : ''}:</p><ol>${o.orden.map((x) => `<li>${x}</li>`).join('')}</ol>
+              <h4>Imagen</h4><p>${p1.img[0].toUpperCase() + p1.img.slice(1)}${p3 ? `, con un toque de «${sel[2].toLowerCase()}»: ${p3.img}` : ''}.</p>
+              <h4>Movimiento</h4><p>${mov}</p>
+              ${tension ? `<p class="tension">Hay tensión entre palabras tranquilas y enérgicas. Deja que «${sel[0]}» mande en la base y la letra, y que las demás solo aparezcan en el acento y en un detalle.</p>` : ''}`;
+          }
+          paint();
+        </script>
+        <figcaption>Empieza con la imprenta (presupuesto; impacto, rapidez, confianza) y cambia el orden: con «Confianza» primero sale una web azul y tranquila con las mismas palabras. Después prueba «Calma» con «Impacto» para ver cómo resuelve una pareja en tensión. Son reglas sencillas: el punto de partida, no la decisión final.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Antes de diseñar nada, devuelve el brief al cliente resumido en una página: objetivo, público, los tres segundos y las tres palabras, con la dirección que sale de ellas. Pregunta «¿Es esto?». Si dice que sí, tienes un contrato de criterio firmado: cada decisión de diseño se defiende con él. Si dice que no, te has ahorrado dos semanas de diseño en la dirección equivocada.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Una web es una herramienta de un negocio: primero una acción principal, un público concreto y la competencia; después el estilo.</li>
+          <li>La primera pantalla tiene que contestar en tres segundos qué es, si es para mí y qué hago, y hacer sentir una emoción concreta.</li>
+          <li>Tres palabras con orden y algo de tensión deciden color, letra, estructura, imagen y movimiento. La primera manda.</li>
+          <li>La portada sigue las preguntas del visitante: promesa, prueba, acción, confianza, detalle, objeciones y cierre.</li>
+          <li>Una imprenta de flyers vende impacto: su web tiene que llamar la atención, pero con un solo acento, para que los trabajos sean los protagonistas.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Elige un cliente real de la agencia cuya web vayáis a rehacer (o una que no te convenza). Rellena la plantilla de brief como si fueras el cliente, saca las tres palabras y escribe en una página la dirección: paleta con valores, letra, orden de la home, imagen y movimiento, cada decisión con su «porque». Después compárala con la web actual y apunta las tres cosas que cambiarías primero. Esa página es la que deberías enseñar al cliente antes de abrir Figma.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: el diagrama se construye paso a paso. Cada paso enciende una caja,
+  // dibuja los cables que llegan a ella y explica su porqué. La web resultante
+  // empieza como boceto gris y se va vistiendo (color, letra, estructura, imagen).
+  (() => {
+    const C = {
+      imprenta: {
+        negocio: ['Imprenta Rayo', 'Flyers, carteles y lonas en Castellón'],
+        objetivo: ['Pedir presupuesto', 'o subir el archivo y pagar'],
+        publico: ['Bares, comercios, fiestas', 'Lo necesitan ya, desde el móvil'],
+        emocion: '«Estos imprimen rápido y queda llamativo»',
+        palabras: ['Impacto', 'Rapidez', 'Confianza'],
+        color: ['#FFFFFF', '#111111', '#E6007E'], tipo: ['"Big Shoulders", sans-serif', 900, 'Aa'],
+        estructura: 'Precios y trabajos arriba', imagen: 'Flyers reales, en la mano', movimiento: 'Rápido y corto',
+        web: { logo: 'RAYO.', h: 'Tus flyers, mañana.', sub: 'Imprenta en Castellón. 24–48 h.', cta: 'Pide presupuesto', onac: '#fff', strip: ['Flyers 39 €', 'Carteles', 'Lonas'], art: 'fan', upper: 1 },
+        why: {
+          negocio: 'Una imprenta vende impacto visual: su web es su mejor flyer. Si es gris, contradice lo que vende.',
+          objetivo: 'Una sola acción principal: el presupuesto. Todo lo demás de la página trabaja para que alguien llegue a ese botón.',
+          publico: 'Llega con prisa y desde el móvil, y le preocupan el precio y el plazo. Por eso el precio y el plazo irán arriba.',
+          emocion: 'Es lo que tiene que pensar en tres segundos, escrito con sus palabras. De aquí salen las tres palabras.',
+          palabras: 'Impacto manda, rapidez decide el ritmo y confianza frena: atrevida pero controlada.',
+          color: 'Papel y tinta como base para que luzcan los trabajos, y magenta de cuatricromía como único acento: el oficio, sin explicarlo.',
+          tipo: 'Condensada muy negra: la letra de los carteles de feria. En poco ancho cabe una palabra enorme, y el tamaño es lo que se ve de lejos.',
+          estructura: 'Promesa y botón, precios «desde», trabajos reales y cómo funciona: el orden de las dudas de quien tiene prisa.',
+          imagen: 'Piezas impresas de verdad, en manos y en barras de bar. La prueba de que imprimen bien es ver lo que imprimen.',
+          movimiento: 'Percusivo y breve: los flyers caen una vez y ya. Una animación lenta contradiría «rapidez».',
+          web: 'Todo sale del objetivo y de las tres palabras. Toca cualquier caja para volver a ver su razón.',
+        },
+      },
+      clinica: {
+        negocio: ['Clínica Dental Nara', 'Familias en Vila-real'],
+        objetivo: ['Pedir cita', 'llamando o con un formulario corto'],
+        publico: ['Adultos con algo de miedo', 'Comparan clínicas cerca de casa'],
+        emocion: '«Aquí me van a tratar bien»',
+        palabras: ['Calma', 'Confianza', 'Cercanía'],
+        color: ['#F7F4EF', '#1F3B4D', '#E8846B'], tipo: ['"Inter Tight", sans-serif', 600, 'Aa'],
+        estructura: 'Teléfono arriba y equipo con caras', imagen: 'El equipo real, luz natural', movimiento: 'Mínimo y suave',
+        web: { logo: 'Nara', h: 'Sin prisas y sin sustos.', sub: 'Odontología familiar en Vila-real.', cta: 'Pedir cita', onac: '#fff', ac: '#1F3B4D', strip: ['Hasta 20 h', 'Financiación', 'Equipo'], art: 'sun' },
+        why: {
+          negocio: 'Una clínica vende tranquilidad. Mucha gente llega con miedo, así que la web tiene que bajar pulsaciones, no subirlas.',
+          objetivo: 'Pedir cita. El teléfono tiene que estar arriba y pulsarse, porque quien tiene dolor no busca en el pie.',
+          publico: 'Comparan dos o tres clínicas cercanas. Ganará la que dé más confianza a primera vista, no la más barata.',
+          emocion: 'Lo que tiene que pensar en tres segundos. Fíjate en que no habla de dientes: habla de cómo le van a tratar.',
+          palabras: 'Calma manda (base y letra), confianza la apoya y cercanía evita que parezca una cadena fría.',
+          color: 'Blanco cálido en vez de blanco clínico, azul petróleo de confianza y un coral suave que da calidez. El azul eléctrico sería frío.',
+          tipo: 'Una sans clara y amable, sin rarezas: lo predecible tranquiliza. Nada de redondeadas, que la harían infantil.',
+          estructura: 'Teléfono y cita, tratamientos claros, el equipo con nombre y cara, opiniones y horario.',
+          imagen: 'Personas reales del equipo con luz natural. Un sillón vacío con luz azul es justo lo que da miedo.',
+          movimiento: 'Casi ninguno, y suave. Algo que salta en la pantalla sube la tensión que queremos bajar.',
+          web: 'Todo sale del objetivo y de las tres palabras. Toca cualquier caja para volver a ver su razón.',
+        },
+      },
+      hotel: {
+        negocio: ['Mas de l’Estela', 'Hotel rural en el Maestrazgo'],
+        objetivo: ['Reservar directo', 'sin pasar por Booking'],
+        publico: ['Parejas de ciudad', 'Quieren desconectar un fin de semana'],
+        emocion: '«Quiero estar ahí ya»',
+        palabras: ['Calma', 'Autenticidad', 'Calidez'],
+        color: ['#EFE7DA', '#2F3A2C', '#B65A3A'], tipo: ['"Fraunces", serif', 420, 'Aa'],
+        estructura: 'Foto enorme y buscador de fechas', imagen: 'Paisaje y detalle, luz de tarde', movimiento: 'Lento: fundidos suaves',
+        web: { logo: 'Mas de l’Estela', h: 'Aquí el tiempo va más despacio.', sub: 'Seis habitaciones de piedra en el Maestrazgo.', cta: 'Ver disponibilidad', onac: '#fff', strip: ['Entrada', 'Salida', '2 personas'], art: 'mont' },
+        why: {
+          negocio: 'Un hotel rural vende un estado de ánimo: silencio, piedra y paisaje. La web tiene que dar ganas de estar allí.',
+          objetivo: 'Reservar directo ahorra la comisión de las plataformas. Por eso el buscador de fechas va en la portada.',
+          publico: 'Gente de Valencia, Castellón o Barcelona que mira desde el sofá un domingo por la noche. Decide con el corazón.',
+          emocion: 'El deseo de estar ya allí. No se consigue con texto, sino con una foto enorme y espacio.',
+          palabras: 'Calma manda (aire y ritmo lento), autenticidad pide materiales reales y calidez evita que parezca frío o de lujo distante.',
+          color: 'Piedra, verde encina y terracota: los colores del propio lugar. Apagados y cálidos, como la luz de la tarde.',
+          tipo: 'Una serif editorial cálida y ligera: suena a revista de viajes y a cuidado, no a cadena hotelera.',
+          estructura: 'Foto a pantalla completa con el buscador encima, habitaciones, el entorno, opiniones y cómo llegar.',
+          imagen: 'Paisaje grande y detalles de cerca (la piedra, una taza, la ventana) con luz de tarde.',
+          movimiento: 'Lento: fundidos y un parallax suave. Aquí lo rápido estaría en contra de la calma.',
+          web: 'Todo sale del objetivo y de las tres palabras. Toca cualquier caja para volver a ver su razón.',
+        },
+      },
+    };
+    const STEPS = ['negocio', 'objetivo', 'publico', 'emocion', 'palabras', 'color', 'tipo', 'estructura', 'imagen', 'movimiento', 'web'];
+    const EDGES = [['negocio','emocion'],['objetivo','emocion'],['publico','emocion'],['emocion','palabras'],
+      ['palabras','color'],['palabras','tipo'],['palabras','estructura'],['palabras','imagen'],['palabras','movimiento'],
+      ['color','web'],['tipo','web'],['estructura','web'],['imagen','web'],['movimiento','web']];
+    const board = document.querySelector('[data-board]'), svg = board.querySelector('.wires');
+    const N = Object.fromEntries([...board.querySelectorAll('[data-k]')].map((n) => [n.dataset.k, n]));
+    const mw = N.web, whyEl = document.querySelector('[data-why]');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const narrow = () => matchMedia('(max-width: 860px)').matches;
+    let cur = 'imprenta', step = -1, timer = null, touched = false;
+
+    function fill() {
+      const c = C[cur];
+      ['negocio', 'objetivo', 'publico'].forEach((k) => { N[k].querySelector('b').textContent = c[k][0]; N[k].querySelector('.s').textContent = c[k][1]; });
+      N.emocion.querySelector('b').textContent = c.emocion;
+      N.palabras.querySelector('.chips').innerHTML = c.palabras.map((p) => `<i>${p}</i>`).join('');
+      N.color.querySelector('.sw').innerHTML = c.color.map((x) => `<i style="background:${x}"></i>`).join('');
+      const aa = N.tipo.querySelector('b'); aa.textContent = c.tipo[2]; aa.style.fontFamily = c.tipo[0]; aa.style.fontWeight = c.tipo[1];
+      ['estructura', 'imagen', 'movimiento'].forEach((k) => (N[k].querySelector('.s').textContent = c[k]));
+      const w = c.web;
+      mw.style.setProperty('--cbg', c.color[0]); mw.style.setProperty('--cfg', c.color[1]);
+      mw.style.setProperty('--cac', w.ac || c.color[2]); mw.style.setProperty('--conac', w.onac);
+      mw.style.setProperty('--cf', c.tipo[0]); mw.style.setProperty('--cw', c.tipo[1]);
+      mw.querySelector('.mw-logo').textContent = w.logo;
+      mw.querySelector('.mw-cta-s').textContent = w.cta;
+      const h = mw.querySelector('.mw-h'); h.textContent = w.h; h.style.textTransform = w.upper ? 'uppercase' : 'none';
+      mw.querySelector('.mw-sub').textContent = w.sub;
+      mw.querySelector('.mw-cta').textContent = w.cta;
+      mw.querySelectorAll('.mw-strip span').forEach((s, i) => (s.textContent = w.strip[i]));
+      const art = mw.querySelector('.mw-art');
+      art.innerHTML = w.art === 'fan' ? '<div class="art-fan" style="position:absolute;inset:0"><i>Fiestas</i><i>Jazz</i><i>Menú</i></div>'
+        : w.art === 'sun' ? '<div class="art-sun"><i></i></div>' : '<div class="art-mont"><i></i><i></i></div>';
+    }
+    // Cables: curvas entre cajas, recalculadas al cambiar el tamaño
+    function wires() {
+      if (narrow()) { svg.innerHTML = ''; return; }
+      const b = board.getBoundingClientRect();
+      svg.setAttribute('viewBox', `0 0 ${b.width} ${b.height}`);
+      svg.innerHTML = EDGES.map(([f, t]) => {
+        const r1 = N[f].getBoundingClientRect(), r2 = N[t].getBoundingClientRect();
+        let d;
+        if (r2.left > r1.right + 4) {
+          const x1 = r1.right - b.left, y1 = r1.top + r1.height / 2 - b.top, x2 = r2.left - b.left, y2 = r2.top + Math.min(r2.height / 2, 60) - b.top, dx = (x2 - x1) / 2;
+          d = `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+        } else {
+          const x = r1.left + r1.width / 2 - b.left; d = `M${x},${r1.bottom - b.top} L${x},${r2.top - b.top}`;
+        }
+        return `<path data-f="${f}" data-t="${t}" d="${d}"/>`;
+      }).join('');
+      svg.querySelectorAll('path').forEach((p) => {
+        const len = Math.ceil(p.getTotalLength()); p.style.setProperty('--len', len);
+        if (STEPS.indexOf(p.dataset.t) <= step) p.classList.add('on');
+      });
+    }
+    function show(k) {
+      whyEl.textContent = C[cur].why[k];
+      Object.values(N).forEach((n) => n.classList.toggle('hot', n.dataset.k === k && k !== 'web'));
+      svg.querySelectorAll('path').forEach((p) => p.classList.toggle('hot', p.dataset.t === k));
+    }
+    function reach(i) {
+      step = i; const k = STEPS[i];
+      N[k].classList.add('on');
+      svg.querySelectorAll(`path[data-t="${k}"]`).forEach((p) => p.classList.add('on'));
+      const cls = { color: 'color', tipo: 'tipo', estructura: 'struct', imagen: 'img', web: 'done' }[k];
+      if (cls) mw.classList.add(cls);
+      show(k);
+      // En el móvil, el tablero se desliza solo hasta la columna que se está construyendo
+      if (narrow() && !touched) { const col = N[k].closest('.col'); board.scrollTo({ left: col.offsetLeft - board.offsetLeft - parseFloat(getComputedStyle(board).paddingLeft), behavior: reduce ? 'auto' : 'smooth' }); }
+    }
+    function build() {
+      clearTimeout(timer); step = -1; touched = false;
+      Object.values(N).forEach((n) => n.classList.remove('on', 'hot'));
+      mw.className = 'mw'; fill(); wires();
+      if (narrow()) board.scrollTo({ left: 0 });
+      if (reduce) { STEPS.forEach((_, i) => reach(i)); return; }
+      const next = () => { reach(step + 1); if (step < STEPS.length - 1) timer = setTimeout(next, STEPS[step] === 'palabras' ? 1300 : 950); };
+      timer = setTimeout(next, 500);
+    }
+    Object.values(N).forEach((n) => n.addEventListener('click', () => { if (n.classList.contains('on')) show(n.dataset.k); }));
+    document.querySelectorAll('[data-case]').forEach((b) => b.addEventListener('click', () => {
+      cur = b.dataset.case;
+      document.querySelectorAll('[data-case]').forEach((x) => x.setAttribute('aria-selected', x === b));
+      build();
+    }));
+    document.querySelector('[data-replay]').addEventListener('click', build);
+    board.addEventListener('pointerdown', () => (touched = true));
+    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(wires, 150); });
+    document.fonts.ready.then(build);
+  })();
+</script>
+</body>
+</html>

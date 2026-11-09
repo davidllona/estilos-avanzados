@@ -1,0 +1,891 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Combinar tipografías | Hora azul</title>
+<meta name="description" content="Por qué unas parejas de fuentes funcionan y otras chocan: contraste, espíritu, altura de x y jerarquía. Doce parejas explicadas con maquetas, parejas que no funcionan, una sola familia bien usada y un laboratorio que valora tu pareja.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Parejas».
+     Blanco azulado, tinta azul noche y un verde azulado. Solo dos familias en toda la página:
+     Jost (geométrica, 300 en titulares, también para la interfaz) y Newsreader para leer. */
+  :root {
+    --bg: oklch(97% 0.01 250);
+    --bg-2: oklch(93.5% 0.014 250);
+    --bg-3: oklch(89% 0.018 250);
+    --fg: oklch(20% 0.03 260);
+    --muted: oklch(44% 0.03 255);
+    --faint: oklch(52% 0.03 255);
+    --accent: oklch(58% 0.14 170);
+    --accent-ink: oklch(45% 0.1 170);   /* el acento para texto pequeño: 5,7:1 sobre el fondo */
+    --on-accent: oklch(20% 0.03 260);
+    --code-bg: oklch(20% 0.03 260);
+    --scheme: light;
+    --f-display: "Jost", system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "Jost", system-ui, sans-serif;
+    --display-weight: 300;
+    --display-tracking: -0.035em;
+  }
+  body { font-size: clamp(1.06rem, 1rem + 0.25vw, 1.2rem); }
+  .prose h2 { font-size: clamp(2.5rem, 1.5rem + 3.4vw, 4.6rem); line-height: .95; max-width: 15ch; letter-spacing: -0.045em; }
+  .prose h2 .n { color: var(--accent-ink); font-weight: 500; }
+  .prose h3 { font-size: clamp(1.6rem, 1.3rem + 1vw, 2.2rem); font-weight: 400; letter-spacing: -0.03em; line-height: 1.05; }
+  .callout .t, .quiz .kind, .lab-head, .toc, .pager small, .chip { font-weight: 500; }
+  .quiz .q { font-weight: 400; }
+  .callout.criterio { --c: var(--accent-ink); }
+  a { text-decoration-color: var(--accent); }
+  @media (max-width: 640px) { .lab[data-height-mobile] .lab-stage iframe { height: var(--h); } }
+
+  /* =========================================================
+     Portada: máquina de parejas. Dos rodillos (titular y texto) giran
+     y se detienen en una pareja curada, aplicada a una mini web con su razón.
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "copy machine" "ctl machine"; gap: 0 clamp(2rem, 4vw, 4.4rem); padding: 5.4rem var(--gutter) 1.6rem; background: var(--bg); color: var(--fg); }
+  .h-copy { grid-area: copy; align-self: center; padding-bottom: 2rem; }
+  .h-copy [data-kicker] { margin: 0 0 1.2rem; font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { margin: 0 0 1.6rem; font: 300 clamp(3rem, 1rem + 5.6vw, 7rem)/.88 var(--f-display); letter-spacing: -0.055em; }
+  .hero h1 em { display: block; font: italic 300 1.04em/1 var(--f-body); letter-spacing: -0.035em; color: var(--accent-ink); margin-top: .06em; }
+  .hero .lede { margin: 0; max-width: 34ch; font-size: var(--step-0); line-height: 1.45; color: var(--muted); }
+  .h-ctl { grid-area: ctl; display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 1rem; padding-top: 1.2rem; border-top: 1px solid var(--line-2); }
+  .spin { display: inline-flex; align-items: center; gap: .6rem; white-space: nowrap; min-height: 54px; padding: 0 1.5rem 0 1.2rem; border: 0; border-radius: 999px; background: var(--accent); color: var(--on-accent);
+    font: 500 1.05rem/1 var(--f-ui); cursor: pointer; transition: background-color .2s, transform .2s var(--ease-out); }
+  .spin:hover { background: oklch(64% 0.14 170); }
+  .spin:active { transform: scale(.97); }
+  .spin i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; transition: rotate .9s var(--ease-out); }
+  .spin.go i { rotate: 540deg; }
+  .prev { min-height: 54px; min-width: 54px; border: 1px solid var(--line-2); border-radius: 999px; background: none; color: var(--fg); font: 500 1rem/1 var(--f-ui); cursor: pointer; padding: 0 1.1rem; }
+  .prev:hover { border-color: var(--fg); }
+  .count { font: 500 var(--step--1)/1.2 var(--f-ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .count b { color: var(--fg); font-weight: 600; }
+  .h-ctl .chip { margin-left: auto; }
+
+  .machine { grid-area: machine; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; border: 1px solid var(--fg); border-radius: 18px; overflow: hidden; background: oklch(99.5% 0.003 250); }
+  .reels { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--fg); }
+  .reel { padding: .65rem 1.1rem .7rem; min-width: 0; }
+  .reel + .reel { border-left: 1px solid var(--fg); }
+  .reel small { display: flex; justify-content: space-between; font: 500 .74rem/1 var(--f-ui); color: var(--muted); margin-bottom: .35rem; }
+  .reel small b { font-weight: 500; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+  .win { height: 2.4rem; overflow: hidden; }
+  .strip { transition: transform 1s cubic-bezier(.16, .84, .3, 1); }
+  .strip.instant { transition: none; }
+  .strip span { display: block; height: 2.4rem; line-height: 2.4rem; font-size: 1.45rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--fg); }
+  .stage { position: relative; display: grid; min-height: 0; }
+  .stage > .pm { transition: opacity .35s var(--ease-out), filter .35s var(--ease-out), background-color .5s, color .5s; }
+  .stage.out > .pm { opacity: 0; filter: blur(6px); }
+  .verdict { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: .6rem 1.6rem; padding: .95rem 1.1rem 1.05rem; border-top: 1px solid var(--fg); }
+  .verdict .t { margin: 0 0 .25rem; font: 500 .8rem/1.2 var(--f-ui); color: var(--accent-ink); }
+  .verdict .why { margin: 0; font-size: 1rem; line-height: 1.42; }
+  .verdict dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .3rem .9rem; align-content: start; font: 400 .8rem/1.3 var(--f-ui); }
+  .verdict dt { color: var(--muted); }
+  .verdict dd { margin: 0; }
+
+  /* ---- Mini web de una pareja (portada y sección de parejas) ---- */
+  .pm { container-type: inline-size; display: grid; grid-template-rows: auto 1fr; gap: 1rem; padding: clamp(1rem, 2.4vw, 1.9rem); background: var(--pbg); color: var(--pfg); min-height: 0; overflow: hidden; }
+  .pm-nav { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; }
+  .pm-nav b { font-weight: 700; }
+  .pm-nav span { opacity: .8; }
+  .pm-main { align-self: center; }
+  .pm-h { margin: 0 0 .5em; font-size: calc(var(--hs, 1) * clamp(1.9rem, 9.4cqi, 5.2rem)); line-height: .95; max-width: 13ch; text-wrap: balance; }
+  .em-italic .pm-h em { font-style: italic; }
+  .pm-h em { font-style: normal; }
+  .em-italic .pm-h em { font-style: italic; }
+  .em-color .pm-h em { color: var(--pac); }
+  .pm-p { margin: 0 0 1.2rem; max-width: 38ch; font-size: clamp(.9rem, .82rem + .6cqi, 1.05rem); line-height: 1.5; }
+  .pm-cta { display: inline-flex; align-items: center; min-height: 40px; padding: 0 1.1rem; border-radius: 999px; background: var(--pac); color: var(--pacfg); font-size: .88rem; font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "copy" "machine" "ctl"; padding: 4.4rem var(--gutter) 1rem; }
+    .h-copy { padding: .6rem 0 1rem; }
+    .h-copy [data-kicker] { margin-bottom: .7rem; }
+    .hero h1 { font-size: clamp(2.6rem, 1.4rem + 6vw, 4rem); margin: 0; }
+    .hero h1 em { display: inline; }
+    .hero .lede { display: none; }
+    .verdict { grid-template-columns: 1fr; padding: .8rem .9rem .9rem; }
+    .verdict .why { font-size: .95rem; }
+    .verdict dl { display: none; }
+    .reel { padding: .55rem .8rem .6rem; }
+    .strip span { font-size: 1.15rem; }
+    .h-ctl { border-top: 0; padding-top: .9rem; }
+    .h-ctl .chip { display: none; }
+    .spin { flex: 1; justify-content: center; }
+  }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  .statement { font-weight: 300; font-size: clamp(2.3rem, 1.4rem + 3.4vw, 4.4rem); line-height: .98; letter-spacing: -0.045em; max-width: 21ch !important; }
+  .statement em { font: italic 300 1.04em/1 var(--f-body); letter-spacing: -0.03em; color: var(--accent-ink); }
+
+  /* Reglas: número grande + título */
+  .rule-h { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 0 1rem; margin: 3.6rem 0 1rem; padding-top: 1rem; border-top: 1px solid var(--fg); }
+  .rule-h span { font: 300 3.4rem/.8 var(--f-display); color: var(--accent); letter-spacing: -0.05em; }
+  .rule-h h3 { margin: 0 !important; }
+
+  /* Así sí / Así no */
+  .sisi { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0 .6rem; }
+  .sisi figure { margin: 0; display: grid; grid-template-rows: auto 1fr; gap: .55rem; }
+  .sisi figcaption { display: flex; align-items: center; gap: .55rem; font: 500 var(--step--1)/1 var(--f-ui); }
+  .sisi figcaption::before { content: ""; width: 1.4rem; height: 3px; background: currentColor; }
+  .sisi .no figcaption { color: oklch(52% 0.18 25); }
+  .sisi .si figcaption { color: var(--accent-ink); }
+  .sisi .box { border-radius: 10px; overflow: hidden; border: 1px solid var(--line-2); background: #fff; padding: 1.3rem 1.3rem 1.4rem; color: oklch(20% 0.02 260); min-height: 11rem; }
+  .sisi .box .k { display: block; margin-bottom: .6rem; font: 500 .74rem/1 "Inter Tight", sans-serif; color: oklch(44% 0.02 260); }
+  .sisi .box h6 { margin: 0 0 .5rem; font-size: 1.9rem; line-height: 1; }
+  .sisi .box h6 + .sub { margin: -.1rem 0 .7rem; font-size: 1.05rem; }
+  .sisi .box p { margin: 0; font-size: .95rem; line-height: 1.5; }
+  .sisi-why { margin: 0 0 2.4rem !important; font-size: var(--step--1); color: var(--muted); line-height: 1.5; }
+  .sisi-why strong { color: var(--fg); }
+  .carta { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+  .carta li { display: flex; align-items: baseline; gap: .6rem; border-bottom: 1px dotted oklch(20% 0.02 260 / .25); padding-bottom: .45rem; font: 400 1rem/1.2 "Inter Tight", sans-serif; }
+  .carta li b { font-family: "Cormorant", serif; font-weight: 500; }
+  .carta li span { color: oklch(44% 0.02 260); flex: 1; }
+  .carta li i { font-style: normal; font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) { .sisi { grid-template-columns: 1fr; } }
+
+  /* Regla de alturas de x */
+  .xruler { margin: 2.2rem 0 1rem; border-top: 1px solid var(--fg); }
+  .xruler li { list-style: none; display: grid; grid-template-columns: 10.5rem 4.2rem minmax(0, 1fr) 3.4rem; align-items: center; gap: .9rem; padding: .5rem 0; border-bottom: 1px solid var(--line); }
+  .xruler { padding: 0 !important; }
+  .xruler .nm { font-size: 1.12rem; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .xruler .sm { font-size: 2.2rem; line-height: 1; }
+  .xruler .bar { height: 10px; border-radius: 5px; background: var(--bg-3); position: relative; overflow: hidden; }
+  .xruler .bar i { position: absolute; inset: 0 auto 0 0; width: calc(var(--x) / 0.62 * 100%); background: var(--fg); border-radius: 5px; }
+  .xruler li.hot .bar i { background: var(--accent); }
+  .xruler .v { font: 500 .85rem/1 var(--f-ui); text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) {
+    .xruler li { grid-template-columns: minmax(0, 1fr) 3rem 3rem; gap: .3rem .7rem; }
+    .xruler .bar { grid-column: 1 / -1; grid-row: 2; }
+    .xruler .sm { font-size: 1.6rem; }
+  }
+  /* Misma línea, dos alturas de x */
+  .sameline { position: relative; margin: 2rem 0 .8rem; padding: 1.4rem 1.2rem; border: 1px solid var(--line-2); border-radius: 10px; background: #fff; color: oklch(20% 0.02 260); overflow: hidden; }
+  .sameline p { margin: 0; font-size: clamp(2rem, 1.2rem + 3vw, 3.4rem); line-height: 1.1; white-space: nowrap; }
+  .sameline .c { font-family: "Cormorant", serif; font-weight: 500; }
+  .sameline .i { font-family: "Inter Tight", sans-serif; font-weight: 400; }
+  .sameline .lx { position: absolute; left: 0; right: 0; height: 0; border-top: 1.5px dashed currentColor; pointer-events: none; }
+  .sameline .lx b { position: absolute; right: .8rem; bottom: .25rem; font: 500 .72rem/1 var(--f-ui); background: #fff; padding: 0 .3rem; }
+  .sameline .lx.a b { bottom: auto; top: .3rem; }
+  .sameline .lx.a { color: oklch(52% 0.18 25); }
+  .sameline .lx.b { color: var(--accent-ink); }
+  .sameline small { display: block; margin-top: .7rem; font: 400 .8rem/1.3 var(--f-ui); color: oklch(44% 0.02 260); white-space: normal; }
+
+  /* Jerarquía: cinco fuentes frente a dos */
+  .hier { display: grid; gap: .25rem; }
+  .sisi .hier .l1 { font-size: 1.7rem; line-height: 1.05; margin: 0 0 .2rem; }
+  .sisi .hier .l2 { font-size: 1.05rem; margin: 0 0 .4rem; }
+  .sisi .hier .l3 { font-size: .9rem; line-height: 1.5; margin: 0 0 .6rem; }
+  .sisi .hier .l4 { font-size: .78rem; margin: 0; }
+
+  /* Banda */
+  .band.teal { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.teal p { margin: 0; font: 300 clamp(2.2rem, 1.3rem + 3.4vw, 4.4rem)/1 var(--f-display); letter-spacing: -0.045em; max-width: 20ch; text-wrap: balance; }
+  .band.teal em { font: italic 300 1.04em/1 var(--f-body); color: oklch(80% 0.12 170); letter-spacing: -0.03em; }
+
+  /* Índice de parejas */
+  .pair-index { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 2rem 0 1rem; padding: 0 !important; list-style: none; border-top: 1px solid var(--fg); }
+  .pair-index li { margin: 0; border-bottom: 1px solid var(--line-2); }
+  .pair-index li:not(:nth-child(4n)) { border-right: 1px solid var(--line-2); }
+  .pair-index a { display: grid; gap: .2rem; padding: .8rem .9rem .9rem; text-decoration: none; min-height: 5.4rem; transition: background-color .2s; }
+  .pair-index a:hover { background: var(--bg-2); }
+  .pair-index small { font: 500 .72rem/1 var(--f-ui); color: var(--accent-ink); }
+  .pair-index b { font-weight: 400; font-size: 1.05rem; line-height: 1.15; }
+  .pair-index span { font: 400 .78rem/1.25 var(--f-ui); color: var(--muted); }
+  @media (max-width: 860px) { .pair-index { grid-template-columns: 1fr 1fr; } .pair-index li:not(:nth-child(4n)) { border-right: 0; } .pair-index li:nth-child(odd) { border-right: 1px solid var(--line-2); } }
+
+  /* Fila de pareja */
+  .pair-row { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(1.2rem, 3.6vw, 3.2rem); align-items: start; padding: 2.6rem 0; border-top: 1px solid var(--fg); scroll-margin-top: 5rem; }
+  .pair-row:nth-of-type(even) > .pm { order: 2; }
+  .pair-row > .pm { min-height: 24rem; border-radius: 12px; position: sticky; top: 5.5rem; }
+  .pair-txt h3 { margin: 0 0 .15rem !important; }
+  .pair-n { margin: 0 0 .5rem; font: 300 2.4rem/.8 var(--f-display); color: var(--accent); letter-spacing: -0.04em; }
+  .pair-t { margin: 0 0 .7rem; font: italic 400 1.25rem/1.2 var(--f-body); color: var(--accent-ink); }
+  .pair-meta { margin: 0 0 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line-2); font: 400 .85rem/1.4 var(--f-ui); color: var(--muted); }
+  .pair-txt h4 { margin: 0 0 .2rem; font: 500 .85rem/1.2 var(--f-ui); letter-spacing: 0; color: var(--accent-ink); }
+  .pair-txt p:not(.pair-n):not(.pair-t):not(.pair-meta) { margin: 0 0 .9rem; font-size: var(--step-0); line-height: 1.55; }
+  @media (max-width: 860px) {
+    .pair-row { grid-template-columns: minmax(0, 1fr); }
+    .pair-row:nth-of-type(even) > .pm { order: 0; }
+    .pair-row > .pm { position: static; min-height: 19rem; }
+  }
+
+  /* Una sola familia: ficha de producto solo con Archivo */
+  .shop { border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; background: oklch(98.5% 0.006 80); color: oklch(20% 0.01 60); font-family: "Archivo", sans-serif; margin: 2.2rem 0 1rem; }
+  .shop-nav { display: flex; align-items: center; gap: 1.4rem; padding: .9rem 1.4rem; border-bottom: 1px solid oklch(20% 0.01 60 / .12); font-size: .85rem; }
+  .shop-nav b { font-weight: 800; font-stretch: 125%; letter-spacing: -0.02em; font-size: 1.05rem; margin-right: auto; }
+  .shop-body { display: grid; grid-template-columns: 1fr 1fr; }
+  .shop-pic { position: relative; min-height: 22rem; background: oklch(90% 0.025 75); overflow: hidden; }
+  .shop-pic { display: grid; place-items: center; }
+  .shop-pic svg { width: min(15rem, 62%); height: auto; }
+  .shop-info { padding: 1.6rem 1.6rem 1.4rem; display: grid; align-content: center; gap: .1rem; }
+  .shop .lbl { font-stretch: 62%; font-weight: 600; font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; color: oklch(45% 0.1 230); }
+  .shop h5 { margin: .3rem 0 .2rem; font-weight: 650; font-size: clamp(1.8rem, 1.3rem + 1.6vw, 2.5rem); line-height: 1; letter-spacing: -0.035em; }
+  .shop .price { margin: 0 0 .9rem; font-weight: 900; font-size: 1.9rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .shop .desc { margin: 0 0 1.1rem; font-weight: 400; font-size: .98rem; line-height: 1.5; color: oklch(38% 0.01 60); max-width: 38ch; }
+  .shop .buy { justify-self: start; display: inline-flex; align-items: center; min-height: 46px; padding: 0 1.3rem; border-radius: 8px; background: oklch(20% 0.01 60); color: oklch(98% 0.005 80); font-weight: 600; font-size: .95rem; }
+  .shop small { margin-top: .8rem; font-size: .8rem; color: oklch(42% 0.01 60); font-stretch: 85%; }
+  @media (max-width: 680px) { .shop-body { grid-template-columns: 1fr; } .shop-pic { min-height: 14rem; } .shop-nav span:not(:last-child) { display: none; } }
+
+  /* Nota de la pareja de esta página */
+  .table-wrap table { min-width: 560px; }
+  .colofon { display: grid; grid-template-columns: auto 1fr; gap: 1.2rem 1.8rem; align-items: center; margin: 3rem 0; padding: 1.4rem 0; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--fg); }
+  .colofon .aa { display: flex; align-items: baseline; gap: .7rem; }
+  .colofon .aa b { font: 300 4.4rem/.8 var(--f-display); letter-spacing: -0.04em; }
+  .colofon .aa i { font: italic 300 4.4rem/.8 var(--f-body); color: var(--accent-ink); }
+  .colofon p { margin: 0; font-size: var(--step--1); line-height: 1.55; color: var(--muted); }
+  .colofon p strong { color: var(--fg); }
+  @media (max-width: 560px) { .colofon { grid-template-columns: 1fr; } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="tipo-combinar">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="h-copy">
+      <p data-kicker>Tipografía</p>
+      <h1 id="t">Combinar <em>tipografías</em></h1>
+      <p class="lede">Una máquina de parejas. Cada tirada se detiene en una pareja curada, aplicada a un negocio, con la razón de por qué funciona.</p>
+    </div>
+
+    <div class="machine" aria-live="off" data-machine>
+      <div class="reels" aria-hidden="true">
+        <div class="reel"><small>Titular <b data-xa>x 0,46</b></small><div class="win"><div class="strip" data-strip="a"></div></div></div>
+        <div class="reel"><small>Texto <b data-xb>x 0,546</b></small><div class="win"><div class="strip" data-strip="b"></div></div></div>
+      </div>
+      <div class="stage" data-mstage>
+        <div class="pm em-italic" style="--pbg:oklch(93% 0.02 50);--pfg:oklch(20% 0.01 40);--pac:oklch(20% 0.01 40);--pacfg:oklch(96% 0.01 50);--hs:1.05;font-family:'Inter Tight';font-weight:400"><div class="pm-nav"><b>Almenara Joyeros</b><span>Colecciones</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Bodoni Moda';font-weight:500;font-variation-settings:'opsz' 96;letter-spacing:-0.02em">Oro que <em>no hace</em> ruido</p><p class="pm-p">Piezas únicas hechas a mano en nuestro taller de Castelló desde 1958.</p><span class="pm-cta">Pedir cita privada</span></div></div>
+      </div>
+      <div class="verdict">
+        <div><p class="t" data-title>Lujo con claridad</p><p class="why" data-why>La didona pone el lujo y la grotesca la claridad: contraste máximo de trazo, y las dos son verticales y racionales.</p></div>
+        <dl><dt>Contraste</dt><dd data-con>Trazo de pelo frente a trazo uniforme</dd><dt>Afinidad</dt><dd data-afi>Eje vertical y orden en las dos</dd></dl>
+      </div>
+    </div>
+
+    <div class="h-ctl">
+      <button class="prev" type="button" data-prev aria-label="Pareja anterior">Anterior</button>
+      <button class="spin" type="button" data-spin><i aria-hidden="true"></i>Otra pareja</button>
+      <span class="count">Pareja <b data-n>01</b> de 12</span>
+      <span class="chip" data-meta>18 min</span>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Una pareja de fuentes es una conversación. Una voz habla para que la vean (el titular) y la otra, para que la lean (el texto). Funciona cuando cada una tiene su papel claro, cuando se distinguen a la primera y cuando, aun así, parecen del mismo mundo. Es como vestirse: una prenda protagonista y otra que acompaña, pero las dos para la misma ocasión.</p>
+      <p>En <a href="tipo-personalidad.html">Qué transmite una tipografía</a> viste la voz de cada familia; aquí, por qué unas voces se entienden y otras se pisan. La técnica para cargarlas y escalarlas en CSS está en <a href="03-tipografia.html">Tipografía en CSS</a>.</p>
+
+      <p class="statement">Dos fuentes funcionan juntas cuando se distinguen a la primera <em>y parecen del mismo mundo</em>.</p>
+
+      <h2>Las reglas y su porqué</h2>
+      <p>Cinco reglas. No son dogmas: son atajos para que la pareja diga una sola cosa. Cuando rompas una, que sea a propósito y sabiendo qué ganas.</p>
+
+      <div class="rule-h"><span>1</span><h3>Contraste claro, o una sola familia</h3></div>
+      <p>El ojo interpreta las diferencias pequeñas como errores y las grandes como decisiones. Si el titular está en una sans y el subtítulo en otra sans casi igual, nadie piensa «qué buena pareja»: piensa que algo ha fallado, igual que con dos azules casi idénticos en la misma página. Cuando la diferencia es clara (una serif de contraste alto y una sans monolineal), el lector asigna papeles sin pensar: esta letra manda, esta otra explica.</p>
+      <p>El contraste puede venir de la estructura (serif frente a sans), del peso, de la anchura o de la personalidad. La estructura es el más fuerte, porque se nota incluso cuando los tamaños se acercan. Si no quieres contraste, usa una sola familia y marca la jerarquía con peso y tamaño.</p>
+
+      <div class="sisi wide">
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="box"><span class="k">Reformas Albalat</span><h6 style="font-family: 'Inter Tight'; font-weight: 650; letter-spacing: -0.03em;">Tu cocina nueva en tres semanas</h6><p class="sub" style="font-family: Archivo; font-weight: 600;">Sin obras eternas ni sorpresas en la factura</p><p style="font-family: 'Inter Tight';">Medimos, diseñamos y montamos con nuestro propio equipo. Presupuesto cerrado antes de empezar.</p></div>
+        </figure>
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="box"><span class="k">Reformas Albalat</span><h6 style="font-family: 'Inter Tight'; font-weight: 650; letter-spacing: -0.03em;">Tu cocina nueva en tres semanas</h6><p class="sub" style="font-family: 'Inter Tight'; font-weight: 500; color: oklch(44% 0.02 260);">Sin obras eternas ni sorpresas en la factura</p><p style="font-family: 'Inter Tight';">Medimos, diseñamos y montamos con nuestro propio equipo. Presupuesto cerrado antes de empezar.</p></div>
+        </figure>
+      </div>
+      <p class="sisi-why">A la izquierda, el subtítulo está en Archivo y el resto en Inter Tight: dos grotescas casi gemelas. La diferencia se nota pero no se entiende, y eso parece un descuido. <strong>A la derecha, una sola familia</strong>: el subtítulo se separa con peso y color, y todo parece decidido.</p>
+
+      <div class="rule-h"><span>2</span><h3>Mismo espíritu, o una época compartida</h3></div>
+      <p>Cada fuente trae su historia: su herramienta, su época y los sitios donde la hemos visto. Si juntas dos historias que no tienen nada que ver, la página cuenta dos cosas a la vez. Una condensada de cartel de boxeo con una garalda renacentista es un púgil leyendo poesía en una boda: puede ser un recurso, pero casi nunca es lo que quería el cliente.</p>
+      <p>Las parejas que funcionan comparten algo de fondo aunque contrasten en la forma: Bodoni e Inter Tight son las dos verticales y racionales; Zilla Slab y Jost vienen de la industria y de principios del XX; Cormorant y Jost son ligeras y tranquilas. Una grotesca neutra casi siempre funciona de segunda voz, precisamente porque no trae una historia fuerte que pueda chocar.</p>
+
+      <div class="sisi wide">
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="box"><span class="k">Club de Pàdel Millars</span><h6 style="font-family: 'Big Shoulders'; font-weight: 900; text-transform: uppercase; font-size: 2.6rem; line-height: .9;">Torneo de primavera</h6><p style="font-family: Cormorant; font-size: 1.15rem; line-height: 1.35;">Del 4 al 6 de abril, categorías de iniciación a primera. Inscripción abierta hasta el 28 de marzo.</p></div>
+        </figure>
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="box"><span class="k">Club de Pàdel Millars</span><h6 style="font-family: 'Big Shoulders'; font-weight: 900; text-transform: uppercase; font-size: 2.6rem; line-height: .9;">Torneo de primavera</h6><p style="font-family: 'Inter Tight';">Del 4 al 6 de abril, categorías de iniciación a primera. Inscripción abierta hasta el 28 de marzo.</p></div>
+        </figure>
+      </div>
+      <p class="sisi-why">La condensada habla de deporte y de cartel; la garalda, de libros antiguos y de bodas. <strong>Con Inter Tight</strong>, una sans funcional del mismo mundo de la señalética, el torneo suena a torneo.</p>
+
+      <div class="rule-h"><span>3</span><h3>Alturas de x parecidas</h3></div>
+      <p>Leemos sobre todo minúsculas, así que el tamaño que percibimos es el de la «x», no el que pone en el CSS. Dos fuentes con alturas de x muy distintas, a los mismos píxeles, parecen de tamaños diferentes. Si se encuentran en la misma línea (un plato y su descripción, un precio dentro de un texto, una etiqueta junto a un dato), el ritmo se rompe y una parece más pequeña o mal elegida.</p>
+
+      <div class="sameline wide" data-sameline>
+        <span class="lx a" data-lx="c"><b>x de Cormorant</b></span><span class="lx b" data-lx="i"><b>x de Inter Tight</b></span>
+        <p><span class="c">Arroz negro</span> <span class="i">con alioli</span></p>
+        <small>Las dos partes a 3,4 rem. La línea roja marca la altura de x de Cormorant (0,386) y la verde la de Inter Tight (0,546): la serif parece un cuerpo más pequeña.</small>
+      </div>
+
+      <p>Estas son las alturas de x de las fuentes del cuaderno, medidas en sus archivos (la proporción entre la altura de la «x» y el tamaño de la fuente). Cuanto más cerca estén dos barras, más fácil es que convivan en la misma línea.</p>
+
+      <ol class="xruler wide" aria-label="Alturas de x de las fuentes del cuaderno">
+        <li class="hot" style="--x:.60"><span class="nm" style="font-family: 'Big Shoulders'; font-weight: 700;">Big Shoulders</span><span class="sm" style="font-family: 'Big Shoulders'; font-weight: 700;">Hxa</span><span class="bar"><i></i></span><span class="v">0,600</span></li>
+        <li style="--x:.566"><span class="nm" style="font-family: Unbounded;">Unbounded</span><span class="sm" style="font-family: Unbounded;">Hxa</span><span class="bar"><i></i></span><span class="v">0,566</span></li>
+        <li style="--x:.55"><span class="nm" style="font-family: 'JetBrains Mono';">JetBrains Mono</span><span class="sm" style="font-family: 'JetBrains Mono';">Hxa</span><span class="bar"><i></i></span><span class="v">0,550</span></li>
+        <li style="--x:.546"><span class="nm" style="font-family: 'Inter Tight';">Inter Tight</span><span class="sm" style="font-family: 'Inter Tight';">Hxa</span><span class="bar"><i></i></span><span class="v">0,546</span></li>
+        <li style="--x:.528"><span class="nm" style="font-family: Bricolage;">Bricolage</span><span class="sm" style="font-family: Bricolage;">Hxa</span><span class="bar"><i></i></span><span class="v">0,528</span></li>
+        <li style="--x:.526"><span class="nm" style="font-family: Archivo;">Archivo</span><span class="sm" style="font-family: Archivo;">Hxa</span><span class="bar"><i></i></span><span class="v">0,526</span></li>
+        <li style="--x:.51"><span class="nm" style="font-family: 'Instrument Serif';">Instrument Serif</span><span class="sm" style="font-family: 'Instrument Serif';">Hxa</span><span class="bar"><i></i></span><span class="v">0,510</span></li>
+        <li style="--x:.50"><span class="nm" style="font-family: Syne;">Syne</span><span class="sm" style="font-family: Syne;">Hxa</span><span class="bar"><i></i></span><span class="v">0,500</span></li>
+        <li style="--x:.49"><span class="nm" style="font-family: Nunito;">Nunito</span><span class="sm" style="font-family: Nunito;">Hxa</span><span class="bar"><i></i></span><span class="v">0,490</span></li>
+        <li style="--x:.482"><span class="nm" style="font-family: Fraunces;">Fraunces</span><span class="sm" style="font-family: Fraunces;">Hxa</span><span class="bar"><i></i></span><span class="v">0,482</span></li>
+        <li style="--x:.46"><span class="nm" style="font-family: Jost;">Jost</span><span class="sm" style="font-family: Jost;">Hxa</span><span class="bar"><i></i></span><span class="v">0,460</span></li>
+        <li style="--x:.46"><span class="nm" style="font-family: 'Bodoni Moda';">Bodoni Moda</span><span class="sm" style="font-family: 'Bodoni Moda'; font-variation-settings: 'opsz' 24;">Hxa</span><span class="bar"><i></i></span><span class="v">0,460</span></li>
+        <li style="--x:.445"><span class="nm" style="font-family: 'Zilla Slab';">Zilla Slab</span><span class="sm" style="font-family: 'Zilla Slab';">Hxa</span><span class="bar"><i></i></span><span class="v">0,445</span></li>
+        <li style="--x:.426"><span class="nm" style="font-family: Newsreader;">Newsreader</span><span class="sm" style="font-family: Newsreader;">Hxa</span><span class="bar"><i></i></span><span class="v">0,426</span></li>
+        <li class="hot" style="--x:.386"><span class="nm" style="font-family: Cormorant;">Cormorant</span><span class="sm" style="font-family: Cormorant;">Hxa</span><span class="bar"><i></i></span><span class="v">0,386</span></li>
+        <li class="hot" style="--x:.355"><span class="nm" style="font-family: Caveat; font-weight: 600;">Caveat</span><span class="sm" style="font-family: Caveat; font-weight: 600;">Hxa</span><span class="bar"><i></i></span><span class="v">0,355</span></li>
+      </ol>
+
+      <p>Ojo con el matiz: entre un titular de 64 px y un texto de 17 px, una diferencia de altura de x apenas importa, porque el tamaño ya separa las dos voces. La regla pesa cuando las dos fuentes se acercan en tamaño o comparten línea. La solución no es cambiar de pareja, sino compensar: sube la fuente de x baja hasta que las minúsculas igualen. Para Cormorant junto a Inter Tight, eso es multiplicar por 1,4 aproximadamente (0,546 ÷ 0,386). CSS tiene una propiedad que hace este cálculo, <code>font-size-adjust</code>, que ajusta el tamaño de cada fuente para que todas tengan la misma altura de x.<!-- verificar soporte de font-size-adjust (valor ex-height) --></p>
+
+      <div class="rule-h"><span>4</span><h3>La jerarquía, con tamaño y peso, no con más fuentes</h3></div>
+      <p>Cada fuente nueva es una voz nueva, y el lector entiende una voz nueva como un significado nuevo: «¿esto es otra sección?, ¿otra marca?, ¿un anuncio?». En cambio, entiende sin esfuerzo que lo grande es más importante que lo pequeño y lo negro más que lo gris. Por eso los niveles de un texto (titular, subtítulo, texto, nota) se marcan mejor con tamaño, peso, color y caja, que son escalones de una misma escalera, que con fuentes distintas, que son escaleras distintas.</p>
+
+      <div class="sisi wide">
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="box hier">
+            <span class="k" style="font-family: 'JetBrains Mono';">Academia Lingua, Castelló</span>
+            <p class="l1" style="font-family: Syne; font-weight: 800; letter-spacing: -0.03em;">Inglés para toda la familia</p>
+            <p class="l2" style="font-family: Fraunces; font-style: italic; font-weight: 500;">Grupos reducidos de 3 a 99 años</p>
+            <p class="l3" style="font-family: Nunito;">Profesores nativos, clases presenciales y online, y preparación de exámenes oficiales de Cambridge.</p>
+            <p class="l4" style="font-family: Caveat; font-size: 1.15rem;">Matrícula gratis en septiembre</p>
+          </div>
+        </figure>
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="box hier">
+            <span class="k" style="font-family: 'Inter Tight';">Academia Lingua, Castelló</span>
+            <p class="l1" style="font-family: Fraunces; font-weight: 600; font-variation-settings: 'opsz' 144; letter-spacing: -0.015em;">Inglés para toda la familia</p>
+            <p class="l2" style="font-family: 'Inter Tight'; font-weight: 600;">Grupos reducidos de 3 a 99 años</p>
+            <p class="l3" style="font-family: 'Inter Tight'; color: oklch(40% 0.02 260);">Profesores nativos, clases presenciales y online, y preparación de exámenes oficiales de Cambridge.</p>
+            <p class="l4" style="font-family: 'Inter Tight'; font-weight: 600; color: oklch(45% 0.1 170);">Matrícula gratis en septiembre</p>
+          </div>
+        </figure>
+      </div>
+      <p class="sisi-why">A la izquierda hay cinco familias (mono, display, serif cursiva, redondeada y manuscrita) para cinco niveles: cada línea parece de una marca distinta. <strong>A la derecha, dos familias y cuatro niveles</strong> marcados con tamaño, peso y color: se lee de arriba abajo sin pensar.</p>
+
+      <div class="rule-h"><span>5</span><h3>Máximo dos</h3></div>
+      <p>Dos voces bastan para casi todo: una que manda y otra que explica. Una tercera solo se justifica si tiene un papel que las otras no pueden hacer y nunca se cruza con ellas: una mono para datos y código, o una manuscrita como acento en una sola frase. Hay tres razones:</p>
+      <ul>
+        <li><strong>Coherencia.</strong> Con dos familias, la página tiene una personalidad; con cuatro, tiene un debate.</li>
+        <li><strong>Memoria de marca.</strong> El público reconoce una marca por repetición: la misma pareja en la web, la etiqueta y el Instagram.</li>
+        <li><strong>Peso de la página.</strong> Cada familia es un archivo que se descarga antes de que el texto se vea bien. En este cuaderno, Newsreader con su cursiva pesa 279 KB; Inter Tight, 45 KB; Jost, 27 KB. Una tercera y una cuarta familia pueden doblar lo que se descarga solo en letras.</li>
+      </ul>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Titular en Bodoni Moda a 72 px y texto en Inter Tight a 17 px. En el móvil, el titular baja a 34 px. ¿Qué le pasa a la pareja?</p>
+        <ol>
+          <li>Deja de funcionar: hay que cambiar de fuentes en el móvil.</li>
+          <li>Pierde contraste de tamaño, pero la diferencia de estructura sigue separando los papeles.</li>
+          <li>Gana contraste, porque Bodoni se ve más fina en pequeño.</li>
+        </ol>
+        <p class="why">La relación de tamaño pasa de 4,2 a 2: el tamaño ya no separa tanto las dos voces. Lo que las sigue distinguiendo es la estructura (didona frente a grotesca). Por eso, en el móvil, las parejas de estructura contrastada aguantan y las de dos fuentes parecidas se funden.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el escritorio, un titular de 96 px y un texto de 18 px se distinguen aunque sean de la misma familia: hay cinco veces de diferencia. En el teléfono, el titular baja a 36–40 px y la relación cae a 2. Toda la distinción que antes ponía el tamaño la tiene que poner ahora el estilo. Por eso dos sans parecidas que «funcionaban» en el monitor se funden en el móvil, y por eso una pareja serif con sans, o una sola familia con pesos muy separados (900 frente a 400), es más segura en pantallas pequeñas.</p>
+      </div>
+
+      <h2>Doce parejas explicadas</h2>
+      <p>Doce parejas probadas, cada una aplicada a un negocio inventado de la zona. Fíjate en lo mismo en todas: dónde está el contraste y qué comparten. Son las mismas que salen en la máquina de la portada.</p>
+
+      <ol class="pair-index wide">
+        <li><a href="#p-bodoni-inter"><small>01</small><b>Bodoni + Inter</b><span>Lujo con claridad</span></a></li>
+        <li><a href="#p-fraunces-inter"><small>02</small><b>Fraunces + Inter</b><span>Editorial cálido</span></a></li>
+        <li><a href="#p-instrument-inter"><small>03</small><b>Instrument Serif + Inter</b><span>El estilo de los vídeos</span></a></li>
+        <li><a href="#p-syne-newsreader"><small>04</small><b>Syne + Newsreader</b><span>Creativo con poso</span></a></li>
+        <li><a href="#p-shoulders-inter"><small>05</small><b>Big Shoulders + Inter</b><span>Deportivo e industrial</span></a></li>
+        <li><a href="#p-zilla-jost"><small>06</small><b>Zilla Slab + Jost</b><span>Artesano</span></a></li>
+        <li><a href="#p-nunito-nunito"><small>07</small><b>Nunito + Nunito</b><span>Infantil</span></a></li>
+        <li><a href="#p-mono-inter"><small>08</small><b>JetBrains Mono + Inter</b><span>Tecnológico</span></a></li>
+        <li><a href="#p-cormorant-jost"><small>09</small><b>Cormorant + Jost</b><span>Boda y floristería</span></a></li>
+        <li><a href="#p-unbounded-inter"><small>10</small><b>Unbounded + Inter</b><span>Startup joven</span></a></li>
+        <li><a href="#p-caveat-jost"><small>11</small><b>Caveat + Jost</b><span>Cafetería</span></a></li>
+        <li><a href="#p-archivo-newsreader"><small>12</small><b>Archivo ancha + Newsreader</b><span>Arquitectura</span></a></li>
+      </ol>
+
+      <section class="pair-row wide" id="p-bodoni-inter">
+        <div class="pm em-italic" style="--pbg:oklch(93% 0.02 50);--pfg:oklch(20% 0.01 40);--pac:oklch(20% 0.01 40);--pacfg:oklch(96% 0.01 50);--hs:1.05;font-family:'Inter Tight';font-weight:400"><div class="pm-nav"><b>Almenara Joyeros</b><span>Colecciones</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Bodoni Moda';font-weight:500;font-variation-settings:'opsz' 96;letter-spacing:-0.02em">Oro que <em>no hace</em> ruido</p><p class="pm-p">Piezas únicas hechas a mano en nuestro taller de Castelló desde 1958.</p><span class="pm-cta">Pedir cita privada</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">01</p>
+          <h3>Bodoni Moda + Inter Tight</h3>
+          <p class="pair-t">Lujo con claridad</p>
+          <p class="pair-meta">Bodoni Moda 500 para titular, Inter Tight 400 para texto. Altura de x: 0,46 y 0,546.</p>
+          <h4>Por qué funciona</h4><p>Es el contraste más extremo que existe entre dos estructuras: trazos de pelo, eje vertical y remates finísimos frente a un trazo uniforme sin remates. Nadie las confunde, así que cada una tiene su papel claro: Bodoni seduce e Inter Tight informa. Y comparten algo de fondo: las dos son verticales, ordenadas y sin gesto de mano, así que parecen del mismo mundo racional.</p>
+          <h4>Para quién</h4><p>Joyería, moda, cosmética, inmobiliaria de lujo, hoteles boutique.</p>
+          <h4>Cómo usarla</h4><p>Bodoni Moda 500 con tamaño óptico alto (<code>opsz</code> 96) a partir de 48 px; Inter Tight 400 a 16–17 px para el texto y 500–600 en botones. Nada de Bodoni por debajo de 24 px.</p>
+          <h4>Cuidado con</h4><p>La x de Bodoni (0,46) es más baja que la de Inter Tight (0,546): si las juntas en una misma línea, sube un poco la Bodoni.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-fraunces-inter">
+        <div class="pm em-italic" style="--pbg:oklch(90% 0.05 75);--pfg:oklch(24% 0.04 40);--pac:oklch(24% 0.04 40);--pacfg:oklch(93% 0.04 75);--hs:1;font-family:'Inter Tight';font-weight:400"><div class="pm-nav"><b>Arrocería Marjal</b><span>Carta</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Fraunces';font-weight:600;font-variation-settings:'opsz' 144;letter-spacing:-0.02em">Arroz de leña, sin prisa</p><p class="pm-p">Cocina de huerta en El Grau. Mesa a mediodía, de martes a domingo.</p><span class="pm-cta">Reservar mesa</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">02</p>
+          <h3>Fraunces + Inter Tight</h3>
+          <p class="pair-t">Editorial cálido</p>
+          <p class="pair-meta">Fraunces 600 para titular, Inter Tight 400 para texto. Altura de x: 0,482 y 0,546.</p>
+          <h4>Por qué funciona</h4><p>Fraunces trae la serif (credibilidad, cocina de siempre) con remates blandos que la hacen cercana; Inter Tight la equilibra con una voz neutra que no compite. El contraste es claro, serif redondeada frente a sans seca, y la temperatura se queda en el titular, que es donde se ve. Si los dos fueran cálidos, la página empalagaría.</p>
+          <h4>Para quién</h4><p>Restaurantes, marcas de alimentación, pastelerías, revistas, newsletters, cafés de especialidad.</p>
+          <h4>Cómo usarla</h4><p>Fraunces 500–650 con <code>opsz</code> 144 para titulares grandes y tracking de −0,03 em; Inter Tight 400 para leer. Para subtítulos, Fraunces cursiva a tamaño medio.</p>
+          <h4>Cuidado con</h4><p>Fraunces en 800–900 se vuelve setentera y caricaturesca; para un restaurante de autor, peso medio.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-instrument-inter">
+        <div class="pm em-italic em-color" style="--pbg:#F3EEE3;--pfg:#111111;--pac:#D9541E;--pacfg:#111111;--hs:1.12;font-family:'Inter Tight';font-weight:400"><div class="pm-nav"><b>Turno</b><span>Producto</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Instrument Serif';font-weight:400;letter-spacing:-0.01em">Reservas que se <em>gestionan solas</em></p><p class="pm-p">Agenda, recordatorios y pagos para clínicas y estudios en una sola pantalla.</p><span class="pm-cta">Probar gratis</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">03</p>
+          <h3>Instrument Serif + Inter Tight</h3>
+          <p class="pair-t">El estilo de los vídeos</p>
+          <p class="pair-meta">Instrument Serif 400 para titular, Inter Tight 400 para texto. Altura de x: 0,51 y 0,546.</p>
+          <h4>Por qué funciona</h4><p>Instrument Serif es estrecha y de contraste alto, con aire de revista; Inter Tight es la voz de producto. Juntas suenan a tecnología con criterio: la sans explica qué hace la herramienta y la serif, sobre todo en cursiva, pone la emoción. La jugada de la landing «mesa» es meter la cursiva solo en las palabras con carga, como quien baja la voz para lo importante.</p>
+          <h4>Para quién</h4><p>SaaS, apps, estudios de diseño, landings de producto, consultoras modernas.</p>
+          <h4>Cómo usarla</h4><p>Titular en Instrument Serif 400 grande (56–96 px), o en Inter Tight 600 apretada con una palabra en Instrument Serif cursiva; texto en Inter Tight 400. Sus alturas de x (0,51 y 0,546) son parecidas, así que conviven bien en la misma línea.</p>
+          <h4>Cuidado con</h4><p>Es la pareja más repetida en las landings de producto recientes. Úsala cuando encaje con la marca, no por defecto, y nunca con cursiva en todos los titulares.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-syne-newsreader">
+        <div class="pm " style="--pbg:oklch(88% 0.17 125);--pfg:oklch(18% 0.02 140);--pac:oklch(18% 0.02 140);--pacfg:oklch(88% 0.17 125);--hs:0.86;font-family:'Newsreader';font-weight:400"><div class="pm-nav"><b>Estudio Garbí</b><span>Proyectos</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Syne';font-weight:800;letter-spacing:-0.045em">Marcas que no se olvidan</p><p class="pm-p">Identidad y webs para negocios de la Plana que quieren dejar huella.</p><span class="pm-cta">Ver proyectos</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">04</p>
+          <h3>Syne + Newsreader</h3>
+          <p class="pair-t">Creativo con poso</p>
+          <p class="pair-meta">Syne 800 para titular, Newsreader 400 para texto. Altura de x: 0,5 y 0,426.</p>
+          <h4>Por qué funciona</h4><p>Es un contraste de épocas hecho a propósito: Syne es nueva, ancha y rara; Newsreader, una serif de lectura con estructura clásica. La display atrae y la serif da credibilidad, como un estudio joven que además sabe escribir. Funciona porque los papeles no se mezclan nunca: Syne solo en titulares cortos y Newsreader en todo lo que se lee.</p>
+          <h4>Para quién</h4><p>Agencias y estudios creativos, galerías, festivales culturales, portfolios con texto.</p>
+          <h4>Cómo usarla</h4><p>Syne 700–800 con tracking negativo y titulares de pocas palabras; Newsreader 400 a 18 px con interlineado de 1,55.</p>
+          <h4>Cuidado con</h4><p>Syne ensancha mucho en 800: en el móvil, titulares de tres o cuatro palabras como mucho.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-shoulders-inter">
+        <div class="pm em-color" style="--pbg:oklch(17% 0.01 260);--pfg:oklch(97% 0.005 260);--pac:oklch(90% 0.17 100);--pacfg:oklch(17% 0.01 260);--hs:1.22;font-family:'Inter Tight';font-weight:400"><div class="pm-nav"><b>Box Riera</b><span>Horarios</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Big Shoulders';font-weight:900;text-transform:uppercase;letter-spacing:0">Entrena <em>sin excusas</em></p><p class="pm-p">Fuerza y cardio de 6:30 a 22:00 en Castelló. La primera semana es gratis.</p><span class="pm-cta">Reservar clase</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">05</p>
+          <h3>Big Shoulders + Inter Tight</h3>
+          <p class="pair-t">Deportivo e industrial</p>
+          <p class="pair-meta">Big Shoulders 900 para titular, Inter Tight 400 para texto. Altura de x: 0,6 y 0,546.</p>
+          <h4>Por qué funciona</h4><p>La condensada grita y la grotesca explica. Comparten espíritu, las dos son sans funcionales de cartel y de señalética, así que parecen del mismo mundo; el contraste lo ponen la anchura y el peso: Big Shoulders estrecha y negra, Inter Tight de anchura normal y regular. Es una pareja de una sola estructura, y funciona porque la diferencia de registro es enorme.</p>
+          <h4>Para quién</h4><p>Gimnasios, clubes, eventos deportivos, imprentas, marcas de calle, industria.</p>
+          <h4>Cómo usarla</h4><p>Big Shoulders 800–900 en mayúsculas para titulares y cifras; Inter Tight 400–500 para texto, horarios y precios pequeños.</p>
+          <h4>Cuidado con</h4><p>La x de Big Shoulders es enorme (0,60): en minúsculas pequeñas junto a texto, el texto parecerá diminuto.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-zilla-jost">
+        <div class="pm " style="--pbg:oklch(86% 0.05 75);--pfg:oklch(25% 0.04 50);--pac:oklch(30% 0.09 15);--pacfg:oklch(93% 0.03 85);--hs:1;font-family:'Jost';font-weight:400"><div class="pm-nav"><b>Forn de la Vila</b><span>Pedidos</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Zilla Slab';font-weight:700;letter-spacing:-0.01em">Pan de masa madre, cada mañana</p><p class="pm-p">Harina de molino de piedra y 24 horas de fermentación. Abrimos a las 7.</p><span class="pm-cta">Encargar pan</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">06</p>
+          <h3>Zilla Slab + Jost</h3>
+          <p class="pair-t">Artesano</p>
+          <p class="pair-meta">Zilla Slab 700 para titular, Jost 400 para texto. Altura de x: 0,445 y 0,46.</p>
+          <h4>Por qué funciona</h4><p>La egipcia pone el oficio (serifas como vigas, peso, carteles de taller) y la geométrica, el orden limpio. Comparten época, la de la industria y las primeras décadas del siglo XX, y el contraste es nítido: serifas de bloque frente a círculos sin remates. Suena a obrador moderno: hecho a mano, pero bien organizado.</p>
+          <h4>Para quién</h4><p>Panaderías, cerveza artesana, cafés, carpinterías, marcas de producto local.</p>
+          <h4>Cómo usarla</h4><p>Zilla Slab 700 para titulares y etiquetas; Jost 400 para texto. Sus alturas de x (0,445 y 0,46) son casi iguales: casan también en la misma línea.</p>
+          <h4>Cuidado con</h4><p>Con kraft, madera y sellos a la vez cae en el cliché retro: una sola referencia artesana basta.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-nunito-nunito">
+        <div class="pm " style="--pbg:oklch(94% 0.035 20);--pfg:oklch(35% 0.08 0);--pac:oklch(35% 0.08 0);--pacfg:oklch(97% 0.01 20);--hs:0.95;font-family:'Nunito';font-weight:600"><div class="pm-nav"><b>pequeña lluna</b><span>Tienda</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Nunito';font-weight:900;letter-spacing:-0.02em">Ropa que aguanta el recreo</p><p class="pm-p">Algodón orgánico de 0 a 8 años. Envío gratis a partir de 40 €.</p><span class="pm-cta">Ver novedades</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">07</p>
+          <h3>Nunito</h3>
+          <p class="pair-t">Infantil</p>
+          <p class="pair-meta">Nunito 900 para titular, Nunito 600 para texto. Altura de x: 0,49 y 0,49.</p>
+          <h4>Por qué funciona</h4><p>Una sola familia redondeada con pesos muy separados: 900 para titulares y 600 para leer. No hay dos voces que conciliar, sino una sola voz amable que sube y baja el volumen. Para un público de familias, la coherencia y la legibilidad (x generosa, aperturas abiertas) importan más que el contraste de estilos.</p>
+          <h4>Para quién</h4><p>Moda infantil, escuelas infantiles, academias para niños, apps familiares.</p>
+          <h4>Cómo usarla</h4><p>Nunito 900 con tracking algo negativo en titulares; 500–600 en texto (el 400 queda fino en pantallas pequeñas); 800 en botones y precios.</p>
+          <h4>Cuidado con</h4><p>Sin contraste de estilos, la jerarquía depende del tamaño y el peso: exagera los saltos.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-mono-inter">
+        <div class="pm em-color" style="--pbg:oklch(22% 0.04 255);--pfg:oklch(92% 0.02 250);--pac:oklch(85% 0.12 160);--pacfg:oklch(15% 0.03 255);--hs:0.82;font-family:'Inter Tight';font-weight:400"><div class="pm-nav"><b>pixel_forja</b><span>Servicios</span></div><div class="pm-main"><p class="pm-h" style="font-family:'JetBrains Mono';font-weight:500;letter-spacing:-0.045em">Despliegues <em>sin sustos</em></p><p class="pm-p">Desarrollo a medida para tiendas online y apps, con monitorización las 24 horas.</p><span class="pm-cta">Hablar con el equipo</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">08</p>
+          <h3>JetBrains Mono + Inter Tight</h3>
+          <p class="pair-t">Tecnológico</p>
+          <p class="pair-meta">JetBrains Mono 500 para titular, Inter Tight 400 para texto. Altura de x: 0,55 y 0,546.</p>
+          <h4>Por qué funciona</h4><p>La mono dice «esto lo hacen programadores» y la grotesca hace que el resto se lea sin esfuerzo. Comparten una x alta (0,55 y 0,546), así que pueden convivir incluso en la misma línea: una cifra en mono dentro de un texto en Inter. El contraste lo pone la rejilla fija de la mono.</p>
+          <h4>Para quién</h4><p>Estudios de desarrollo, herramientas para programadores, ciberseguridad, datos.</p>
+          <h4>Cómo usarla</h4><p>JetBrains Mono 500 para titulares cortos, cifras, etiquetas y código; Inter Tight 400 para todo lo que se lee.</p>
+          <h4>Cuidado con</h4><p>La mono en párrafos largos cansa: que sea el titular o el detalle, nunca el texto.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-cormorant-jost">
+        <div class="pm em-italic" style="--pbg:oklch(95% 0.018 20);--pfg:oklch(28% 0.03 10);--pac:oklch(28% 0.03 10);--pacfg:oklch(96% 0.015 20);--hs:1.18;font-family:'Jost';font-weight:400"><div class="pm-nav"><b>Flors d'Azahar</b><span>Bodas</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Cormorant';font-weight:500;letter-spacing:-0.015em">Flores para el día <em>que no se repite</em></p><p class="pm-p">Ramos de novia, centros y decoración de ceremonias en Castelló y Valencia.</p><span class="pm-cta">Pedir presupuesto</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">09</p>
+          <h3>Cormorant + Jost</h3>
+          <p class="pair-t">Boda y floristería</p>
+          <p class="pair-meta">Cormorant 500 para titular, Jost 400 para texto. Altura de x: 0,386 y 0,46.</p>
+          <h4>Por qué funciona</h4><p>La garalda delicada pone el romanticismo (trazos finos, cursiva caligráfica) y la geométrica fina, un orden limpio y moderno que evita que todo parezca una invitación antigua. Las dos son ligeras y tranquilas: comparten el volumen bajo. El contraste es de estructura, pluma frente a compás.</p>
+          <h4>Para quién</h4><p>Floristerías, wedding planners, fotógrafos de boda, cosmética natural, hoteles con encanto.</p>
+          <h4>Cómo usarla</h4><p>Cormorant 500 grande (a partir de 40 px), con su cursiva para una palabra; Jost 300–400 para texto, con algo de tracking en etiquetas pequeñas.</p>
+          <h4>Cuidado con</h4><p>La x de Cormorant (0,386) es bajísima: nunca la uses en texto pequeño, y súbela de tamaño si comparte línea con Jost.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-unbounded-inter">
+        <div class="pm " style="--pbg:oklch(28% 0.12 290);--pfg:oklch(95% 0.03 300);--pac:oklch(88% 0.17 125);--pacfg:oklch(18% 0.03 290);--hs:0.8;font-family:'Inter Tight';font-weight:400"><div class="pm-nav"><b>Rumbo</b><span>Cómo funciona</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Unbounded';font-weight:700;letter-spacing:-0.04em">Ir a clase sale a cuenta</p><p class="pm-p">Comparte coche hasta la universidad y divide la gasolina con un toque.</p><span class="pm-cta">Descargar la app</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">10</p>
+          <h3>Unbounded + Inter Tight</h3>
+          <p class="pair-t">Startup joven</p>
+          <p class="pair-meta">Unbounded 700 para titular, Inter Tight 400 para texto. Altura de x: 0,566 y 0,546.</p>
+          <h4>Por qué funciona</h4><p>Unbounded, ancha y redonda, pone la actitud joven; Inter Tight, la claridad de app. Las dos tienen la x muy alta (0,566 y 0,546) y son sans de pantalla, así que casan sin esfuerzo; el contraste lo ponen la anchura y la personalidad, no la estructura.</p>
+          <h4>Para quién</h4><p>Apps de consumo, startups, eventos musicales, marcas para un público de 18 a 30 años.</p>
+          <h4>Cómo usarla</h4><p>Unbounded 600–700 con tracking negativo para titulares cortos; Inter Tight 400–500 para texto e interfaz.</p>
+          <h4>Cuidado con</h4><p>Es tan ancha que una palabra larga no cabe en el móvil: titulares cortos o tamaño contenido.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-caveat-jost">
+        <div class="pm " style="--pbg:oklch(24% 0.03 160);--pfg:oklch(94% 0.02 100);--pac:oklch(88% 0.11 85);--pacfg:oklch(20% 0.03 160);--hs:1.25;font-family:'Jost';font-weight:400"><div class="pm-nav"><b>Café Terral</b><span>Carta</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Caveat';font-weight:700;letter-spacing:0;rotate:-2deg;transform-origin:left;color:oklch(88% 0.11 85)">Hoy, bizcocho de naranja</p><p class="pm-p">Café de especialidad tostado en Vila-real. Desayunos de 8 a 12.</p><span class="pm-cta">Ver la carta</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">11</p>
+          <h3>Caveat + Jost</h3>
+          <p class="pair-t">Cafetería</p>
+          <p class="pair-meta">Caveat 700 (acento) para titular, Jost 400 para texto. Altura de x: 0,355 y 0,46.</p>
+          <h4>Por qué funciona</h4><p>Caveat no es la segunda fuente: es un acento, como el toque de color de una paleta. Jost hace casi todo el trabajo y la manuscrita aparece solo en una nota, el plato del día o un subrayado, donde su cercanía se nota porque es la excepción. La geometría limpia de Jost hace de lienzo neutro para que ese gesto destaque.</p>
+          <h4>Para quién</h4><p>Cafeterías, panaderías, mercados, heladerías, marcas personales.</p>
+          <h4>Cómo usarla</h4><p>Jost 400–500 para todo; Caveat 600–700 grande (a partir de 28 px) en una o dos frases por pantalla, a veces girada unos grados.</p>
+          <h4>Cuidado con</h4><p>Si Caveat aparece en menús, botones o párrafos, la web parece un borrador.</p>
+        </div>
+      </section>
+      <section class="pair-row wide" id="p-archivo-newsreader">
+        <div class="pm " style="--pbg:oklch(94% 0.004 250);--pfg:oklch(20% 0.005 250);--pac:oklch(20% 0.005 250);--pacfg:oklch(96% 0.004 250);--hs:0.84;font-family:'Newsreader';font-weight:400"><div class="pm-nav"><b>estudio riu</b><span>Obras</span></div><div class="pm-main"><p class="pm-h" style="font-family:'Archivo';font-weight:400;font-stretch:125%;letter-spacing:-0.03em">Casas que miran al mar</p><p class="pm-p">Vivienda y rehabilitación en la costa de Castelló, del primer boceto a la llave.</p><span class="pm-cta">Ver obras</span></div></div>
+        <div class="pair-txt">
+          <p class="pair-n">12</p>
+          <h3>Archivo + Newsreader</h3>
+          <p class="pair-t">Arquitectura</p>
+          <p class="pair-meta">Archivo 400, ancha 125 % para titular, Newsreader 400 para texto. Altura de x: 0,526 y 0,426.</p>
+          <h4>Por qué funciona</h4><p>Archivo al 125 % de anchura ocupa el espacio con calma, como un plano; Newsreader aporta el texto culto y legible de una memoria de proyecto. Una sans ancha y una serif de lectura: contraste de estructura y de ritmo, y las dos son sobrias, sin adornos que distraigan de las fotos de la obra.</p>
+          <h4>Para quién</h4><p>Estudios de arquitectura e interiorismo, constructoras de calidad, galerías, editoriales de diseño.</p>
+          <h4>Cómo usarla</h4><p>Archivo 125 % en 300–500, en minúsculas o en mayúsculas con tracking amplio, para titulares; Newsreader 400 a 18 px para texto.</p>
+          <h4>Cuidado con</h4><p>La anchura gasta mucho espacio: en el móvil, baja a 110–115 % o el titular se parte en una palabra por línea.</p>
+        </div>
+      </section>
+
+      <div class="band teal"><div class="inner"><p>La segunda fuente no está para lucirse: <em>está para que la primera se luzca</em>.</p></div></div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Una clínica dental quiere parecer «limpia, cercana y fiable». ¿Qué pareja propones?</p>
+        <ol>
+          <li>Syne para titulares y Unbounded para el texto.</li>
+          <li>Inter Tight sola en dos pesos, o con una serif sobria en los titulares.</li>
+          <li>Cormorant para titulares y Caveat para el texto.</li>
+        </ol>
+        <p class="why">La grotesca es neutra, legible y fiable; una sola familia con pesos separados da limpieza. Si se quiere algo de calidez, una serif sobria en titulares la añade sin perder seriedad. Dos display compiten y suenan a festival; Cormorant con Caveat es una invitación de boda escrita a mano.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando presentes una pareja al cliente, explícala con dos frases: dónde está el contraste y qué comparten. «El titular va en una serif de contraste alto porque transmite lujo; el texto, en una sans neutra para que se lea sin esfuerzo. Las dos son verticales y ordenadas, por eso no se pelean.» Si no puedes decir qué comparten, probablemente no comparten nada.</p>
+      </div>
+
+      <h2>Parejas que no funcionan y por qué</h2>
+      <p>Ya has visto dos errores en las reglas (dos sans casi iguales y épocas que chocan). Estos son otros dos muy frecuentes, con su arreglo.</p>
+
+      <h3>Dos protagonistas</h3>
+      <div class="sisi wide">
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="box"><span class="k">Festival Ensems, Castelló</span><h6 style="font-family: Syne; font-weight: 800; letter-spacing: -0.04em;">Tres días de música en el puerto</h6><p style="font-family: Unbounded; font-size: .85rem; line-height: 1.55;">Doce conciertos, mercado de vinilo y talleres para peques. Entradas por días o abono completo.</p></div>
+        </figure>
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="box"><span class="k">Festival Ensems, Castelló</span><h6 style="font-family: Syne; font-weight: 800; letter-spacing: -0.04em;">Tres días de música en el puerto</h6><p style="font-family: Newsreader; font-size: 1.02rem;">Doce conciertos, mercado de vinilo y talleres para peques. Entradas por días o abono completo.</p></div>
+        </figure>
+      </div>
+      <p class="sisi-why">Syne y Unbounded tienen muchísima personalidad: juntas compiten y el texto se vuelve agotador. <strong>Una display solo puede tener a su lado una voz tranquila</strong>: Newsreader lee bien y deja que Syne sea la protagonista.</p>
+
+      <h3>Alturas de x desiguales en la misma línea</h3>
+      <div class="sisi wide">
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="box"><span class="k">Arrocería Marjal, carta</span><ul class="carta">
+            <li><b style="font-size: 1rem;">Arroz negro</b><span>sepia y alioli</span><i>16 €</i></li>
+            <li><b style="font-size: 1rem;">Arroz del senyoret</b><span>marisco pelado</span><i>18 €</i></li>
+            <li><b style="font-size: 1rem;">Fideuà</b><span>gamba roja</span><i>17 €</i></li>
+          </ul></div>
+        </figure>
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="box"><span class="k">Arrocería Marjal, carta</span><ul class="carta">
+            <li><b style="font-size: 1.4rem;">Arroz negro</b><span>sepia y alioli</span><i>16 €</i></li>
+            <li><b style="font-size: 1.4rem;">Arroz del senyoret</b><span>marisco pelado</span><i>18 €</i></li>
+            <li><b style="font-size: 1.4rem;">Fideuà</b><span>gamba roja</span><i>17 €</i></li>
+          </ul></div>
+        </figure>
+      </div>
+      <p class="sisi-why">A la izquierda, Cormorant e Inter Tight van al mismo tamaño y el nombre del plato parece más pequeño que su descripción, justo al revés de lo que se quiere. <strong>Multiplicar Cormorant por 1,4</strong> (la proporción entre sus alturas de x) iguala las minúsculas y el plato vuelve a mandar.</p>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Un cliente te dice que su web «tiene algo raro» y no sabe qué. Los titulares van en Inter Tight y los subtítulos en Archivo. ¿Qué pasa?</p>
+        <ol>
+          <li>Archivo es una mala fuente.</li>
+          <li>Las alturas de x son muy distintas.</li>
+          <li>Son dos grotescas casi iguales: la diferencia se nota pero no se entiende, y parece un error.</li>
+        </ol>
+        <p class="why">Las dos fuentes son buenas y sus alturas de x son casi iguales (0,546 y 0,526). El problema es la falta de contraste: dos voces gemelas que no se distinguen a la primera. Usa una sola o cambia una por algo realmente distinto.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los errores de pareja se agravan en el teléfono. Una display en el texto, que en el escritorio era «solo un poco cansada», en 390 px deja líneas de tres o cuatro palabras y obliga a hacer scroll sin parar. Y las alturas de x desiguales se notan más, porque en una columna estrecha el plato y su descripción suelen acabar en la misma línea.</p>
+      </div>
+
+      <h2>Una sola familia bien usada</h2>
+      <p>La pareja más segura es no tener pareja. Una sola familia tiene la coherencia garantizada, porque todas las letras comparten esqueleto, y si es variable, todos los pesos y anchuras caben en un solo archivo. El contraste no desaparece: se traslada a los ejes. Peso, anchura, tamaño, caja, cursiva y color dan más niveles de los que vas a necesitar.</p>
+
+      <div class="shop wide" aria-label="Ficha de producto compuesta solo con Archivo">
+        <div class="shop-nav"><b>Alba Cerámica</b><span>Tienda</span><span>Taller</span><span>Cesta (2)</span></div>
+        <div class="shop-body">
+          <div class="shop-pic" aria-hidden="true"><svg viewBox="0 0 200 260"><ellipse cx="100" cy="246" rx="70" ry="8" fill="oklch(70% 0.03 70 / .5)"/><path d="M78 20h44v10c0 16 6 26 18 40 22 26 30 52 30 86 0 46-26 84-70 88-44-4-70-42-70-88 0-34 8-60 30-86 12-14 18-24 18-40z" fill="oklch(46% 0.1 232)"/><path d="M74 14h52a4 4 0 0 1 0 10H74a4 4 0 0 1 0-10z" fill="oklch(38% 0.09 232)"/><path d="M46 150c20 10 88 10 108 0" stroke="oklch(92% 0.03 85)" stroke-width="3" fill="none" opacity=".75"/><path d="M50 172c22 10 78 10 100 0" stroke="oklch(92% 0.03 85)" stroke-width="2" fill="none" opacity=".5"/><path d="M62 92c-12 18-18 38-18 62" stroke="oklch(80% 0.06 220)" stroke-width="6" stroke-linecap="round" fill="none" opacity=".35"/></svg></div>
+          <div class="shop-info">
+            <span class="lbl">Hecho a mano en Manises</span>
+            <h5>Jarrón Albufera</h5>
+            <p class="price">48,00 €</p>
+            <p class="desc">Gres esmaltado en azul de cobalto, torneado y pintado pieza a pieza. 28 cm de alto. Cada jarrón es ligeramente distinto.</p>
+            <span class="buy">Añadir a la cesta</span>
+            <small>Envío en 48 horas. Devolución gratis durante 30 días.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nivel</th><th>Archivo</th><th>Por qué</th></tr></thead>
+          <tbody>
+            <tr><td>Marca</td><td>800, ancha (125 %)</td><td>La anchura le da presencia de logotipo sin otra fuente</td></tr>
+            <tr><td>Etiqueta</td><td>600, estrecha (62 %), mayúsculas</td><td>Lo estrecho y en caja alta se lee como «dato», no como texto</td></tr>
+            <tr><td>Nombre del producto</td><td>650, normal, tracking negativo</td><td>Peso medio y tamaño grande: manda sin gritar</td></tr>
+            <tr><td>Precio</td><td>900, cifras tabulares</td><td>El peso máximo dice «esto es lo que importa»; las tabulares no bailan</td></tr>
+            <tr><td>Descripción</td><td>400, gris</td><td>La voz de lectura, un paso por debajo en color</td></tr>
+            <tr><td>Botón y aviso</td><td>600 y 400 algo estrecha</td><td>Acción clara; la letra pequeña ocupa poco</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Funciona especialmente bien en tiendas online (PrestaShop, WooCommerce), en paneles, en SaaS y en webs corporativas: sitios con muchos tipos de información distintos, donde la marca la ponen las fotos y el color, y la tipografía tiene que ordenar. Las familias más útiles para esto son las variables con muchos ejes: Archivo (peso y anchura), Bricolage (peso, anchura y tamaño óptico), Inter Tight (peso) o Fraunces (peso y tamaño óptico) si quieres una serif. También existen superfamilias diseñadas con versiones sans, serif y mono que comparten esqueleto, como IBM Plex: dan contraste de estructura sin perder el parentesco.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El riesgo de una sola familia es la monotonía, y se combate exagerando. Saltos de tamaño grandes (un titular de cuatro o cinco veces el texto), pesos de los extremos (300 y 800, no 400 y 500) y alguna variación de anchura o de caja. Si los niveles se parecen, la página parece plana; si están muy separados, parece diseñada con una sola fuente a propósito.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Una sola familia variable es un solo archivo: en 4G y en un móvil modesto, el texto aparece antes y no salta de fuente al cargar. Si tienes que elegir dónde ahorrar peso en una tienda online, empieza por aquí.</p>
+      </div>
+
+      <h2>El laboratorio de emparejar</h2>
+      <p>Elige la fuente del titular y la del texto. El laboratorio aplica las cinco reglas (contraste, espíritu, alturas de x, si la fuente del texto sirve para leer y si hay dos voces compitiendo) y te dice por qué funciona o por qué choca.</p>
+
+      <figure class="lab" data-title="Emparejar" data-hint="Elige titular y texto" data-height="480" data-height-mobile="800">
+        <script type="text/x-demo" data-lang="html">
+          <div class="lab">
+            <div class="pickers">
+              <label>Titular <select id="fa"></select></label>
+              <label>Texto <select id="fb"></select></label>
+            </div>
+            <div class="mock">
+              <small>Hotel Mas de l'Avellà, Maestrazgo</small>
+              <p class="h" id="h">Dormir donde empieza el silencio</p>
+              <p class="p" id="p">Seis habitaciones en una masía de piedra del siglo XVIII, a veinte minutos de Morella. Desayuno con producto del pueblo y rutas a pie desde la puerta.</p>
+            </div>
+            <div class="res"><p class="v" id="v"></p><ul id="why"></ul></div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f2f6fb; color: #142030; font-family: var(--f-jost); }
+          .lab { display: grid; grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr; gap: 16px 22px; padding: 18px; }
+          .pickers { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+          label { display: grid; gap: 4px; font-size: 13px; color: #4a5566; }
+          select { min-height: 44px; padding: 0 10px; border: 1px solid #14203033; border-radius: 8px; background: #fff; font-size: 16px; color: #142030; }
+          .mock { background: #fff; border: 1px solid #14203022; border-radius: 10px; padding: 22px; }
+          .mock small { font-size: 12px; color: #4a5566; }
+          .h { margin: 10px 0 12px; font-size: 44px; line-height: 1; letter-spacing: -0.02em; }
+          .p { margin: 0; font-size: 16px; line-height: 1.55; }
+          .v { margin: 0 0 10px; font-size: 26px; font-weight: 400; }
+          .v.ok { color: #0b6b52; } .v.mid { color: #8a5a00; } .v.ko { color: #b42318; }
+          ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font: 400 15px/1.45 var(--f-read); }
+          li b { font: 600 12px var(--f-jost); margin-right: 6px; }
+          li.Bien b { color: #0b6b52; } li.Ojo b { color: #8a5a00; } li.Mal b { color: #b42318; }
+          @media (max-width: 640px) { .lab { grid-template-columns: 1fr; padding: 14px; } .h { font-size: 34px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // nombre, peso titular, peso texto, estructura, personalidad (1-3), ¿sirve para texto?, espíritu, altura de x, por qué no sirve para texto
+          const F = [
+            ['Cormorant', 500, 500, 'serif', 2, 0, 'clásico', .386, 'su x es tan baja que en párrafos se lee pequeña y frágil'],
+            ['Newsreader', 400, 400, 'serif', 1, 1, 'clásico', .426],
+            ['Bodoni Moda', 500, 400, 'serif', 3, 0, 'racional', .46, 'sus trazos finísimos desaparecen a tamaño de texto'],
+            ['Instrument Serif', 400, 400, 'serif', 2, 0, 'editorial', .51, 'tiene un solo peso y es estrecha: cansa en bloques largos'],
+            ['Fraunces', 600, 400, 'serif', 2, 1, 'cálido', .482],
+            ['Zilla Slab', 700, 400, 'slab', 2, 1, 'industrial', .445],
+            ['Inter Tight', 650, 400, 'sans', 1, 1, 'neutro', .546],
+            ['Archivo', 700, 400, 'sans', 1, 1, 'neutro', .526],
+            ['Jost', 400, 400, 'sans', 1, 1, 'racional', .46],
+            ['Nunito', 900, 500, 'sans', 2, 1, 'amable', .49],
+            ['Big Shoulders', 800, 500, 'sans', 3, 0, 'industrial', .60, 'la estrechez y las aperturas cerradas cansan en un párrafo'],
+            ['Syne', 800, 400, 'sans', 3, 0, 'expresivo', .50, 'sus formas raras se notan en cada palabra y agotan'],
+            ['Unbounded', 700, 400, 'sans', 3, 0, 'expresivo', .566, 'es tan ancha que una línea apenas lleva cinco palabras'],
+            ['JetBrains Mono', 500, 400, 'mono', 2, 0, 'técnico', .55, 'la rejilla fija rompe el ritmo de lectura del público general'],
+            ['Caveat', 700, 500, 'script', 3, 0, 'manual', .355, 'en más de una frase parece un borrador'],
+          ];
+          const G = { serif: 'serif', slab: 'egipcia', sans: 'sans', mono: 'mono', script: 'manuscrita' };
+          const k = (a, b) => [a, b].sort().join('|');
+          const GOOD = new Set(['clásico|neutro', 'clásico|racional', 'editorial|neutro', 'clásico|editorial', 'cálido|neutro', 'cálido|racional', 'cálido|industrial',
+            'industrial|neutro', 'industrial|racional', 'neutro|racional', 'racional|racional', 'amable|neutro', 'clásico|expresivo', 'expresivo|neutro',
+            'neutro|técnico', 'manual|racional', 'manual|neutro', 'neutro|neutro'].map(s => k(...s.split('|'))));
+          const BAD = new Set(['clásico|industrial', 'amable|clásico', 'clásico|técnico', 'clásico|manual', 'amable|industrial', 'expresivo|manual', 'manual|técnico'].map(s => k(...s.split('|'))));
+          const fx = n => n.toFixed(3).replace('.', ',');
+          [fa, fb].forEach((s, j) => s.innerHTML = F.map((f, i) => `<option value="${i}">${f[0]}</option>`).join(''));
+          fa.value = 2; fb.value = 6;
+          function judge(A, B, same) {
+            const r = []; let s = 0;
+            const add = (t, m, d) => { r.push([t, m]); s += d; };
+            if (same) {
+              if (!B[5]) add('Mal', `${B[0]} sola no sirve: ${B[8]}.`, -3);
+              else add('Bien', 'Una sola familia: coherencia garantizada. Marca la jerarquía con peso, tamaño y color.', 3);
+              return [r, s];
+            }
+            if (!B[5]) add('Mal', `${B[0]} no está hecha para párrafos: ${B[8]}.`, -3);
+            if (A[3] !== B[3]) add('Bien', `Contraste de estructura (${G[A[3]]} frente a ${G[B[3]]}): cada una tiene su papel a la primera.`, 2);
+            else if (A[4] === 1 && B[4] === 1) add('Mal', 'Demasiado parecidas: la diferencia se lee como un error, no como una decisión.', -2);
+            else add('Ojo', `Misma estructura (${G[A[3]]}): el contraste lo pone la personalidad y depende del tamaño del titular.`, 1);
+            if (A[4] >= 3 && B[4] >= 2) add('Mal', 'Dos voces con mucha personalidad: compiten y nadie sabe a cuál escuchar.', -2);
+            if (A[4] === 1 && B[4] >= 2) add('Ojo', 'La personalidad está en el texto y no en el titular: la jerarquía queda al revés.', -1);
+            if (A[3] === 'script') add('Ojo', 'La manuscrita, solo como acento: una o dos frases por pantalla.', -1);
+            const e = k(A[6], B[6]);
+            if (GOOD.has(e)) add('Bien', A[6] === B[6] ? `Mismo espíritu (${A[6]}): parecen del mismo mundo.` : `Espíritus compatibles (${A[6]} y ${B[6]}).`, 1);
+            else if (BAD.has(e)) add('Mal', `Espíritus que chocan (${A[6]} y ${B[6]}): la página cuenta dos historias.`, -2);
+            const d = Math.abs(A[7] - B[7]);
+            if (d >= .15) add('Ojo', `Alturas de x muy distintas (${fx(A[7])} y ${fx(B[7])}): si comparten línea, compensa el tamaño.`, -1);
+            else if (d > .1) add('Ojo', `Alturas de x algo distintas (${fx(A[7])} y ${fx(B[7])}): cuidado si comparten línea.`, 0);
+            else if (d <= .06) add('Bien', `Alturas de x parecidas (${fx(A[7])} y ${fx(B[7])}): pueden convivir en la misma línea.`, 1);
+            return [r, s];
+          }
+          function paint() {
+            const A = F[fa.value], B = F[fb.value];
+            Object.assign(h.style, { fontFamily: `"${A[0]}"`, fontWeight: A[1] });
+            Object.assign(p.style, { fontFamily: `"${B[0]}"`, fontWeight: B[2] });
+            const [r, s] = judge(A, B, fa.value === fb.value);
+            const [t, c] = s >= 3 ? ['Funciona', 'ok'] : s >= 1 ? ['Funciona con cuidado', 'mid'] : ['Choca', 'ko'];
+            v.textContent = t; v.className = 'v ' + c;
+            why.innerHTML = r.map(([t, m]) => `<li class="${t}"><b>${t}</b>${m}</li>`).join('');
+          }
+          [fa, fb].forEach(s => s.addEventListener('change', paint)); paint();
+        </script>
+        <figcaption>Son reglas sencillas, no un jurado: sirven para entrenar el ojo. Prueba las parejas que chocan de esta lección (Inter Tight con Archivo, Big Shoulders con Cormorant, Syne con Unbounded) y luego invierte una buena: Inter Tight de titular con Bodoni de texto. La misma pareja, con los papeles cambiados, deja de funcionar.</figcaption>
+      </figure>
+
+      <div class="colofon wide">
+        <div class="aa"><b>Aa</b><i>Aa</i></div>
+        <p><strong>La pareja de esta página.</strong> Toda la lección usa solo dos familias: Jost, una geométrica, en peso 300 para los titulares y en la interfaz, y Newsreader para leer y para la cursiva. El contraste es de estructura (compás frente a pluma) y comparten la calma: titulares finos y texto de contraste suave. Sus alturas de x (0,46 y 0,426) son tan parecidas que pueden ir en la misma línea, como en el título de la portada.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Una pareja funciona cuando las dos fuentes se distinguen a la primera y parecen del mismo mundo: contraste en la forma, afinidad en el fondo.</li>
+          <li>El contraste de estructura (serif frente a sans) es el más fuerte, y el único que aguanta en el móvil cuando los tamaños se acercan.</li>
+          <li>Las alturas de x importan cuando las fuentes comparten línea o tamaño: compensa multiplicando por la proporción entre ellas.</li>
+          <li>La jerarquía se hace con tamaño, peso y color; cada fuente nueva es una voz nueva. Máximo dos.</li>
+          <li>Una sola familia variable, con pesos y anchuras exagerados, es la opción más segura y ligera para tiendas y webs con mucha información.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Abre la web de un cliente de la agencia y apunta todas las familias que usa (en DevTools, pestaña de fuentes del panel Elementos o la lista de recursos de red). Si son más de dos, reduce a dos con las reglas de esta lección; si son dos, escribe en una frase dónde está su contraste y qué comparten. Luego monta la cabecera de su home con la pareja original y con tu propuesta, ábrelas en el móvil y quédate con la que distinga mejor titular y texto a 390 px.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: máquina de parejas. Los rodillos giran y se detienen en la pareja elegida.
+  (() => {
+    const P = [{"id": "bodoni-inter", "t": "Lujo con claridad", "A": "Bodoni Moda", "B": "Inter Tight", "Al": "Bodoni Moda 500", "Bl": "Inter Tight 400", "a": "font-family:'Bodoni Moda';font-weight:500;font-variation-settings:'opsz' 96;letter-spacing:-0.02em", "b": "font-family:'Inter Tight';font-weight:400", "hs": 1.05, "brand": "Almenara Joyeros", "nav": "Colecciones", "h": "Oro que <em>no hace</em> ruido", "p": "Piezas únicas hechas a mano en nuestro taller de Castelló desde 1958.", "cta": "Pedir cita privada", "bg": "oklch(93% 0.02 50)", "fg": "oklch(20% 0.01 40)", "ac": "oklch(20% 0.01 40)", "acfg": "oklch(96% 0.01 50)", "em": "italic", "why": "La didona pone el lujo y la grotesca la claridad: contraste máximo de trazo, y las dos son verticales y racionales.", "con": "Trazo de pelo frente a trazo uniforme", "afi": "Eje vertical y orden en las dos", "hc": "", "xa": "0,46", "xb": "0,546"}, {"id": "fraunces-inter", "t": "Editorial cálido", "A": "Fraunces", "B": "Inter Tight", "Al": "Fraunces 600", "Bl": "Inter Tight 400", "a": "font-family:'Fraunces';font-weight:600;font-variation-settings:'opsz' 144;letter-spacing:-0.02em", "b": "font-family:'Inter Tight';font-weight:400", "hs": 1, "brand": "Arrocería Marjal", "nav": "Carta", "h": "Arroz de leña, sin prisa", "p": "Cocina de huerta en El Grau. Mesa a mediodía, de martes a domingo.", "cta": "Reservar mesa", "bg": "oklch(90% 0.05 75)", "fg": "oklch(24% 0.04 40)", "ac": "oklch(24% 0.04 40)", "acfg": "oklch(93% 0.04 75)", "em": "italic", "why": "Fraunces trae la serif con remates blandos y cálidos; Inter Tight la acompaña sin competir.", "con": "Serif blanda frente a sans seca", "afi": "Las dos, de lectura cómoda", "hc": "", "xa": "0,482", "xb": "0,546"}, {"id": "instrument-inter", "t": "El estilo de los vídeos", "A": "Instrument Serif", "B": "Inter Tight", "Al": "Instrument Serif 400", "Bl": "Inter Tight 400", "a": "font-family:'Instrument Serif';font-weight:400;letter-spacing:-0.01em", "b": "font-family:'Inter Tight';font-weight:400", "hs": 1.12, "brand": "Turno", "nav": "Producto", "h": "Reservas que se <em>gestionan solas</em>", "p": "Agenda, recordatorios y pagos para clínicas y estudios en una sola pantalla.", "cta": "Probar gratis", "bg": "#F3EEE3", "fg": "#111111", "ac": "#D9541E", "acfg": "#111111", "em": "italic color", "why": "Serif estrecha de revista para la emoción, grotesca de producto para explicar: tecnología con criterio.", "con": "Serif de contraste alto frente a sans", "afi": "Alturas de x altas en las dos", "hc": "", "xa": "0,51", "xb": "0,546"}, {"id": "syne-newsreader", "t": "Creativo con poso", "A": "Syne", "B": "Newsreader", "Al": "Syne 800", "Bl": "Newsreader 400", "a": "font-family:'Syne';font-weight:800;letter-spacing:-0.045em", "b": "font-family:'Newsreader';font-weight:400", "hs": 0.86, "brand": "Estudio Garbí", "nav": "Proyectos", "h": "Marcas que no se olvidan", "p": "Identidad y webs para negocios de la Plana que quieren dejar huella.", "cta": "Ver proyectos", "bg": "oklch(88% 0.17 125)", "fg": "oklch(18% 0.02 140)", "ac": "oklch(18% 0.02 140)", "acfg": "oklch(88% 0.17 125)", "em": "", "why": "Contraste de épocas hecho a propósito: la display atrae y la serif de lectura da credibilidad.", "con": "Display nueva frente a serif clásica", "afi": "Papeles que no se mezclan", "hc": "", "xa": "0,5", "xb": "0,426"}, {"id": "shoulders-inter", "t": "Deportivo e industrial", "A": "Big Shoulders", "B": "Inter Tight", "Al": "Big Shoulders 900", "Bl": "Inter Tight 400", "a": "font-family:'Big Shoulders';font-weight:900;text-transform:uppercase;letter-spacing:0", "b": "font-family:'Inter Tight';font-weight:400", "hs": 1.22, "brand": "Box Riera", "nav": "Horarios", "h": "Entrena <em>sin excusas</em>", "p": "Fuerza y cardio de 6:30 a 22:00 en Castelló. La primera semana es gratis.", "cta": "Reservar clase", "bg": "oklch(17% 0.01 260)", "fg": "oklch(97% 0.005 260)", "ac": "oklch(90% 0.17 100)", "acfg": "oklch(17% 0.01 260)", "em": "color", "why": "La condensada grita y la grotesca explica. Mismo espíritu funcional; el contraste lo ponen anchura y peso.", "con": "Estrecha y negra frente a normal y regular", "afi": "Sans funcionales de cartel", "hc": "", "xa": "0,6", "xb": "0,546"}, {"id": "zilla-jost", "t": "Artesano", "A": "Zilla Slab", "B": "Jost", "Al": "Zilla Slab 700", "Bl": "Jost 400", "a": "font-family:'Zilla Slab';font-weight:700;letter-spacing:-0.01em", "b": "font-family:'Jost';font-weight:400", "hs": 1, "brand": "Forn de la Vila", "nav": "Pedidos", "h": "Pan de masa madre, cada mañana", "p": "Harina de molino de piedra y 24 horas de fermentación. Abrimos a las 7.", "cta": "Encargar pan", "bg": "oklch(86% 0.05 75)", "fg": "oklch(25% 0.04 50)", "ac": "oklch(30% 0.09 15)", "acfg": "oklch(93% 0.03 85)", "em": "", "why": "La egipcia pone el oficio y la geométrica el orden: obrador moderno, hecho a mano pero bien organizado.", "con": "Serifas de bloque frente a círculos", "afi": "Industria y principios del XX", "hc": "", "xa": "0,445", "xb": "0,46"}, {"id": "nunito-nunito", "t": "Infantil", "A": "Nunito", "B": "Nunito", "Al": "Nunito 900", "Bl": "Nunito 600", "a": "font-family:'Nunito';font-weight:900;letter-spacing:-0.02em", "b": "font-family:'Nunito';font-weight:600", "hs": 0.95, "brand": "pequeña lluna", "nav": "Tienda", "h": "Ropa que aguanta el recreo", "p": "Algodón orgánico de 0 a 8 años. Envío gratis a partir de 40 €.", "cta": "Ver novedades", "bg": "oklch(94% 0.035 20)", "fg": "oklch(35% 0.08 0)", "ac": "oklch(35% 0.08 0)", "acfg": "oklch(97% 0.01 20)", "em": "", "why": "Una sola familia redondeada con pesos muy separados: una voz amable que sube y baja el volumen.", "con": "Peso 900 frente a 600", "afi": "La misma familia", "hc": "", "xa": "0,49", "xb": "0,49"}, {"id": "mono-inter", "t": "Tecnológico", "A": "JetBrains Mono", "B": "Inter Tight", "Al": "JetBrains Mono 500", "Bl": "Inter Tight 400", "a": "font-family:'JetBrains Mono';font-weight:500;letter-spacing:-0.045em", "b": "font-family:'Inter Tight';font-weight:400", "hs": 0.82, "brand": "pixel_forja", "nav": "Servicios", "h": "Despliegues <em>sin sustos</em>", "p": "Desarrollo a medida para tiendas online y apps, con monitorización las 24 horas.", "cta": "Hablar con el equipo", "bg": "oklch(22% 0.04 255)", "fg": "oklch(92% 0.02 250)", "ac": "oklch(85% 0.12 160)", "acfg": "oklch(15% 0.03 255)", "em": "color", "why": "La mono dice «esto lo hacen programadores» y la grotesca hace que el resto se lea sin esfuerzo.", "con": "Rejilla fija frente a anchos proporcionales", "afi": "x alta en las dos", "hc": "", "xa": "0,55", "xb": "0,546"}, {"id": "cormorant-jost", "t": "Boda y floristería", "A": "Cormorant", "B": "Jost", "Al": "Cormorant 500", "Bl": "Jost 400", "a": "font-family:'Cormorant';font-weight:500;letter-spacing:-0.015em", "b": "font-family:'Jost';font-weight:400", "hs": 1.18, "brand": "Flors d'Azahar", "nav": "Bodas", "h": "Flores para el día <em>que no se repite</em>", "p": "Ramos de novia, centros y decoración de ceremonias en Castelló y Valencia.", "cta": "Pedir presupuesto", "bg": "oklch(95% 0.018 20)", "fg": "oklch(28% 0.03 10)", "ac": "oklch(28% 0.03 10)", "acfg": "oklch(96% 0.015 20)", "em": "italic", "why": "La garalda pone el romanticismo y la geométrica fina el orden: las dos ligeras, pluma frente a compás.", "con": "Pluma frente a compás", "afi": "Las dos ligeras y tranquilas", "hc": "", "xa": "0,386", "xb": "0,46"}, {"id": "unbounded-inter", "t": "Startup joven", "A": "Unbounded", "B": "Inter Tight", "Al": "Unbounded 700", "Bl": "Inter Tight 400", "a": "font-family:'Unbounded';font-weight:700;letter-spacing:-0.04em", "b": "font-family:'Inter Tight';font-weight:400", "hs": 0.8, "brand": "Rumbo", "nav": "Cómo funciona", "h": "Ir a clase sale a cuenta", "p": "Comparte coche hasta la universidad y divide la gasolina con un toque.", "cta": "Descargar la app", "bg": "oklch(28% 0.12 290)", "fg": "oklch(95% 0.03 300)", "ac": "oklch(88% 0.17 125)", "acfg": "oklch(18% 0.03 290)", "em": "", "why": "Unbounded, ancha y redonda, pone la actitud joven; Inter Tight, la claridad de app.", "con": "Ancha y expresiva frente a neutra", "afi": "Sans de pantalla con x muy alta", "hc": "", "xa": "0,566", "xb": "0,546"}, {"id": "caveat-jost", "t": "Cafetería", "A": "Caveat", "B": "Jost", "Al": "Caveat 700 (acento)", "Bl": "Jost 400", "a": "font-family:'Caveat';font-weight:700;letter-spacing:0;rotate:-2deg;transform-origin:left", "b": "font-family:'Jost';font-weight:400", "hs": 1.25, "brand": "Café Terral", "nav": "Carta", "h": "Hoy, bizcocho de naranja", "p": "Café de especialidad tostado en Vila-real. Desayunos de 8 a 12.", "cta": "Ver la carta", "bg": "oklch(24% 0.03 160)", "fg": "oklch(94% 0.02 100)", "ac": "oklch(88% 0.11 85)", "acfg": "oklch(20% 0.03 160)", "em": "", "why": "Caveat no es la segunda fuente: es un acento, como un toque de color. Jost hace el resto.", "con": "Mano frente a compás", "afi": "Jost hace de lienzo neutro", "hc": "oklch(88% 0.11 85)", "xa": "0,355", "xb": "0,46"}, {"id": "archivo-newsreader", "t": "Arquitectura", "A": "Archivo", "B": "Newsreader", "Al": "Archivo 400, ancha 125 %", "Bl": "Newsreader 400", "a": "font-family:'Archivo';font-weight:400;font-stretch:125%;letter-spacing:-0.03em", "b": "font-family:'Newsreader';font-weight:400", "hs": 0.84, "brand": "estudio riu", "nav": "Obras", "h": "Casas que miran al mar", "p": "Vivienda y rehabilitación en la costa de Castelló, del primer boceto a la llave.", "cta": "Ver obras", "bg": "oklch(94% 0.004 250)", "fg": "oklch(20% 0.005 250)", "ac": "oklch(20% 0.005 250)", "acfg": "oklch(96% 0.004 250)", "em": "", "why": "La sans ancha ocupa el espacio con calma, como un plano; la serif de lectura pone el texto culto.", "con": "Sans ancha frente a serif de lectura", "afi": "Las dos sobrias, sin adornos", "hc": "", "xa": "0,526", "xb": "0,426"}];
+    const hero = document.querySelector('.hero');
+    const stage = hero.querySelector('[data-mstage]');
+    const strips = { a: hero.querySelector('[data-strip="a"]'), b: hero.querySelector('[data-strip="b"]') };
+    const $ = (s) => hero.querySelector(s);
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const REP = 5;                         // la lista se repite para que el rodillo pueda dar vueltas
+    let cur = 0, pos = P.length, busy = false, touched = false, auto = null;
+
+    const fam = (css) => css.split(';').filter((d) => /^(font-family|font-weight|font-stretch|font-variation-settings)/.test(d)).join(';');
+    for (const key of ['a', 'b']) {
+      const items = [];
+      for (let r = 0; r < REP; r++) P.forEach((p) => items.push(`<span style="${fam(p[key])}">${key === 'a' ? p.Al : p.Bl}</span>`));
+      strips[key].innerHTML = items.join('');
+    }
+    const itemH = () => strips.a.firstElementChild.getBoundingClientRect().height || 38;
+    function place(key, idx, instant) {
+      const s = strips[key];
+      s.classList.toggle('instant', !!instant || reduce);
+      s.style.transform = `translateY(${-idx * itemH()}px)`;
+    }
+    function mockHTML(p) {
+      const em = p.em ? p.em.split(' ').map((e) => 'em-' + e).join(' ') : '';
+      const hs = p.a + (p.hc ? `;color:${p.hc}` : '');
+      return `<div class="pm ${em}" style="--pbg:${p.bg};--pfg:${p.fg};--pac:${p.ac};--pacfg:${p.acfg};--hs:${p.hs};${p.b}">` +
+        `<div class="pm-nav"><b>${p.brand}</b><span>${p.nav}</span></div>` +
+        `<div class="pm-main"><p class="pm-h" style="${hs}">${p.h}</p><p class="pm-p">${p.p}</p><span class="pm-cta">${p.cta}</span></div></div>`;
+    }
+    function fill(p) {
+      stage.innerHTML = mockHTML(p);
+      $('[data-title]').textContent = p.t;
+      $('[data-why]').textContent = p.why;
+      $('[data-con]').textContent = p.con;
+      $('[data-afi]').textContent = p.afi;
+      $('[data-xa]').textContent = 'x ' + p.xa;
+      $('[data-xb]').textContent = 'x ' + p.xb;
+      $('[data-n]').textContent = String(cur + 1).padStart(2, '0');
+    }
+    async function go(dir) {
+      if (busy) return;
+      busy = true;
+      const N = P.length;
+      // hacia delante, el rodillo da una vuelta entera más un paso; si se acaba la lista, salta sin animación a la vuelta equivalente
+      const step = dir > 0 ? (reduce ? 1 : N + 1) : -1;
+      if (pos + step > REP * N - 1 || pos + step < 0) {
+        pos = (pos % N) + N; place('a', pos, true); place('b', pos, true); void strips.a.offsetHeight;
+      }
+      pos += step;
+      cur = ((pos % N) + N) % N;
+      $('[data-spin]').classList.add('go');
+      stage.classList.add('out');
+      place('a', pos);
+      setTimeout(() => place('b', pos), reduce ? 0 : 140);
+      await new Promise((r) => setTimeout(r, reduce ? 0 : 820));
+      fill(P[cur]);
+      requestAnimationFrame(() => stage.classList.remove('out'));
+      $('[data-spin]').classList.remove('go');
+      busy = false;
+    }
+    function interact() { if (!touched) { touched = true; $('[data-machine]').setAttribute('aria-live', 'polite'); } clearInterval(auto); auto = null; }
+    $('[data-spin]').addEventListener('click', () => { interact(); go(1); });
+    $('[data-prev]').addEventListener('click', () => { interact(); go(-1); });
+    stage.addEventListener('click', () => { interact(); go(1); });
+    place('a', pos, true); place('b', pos, true);
+    // Una tirada sola al cargar, para enseñar que se mueve; después, quieta hasta que la toques
+    if (!reduce) setTimeout(() => { if (!touched) go(1); }, 1400);
+    // Rodillos recolocados si cambia el tamaño (la altura de cada elemento depende del rem)
+    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { place('a', pos, true); place('b', pos, true); }, 100); });
+
+    // Líneas de altura de x en la muestra «misma línea», medidas en las fuentes reales
+    const sl = document.querySelector('[data-sameline]');
+    if (sl) {
+      const ctx = document.createElement('canvas').getContext('2d');
+      const placeLines = () => {
+        const pEl = sl.querySelector('p');
+        let mk = pEl.querySelector('i.mk');
+        if (!mk) { mk = document.createElement('i'); mk.className = 'mk'; mk.style.cssText = 'display:inline-block;width:0;height:0'; pEl.append(mk); }
+        const base = mk.getBoundingClientRect().top - sl.getBoundingClientRect().top;
+        const fs = parseFloat(getComputedStyle(pEl).fontSize);
+        for (const [cls, f] of [['c', '500 ' + fs + 'px "Cormorant"'], ['i', '400 ' + fs + 'px "Inter Tight"']]) {
+          ctx.font = f;
+          sl.querySelector(`[data-lx="${cls}"]`).style.top = (base - ctx.measureText('x').actualBoundingBoxAscent) + 'px';
+        }
+      };
+      document.fonts.ready.then(placeLines);
+      addEventListener('resize', placeLines);
+    }
+  })();
+</script>
+</body>
+</html>

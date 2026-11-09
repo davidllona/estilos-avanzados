@@ -5,7 +5,8 @@
    --f-grotesk Bricolage        (grotesca con carácter)
    --f-read    Newsreader       (serif de lectura)
    --f-mono    JetBrains Mono
-   y además --f-fraunces, --f-syne, --f-bodoni, --f-shoulders, --f-unbounded, --f-archivo, --f-cormorant */
+   y además --f-fraunces, --f-syne, --f-bodoni, --f-shoulders, --f-unbounded, --f-archivo, --f-cormorant,
+   --f-jost (geométrica), --f-slab (Zilla Slab), --f-script (Caveat), --f-round (Nunito) */
 
 @import url("fonts.css");
 
@@ -22,6 +23,10 @@
   --f-unbounded: "Unbounded", system-ui, sans-serif;
   --f-archivo: "Archivo", system-ui, sans-serif;
   --f-cormorant: "Cormorant", Georgia, serif;
+  --f-jost: "Jost", system-ui, sans-serif;            /* geométrica */
+  --f-slab: "Zilla Slab", Rockwell, serif;            /* egipcia o slab */
+  --f-script: "Caveat", cursive;                      /* manuscrita */
+  --f-round: "Nunito", system-ui, sans-serif;         /* redondeada */
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }

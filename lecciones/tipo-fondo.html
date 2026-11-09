@@ -1,0 +1,921 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tipografía, color y fondo | Hora azul</title>
+<meta name="description" content="Por qué una letra dice cosas distintas según el fondo: didona sobre crema, geométrica sobre negro, slab sobre verde botella. Legibilidad sobre color, texto sobre imagen y una matriz de referencia.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Fondo y figura».
+     Verde botella, crema y un amarillo de etiqueta. Zilla Slab para titular, Inter Tight ligera para leer.
+     La página aplica lo que enseña: texto claro sobre oscuro con el peso bajado y el interlineado abierto. */
+  :root {
+    --bg: oklch(28% 0.05 150);
+    --bg-2: oklch(31.5% 0.052 150);
+    --bg-3: oklch(36% 0.055 150);
+    --fg: oklch(94% 0.02 100);
+    --muted: oklch(80% 0.03 120);
+    --faint: oklch(70% 0.035 130);
+    --accent: oklch(85% 0.12 95);
+    --on-accent: oklch(24% 0.05 150);
+    --code-bg: oklch(20% 0.035 150);
+    --scheme: dark;
+    --f-display: "Zilla Slab", Rockwell, Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 700;
+    --display-tracking: -0.02em;
+    /* Muestras con nombre (las mismas que usan los ejemplos) */
+    --crema: #F3EBDD; --tinta: #1C1814; --negro: #0E0E10; --botella: #1E3B2A; --etiqueta: #E6CD6D;
+    --kraft: #C9A47E; --rosa: #F6D5DC; --ciruela: #5A1F3C; --noche: #0E1A33; --cian: #5FD4E8;
+  }
+  body { font-weight: 380; line-height: 1.7; letter-spacing: 0.004em; }
+  .prose strong { font-weight: 600; }
+  .prose h2 { font-size: clamp(2.2rem, 1.4rem + 3vw, 4rem); line-height: .98; max-width: 15ch; }
+  .prose h3 { font-size: var(--step-2); line-height: 1.05; }
+  .quiz .q { font-weight: 700; }
+
+  /* =========================================================
+     Portada: el mismo titular sobre cuatro fondos con cuatro letras.
+     Tocar un panel le cambia la letra; los botones barajan letras o fondos.
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, .86fr) minmax(0, 1.14fr); grid-template-rows: 1fr auto;
+    gap: 1.6rem clamp(1.5rem, 3.5vw, 3.5rem); padding: 5.2rem var(--gutter) var(--gutter); background: var(--bg); }
+  .hero-copy { align-self: end; }
+  .hero-copy [data-kicker] { margin: 0 0 1.2rem; font: 500 var(--step--1)/1.2 var(--f-ui); color: var(--muted); }
+  .hero h1 { font: 700 clamp(3rem, 1.2rem + 5.2vw, 7rem)/.88 var(--f-display); letter-spacing: -0.035em; margin: 0 0 1.4rem; }
+  .hero h1 span { display: block; color: var(--accent); }
+  .hero .lede { margin: 0; max-width: 34ch; font-size: var(--step-1); line-height: 1.45; color: var(--muted); }
+  .hero-ctrl { align-self: start; display: grid; gap: 1rem; }
+  .hero-ctrl .row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  .hero-ctrl .btn { min-height: 44px; border-color: color-mix(in oklab, var(--fg) 35%, transparent); }
+  .hero-ctrl .btn:hover { border-color: var(--fg); }
+  .hero-ctrl .btn.primary { border-color: var(--accent); }
+  .readout { margin: 0; min-height: 5.2em; max-width: 46ch; padding-top: 1rem; border-top: 1px solid var(--line-2); font: 400 var(--step--1)/1.55 var(--f-ui); color: var(--muted); }
+  .readout b { display: block; color: var(--fg); font-weight: 600; margin-bottom: .2rem; }
+  .hero-ctrl .chip { justify-self: start; }
+
+  .panels { grid-column: 2; grid-row: 1 / 3; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; min-height: 0; }
+  .panel { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; min-width: 0;
+    padding: clamp(.9rem, 1.8vw, 1.5rem); border: 0; border-radius: 3px; cursor: pointer; text-align: left;
+    background: var(--pbg); color: var(--pink); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fg) 14%, transparent);
+    transition: background-color .6s var(--ease-out), color .6s var(--ease-out), translate .3s var(--ease-out); font: inherit; }
+  .panel:hover { translate: 0 -3px; }
+  .panel:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .panel.on { box-shadow: inset 0 0 0 2px var(--accent); }
+  .p-tag { font: 500 .78rem/1.3 var(--f-ui); opacity: .78; }
+  .p-body { transition: opacity .22s, translate .22s var(--ease-out); }
+  .panel.swap .p-body { opacity: 0; translate: 0 6px; }
+  .p-head { display: block; font-size: clamp(1.7rem, .4rem + 3vw, 3.8rem); line-height: .95; text-wrap: balance; }
+  .p-date { display: block; margin-top: .6rem; font-size: clamp(.82rem, .7rem + .3vw, 1rem); opacity: .85; }
+  .p-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem .6rem; font: 500 .8rem/1.25 var(--f-ui); }
+  .p-sub { min-width: 0; }
+  .p-verdict { flex: none; padding: .28rem .6rem; border-radius: 99px; border: 1px solid currentColor; font-weight: 600; }
+  .p-verdict.ok { background: var(--pink); color: var(--pbg); border-color: var(--pink); }
+  .p-verdict.no { border-style: dashed; }
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; grid-template-rows: auto; padding-top: 5rem; gap: 1.2rem; min-height: 0; }
+    .hero-copy, .hero-ctrl, .panels { grid-column: 1; grid-row: auto; }
+    .hero h1 { font-size: clamp(2.7rem, 1.2rem + 7vw, 4.4rem); margin-bottom: 1rem; }
+    .hero .lede { font-size: var(--step-0); }
+    .panels { grid-template-rows: auto auto; gap: 8px; }
+    .panel { aspect-ratio: 1 / 1.08; padding: .8rem; gap: .5rem; }
+    .p-tag { font-size: .7rem; }
+    .p-date { margin-top: .35rem; }
+    .p-foot { font-size: .72rem; }
+    .p-verdict { padding: .2rem .45rem; }
+    .readout { min-height: 6.6em; }
+  }
+  @media (prefers-reduced-motion: reduce) { .panel, .p-body { transition: none; } }
+
+  /* ---- Banda amarilla con la frase de la lección ---- */
+  .band.label { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.label p { margin: 0; max-width: 18ch; font: 700 clamp(2.1rem, 1.1rem + 4vw, 4.8rem)/.98 var(--f-display); letter-spacing: -0.03em; text-wrap: balance; }
+  .band.label small { display: block; margin-top: 1.4rem; max-width: 52ch; font: 450 var(--step-0)/1.5 var(--f-ui); }
+
+  /* ---- Tira de muestras: índice de los seis casos ---- */
+  .tira { display: grid; grid-template-columns: repeat(6, 1fr); margin-block: 2.6rem 3.4rem; }
+  .tira a { display: flex; flex-direction: column; justify-content: space-between; gap: 2.2rem; min-height: clamp(10rem, 18vw, 15rem); padding: 1rem 1.1rem;
+    text-decoration: none; background: var(--tb); color: var(--ti); transition: flex-grow .4s; }
+  .tira a span { font: 500 .78rem/1.3 var(--f-ui); opacity: .8; }
+  .tira a b { font-size: clamp(1.35rem, .8rem + 1.4vw, 2.3rem); line-height: 1; font-weight: inherit; }
+  .tira a:hover b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .15em; }
+  @media (max-width: 900px) { .tira { grid-template-columns: repeat(3, 1fr); } .tira a { min-height: 7.5rem; gap: 1rem; } }
+  @media (max-width: 480px) { .tira { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---- Fichas de caso: muestra a la izquierda, razonamiento a la derecha ---- */
+  .case { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(1.4rem, 4vw, 3.5rem); align-items: start; margin: 4.5rem 0; scroll-margin-top: 5rem; }
+  .case > div > h3:first-child { margin-top: 0; }
+  .case .why, .case .risk { font-size: var(--step--1); line-height: 1.6; padding-left: 1rem; border-left: 2px solid var(--accent); color: var(--muted); }
+  .case .risk { border-left-color: var(--line-2); }
+  .case .why b, .case .risk b { color: var(--fg); font-weight: 600; }
+  .sample { position: sticky; top: 5.5rem; aspect-ratio: 4 / 3.3; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; padding: clamp(1.1rem, 3vw, 2.2rem);
+    border-radius: 3px; overflow: hidden; box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fg) 12%, transparent); }
+  .sample small { font: 500 .78rem/1.3 var(--f-ui); }
+  .sample p { margin: 0; }
+  @media (max-width: 760px) { .case { grid-template-columns: 1fr; margin: 3.2rem 0; } .sample { position: relative; top: 0; aspect-ratio: auto; min-height: 17rem; } }
+  /* Las seis muestras */
+  .s-didona { background: var(--crema); color: var(--tinta); font-family: "Bodoni Moda", serif; }
+  .s-didona .t { font-size: clamp(2.5rem, 1.2rem + 3.6vw, 4.6rem); font-weight: 500; line-height: .92; letter-spacing: -0.02em; }
+  .s-didona .t i { font-style: italic; }
+  .s-didona .p { font: 400 1rem/1.45 "Newsreader", serif; max-width: 30ch; }
+  .s-didona .rule { display: flex; justify-content: space-between; border-top: 1px solid currentColor; padding-top: .5rem; font: 500 .74rem/1.2 "Bodoni Moda", serif; }
+  .s-geo { background: var(--negro); color: #EDEDED; font-family: "Jost", sans-serif; position: relative; }
+  .s-geo::after { content: ""; position: absolute; right: -12%; top: 18%; width: 56%; aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3a3a40, #121214 60%); box-shadow: inset 0 0 0 1px #2a2a2e; }
+  .s-geo > * { position: relative; z-index: 1; }
+  .s-geo .t { font-size: clamp(2.2rem, 1.1rem + 3.2vw, 4.2rem); font-weight: 300; line-height: .98; letter-spacing: -0.02em; max-width: 9ch; }
+  .s-geo .p { font-weight: 350; letter-spacing: .02em; font-size: .92rem; color: #B9B9BF; }
+  .s-slab { padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .s-slab > div { display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; padding: clamp(1rem, 2.6vw, 2rem); font-family: "Zilla Slab", serif; }
+  .s-slab .k { background: var(--kraft); color: #2B1E12; }
+  .s-slab .v { background: var(--botella); color: #F1E8CF; }
+  .s-slab .t { font-size: clamp(1.8rem, 1rem + 2.4vw, 3.3rem); font-weight: 700; line-height: .95; }
+  .s-slab .v .t span { color: var(--etiqueta); }
+  .s-slab .p { font-size: .95rem; font-weight: 400; line-height: 1.35; }
+  .s-round { background: var(--rosa); color: var(--ciruela); font-family: "Nunito", sans-serif; position: relative; }
+  .s-round::before, .s-round::after { content: ""; position: absolute; border-radius: 50%; background: #CFEDE3; }
+  .s-round::before { width: 34%; aspect-ratio: 1; right: 8%; top: 12%; }
+  .s-round::after { width: 18%; aspect-ratio: 1; right: 30%; top: 46%; background: #FBE9B7; }
+  .s-round > * { position: relative; z-index: 1; }
+  .s-round .t { font-size: clamp(2.1rem, 1.1rem + 3vw, 4rem); font-weight: 850; line-height: .95; letter-spacing: -0.015em; max-width: 9ch; }
+  .s-round .b { align-self: start; padding: .7rem 1.2rem; border-radius: 99px; background: var(--ciruela); color: var(--rosa); font: 800 .95rem/1 "Nunito", sans-serif; }
+  .s-mono { background: var(--noche); color: #CFE0FF; font-family: "JetBrains Mono", monospace; background-image: linear-gradient(#ffffff0a 1px, transparent 1px), linear-gradient(90deg, #ffffff0a 1px, transparent 1px); background-size: 24px 24px; }
+  .s-mono .t { font-size: clamp(1.4rem, .8rem + 1.9vw, 2.5rem); font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; }
+  .s-mono .t b { color: var(--cian); font-weight: 500; }
+  .s-mono .p { font-size: .82rem; line-height: 1.6; color: #9FB4D8; }
+  .s-papel { padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .s-papel > div { display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; padding: clamp(1rem, 2.6vw, 1.8rem); }
+  .s-papel .w { background: #fff; color: #111; }
+  .s-papel .c { background: var(--crema); color: #2A221B; }
+  .s-papel .t { font: 500 clamp(1.5rem, .9rem + 1.8vw, 2.5rem)/1 "Newsreader", serif; letter-spacing: -0.02em; }
+  .s-papel .p { font: 400 .95rem/1.5 "Newsreader", serif; }
+  @media (max-width: 480px) { .s-slab, .s-papel { grid-template-columns: 1fr; } }
+
+  /* ---- Fondos de color vivo ---- */
+  .vivo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 1.6rem 0 2rem; }
+  .vivo div { min-height: 11rem; padding: 1.2rem; border-radius: 3px; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; }
+  .vivo small { font: 600 .78rem/1.3 var(--f-ui); }
+  .vivo .t { margin: 0; font-size: clamp(1.7rem, 1rem + 1.6vw, 2.5rem); line-height: .95; letter-spacing: -0.01em; }
+  @media (max-width: 760px) { .vivo { grid-template-columns: 1fr; } .vivo div { min-height: 8rem; } }
+
+  /* ---- Así sí / Así no ---- */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(.8rem, 2vw, 1.4rem); margin: 2.8rem 0; }
+  .duo figure { margin: 0; display: grid; gap: .7rem; align-content: start; }
+  .duo .art { position: relative; aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: center; gap: .6rem; padding: clamp(1rem, 3vw, 2rem); border-radius: 3px; overflow: hidden;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fg) 12%, transparent); }
+  .duo .art p { margin: 0; }
+  .duo figcaption { font: 400 var(--step--1)/1.5 var(--f-ui); color: var(--muted); }
+  .duo figcaption b { display: inline-block; margin-right: .5rem; padding: .18rem .55rem; border-radius: 99px; font-weight: 650; font-size: .78rem; }
+  .duo .no figcaption b { border: 1px dashed var(--muted); color: var(--fg); }
+  .duo .si figcaption b { background: var(--accent); color: var(--on-accent); }
+  .duo .d-why { grid-column: 1 / -1; margin: 0; font: 400 var(--step-0)/1.55 var(--f-body); }
+  .duo .d-why::before { content: ""; display: inline-block; width: 1.4rem; height: 2px; margin-right: .6rem; vertical-align: middle; background: var(--accent); }
+  @media (max-width: 640px) { .duo { grid-template-columns: 1fr; } }
+  /* Arte de los duos */
+  .a-crema { background: var(--crema); font-family: "Newsreader", serif; }
+  .a-crema .h { font: 500 clamp(1.6rem, 1rem + 1.6vw, 2.4rem)/1 "Newsreader", serif; letter-spacing: -0.02em; }
+  .a-crema .p { font-size: .98rem; line-height: 1.5; max-width: 34ch; }
+  .a-vibra { background: #3F7A4E; color: #B5473A; font: 800 clamp(1.7rem, 1rem + 2vw, 2.8rem)/1 "Inter Tight", sans-serif; }
+  .a-vibra .p { font: 600 1rem/1.4 "Inter Tight", sans-serif; }
+  .a-calma { background: var(--botella); color: #F1E8CF; font: 700 clamp(1.7rem, 1rem + 2vw, 2.8rem)/1 "Zilla Slab", serif; }
+  .a-calma span { color: var(--etiqueta); }
+  .a-calma .p { font: 400 1rem/1.5 "Inter Tight", sans-serif; }
+  .a-foto { justify-content: flex-end; color: #fff; background: #2b2140 url("../landing/media/azotea.webp") 30% 8% / auto 185% no-repeat; }
+  .a-foto.scrim::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgb(16 10 30 / .82), rgb(16 10 30 / .45) 45%, transparent 75%); }
+  .a-foto > * { position: relative; }
+  .a-foto .h { font: 700 clamp(1.5rem, 1rem + 1.6vw, 2.4rem)/1 "Zilla Slab", serif; max-width: 14ch; }
+  .a-foto .p { font: 450 .95rem/1.4 "Inter Tight", sans-serif; }
+
+  /* ---- Escalera de contraste ---- */
+  .ladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin: 2rem 0 2.4rem; border-radius: 3px; overflow: hidden; }
+  .ladder div { padding: 1.1rem 1rem 1rem; background: var(--botella); min-height: 9.5rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: inset -1px 0 0 #ffffff12; }
+  .ladder b { font: 700 clamp(1.4rem, 1rem + 1.2vw, 2.1rem)/1 "Zilla Slab", serif; color: var(--c); }
+  .ladder p { margin: .4rem 0 0; font: 400 .92rem/1.35 var(--f-ui); color: var(--c); }
+  .ladder small { font: 600 .78rem/1.3 var(--f-ui); color: #F1E8CF; opacity: .9; }
+  .ladder small em { font-style: normal; display: block; font-weight: 400; opacity: .8; }
+  @media (max-width: 760px) { .ladder { grid-template-columns: 1fr 1fr; } .ladder div { min-height: 7.2rem; } .ladder div:last-child { grid-column: 1 / -1; } }
+
+  /* ---- Trazos finos: la didona en pequeño sobre negro ---- */
+  .hair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 2rem 0; }
+  .hair div { background: var(--negro); color: #EDEDED; padding: 1.3rem; border-radius: 3px; font-family: "Bodoni Moda", serif; }
+  .hair .big { font-size: 3.4rem; line-height: 1; font-weight: 400; }
+  .hair .small { font-size: 15px; line-height: 1.5; margin: .8rem 0 1rem; }
+  .hair .o96 .small { font-variation-settings: "opsz" 96; }
+  .hair .o6 .small { font-variation-settings: "opsz" 9; }
+  .hair small { display: block; font: 500 .78rem/1.35 var(--f-ui); color: #A9A9B0; }
+  @media (max-width: 640px) { .hair { grid-template-columns: 1fr; } }
+
+  /* ---- Matriz de referencia ---- */
+  .matrix table { min-width: 860px; }
+  .matrix th, .matrix td { padding: .75rem .8rem; }
+  .matrix thead th { font-family: var(--f-ui); color: var(--fg); background: var(--bg-3); }
+  .matrix thead th span { display: block; font-size: 1.15rem; font-weight: 400; margin-top: .25rem; color: var(--accent); }
+  .matrix tbody th { position: sticky; left: 0; z-index: 1; min-width: 9.5rem; background: var(--bg-2); color: var(--fg); }
+  .matrix tbody th i { display: inline-block; width: .9rem; height: .9rem; margin-right: .5rem; vertical-align: -2px; border-radius: 2px; background: var(--m); box-shadow: inset 0 0 0 1px #ffffff40; }
+  .matrix td { color: var(--muted); }
+  .matrix td::before { content: ""; display: block; width: 1.6rem; height: 4px; margin-bottom: .45rem; border-radius: 2px; background: var(--line-2); }
+  .matrix td.ok { color: var(--fg); }
+  .matrix td.ok::before { background: var(--accent); }
+  .matrix td.no::before { background: repeating-linear-gradient(90deg, var(--muted) 0 3px, transparent 3px 6px); }
+  .legend { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; font: 400 var(--step--1)/1.4 var(--f-ui); color: var(--muted); }
+  .legend span::before { content: ""; display: inline-block; width: 1.6rem; height: 4px; margin-right: .5rem; vertical-align: middle; border-radius: 2px; background: var(--line-2); }
+  .legend .ok::before { background: var(--accent); }
+  .legend .no::before { background: repeating-linear-gradient(90deg, var(--muted) 0 3px, transparent 3px 6px); }
+
+  /* ---- Lista de comprobación ---- */
+  .check { list-style: none; padding: 0 !important; counter-reset: c; }
+  .check li { counter-increment: c; display: grid; grid-template-columns: 2.6rem 1fr; gap: .2rem 1rem; padding: 1rem 0; border-top: 1px solid var(--line-2); margin: 0; }
+  .check li::before { content: counter(c); grid-row: span 2; font: 700 2rem/1 var(--f-display); color: var(--accent); }
+  .check b { font-weight: 600; }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="tipo-fondo">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="hero-copy">
+      <p data-kicker>Tipografía</p>
+      <h1 id="t">Tipografía, color <span>y fondo</span></h1>
+      <p class="lede">Las mismas tres palabras sobre cuatro fondos y con cuatro letras. Toca un panel para cambiarle la letra y mira cómo cambia lo que promete.</p>
+    </div>
+
+    <div class="panels" role="group" aria-label="El mismo titular sobre cuatro fondos">
+      <button class="panel" type="button" data-i="0"><span class="p-tag"></span><span class="p-body"><span class="p-head">Edición de otoño</span><span class="p-date">Desde el 3 de octubre</span></span><span class="p-foot"><span class="p-sub"></span><span class="p-verdict"></span></span></button>
+      <button class="panel" type="button" data-i="1"><span class="p-tag"></span><span class="p-body"><span class="p-head">Edición de otoño</span><span class="p-date">Desde el 3 de octubre</span></span><span class="p-foot"><span class="p-sub"></span><span class="p-verdict"></span></span></button>
+      <button class="panel" type="button" data-i="2"><span class="p-tag"></span><span class="p-body"><span class="p-head">Edición de otoño</span><span class="p-date">Desde el 3 de octubre</span></span><span class="p-foot"><span class="p-sub"></span><span class="p-verdict"></span></span></button>
+      <button class="panel" type="button" data-i="3"><span class="p-tag"></span><span class="p-body"><span class="p-head">Edición de otoño</span><span class="p-date">Desde el 3 de octubre</span></span><span class="p-foot"><span class="p-sub"></span><span class="p-verdict"></span></span></button>
+    </div>
+
+    <div class="hero-ctrl">
+      <div class="row">
+        <button class="btn" type="button" data-act="shuffle">Barajar letras</button>
+        <button class="btn" type="button" data-act="rotate">Girar fondos</button>
+        <button class="btn primary" type="button" data-act="reset">Pares que encajan</button>
+      </div>
+      <p class="readout" aria-live="polite"><b data-ro-t>Cuatro pares que encajan.</b><span data-ro-w>Cada letra está sobre el fondo que dice lo mismo que ella. Toca cualquier panel para romper el par.</span></p>
+      <span class="chip" data-meta>18 min</span>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Una letra nunca aparece sola. Siempre está encima de algo: un papel, una pantalla negra, una foto, un color de marca. Y ese algo cambia lo que la letra dice. La misma Bodoni que en crema suena a revista de moda, en rosa pastel suena a tarta de boda. La portada lo enseña con las mismas tres palabras: el texto no cambia, el mensaje sí.</p>
+      <p>En esta lección vas a entender <strong>por qué</strong> pasa eso, para poder decidir con seguridad y explicárselo a un cliente. Hay dos capas. La primera es de significado: qué promete cada pareja de letra y fondo. La segunda es física: qué le pasa a una letra cuando el fondo es oscuro, de color o una foto, y cómo se corrige para que se lea bien.</p>
+      <p>Una advertencia que vale para todo el bloque: estas lecturas son <strong>asociaciones culturales</strong>, no leyes. Funcionan en nuestro contexto (España, Europa, el comercio que vemos cada día) porque llevamos toda la vida viéndolas en etiquetas, revistas y escaparates. El sector, la competencia y el tono de la marca pesan tanto como la letra.</p>
+
+      <div class="band label"><div class="inner"><p>La letra pone la voz. El fondo decide en qué sala se oye.</p><small>La misma frase dicha en una iglesia, en un bar o en una guardería no suena igual. Con la tipografía pasa lo mismo: el fondo es el sitio.</small></div></div>
+
+      <h2>El fondo cambia lo que dice una letra</h2>
+      <p>Cada familia tipográfica trae su propia historia (de eso va «Qué transmite una tipografía»). Aquí nos interesa otra cosa: qué pasa cuando esa historia se encuentra con un fondo. Si los dos cuentan lo mismo, el mensaje se refuerza y se entiende al instante. Si cuentan cosas distintas, el resultado es un tercer mensaje, que a veces es justo lo que buscas y a veces es un malentendido.</p>
+      <p>Seis parejas clásicas. Toca una para ir a su ficha.</p>
+
+      <nav class="tira bleed" aria-label="Las seis parejas">
+        <a href="#c-didona" style="--tb: var(--crema); --ti: var(--tinta); font-family: 'Bodoni Moda', serif; font-weight: 500"><span>Crema</span><b>Didona</b></a>
+        <a href="#c-geo" style="--tb: var(--negro); --ti: #EDEDED; font-family: 'Jost', sans-serif; font-weight: 300"><span>Negro</span><b>Geométrica</b></a>
+        <a href="#c-slab" style="--tb: var(--kraft); --ti: #2B1E12; font-family: 'Zilla Slab', serif; font-weight: 700"><span>Kraft o botella</span><b>Slab</b></a>
+        <a href="#c-round" style="--tb: var(--rosa); --ti: var(--ciruela); font-family: 'Nunito', sans-serif; font-weight: 850"><span>Pastel</span><b>Redondeada</b></a>
+        <a href="#c-mono" style="--tb: var(--noche); --ti: #CFE0FF; font-family: 'JetBrains Mono', monospace; font-weight: 500"><span>Azul noche</span><b>Mono</b></a>
+        <a href="#c-papel" style="--tb: #fff; --ti: #111; font-family: 'Newsreader', serif; font-weight: 500"><span>Blanco o crema</span><b>Serif</b></a>
+      </nav>
+
+      <div class="case wide" id="c-didona">
+        <div class="sample s-didona" aria-hidden="true">
+          <div class="rule"><span>Nº 14</span><span>Otoño 2026</span></div>
+          <p class="t">La luz <i>del oro</i></p>
+          <p class="p">Doce piezas hechas a mano en nuestro taller de la calle de la Paz, en Valencia. Cada una lleva su número grabado.</p>
+        </div>
+        <div>
+          <h3>Didona sobre crema: editorial de lujo</h3>
+          <p>La didona (Bodoni, Didot) es la letra de contraste extremo: trazos verticales gruesos y horizontales finísimos. Nació a finales del siglo XVIII, cuando el papel y la impresión mejoraron lo bastante como para reproducir esos hilos sin que se rompieran. Por eso es, desde su origen, una letra que presume de calidad.</p>
+          <p>El crema completa la frase. Es el color del papel sin blanquear, el de los libros buenos y las revistas impresas en papel con cuerpo. El ojo lo asocia a algo que se toca y que dura, no a algo que se tira.</p>
+          <p class="why"><b>Por qué funciona.</b> Las dos piezas cuentan la misma historia, impresión cuidada, así que el mensaje llega reforzado: joyería, moda, una revista, un hotel con historia. Además el crema suaviza el contraste del negro, que en blanco puro haría que los hilos finos vibraran.</p>
+          <p class="risk"><b>Cuidado.</b> Si el crema se pasa a amarillo, envejece: deja de ser papel bueno y pasa a ser papel viejo. Mantenlo casi neutro (un croma de 0,01 a 0,025 en OKLCH).</p>
+        </div>
+      </div>
+
+      <div class="case wide" id="c-geo">
+        <div class="sample s-geo" aria-hidden="true">
+          <small>Onda Studio One</small>
+          <p class="t">Silencio, ahora en negro.</p>
+          <p class="p">Cancelación activa. 40 horas de batería.</p>
+        </div>
+        <div>
+          <h3>Geométrica sobre negro: tecnología premium</h3>
+          <p>Una geométrica (Jost, Futura) está construida con círculo, cuadrado y triángulo: la «o» es un círculo casi perfecto y el trazo apenas cambia de grosor. Eso se lee como precisión, como algo diseñado con regla y compás, más cerca de la máquina que de la mano.</p>
+          <p>El negro es el fondo de la foto de producto de estudio: sin contexto, sin distracciones, como un objeto en una vitrina iluminada. Es también el color de los aparatos caros, el acabado mate.</p>
+          <p class="why"><b>Por qué funciona.</b> Precisión más escaparate es igual a producto caro y bien hecho. Por eso marcas de audio, de coches eléctricos y de relojes lo repiten. Fíjate en el peso: en fino (300) suena a elegancia; la misma letra en 800 sobre negro suena a gimnasio o a bebida energética.</p>
+          <p class="risk"><b>Cuidado.</b> Sobre negro las letras claras parecen más gruesas (lo verás en la siguiente sección). Por eso aquí la geométrica va un punto más ligera que en fondo claro.</p>
+        </div>
+      </div>
+
+      <div class="case wide" id="c-slab">
+        <div class="sample s-slab" aria-hidden="true">
+          <div class="k"><small>Obrador desde 1962</small><p class="t">Pan de leña</p><p class="p">Masa madre, 24 horas de reposo.</p></div>
+          <div class="v"><small>Cervecería Ermita</small><p class="t">Lager <span>de la Plana</span></p><p class="p">Lote 12, embotellada en Castellón.</p></div>
+        </div>
+        <div>
+          <h3>Slab sobre kraft o verde botella: artesanal</h3>
+          <p>Las slab, o egipcias, tienen serifas gruesas y rectas, del mismo grosor que el palo de la letra. Se popularizaron en el siglo XIX en carteles, anuncios de feria y tipos de madera, y luego en las máquinas de escribir. Son letras de trabajo: robustas, se leen de lejos y no se rompen al imprimirlas mal.</p>
+          <p>El kraft es papel de embalar sin blanquear, el de la bolsa del pan y las cajas. El verde botella es el del vidrio de las botellas de vino y de cerveza, y el de muchas etiquetas antiguas.</p>
+          <p class="why"><b>Por qué funciona.</b> Las dos mitades hablan de oficio: letra de cartel de imprenta y material honesto. Por eso es la pareja de cervecerías artesanas, obradores, bodegas familiares y tiendas de producto local. Esta página usa la misma idea: Zilla Slab sobre verde botella.</p>
+          <p class="risk"><b>Cuidado.</b> La estética «artesanal» está muy vista. Si todo es kraft, slab y sellos, parece plantilla. Basta con dos de esos tres ingredientes y algo moderno al lado (una sans limpia para el texto, fotos actuales).</p>
+        </div>
+      </div>
+
+      <div class="case wide" id="c-round">
+        <div class="sample s-round" aria-hidden="true">
+          <small style="font-family: Nunito, sans-serif; font-weight: 700">Pequeño Nido</small>
+          <p class="t">Ropa blandita para crecer</p>
+          <span class="b">Ver la colección</span>
+        </div>
+        <div>
+          <h3>Redondeada sobre pastel: infantil</h3>
+          <p>Una redondeada (Nunito, VAG Rounded) tiene los extremos de los trazos en semicírculo. No hay ninguna esquina. Físicamente asociamos lo romo con lo seguro: los juguetes, los muebles de bebé y las tijeras escolares no tienen puntas.</p>
+          <p>El pastel es color con mucha luz y poca saturación: no grita, no excita. Es el color de las habitaciones de bebé y de la ropita, porque se percibe como suave y tranquilo.</p>
+          <p class="why"><b>Por qué funciona.</b> Forma blanda más color blando: todo transmite que aquí nada hace daño. Encaja en moda infantil, juguetes, escuelas infantiles o un dentista pediátrico.</p>
+          <p class="risk"><b>Cuidado.</b> Es tan clara que se contagia: una gestoría que use esta pareja para «parecer cercana» parecerá una tienda de niños. Y para moda infantil cara, el pastel con redondeada puede quedar barato; ahí funciona mejor una serif ligera sobre pastel, que añade cuidado adulto.</p>
+        </div>
+      </div>
+
+      <div class="case wide" id="c-mono">
+        <div class="sample s-mono" aria-hidden="true">
+          <small>nodo.sec</small>
+          <p class="t">&gt; auditoría completa <b>en 48 h</b>_</p>
+          <p class="p">Pentesting, copias y formación para pymes de Castellón y Valencia.</p>
+        </div>
+        <div>
+          <h3>Mono sobre azul oscuro: técnico</h3>
+          <p>En una monoespaciada todas las letras ocupan lo mismo, de la «i» a la «m», como en las máquinas de escribir y las terminales de ordenador. Es la letra del código, de los datos y de los documentos técnicos.</p>
+          <p>El azul muy oscuro es el color de la pantalla de noche, de los editores de código y de los planos (las antiguas cianotipias eran líneas claras sobre azul). Es más amable que el negro, pero igual de serio.</p>
+          <p class="why"><b>Por qué funciona.</b> Las dos piezas dicen «esto lo hacen ingenieros»: ciberseguridad, desarrollo, consultoría técnica, un estudio de ingeniería. Un acento cian o verde de terminal remata la sensación de pantalla.</p>
+          <p class="risk"><b>Cuidado.</b> La mono cansa en texto largo porque su ritmo es irregular para el ojo. Úsala para titulares, datos y etiquetas, y deja el texto corrido en una sans.</p>
+        </div>
+      </div>
+
+      <div class="case wide" id="c-papel">
+        <div class="sample s-papel" aria-hidden="true">
+          <div class="w"><small style="font-family: Inter Tight, sans-serif">Blanco puro</small><p class="t">Defendemos lo que es tuyo</p><p class="p">Despacho de abogados en Castellón. Primera consulta en 24 horas.</p></div>
+          <div class="c"><small style="font-family: Inter Tight, sans-serif">Crema</small><p class="t">Defendemos lo que es tuyo</p><p class="p">Despacho de abogados en Castellón. Primera consulta en 24 horas.</p></div>
+        </div>
+        <div>
+          <h3>Serif sobre blanco puro frente a crema</h3>
+          <p>Misma letra, mismo texto. Solo cambia el blanco. El blanco puro es la máxima luz de la pantalla: se lee como nuevo, limpio, institucional, casi clínico. El crema se lee como papel: cálido, con tiempo, más humano.</p>
+          <p class="why"><b>Por qué funciona cada uno.</b> Sobre blanco, la serif suena a periódico digital, a institución, a despacho serio y actual. Sobre crema, a librería, a editorial, a despacho de toda la vida que trata a la gente por su nombre. Ninguno es mejor: depende de si el cliente quiere parecer moderno y eficaz o cercano y con historia.</p>
+          <p class="risk"><b>Cuidado.</b> En texto largo, el negro puro sobre blanco puro es el contraste máximo posible (21:1) y en pantalla puede deslumbrar. Un texto casi negro (#111 o una tinta cálida) se lee igual de bien y cansa menos.</p>
+        </div>
+      </div>
+
+      <h3>Y cuando el fondo es un color vivo</h3>
+      <div class="vivo wide" aria-hidden="true">
+        <div style="background: #F2C230; color: #1A1405"><small>Reformas y obra nueva</small><p class="t" style="font-family: Archivo, sans-serif; font-weight: 900; font-stretch: 85%">Obra en 3 semanas</p></div>
+        <div style="background: #C8102E; color: #FFF4E8"><small>Cine de verano en la playa</small><p class="t" style="font-family: 'Big Shoulders', sans-serif; font-weight: 900; text-transform: uppercase">Del 4 al 9 de agosto</p></div>
+        <div style="background: #F2C230; color: #1A1405"><small>Así no</small><p class="t" style="font-family: 'Bodoni Moda', serif; font-weight: 400; font-variation-settings: 'opsz' 96">Obra en 3 semanas</p></div>
+      </div>
+      <p>Un amarillo o un rojo a pantalla completa ya está gritando. La letra no tiene que gritar más, tiene que <strong>aguantar</strong>: formas simples, trazo grueso y uniforme, mucho peso. Por eso sobre color vivo funcionan las grotescas y las condensadas negras, y fallan las didonas y las letras finas: sus hilos tienen que competir con un fondo que vibra y desaparecen, como ves en la tercera muestra.</p>
+      <p>El significado también viene de fuera de la web. Negro sobre amarillo es la combinación de aviso de la naturaleza (avispas, serpientes) y de las señales de tráfico y de obra, así que suena a «atención», a reformas, a ferretería, a festival. Blanco o crema sobre rojo es la de los carteles y las rebajas: urgencia y evento. Úsalas cuando el cliente vende precisamente eso, y nunca para una marca que necesita calma.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Antes de elegir la letra, pregúntate dónde va a vivir. Si el fondo principal de la marca es oscuro, de color o fotográfico, eso descarta familias enteras (las de trazo muy fino) y cambia el peso de todas las demás. Elegir la letra en Figma sobre blanco y luego ponerla sobre verde es la forma más rápida de equivocarse.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el teléfono el fondo pesa más que en el escritorio, porque ocupa la pantalla entera y no hay márgenes blancos alrededor. Un rosa pastel que en el monitor era un detalle, en el móvil es toda la experiencia. Revisa la pareja en un teléfono real antes de presentarla: si el fondo cuenta otra cosa a pantalla completa, se nota ahí antes que en ningún sitio.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Una gestoría de Vila-real quiere «parecer cercana» y pone su nombre en Nunito negrita sobre rosa pastel. ¿Qué entiende quien entra?</p>
+        <ol>
+          <li>Que es una gestoría amable y profesional.</li>
+          <li>Que es algo para niños: una tienda, una guardería, un juguete.</li>
+          <li>Que es una marca de lujo discreta.</li>
+        </ol>
+        <p class="why">La redondeada y el pastel dicen los dos «blando y seguro», y juntos ese mensaje es tan fuerte que tapa el sector. La cercanía de una gestoría se consigue mejor con una sans humanista, un fondo cálido (crema, arena) y fotos de las personas del despacho.</p>
+      </div>
+
+      <h2>Legibilidad sobre color</h2>
+      <p>La segunda capa es física. Una pareja puede significar exactamente lo que quieres y aun así no leerse bien. Aquí entran cinco cosas: el contraste, el efecto del fondo oscuro, los trazos finos, el texto de color sobre color y el negro sobre crema.</p>
+
+      <h3>El contraste es diferencia de luz, no de color</h3>
+      <p>El ojo distingue la forma de las letras sobre todo por la diferencia de <strong>luminosidad</strong> con el fondo, no por la diferencia de tono. Por eso un rojo y un verde muy distintos como colores pueden ser ilegibles juntos si tienen la misma luz. La norma de accesibilidad WCAG lo mide como una proporción entre la luminancia de los dos colores: pide al menos <strong>4,5:1</strong> para texto normal y <strong>3:1</strong> para texto grande (unos 24 px, o 18,7 px en negrita).</p>
+      <p>Mira la escalera: todos los textos están sobre el mismo verde botella. Cuanto más se aleja su luz de la del fondo, mejor se lee, da igual el tono.</p>
+
+      <div class="ladder wide" aria-label="Cinco textos sobre verde botella con su contraste">
+        <div style="--c: #F1E8CF"><div><b>Crema</b><p>Se lee perfecto.</p></div><small>10:1<em>#F1E8CF</em></small></div>
+        <div style="--c: #E6CD6D"><div><b>Amarillo</b><p>Se lee perfecto.</p></div><small>7,8:1<em>#E6CD6D</em></small></div>
+        <div style="--c: #8FA894"><div><b>Salvia</b><p>Justo para texto.</p></div><small>4,8:1<em>#8FA894</em></small></div>
+        <div style="--c: #C8452F"><div><b>Rojo</b><p>Solo para adornos.</p></div><small>2,5:1<em>#C8452F</em></small></div>
+        <div style="--c: #2E5E3D"><div><b>Verde</b><p>Casi invisible.</p></div><small>1,6:1<em>#2E5E3D</em></small></div>
+      </div>
+
+      <p>El rojo es un color muy distinto del verde y aun así se queda en 2,5:1: tiene casi la misma luz que el fondo. En cambio el amarillo, que en teoría «pega menos», se lee de maravilla porque es mucho más claro. Esa es la razón por la que la etiqueta clásica de cerveza o de vino sobre verde usa crema, oro o amarillo y casi nunca rojo para el texto.</p>
+
+      <div class="callout idea"><span class="t">Truco</span>
+        <p>Si dudas, pasa la composición a escala de grises (en Figma, un relleno «Color» negro encima; en el navegador, <code>filter: grayscale(1)</code> en DevTools). Si en gris el texto se sigue leyendo, el contraste está bien. Si desaparece, no lo arregla ningún tono.</p>
+      </div>
+
+      <h3>En oscuro, las letras parecen más gordas</h3>
+      <p>Una forma clara sobre fondo oscuro parece más grande que la misma forma oscura sobre claro. Es un efecto óptico conocido desde hace siglos, la <strong>irradiación</strong>: la luz de la zona clara se «desborda» en nuestra percepción sobre la oscura. Con texto, significa que la misma fuente, al mismo peso, se ve más gruesa, más apretada y un poco borrosa cuando la pones clara sobre oscuro.</p>
+      <p>La corrección es siempre la misma, en tres gestos: <strong>bajar el peso</strong> (unos 30 a 60 puntos en una variable, por ejemplo de 400 a 360), <strong>abrir el espaciado</strong> entre letras (de 0,005 a 0,015 em) y <strong>subir el interlineado</strong> (de 1,55 a 1,65 o 1,7). Pruébalo:</p>
+
+      <figure class="lab" data-title="El oscuro engorda la letra" data-hint="Activa la compensación" data-height="430" data-height-mobile="640">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pair">
+            <article class="claro">
+              <p class="k">Fondo claro</p>
+              <h2>Vermut de la casa</h2>
+              <p>Lo preparamos cada lunes con vino de la Plana, piel de naranja de Vila-real y una receta de 1958. Se sirve con hielo, una aceituna y sin prisa.</p>
+            </article>
+            <article class="oscuro">
+              <p class="k">Fondo oscuro</p>
+              <h2>Vermut de la casa</h2>
+              <p>Lo preparamos cada lunes con vino de la Plana, piel de naranja de Vila-real y una receta de 1958. Se sirve con hielo, una aceituna y sin prisa.</p>
+            </article>
+          </div>
+          <div class="ui">
+            <button id="fix" aria-pressed="false">Compensar el oscuro</button>
+            <span id="fam">
+              <button data-f="sans" aria-pressed="true">Inter Tight</button>
+              <button data-f="serif">Newsreader</button>
+              <button data-f="didona">Bodoni</button>
+            </span>
+          </div>
+          <p id="val"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 16px; background: #DCD5C6; color: #1C1814; font-family: var(--f-sans); }
+          .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          article { padding: 20px 22px; border-radius: 4px; --w: 400; --ls: 0em; --lh: 1.55; }
+          .claro { background: #F3EBDD; color: #1C1814; }
+          .oscuro { background: #1E3B2A; color: #F1E8CF; }
+          /* La compensación: menos peso, más aire */
+          .fixed .oscuro { --w: 350; --ls: .012em; --lh: 1.68; }
+          h2 { margin: 0 0 10px; font-size: 26px; line-height: 1.05; font-weight: calc(var(--w) + 250); }
+          article p { margin: 0; font-size: 16.5px; font-weight: var(--w); letter-spacing: var(--ls); line-height: var(--lh); transition: all .3s; }
+          .k { font-size: 12px !important; opacity: .7; margin-bottom: 8px !important; font-family: var(--f-sans); font-weight: 500 !important; }
+          body[data-f="serif"] article { font-family: var(--f-read); }
+          body[data-f="didona"] article { font-family: var(--f-bodoni); font-variation-settings: "opsz" 96; }
+          .ui { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+          #fam { display: flex; gap: 6px; }
+          button { min-height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid #1C1814; background: transparent; color: #1C1814; font: 600 13px var(--f-sans); cursor: pointer; }
+          button[aria-pressed="true"] { background: #1C1814; color: #F3EBDD; }
+          #val { margin: 10px 2px 0; font: 500 12.5px/1.5 var(--f-mono); color: #4a4238; }
+          @media (max-width: 560px) { .pair { grid-template-columns: 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const fix = document.querySelector('#fix');
+          function show() {
+            const on = document.body.classList.contains('fixed');
+            val.textContent = on
+              ? 'Oscuro: peso 350, espaciado +0.012em, interlineado 1.68'
+              : 'Los dos: peso 400, espaciado 0, interlineado 1.55';
+          }
+          fix.addEventListener('click', () => {
+            const on = document.body.classList.toggle('fixed');
+            fix.setAttribute('aria-pressed', on); show();
+          });
+          document.querySelectorAll('#fam button').forEach(b => b.addEventListener('click', () => {
+            document.body.dataset.f = b.dataset.f;
+            document.querySelectorAll('#fam button').forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+          show();
+        </script>
+        <figcaption>Sin compensar, el párrafo del fondo verde parece de otra fuente: más negro, más apretado. Con la compensación los dos se ven del mismo peso, aunque el de la derecha lleva 50 puntos menos. Prueba con Bodoni: en oscuro los hilos finos casi desaparecen, que es lo siguiente que vas a ver.</figcaption>
+      </figure>
+
+      <p>La compensación se escribe una vez y vale para todas las secciones oscuras de la web:</p>
+      <script type="text/x-code" data-lang="css" data-label="Texto sobre fondo oscuro, compensado">
+        :root { --peso-texto: 400; --interlineado: 1.55; --espaciado: 0em; }
+
+        /* Cualquier sección oscura: banda, pie, modo oscuro */
+        .oscuro, [data-tema="oscuro"] {
+          --peso-texto: 360;
+          --interlineado: 1.68;
+          --espaciado: 0.012em;
+        }
+        body, .oscuro, [data-tema="oscuro"] {
+          font-weight: var(--peso-texto);
+          line-height: var(--interlineado);
+          letter-spacing: var(--espaciado);
+        }
+      </script>
+      <p>Esta página lo hace: el texto que estás leyendo está en Inter Tight a 380, con interlineado de 1,7, porque vive sobre verde botella.</p>
+
+      <h3>Las serifas finas sobre oscuro se rompen</h3>
+      <p>La irradiación no afecta igual a todos los trazos. Los gruesos engordan; los finos, en cambio, desaparecen. En pantalla, un trazo más fino que un píxel se dibuja con píxeles a medio tono. Sobre blanco, esos grises siguen marcando la forma. Sobre negro, el gris de un hilo de Bodoni queda casi a la luz del fondo y el ojo lo pierde. La letra se queda en sus palos gruesos, como rota a trozos. En imprenta pasa algo parecido por otro motivo: la tinta del fondo se expande un poco y «se come» los blancos finos del texto calado.</p>
+
+      <div class="hair wide" aria-label="Bodoni a 15 píxeles sobre negro con dos tamaños ópticos">
+        <div class="o96"><p class="big">Aa</p><p class="small">Doce piezas hechas a mano en el taller. Cada una lleva su número grabado y su certificado de origen.</p><small>Bodoni con el corte para titulares (opsz 96) a 15 px: los hilos se pierden.</small></div>
+        <div class="o6"><p class="big">Aa</p><p class="small">Doce piezas hechas a mano en el taller. Cada una lleva su número grabado y su certificado de origen.</p><small>La misma Bodoni con el corte para texto (opsz 9): trazos finos más gruesos, se lee.</small></div>
+      </div>
+
+      <p>Arriba, la letra grande se ve bien en las dos: a 54 px los hilos tienen varios píxeles. Abajo, a 15 px, el corte de titular se deshace. Por eso la regla es: <strong>didona sobre oscuro solo en grande</strong>, y para el texto pequeño, una fuente de contraste bajo (una sans, una slab, una serif de texto). Si la fuente tiene eje de tamaño óptico (<code>opsz</code>, como Bodoni Moda, Fraunces o Newsreader), deja <code>font-optical-sizing: auto</code> y el navegador engrosa los trazos finos en los tamaños pequeños.</p>
+
+      <h3>Texto de color sobre fondo de color</h3>
+      <p>Cuando ni el texto ni el fondo son neutros, la tentación es elegir dos colores que «combinen» por tono. Pero para leer lo que manda es la luz. Si los dos tienen una luminosidad parecida, sobre todo si además son complementarios, los bordes de las letras <strong>vibran</strong>: el ojo no consigue enfocar dónde acaba uno y empieza el otro.</p>
+
+      <div class="duo wide">
+        <figure class="no">
+          <div class="art a-vibra" aria-hidden="true"><p>Feria de la cerveza</p><p class="p">Del 12 al 14 de julio en el puerto</p></div>
+          <figcaption><b>Así no</b>Rojo sobre verde a la misma luz: 1,05:1. Vibra y cansa.</figcaption>
+        </figure>
+        <figure class="si">
+          <div class="art a-calma" aria-hidden="true"><p>Feria de la <span>cerveza</span></p><p class="p">Del 12 al 14 de julio en el puerto</p></div>
+          <figcaption><b>Así sí</b>Crema y amarillo sobre verde oscuro: 10:1 y 7,8:1.</figcaption>
+        </figure>
+        <p class="d-why">La diferencia no es el tono sino la luz. Si quieres un texto de color, oscurece mucho el fondo o aclara mucho el texto, y reserva el color vivo para lo corto y grande: un titular, una cifra, un subrayado.</p>
+      </div>
+
+      <p>Las combinaciones de color sobre color que mejor funcionan son las de <strong>mismo tono a distinta luz</strong>: verde muy oscuro sobre verde menta, ciruela sobre rosa empolvado, azul marino sobre azul cielo. Comparten tono, así que armonizan sin esfuerzo, y tienen mucha diferencia de luz, así que se leen. Es la receta de la muestra infantil de arriba: ciruela <code>#5A1F3C</code> sobre rosa <code>#F6D5DC</code>, 9,1:1.</p>
+
+      <h3>Por qué no usar el negro puro sobre crema</h3>
+      <p>El crema tiene temperatura: es un blanco con un poco de amarillo y naranja. El negro puro <code>#000</code> no tiene ninguna. Juntos se nota que no son de la misma familia: el negro parece pegado encima, demasiado duro, como un texto de pantalla sobre un papel. Ningún negro impreso es negro puro; la tinta sobre papel siempre queda como un gris muy oscuro con algo de calor.</p>
+
+      <div class="duo wide">
+        <figure class="no">
+          <div class="art a-crema" aria-hidden="true" style="color: #000"><p class="h">Hecho a mano en Morella</p><p class="p">Mantas de lana de oveja guirra tejidas en el telar de la familia desde 1921.</p></div>
+          <figcaption><b>Así no</b>Negro puro #000 sobre crema: 17,7:1, duro y sin relación con el fondo.</figcaption>
+        </figure>
+        <figure class="si">
+          <div class="art a-crema" aria-hidden="true" style="color: var(--tinta)"><p class="h">Hecho a mano en Morella</p><p class="p">Mantas de lana de oveja guirra tejidas en el telar de la familia desde 1921.</p></div>
+          <figcaption><b>Así sí</b>Tinta cálida #1C1814 sobre crema: 14,9:1, parece impreso.</figcaption>
+        </figure>
+        <p class="d-why">La tinta comparte el tono del crema (los dos rondan el 60–80 en OKLCH), así que la página se ve de una pieza. Y con 14,9:1 sigue sobrando contraste: no pierdes nada de legibilidad.</p>
+      </div>
+
+      <div class="swatches">
+        <div class="swatch" style="--s: #F3EBDD"><i></i><span><b>Crema</b><small>#F3EBDD<br>oklch(94.3% 0.021 82)</small></span></div>
+        <div class="swatch" style="--s: #1C1814"><i></i><span><b>Tinta cálida</b><small>#1C1814<br>oklch(21.2% 0.010 67)</small></span></div>
+        <div class="swatch" style="--s: #1E3B2A"><i></i><span><b>Verde botella</b><small>#1E3B2A<br>oklch(32.4% 0.047 157)</small></span></div>
+        <div class="swatch" style="--s: #F1E8CF"><i></i><span><b>Crema etiqueta</b><small>#F1E8CF<br>oklch(93.2% 0.034 91)</small></span></div>
+        <div class="swatch" style="--s: #E6CD6D"><i></i><span><b>Amarillo</b><small>#E6CD6D<br>oklch(85% 0.12 95)</small></span></div>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Tres cosas. <strong>Al sol</strong>, la pantalla pierde contraste: lo que en la agencia daba 4,6:1, en la calle parece 3:1. Para texto de lectura en móvil apunta a 7:1. <strong>En pantallas OLED</strong>, el negro puro apaga los píxeles y al hacer scroll se ve un rastro borroso al encenderse; un casi negro como <code>#0E0E10</code> lo evita y además se ve más rico. <strong>En tamaño</strong>, el texto de lectura no baja de 16 px, y en fondo oscuro los trazos finos sufren aún más en una pantalla pequeña: sube la didona de tamaño o cámbiala por una de contraste bajo.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Tu texto crema en Inter Tight 400 sobre verde botella se ve pesado y algo borroso, aunque el contraste es de 10:1. ¿Qué tocas primero?</p>
+        <ol>
+          <li>Lo cambio a blanco puro para que tenga más contraste.</li>
+          <li>Bajo el peso a unos 360 y abro el interlineado y el espaciado.</li>
+          <li>Lo paso a negrita para que se distinga mejor.</li>
+        </ol>
+        <p class="why">El problema no es de contraste, que sobra, sino de irradiación: el texto claro sobre oscuro engorda. Blanco puro lo empeora (más luz, más halo) y la negrita todavía más.</p>
+      </div>
+
+      <h2>Texto sobre imagen</h2>
+      <p>Una foto no es un fondo: es mil fondos a la vez. Tiene zonas claras, oscuras, detalladas y lisas, y el texto pasa por encima de todas. Por eso nunca basta con medir el contraste en un punto. Hay tres herramientas para controlarlo, y cada una tiene su caso.</p>
+
+      <div class="split">
+        <div>
+          <h3>Velo</h3>
+          <p>Una capa uniforme encima de toda la foto, normalmente oscura al 30–55 %. <strong>Cuándo:</strong> cuando la foto es ambiente (una textura, un interior, un paisaje) y el texto es el protagonista. <strong>Por qué:</strong> iguala la foto entera, así que el texto se lee en cualquier punto. <strong>El coste:</strong> la foto pierde luz y color y puede quedar gris y triste. Arréglalo tiñendo el velo con el color de la marca (un verde botella en vez de negro), que integra la foto en la paleta.</p>
+          <h3>Degradado</h3>
+          <p>Solo se oscurece la zona donde va el texto: abajo, o a la izquierda. <strong>Cuándo:</strong> en portadas con el titular en una esquina y en tarjetas con el título abajo. <strong>Por qué:</strong> el resto de la foto conserva su luz, que es lo que vende (una terraza, un plato, una habitación). <strong>El truco:</strong> que sea largo y suave, con varias paradas, para que no se vea una franja.</p>
+          <h3>Caja</h3>
+          <p>Un panel sólido o casi sólido detrás del texto. <strong>Cuándo:</strong> cuando la foto está llena de detalle por todas partes o cuando no sabes qué foto va a ir: banners que sube el cliente a PrestaShop, entradas de un blog en WordPress, fotos de producto que cambian. <strong>Por qué:</strong> es la única opción que garantiza el contraste sin mirar la foto. Además se lee como una etiqueta y da un aire editorial o de tienda.</p>
+        </div>
+        <div class="stick">
+          <div class="duo" style="grid-template-columns: 1fr; margin: 0">
+            <figure class="no">
+              <div class="art a-foto" aria-hidden="true"><p class="h">Cenar por encima de la ciudad</p><p class="p">Ático con terraza, planta 31</p></div>
+              <figcaption><b>Así no</b>Texto blanco directo: justo sobre el horizonte claro, se deshace.</figcaption>
+            </figure>
+            <figure class="si">
+              <div class="art a-foto scrim" aria-hidden="true"><p class="h">Cenar por encima de la ciudad</p><p class="p">Ático con terraza, planta 31</p></div>
+              <figcaption><b>Así sí</b>Degradado desde abajo: la foto sigue viva arriba.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <figure class="lab" data-title="Velo, degradado o caja" data-hint="Cambia la técnica y la intensidad" data-height="470" data-height-mobile="500">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero modo-nada">
+            <img src="../landing/media/azotea.webp" alt="">
+            <div class="capa"></div>
+            <div class="copy">
+              <p class="k">Ático con terraza, planta 31</p>
+              <h1>Cenar por encima de la ciudad</h1>
+              <a href="#">Reservar visita</a>
+            </div>
+          </section>
+          <div class="ui">
+            <button data-m="nada" aria-pressed="true">Nada</button>
+            <button data-m="velo">Velo</button>
+            <button data-m="degradado">Degradado</button>
+            <button data-m="caja">Caja</button>
+            <label>Intensidad <input id="k" type="range" min="20" max="90" value="60"></label>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #15301B; color: #F1E8CF; --k: .6; }
+          .hero { position: relative; height: 360px; overflow: hidden; display: flex; align-items: center; }
+          img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%; }
+          .capa { position: absolute; inset: 0; transition: background .4s; }
+          .copy { position: relative; margin: 0 6%; max-width: 30rem; color: #fff; transition: all .4s; }
+          .k { margin: 0 0 8px; font: 500 14px var(--f-sans); }
+          h1 { margin: 0 0 18px; font: 700 clamp(30px, 6vw, 52px)/.98 var(--f-slab); }
+          a { display: inline-block; padding: 12px 18px; border-radius: 99px; background: #E6CD6D; color: #15301B; font: 700 14px var(--f-sans); text-decoration: none; }
+          /* Velo: uniforme, teñido con el color de la marca */
+          .modo-velo .capa { background: rgb(21 48 27 / var(--k)); }
+          /* Degradado: solo donde está el texto, largo y con varias paradas */
+          .modo-degradado .capa { background: linear-gradient(90deg,
+            rgb(12 8 26 / var(--k)) 0%, rgb(12 8 26 / calc(var(--k) * .7)) 35%, rgb(12 8 26 / 0) 75%); }
+          /* Caja: contraste garantizado sin mirar la foto */
+          .modo-caja .copy { background: rgb(21 48 27 / calc(.35 + var(--k) * .65)); padding: 22px 24px; border-radius: 4px; }
+          .ui { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 16px; }
+          button { min-height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid #F1E8CF66; background: none; color: inherit; font: 600 13px var(--f-sans); cursor: pointer; }
+          button[aria-pressed="true"] { background: #F1E8CF; color: #15301B; }
+          label { display: flex; align-items: center; gap: 8px; font: 500 13px var(--f-sans); margin-left: auto; }
+          @media (max-width: 560px) { .hero { height: 380px; align-items: flex-end; padding-bottom: 24px; } label { margin-left: 0; }
+            .modo-degradado .capa { background: linear-gradient(0deg, rgb(12 8 26 / var(--k)), rgb(12 8 26 / calc(var(--k) * .6)) 45%, transparent 80%); } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const hero = document.querySelector('.hero');
+          document.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => {
+            hero.className = 'hero modo-' + b.dataset.m;
+            document.querySelectorAll('[data-m]').forEach(x => x.setAttribute('aria-pressed', x === b));
+          }));
+          k.addEventListener('input', () => document.body.style.setProperty('--k', k.value / 100));
+        </script>
+        <figcaption>Sin nada, el titular pierde fuerza justo donde cruza el horizonte claro y el brillo de la piscina. El velo lo arregla todo pero apaga la foto; el degradado conserva el cielo y la luz de la azotea; la caja ignora la foto y siempre funciona. En «Ver en móvil» el degradado cambia de dirección: en vertical el texto vive abajo.</figcaption>
+      </figure>
+
+      <h3>Qué color poner al texto sobre la foto</h3>
+      <p>Blanco puro no es la única opción, ni casi nunca la mejor. Sobre una foto cálida (atardecer, madera, piedra), un crema o un blanco roto encaja mejor porque comparte la temperatura de la luz de la foto; el blanco puro parece recortado y pegado encima. Sobre fotos claras (una playa, un interior blanco), el texto va oscuro, y queda más integrado si es un tono muy oscuro sacado de la propia foto (el marrón de una sombra, el azul de un cielo de noche) en lugar de negro. La regla es la misma que con la tinta sobre crema: <strong>el texto tiene que parecer parte de la imagen</strong>, no una etiqueta de otro mundo.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>La mejor solución es la que no necesita ninguna: elegir o encargar la foto pensando en el texto. Un cielo liso, una pared, una mesa con espacio vacío a un lado. Cuando hagas el brief de fotos (o los prompts de imagen con IA), pide «espacio negativo a la izquierda para titular». Te ahorra velos y la foto luce entera.</p>
+      </div>
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>La sombra de texto (<code>text-shadow</code>) no sustituye a nada de esto. Una sombra suave y amplia (<code>0 1px 24px rgb(0 0 0 / .5)</code>) ayuda un poco en fotos ya oscuras; una sombra dura y corta hace que el texto parezca de los años noventa.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Al pasar a vertical, la foto se recorta y el texto ocupa mucha más superficie de imagen: lo que en escritorio caía sobre un cielo liso, en el móvil cae sobre la fachada. Coloca el texto abajo (donde además está el pulgar), usa el degradado de abajo arriba y ajusta <code>object-position</code> para que lo importante de la foto quede en el tercio superior. Si la foto es muy compleja, la caja es la apuesta segura en móvil.</p>
+      </div>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Una tienda online de moda en PrestaShop: el cliente sube cada semana banners nuevos con fotos muy distintas. ¿Cómo pones el texto encima?</p>
+        <ol>
+          <li>Con un velo suave del 20 %, para no apagar las fotos.</li>
+          <li>Con un degradado ajustado a la foto de esta semana.</li>
+          <li>Con una caja sólida o casi sólida detrás del texto.</li>
+        </ol>
+        <p class="why">Si no controlas la foto, necesitas una solución que no dependa de ella. La caja garantiza el contraste con cualquier imagen; el velo suave y el degradado a medida fallarán el día que suban una foto clara.</p>
+      </div>
+
+      <h2>Matriz de referencia</h2>
+      <p>Seis familias por ocho fondos. Cada celda dice qué suena esa pareja. Úsala para descartar rápido y para tener el argumento a mano cuando el cliente pregunte «¿y por qué esta letra?».</p>
+      <div class="legend"><span class="ok">Pareja natural: refuerza el mensaje</span><span>Funciona con otro tono</span><span class="no">Choca o se lee mal</span></div>
+
+      <div class="table-wrap matrix">
+        <table>
+          <thead>
+            <tr><th>Fondo</th>
+              <th>Didona<span style="font-family: 'Bodoni Moda', serif">Bodoni</span></th>
+              <th>Serif de texto<span style="font-family: Newsreader, serif">Newsreader</span></th>
+              <th>Slab<span style="font-family: 'Zilla Slab', serif; font-weight: 700">Zilla Slab</span></th>
+              <th>Geométrica<span style="font-family: Jost, sans-serif">Jost</span></th>
+              <th>Redondeada<span style="font-family: Nunito, sans-serif; font-weight: 800">Nunito</span></th>
+              <th>Mono<span style="font-family: 'JetBrains Mono', monospace; font-size: .95rem">JetBrains</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th><i style="--m: #fff"></i>Blanco puro</th><td>Moda actual, catálogo de alta gama</td><td class="ok">Periódico, institución, despacho moderno</td><td>Cocina casera actual, editorial práctica</td><td class="ok">Producto digital, arquitectura limpia</td><td>Clínica infantil, app amable</td><td>Documentación técnica</td></tr>
+            <tr><th><i style="--m: #F3EBDD"></i>Crema o marfil</th><td class="ok">Revista, joyería, hotel con historia</td><td class="ok">Librería, editorial, despacho de siempre</td><td>Panadería, producto local</td><td>Estudio nórdico, cálido y ordenado</td><td>Marca de bebé ecológica</td><td>Fanzine, editorial independiente</td></tr>
+            <tr><th><i style="--m: #C9A47E"></i>Kraft o arena</th><td>Lujo rústico, si el tamaño es grande</td><td>Vino, aceite, conservas de autor</td><td class="ok">Obrador, cervecería, ultramarinos</td><td>Cosmética natural moderna</td><td>Juguetes de madera</td><td>Etiqueta de lote, packaging industrial</td></tr>
+            <tr><th><i style="--m: #0E0E10"></i>Negro</th><td>Perfume, gala; solo en grande</td><td class="no">Texto largo cansado y con halo</td><td>Barbería, taller, hamburguesería</td><td class="ok">Tecnología premium, audio, coches</td><td class="no">Pierde la ternura: suena a videojuego</td><td>Terminal, ciberseguridad agresiva</td></tr>
+            <tr><th><i style="--m: #1E3B2A"></i>Verde botella</th><td>Ginebra premium, club de golf</td><td>Bodega con historia, notaría</td><td class="ok">Cervecería artesana, bodega familiar</td><td>Marca sostenible joven</td><td>Granja escuela, zumos</td><td>Agricultura técnica, sensores</td></tr>
+            <tr><th><i style="--m: #0E1A33"></i>Azul noche</th><td>Hotel de lujo, joyería nocturna</td><td>Banca privada, abogados</td><td>Náutica, marca marinera</td><td>Fintech, software serio</td><td>App de dormir o meditar</td><td class="ok">Ingeniería, código, datos</td></tr>
+            <tr><th><i style="--m: #F6D5DC"></i>Pastel</th><td>Pastelería fina, boda</td><td>Floristería, papelería bonita</td><td class="no">Robusta sobre dulce: se contradicen</td><td>Skincare, app joven</td><td class="ok">Moda infantil, juguetes</td><td>Diseño gráfico irónico</td></tr>
+            <tr><th><i style="--m: #F2C230"></i>Color vivo</th><td class="no">Hilos finos que vibran con el color</td><td>Cartel cultural, festival de cine</td><td>Cartel de feria, ferretería</td><td>Deporte, festival, campaña</td><td>Snacks, juguete barato</td><td>Evento tecnológico</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Fíjate en cómo se lee la tabla por columnas. Las letras con mucha personalidad (didona, redondeada) tienen pocas parejas naturales y muchas celdas raras: su significado es tan fuerte que el fondo solo lo matiza o lo rompe. Las neutras (serif de texto, geométrica) funcionan casi en cualquier sitio y es el fondo el que decide el mensaje. Esa es la razón por la que las marcas que necesitan flexibilidad eligen letras neutras y ponen la personalidad en el color.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando una pareja cae en una celda «rara», no siempre es un error. La didona sobre rosa pastel es justo lo que quiere una pastelería fina. Lo importante es que el tercer mensaje sea el que buscas. El error es llegar a él sin darte cuenta.</p>
+      </div>
+
+      <p class="statement">Primero dónde vive la letra. <em style="font-style: normal; color: var(--accent)">Después</em> qué letra.</p>
+
+      <h2>Prueba tu combinación</h2>
+      <p>Último paso: probar. Elige un fondo, una familia, un peso y un tamaño. El laboratorio mide el contraste real, te dice qué suena la pareja según la matriz y te avisa si la física juega en contra (peso alto en oscuro, trazos finos en pequeño).</p>
+
+      <figure class="lab" data-title="Fondo, letra y peso" data-hint="Combina y lee el diagnóstico" data-height="540" data-height-mobile="800">
+        <script type="text/x-demo" data-lang="html">
+          <div class="wrap">
+            <div class="card" id="card">
+              <h2 id="h">Edición de otoño</h2>
+              <p id="p">Doce piezas hechas a mano, numeradas una a una. Entrega en Castellón y Valencia en 48 horas.</p>
+            </div>
+            <div class="panel">
+              <p class="lbl">Fondo</p><div class="opts" id="fb"></div>
+              <p class="lbl">Letra</p><div class="opts" id="ff"></div>
+              <label class="lbl">Peso <b id="wv"></b><input id="w" type="range" min="300" max="800" step="50" value="400"></label>
+              <label class="lbl">Tamaño del texto <b id="sv"></b><input id="s" type="range" min="13" max="22" value="17"></label>
+              <div class="out" id="out" aria-live="polite"></div>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 14px; background: #10261A; color: #F1E8CF; font-family: var(--f-sans); }
+          .wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; }
+          .card { border-radius: 4px; padding: 26px; min-height: 250px; transition: background .4s, color .4s; }
+          @media (min-width: 601px) { .card { min-height: calc(100vh - 28px); } }
+          .card h2 { margin: 0 0 14px; font-size: clamp(30px, 6vw, 46px); line-height: 1; }
+          .card p { margin: 0; line-height: 1.55; max-width: 34ch; }
+          .lbl { display: block; margin: 0 0 6px; font-size: 12px; font-weight: 600; opacity: .8; }
+          label.lbl { margin-top: 12px; }
+          label input { display: block; width: 100%; margin-top: 4px; }
+          .opts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+          .opts button { min-height: 36px; padding: 0 10px; border-radius: 99px; border: 1px solid #F1E8CF55; background: none; color: inherit; font: 500 12.5px var(--f-sans); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+          .opts button i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px #ffffff55; }
+          .opts button[aria-pressed="true"] { background: #F1E8CF; color: #10261A; }
+          .out { margin-top: 14px; padding-top: 12px; border-top: 1px solid #F1E8CF33; font-size: 13.5px; line-height: 1.5; }
+          .out p { margin: 0 0 6px; }
+          .out .ratio { font: 700 26px var(--f-slab); }
+          .tag { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; margin-left: 4px; }
+          .ok { background: #E6CD6D; color: #10261A; } .ko { border: 1px dashed #F1E8CF; }
+          .warn { color: #F4B9A6; }
+          @media (max-width: 600px) { .wrap { grid-template-columns: 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Fondos: color de fondo y de texto (tinta pensada para cada uno)
+          const B = [['Blanco','#FFFFFF','#111111'],['Crema','#F3EBDD','#1C1814'],['Kraft','#C9A47E','#2B1E12'],['Negro','#0E0E10','#EDEDED'],
+                     ['Verde botella','#1E3B2A','#F1E8CF'],['Azul noche','#0E1A33','#CFE0FF'],['Pastel','#F6D5DC','#5A1F3C'],['Amarillo','#F2C230','#2A1E05']];
+          const F = [['Didona','--f-bodoni'],['Serif','--f-read'],['Slab','--f-slab'],['Geométrica','--f-jost'],['Redondeada','--f-round'],['Mono','--f-mono']];
+          // Qué suena cada pareja: fila = fondo, columna = letra (la matriz de la lección). * = pareja natural, ! = choca
+          const M = [
+            ['Moda actual','*Periódico, institución','Cocina casera actual','*Producto digital','Clínica infantil','Documentación técnica'],
+            ['*Revista, joyería','*Librería, editorial','Panadería, producto local','Estudio nórdico','Marca de bebé ecológica','Fanzine'],
+            ['Lujo rústico','Vino y conservas de autor','*Obrador, cervecería','Cosmética natural','Juguetes de madera','Etiqueta industrial'],
+            ['Perfume, gala (solo en grande)','!Texto largo con halo','Barbería, taller','*Tecnología premium','!Videojuego, pierde la ternura','Terminal, ciberseguridad'],
+            ['Ginebra premium','Bodega con historia','*Cervecería artesana','Marca sostenible joven','Granja escuela','Agricultura técnica'],
+            ['Hotel de lujo','Banca privada','Náutica','Fintech','App de meditar','*Ingeniería, datos'],
+            ['Pastelería fina, boda','Floristería','!Robusta sobre dulce','Skincare, app joven','*Moda infantil','Diseño irónico'],
+            ['!Hilos finos que vibran','Cartel cultural','Cartel de feria','Deporte, festival','Snacks','Evento tecnológico']];
+          let b = 1, f = 0;
+          const lum = hex => { const c = [1,3,5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+            .map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+          const ratio = (a, c) => { const [x, y] = [lum(a), lum(c)].sort((m, n) => n - m); return (x + .05) / (y + .05); };
+          function buttons(el, list, get, set, dot) {
+            el.innerHTML = list.map((it, i) => `<button aria-pressed="${i === get()}">${dot ? `<i style="background:${it[1]}"></i>` : ''}${it[0]}</button>`).join('');
+            [...el.children].forEach((btn, i) => btn.onclick = () => { set(i); paint(); });
+          }
+          function paint() {
+            const [bn, bg, ink] = B[b], dark = lum(bg) < .2, wt = +w.value, size = +s.value;
+            buttons(fb, B, () => b, i => b = i, true); buttons(ff, F, () => f, i => f = i);
+            Object.assign(card.style, { background: bg, color: ink, fontFamily: `var(${F[f][1]})`, fontWeight: wt });
+            p.style.fontSize = size + 'px'; h.style.fontWeight = Math.min(900, wt + 200);
+            wv.textContent = wt; sv.textContent = size + ' px';
+            const r = ratio(bg, ink), m = M[b][f], kind = m[0] === '*' ? 'ok' : m[0] === '!' ? 'ko' : '';
+            const notes = [];
+            if (dark && wt > 400) notes.push('En oscuro la letra engorda: prueba a bajar el peso.');
+            if (dark && f === 0 && size < 20) notes.push('Didona pequeña sobre oscuro: los trazos finos se rompen.');
+            if (size < 16) notes.push('Por debajo de 16 px, el texto de lectura sufre en el móvil.');
+            out.innerHTML = `<p><span class="ratio">${r.toFixed(1)}:1</span> ${r >= 4.5 ? '<span class="tag ok">Texto normal: sí</span>' : '<span class="tag ko">Solo texto grande</span>'}</p>
+              <p>Suena a: <b>${m.replace(/^[*!]/, '')}</b>${kind === 'ok' ? '<span class="tag ok">Pareja natural</span>' : kind === 'ko' ? '<span class="tag ko">Choca</span>' : ''}</p>
+              ${notes.map(n => `<p class="warn">${n}</p>`).join('')}`;
+          }
+          w.oninput = s.oninput = paint; paint();
+        </script>
+        <figcaption>Cada fondo trae su tinta pensada (no negro puro sobre crema, crema y no blanco sobre verde), así que el contraste casi siempre pasa: lo que cambia es el mensaje. Prueba Didona sobre negro a 15 px con peso 600 para ver los tres avisos a la vez.</figcaption>
+      </figure>
+
+      <p>Antes de dar por buena una pareja en un proyecto real, repasa esta lista:</p>
+      <ol class="check">
+        <li><div><b>¿Dicen lo mismo?</b> Lee la letra y el fondo por separado. Si los dos apuntan al mismo sector, bien. Si no, ¿el tercer mensaje es el que quieres?</div></li>
+        <li><div><b>¿Se lee en gris?</b> Pasa la pantalla a escala de grises. Si el texto se pierde, el problema es de luz.</div></li>
+        <li><div><b>¿Está compensado el oscuro?</b> Menos peso, más interlineado, algo más de espaciado en cualquier sección oscura.</div></li>
+        <li><div><b>¿Aguantan los trazos finos?</b> Mira el texto más pequeño de la web sobre el fondo más oscuro, en el móvil.</div></li>
+        <li><div><b>¿Las tintas tienen temperatura?</b> Nada de negro puro sobre crema ni de blanco puro sobre fondos cálidos.</div></li>
+      </ol>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Prueba la combinación final en un teléfono con el brillo al 30 % y luego al sol. Son las dos condiciones reales de uso que el monitor de la agencia nunca te enseña, y donde se ven antes los trazos finos rotos y los contrastes justos.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>El fondo es la mitad del mensaje: si letra y fondo cuentan lo mismo, se refuerza; si no, aparece un tercer mensaje que tiene que ser buscado.</li>
+          <li>El contraste es diferencia de luz, no de tono: 4,5:1 para texto normal, y en el móvil apunta más alto.</li>
+          <li>Sobre oscuro la letra engorda: baja el peso, abre el interlineado y el espaciado. Y los trazos finos se rompen: didona sobre oscuro, solo en grande.</li>
+          <li>Las tintas tienen temperatura: tinta cálida sobre crema, crema sobre verde, nunca negro o blanco puros por defecto.</li>
+          <li>Texto sobre foto: velo si la foto es ambiente, degradado si la foto vende, caja si no controlas la foto.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge una web de la agencia que tenga una sección oscura (un pie, una banda, un hero con foto). Haz tres capturas: tal como está, con el texto oscuro compensado (peso, interlineado y espaciado) y con la tinta cambiada a una con temperatura. Después elige una de sus fotos de portada y prueba velo, degradado y caja. Monta las capturas en una lámina con una frase de «por qué» debajo de cada una: es exactamente lo que necesitas para convencer al cliente del cambio.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: cuatro paneles con fondo y letra. Tocar un panel le cambia la letra;
+  // los botones barajan letras, giran fondos o vuelven a los pares que encajan.
+  (() => {
+    const F = {
+      didona: { n: 'Bodoni Moda', fam: '"Bodoni Moda", serif', w: 500, wd: 420, ls: '-0.02em' },
+      geo:    { n: 'Jost',        fam: '"Jost", sans-serif',   w: 400, wd: 300, ls: '-0.02em' },
+      slab:   { n: 'Zilla Slab',  fam: '"Zilla Slab", serif',  w: 700, wd: 700, ls: '-0.01em' },
+      round:  { n: 'Nunito',      fam: '"Nunito", sans-serif', w: 850, wd: 780, ls: '-0.015em' },
+    };
+    const B = {
+      crema:  { n: 'crema',         bg: '#F3EBDD', ink: '#1C1814' },
+      negro:  { n: 'negro',         bg: '#0E0E10', ink: '#EDEDED', dark: 1 },
+      verde:  { n: 'verde botella', bg: '#1E3B2A', ink: '#F1E8CF', dark: 1 },
+      pastel: { n: 'rosa pastel',   bg: '#F6D5DC', ink: '#5A1F3C' },
+    };
+    // s: qué suena, v: ok (encaja) | mid (otro mensaje) | no (choca), w: por qué
+    const R = {
+      didona: {
+        crema:  { s: 'Revista de moda, joyería', v: 'ok', w: 'La didona nació en la imprenta fina del siglo XVIII y su contraste extremo pide papel bueno; el crema es ese papel. Las dos cuentan la misma historia de calidad impresa.' },
+        negro:  { s: 'Perfume, gala de noche', v: 'mid', w: 'El negro añade noche y misterio: sigue siendo lujo, pero más teatral. En grande luce; en pequeño los hilos finos se pierden en el negro.' },
+        verde:  { s: 'Ginebra premium, club de golf', v: 'mid', w: 'El verde botella es el de las bibliotecas, los tapetes y el vidrio caro: con la didona suena a lujo de toda la vida, más clásico que moda.' },
+        pastel: { s: 'Pastelería fina, boda', v: 'mid', w: 'La didona es adulta y ceremoniosa. Sobre rosa empolvado ya no suena a niños: suena a tarta de boda o a confitería de escaparate.' },
+      },
+      geo: {
+        crema:  { s: 'Estudio de arquitectura', v: 'mid', w: 'La geometría exacta dice orden y proyecto; el crema le quita frialdad. Moderno y cálido a la vez, muy de diseño nórdico.' },
+        negro:  { s: 'Tecnología premium', v: 'ok', w: 'Círculos perfectos y trazo uniforme suenan a máquina precisa; el negro es el fondo de la foto de estudio de un producto caro. Por eso lo usan las marcas de audio y de coches eléctricos.' },
+        verde:  { s: 'Cosmética natural moderna', v: 'mid', w: 'El verde pone la naturaleza y la geométrica la cuenta en lenguaje actual: marca sostenible joven, no herbolario antiguo.' },
+        pastel: { s: 'App joven, fintech amable', v: 'mid', w: 'La geométrica es moderna y el pastel le quita seriedad: fresco y digital, sin llegar a infantil porque la letra sigue siendo seca.' },
+      },
+      slab: {
+        crema:  { s: 'Panadería con historia', v: 'mid', w: 'Las serifas gruesas son robustas y honestas; el crema es papel de envolver. Obrador de siempre, producto de verdad.' },
+        negro:  { s: 'Barbería, taller de motos', v: 'mid', w: 'Sobre negro la slab pierde la calidez del papel y gana dureza: suena a taller, a hierro, a industrial.' },
+        verde:  { s: 'Cervecería artesana', v: 'ok', w: 'La slab viene de los carteles de tipos de madera del XIX y el verde es el del vidrio de botella: los dos hablan de oficio y de etiqueta.' },
+        pastel: { s: 'Heladería retro, con esfuerzo', v: 'no', w: 'Una letra robusta y seria sobre un fondo dulce se contradicen. Solo funciona si el gesto retro es buscado.' },
+      },
+      round: {
+        crema:  { s: 'Escuela infantil, marca de bebé', v: 'mid', w: 'La redondez es amable y el crema, cálido y natural: producto infantil ecológico, más tranquilo que el pastel.' },
+        negro:  { s: 'Videojuego para móvil', v: 'no', w: 'La redondez dice amable y el negro dice noche y seriedad: el mensaje se rompe. Queda como app de juegos, nunca como algo tierno.' },
+        verde:  { s: 'Granja escuela, zumos', v: 'mid', w: 'Formas blandas y verde de campo: naturaleza para niños y familias. Divertido sin dejar de ser sano.' },
+        pastel: { s: 'Moda infantil, juguetes', v: 'ok', w: 'Ninguna esquina y ningún color fuerte: todo es blando, como un juguete sin aristas. Por eso transmite seguridad y suena a niños.' },
+      },
+    };
+    const PAIRS = { bgs: ['crema', 'negro', 'verde', 'pastel'], fonts: ['didona', 'geo', 'slab', 'round'] };
+    const ORDER = Object.keys(F);
+    let bgs = [...PAIRS.bgs], fonts = [...PAIRS.fonts], active = -1;
+    const panels = [...document.querySelectorAll('.panel')];
+    const roT = document.querySelector('[data-ro-t]'), roW = document.querySelector('[data-ro-w]');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const label = { ok: 'Encaja', mid: 'Otro mensaje', no: 'Choca' };
+
+    function paint(i, animate) {
+      const p = panels[i], f = F[fonts[i]], b = B[bgs[i]], r = R[fonts[i]][bgs[i]];
+      const apply = () => {
+        p.style.setProperty('--pbg', b.bg); p.style.setProperty('--pink', b.ink);
+        const body = p.querySelector('.p-body');
+        body.style.fontFamily = f.fam; body.style.fontWeight = b.dark ? f.wd : f.w; body.style.letterSpacing = f.ls;
+        p.querySelector('.p-tag').textContent = `${f.n} sobre ${b.n}`;
+        p.querySelector('.p-sub').textContent = `Suena a: ${r.s.toLowerCase()}`;
+        const v = p.querySelector('.p-verdict'); v.textContent = label[r.v]; v.className = 'p-verdict ' + r.v;
+        p.setAttribute('aria-label', `${f.n} sobre ${b.n}: suena a ${r.s}. Toca para cambiar la letra.`);
+        p.classList.remove('swap');
+      };
+      if (animate && !reduce) { p.classList.add('swap'); setTimeout(apply, 220); } else apply();
+    }
+    function tell(i) {
+      const f = F[fonts[i]], b = B[bgs[i]], r = R[fonts[i]][bgs[i]];
+      roT.textContent = `${f.n} sobre ${b.n}: ${r.s.toLowerCase()}.`;
+      roW.textContent = r.w;
+      panels.forEach((p, j) => p.classList.toggle('on', j === i));
+    }
+    const all = (animate) => panels.forEach((_, i) => paint(i, animate));
+    panels.forEach((p, i) => p.addEventListener('click', () => {
+      fonts[i] = ORDER[(ORDER.indexOf(fonts[i]) + 1) % ORDER.length];
+      paint(i, true); tell(i); active = i;
+    }));
+    document.querySelector('[data-act="shuffle"]').addEventListener('click', () => {
+      // Desordena sin repetir ningún par que encaje si se puede
+      let next;
+      do { next = [...ORDER].sort(() => Math.random() - .5); } while (next.some((f, i) => f === PAIRS.fonts[PAIRS.bgs.indexOf(bgs[i])]));
+      fonts = next; all(true); tell(Math.max(0, active));
+    });
+    document.querySelector('[data-act="rotate"]').addEventListener('click', () => {
+      bgs.push(bgs.shift()); all(true); tell(Math.max(0, active));
+    });
+    document.querySelector('[data-act="reset"]').addEventListener('click', () => {
+      bgs = [...PAIRS.bgs]; fonts = [...PAIRS.fonts]; all(true); active = -1;
+      panels.forEach((p) => p.classList.remove('on'));
+      roT.textContent = 'Cuatro pares que encajan.';
+      roW.textContent = 'Cada letra está sobre el fondo que dice lo mismo que ella. Toca cualquier panel para romper el par.';
+    });
+    all(false);
+  })();
+</script>
+</body>
+</html>

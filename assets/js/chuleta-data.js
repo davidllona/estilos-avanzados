@@ -557,5 +557,68 @@ window.CHULETA = [
   "etiqueta": "Reconstruir residencia.min.js después de tocar src/residencia.js",
   "lang": "txt",
   "codigo": "cd landing\nnpm install\nnpm run build"
+ },
+ {
+  "leccion": "color-paleta",
+  "archivo": "color-paleta.html",
+  "titulo": "Construir una paleta paso a paso",
+  "seccion": "Tres casos de principio a fin",
+  "etiqueta": "Celler Tres Sénies: variables",
+  "lang": "css",
+  "codigo": ":root {\n  --fondo:        #F4EFE6; /* cal        oklch(95.4% 0.013 82) */\n  --superficie:   #E6DCCD; /* piedra     oklch(89.8% 0.023 78) */\n  --texto:        #2B1F1C; /* sarmiento  oklch(25.3% 0.020 34) */\n  --marca:        #5C1D2B; /* tinto      oklch(33.3% 0.093 10) */\n  --acento:       #8C9A4E; /* parra      oklch(65.8% 0.102 118) */\n  --sobre-marca:  var(--fondo);  /* 11,0:1 */\n  --sobre-acento: var(--texto);  /*  5,2:1 */\n}"
+ },
+ {
+  "leccion": "color-paleta",
+  "archivo": "color-paleta.html",
+  "titulo": "Construir una paleta paso a paso",
+  "seccion": "Tres casos de principio a fin",
+  "etiqueta": "Pop English: variables",
+  "lang": "css",
+  "codigo": ":root {\n  --fondo:        #FFF8EC; /* papel      oklch(98.1% 0.018 81) */\n  --superficie:   #FFE9C2; /* cartulina  oklch(94.2% 0.056 82) */\n  --texto:        #1C2C4C; /* tinta azul oklch(29.7% 0.062 263) */\n  --marca:        #1F7BC0; /* cielo      oklch(56.6% 0.134 247) */\n  --acento:       #FFB627; /* sol        oklch(82.4% 0.163 78) */\n  --acento-2:     #FF6B57; /* coral      oklch(70.8% 0.185 30), solo ilustración */\n  --sobre-marca:  #FFFFFF;       /* 4,5:1: titulares y botones grandes */\n  --sobre-acento: var(--texto);  /* 7,9:1 */\n}"
+ },
+ {
+  "leccion": "color-paleta",
+  "archivo": "color-paleta.html",
+  "titulo": "Construir una paleta paso a paso",
+  "seccion": "Tres casos de principio a fin",
+  "etiqueta": "Estudio Bancal: variables",
+  "lang": "css",
+  "codigo": ":root {\n  --fondo:      #F5F3EF; /* cal       oklch(96.5% 0.006 85) */\n  --superficie: #DEDAD3; /* hormigón  oklch(89% 0.010 82) */\n  --texto:      #1E1E1C; /* grafito   oklch(23.4% 0.004 107) */\n  --texto-2:    #6B6760; /* piedra    oklch(51.5% 0.012 82), 5,1:1 */\n  --acento:     #A0502A; /* corten    oklch(52.3% 0.118 44), 5,2:1 */\n}"
+ },
+ {
+  "leccion": "color-paleta",
+  "archivo": "color-paleta.html",
+  "titulo": "Construir una paleta paso a paso",
+  "seccion": "Cómo presentar la paleta al cliente",
+  "etiqueta": "Plantilla: presentar una paleta por correo",
+  "lang": "text",
+  "codigo": "Hola, [nombre]:\n\nTe paso la propuesta de color para la web. Partimos de las tres palabras que acordamos: [palabra 1], [palabra 2] y [palabra 3].\n\nColor principal, [nombre del color]: lo hemos elegido porque [motivo ligado al producto, al material o al territorio] y transmite [palabra].\nFondo y texto, [neutros]: llevan un toque del color principal para que todo se sienta [palabra]; el texto se lee con un contraste de [X]:1.\nAcento, [nombre]: es el único color [frío/cálido/vivo] de la paleta, por eso lo reservamos para [acción principal].\n\nDescartamos [alternativa] porque [razón concreta].\n\nEn el enlace tienes la portada y una ficha de producto con la paleta aplicada. Míralas también en el móvil, que es donde te verán la mayoría de tus clientes.\n\nUn saludo,\nDavid"
+ },
+ {
+  "leccion": "tipo-fondo",
+  "archivo": "tipo-fondo.html",
+  "titulo": "Tipografía, color y fondo",
+  "seccion": "Vermut de la casa",
+  "etiqueta": "Texto sobre fondo oscuro, compensado",
+  "lang": "css",
+  "codigo": ":root { --peso-texto: 400; --interlineado: 1.55; --espaciado: 0em; }\n\n/* Cualquier sección oscura: banda, pie, modo oscuro */\n.oscuro, [data-tema=\"oscuro\"] {\n  --peso-texto: 360;\n  --interlineado: 1.68;\n  --espaciado: 0.012em;\n}\nbody, .oscuro, [data-tema=\"oscuro\"] {\n  font-weight: var(--peso-texto);\n  line-height: var(--interlineado);\n  letter-spacing: var(--espaciado);\n}"
+ },
+ {
+  "leccion": "web-pensar",
+  "archivo": "web-pensar.html",
+  "titulo": "Cómo se piensa una web",
+  "seccion": "Caso guiado: una imprenta de flyers",
+  "etiqueta": "Paleta de Imprenta Rayo, lista para copiar",
+  "lang": "css",
+  "codigo": ":root {\n  --papel:    #FFFFFF;  /* oklch(100% 0 0)          fondo, 60 % */\n  --gris:     #F2F2F0;  /* oklch(96.1% 0.003 106)   superficies, bandas */\n  --tinta:    #111111;  /* oklch(17.8% 0 0)         texto, bandas oscuras */\n  --magenta:  #E6007E;  /* oklch(60% 0.244 359)     acento: CTA, precios, subrayado */\n  --amarillo: #FFE500;  /* oklch(91.5% 0.191 101)    pegatinas «24 h», solo con texto negro */\n\n  --texto-sobre-magenta: #FFFFFF;  /* 4,5:1, en negrita */\n  --texto-sobre-amarillo: #111111; /* 14,8:1 */\n}"
+ },
+ {
+  "leccion": "web-pensar",
+  "archivo": "web-pensar.html",
+  "titulo": "Cómo se piensa una web",
+  "seccion": "Plantilla de brief para clientes",
+  "etiqueta": "Brief de web (para copiar)",
+  "lang": "text",
+  "codigo": "BRIEF DE WEB\nCliente:                        Fecha:\n\n1. EL NEGOCIO\n- ¿Qué vendéis o hacéis, en una frase que entendería tu vecino?\n- ¿Qué os diferencia de la competencia? ¿Por qué os eligen vuestros mejores clientes?\n- ¿Qué es lo que más dinero os da? ¿Y lo que queréis vender más?\n\n2. EL OBJETIVO\n- Si mañana en la web solo pudiera pasar una cosa, ¿cuál sería?\n  (comprar / reservar / llamar o pedir cita / pedir presupuesto / inspirar y contactar)\n- ¿Cómo sabremos dentro de seis meses que la web funciona? (un número: llamadas, reservas, ventas)\n\n3. EL PÚBLICO\n- ¿Quién es vuestro cliente principal? ¿Y el secundario?\n- ¿Desde dónde llega? (móvil desde Instagram o Google Maps, ordenador en la oficina...)\n- ¿Qué le preocupa antes de decidirse? (precio, plazo, confianza, miedo...)\n- ¿Qué palabras usa para pedir lo que vendéis?\n\n4. LA COMPETENCIA\n- Tres webs de competidores y qué os gusta y qué no de cada una.\n- Dos webs de otros sectores que os gusten, y por qué.\n\n5. LOS TRES SEGUNDOS\n- ¿Qué tiene que pensar o sentir alguien nada más entrar? (en sus palabras, entre comillas)\n\n6. TRES PALABRAS\n- Tres palabras que describan cómo queréis que os perciban, en orden de importancia.\n- Tres palabras que NO queréis que os describan.\n\n7. LO QUE YA EXISTE\n- Logo, colores, tipografías, manual de marca.\n- Fotos propias (¿de calidad?), textos, vídeos, opiniones de clientes.\n\n8. TÉCNICA\n- Plataforma (WordPress, PrestaShop...), idiomas, dominio y hosting.\n- ¿Quién va a actualizar la web y con qué frecuencia?\n\n9. PLAZOS Y PRESUPUESTO\n- Fecha límite real y por qué.\n- Presupuesto aproximado."
  }
 ];

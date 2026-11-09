@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qué transmite cada color | Hora azul</title>
+<meta name="description" content="Rojo, naranja, amarillo, verde, azul, violeta, rosa, tierras, negro, blancos, grises y dorados: qué transmite cada color, por qué, en qué sectores funciona y con qué combina.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad «Pigmentos»: carbón cálido, crema y un rojo de pigmento.
+     Fraunces muy pesada (opsz 144) para titulares; Inter Tight para leer. */
+  :root {
+    --bg: oklch(21% 0.012 50);
+    --bg-2: oklch(25% 0.014 50);
+    --bg-3: oklch(30% 0.016 50);
+    --fg: oklch(94% 0.02 80);
+    --muted: oklch(78% 0.02 75);
+    --faint: oklch(64% 0.02 70);
+    --accent: oklch(68% 0.19 30);
+    --on-accent: oklch(19% 0.012 50);
+    --code-bg: oklch(16% 0.01 50);
+    --scheme: dark;
+    --f-display: "Fraunces", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 750;
+    --display-tracking: -0.03em;
+  }
+  body { font-size: clamp(1.04rem, 1rem + 0.2vw, 1.15rem); line-height: 1.62; }
+  h1, h2, h3, h4 { font-variation-settings: "opsz" 144; }
+  .prose h2 { font-size: clamp(2.3rem, 1.4rem + 3.4vw, 4.4rem); line-height: .92; letter-spacing: -0.04em; }
+  .prose h3 { font-weight: 650; font-size: var(--step-1); margin-top: 2.4rem; letter-spacing: -0.008em; }
+  @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+
+  /* =========================================================
+     Portada: doce familias. Al tocar una, la portada se tiñe.
+     ========================================================= */
+  :root { --top-fg: #FBEDE3; }
+  .hero { --hb: #A8181E; --hf: #FBEDE3; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); grid-template-rows: auto 1fr auto; gap: 0 clamp(2rem, 5vw, 5rem);
+    padding: 5.2rem var(--gutter) 0; background: var(--hb); color: var(--hf); transition: color .5s; }
+  .ink { position: absolute; inset: 0; z-index: -1; background: var(--nb, transparent); clip-path: circle(0 at var(--x, 50%) var(--y, 50%)); pointer-events: none; }
+  .ink.go { animation: spread .85s cubic-bezier(.65, .05, .3, 1) forwards; }
+  @keyframes spread { to { clip-path: circle(var(--r, 150%) at var(--x, 50%) var(--y, 50%)); } }
+  .hero-head { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem 2rem; padding-bottom: 1.4rem; border-bottom: 1px solid color-mix(in oklab, currentColor 22%, transparent); }
+  .hero [data-kicker] { margin: 0 0 .7rem; font: 500 var(--step--1)/1 var(--f-ui); opacity: .78; }
+  .hero h1 { margin: 0; font-size: clamp(1.7rem, 1rem + 1.9vw, 2.9rem); font-weight: 750; line-height: .98; letter-spacing: -0.012em; max-width: 18ch; }
+  .hero .chip { flex: none; }
+  .fam { grid-column: 1; grid-row: 2; align-self: center; padding: 2rem 0; min-width: 0; }
+  .fname { display: block; margin: 0 0 1.2rem; font: 900 clamp(4rem, 0.6rem + 10.5vw, 12.5rem)/.82 var(--f-display); font-variation-settings: "opsz" 144; letter-spacing: -0.055em; white-space: nowrap; }
+  .fname.metal { background: linear-gradient(100deg, #8C5A2B 0%, #E8D7B0 34%, #C9A227 52%, #7A5A1E 74%, #E8D7B0 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hkw { display: flex; flex-wrap: wrap; gap: .2rem 1.4rem; list-style: none; padding: 0; margin: 0 0 1rem; font: italic 400 var(--step-2)/1.1 var(--f-display); font-variation-settings: "opsz" 72; }
+  .hkw li + li::before { content: ""; display: inline-block; width: .9rem; height: 1px; margin: 0 1.4rem 0 -.6rem; vertical-align: .35em; background: currentColor; opacity: .5; }
+  .hwhy { margin: 0 0 1.2rem; max-width: 40ch; font: 400 var(--step-0)/1.45 var(--f-ui); opacity: .88; }
+  .hgo { font: 600 var(--step--1)/1 var(--f-ui); color: inherit; text-decoration-color: currentColor; }
+  .scene { grid-column: 2; grid-row: 2; align-self: center; padding: 2rem 0; min-width: 0; }
+  .mock { position: relative; overflow: hidden; aspect-ratio: 1.3; padding: clamp(1rem, 2vw, 1.6rem); display: flex; flex-direction: column; background: var(--sb); color: var(--sf); box-shadow: 0 30px 60px -24px rgb(0 0 0 / .45); transition: background-color .6s, color .6s; font-family: var(--f-ui); }
+  .mock .mnav { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+  .mock .mnav b { font: 750 1rem/1 var(--f-display); letter-spacing: -0.02em; }
+  .mock .mnav span { display: flex; gap: .5rem; } .mock .mnav span i { width: 1.6rem; height: 2px; background: currentColor; opacity: .5; }
+  .mock .mbody { position: relative; z-index: 1; margin-top: auto; max-width: 70%; }
+  .mock h2 { margin: 0 0 .6rem; font: 750 clamp(1.4rem, .8rem + 1.6vw, 2.4rem)/.98 var(--f-display); letter-spacing: -0.035em; }
+  .mock p { margin: 0 0 1rem; font-size: .88rem; opacity: .85; }
+  .mock .mbtn { display: inline-block; padding: .75rem 1.1rem; border-radius: 999px; background: var(--sa); color: var(--sat); font: 650 .86rem/1 var(--f-ui); transition: background-color .6s, color .6s; }
+  .mock .orn { position: absolute; right: -8%; top: 18%; width: 52%; aspect-ratio: 1; border-radius: 50%; background: var(--so); transition: background-color .6s; }
+  .mock .orn2 { position: absolute; right: 30%; bottom: 0; width: 17%; aspect-ratio: .62; border-radius: 999px 999px 0 0; background: var(--sa); transition: background-color .6s; }
+  .hnu { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin-top: 1rem; }
+  .hnu div { display: grid; gap: .25rem; min-width: 0; }
+  .hnu i { height: 2.6rem; background: var(--s); box-shadow: 0 0 0 1px color-mix(in oklab, currentColor 18%, transparent); transition: background-color .6s; }
+  .hnu small { font: 500 .72rem/1 var(--f-ui); opacity: .72; }
+  .hnu b { font: 600 .85rem/1.1 var(--f-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .picker { grid-column: 1 / -1; grid-row: 3; display: flex; gap: .3rem; padding: 1rem 0 1.3rem; border-top: 1px solid color-mix(in oklab, currentColor 22%, transparent); overflow-x: auto; scrollbar-width: none; }
+  .picker::-webkit-scrollbar { display: none; }
+  .picker button { flex: 1 0 auto; display: grid; justify-items: center; gap: .45rem; min-width: 4.6rem; padding: .3rem .2rem; background: none; border: 0; color: inherit; font: 500 .8rem/1 var(--f-ui); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .picker i { width: 2.4rem; height: 2.4rem; border-radius: 50%; box-shadow: 0 0 0 1px color-mix(in oklab, currentColor 30%, transparent); transition: box-shadow .3s, transform .3s var(--ease-out); }
+  .picker button[aria-pressed="true"] i { box-shadow: 0 0 0 3px var(--hb), 0 0 0 5px var(--hf); transform: scale(1.08); }
+  .picker button[aria-pressed="true"] span { font-weight: 700; }
+  @media (hover: hover) { .picker button:hover i { transform: scale(1.08); } }
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; padding-top: 4.6rem; }
+    .hero-head { padding-bottom: 1rem; }
+    .hero h1 { font-size: clamp(1.55rem, 1rem + 2.6vw, 2.2rem); }
+    .picker { grid-row: 2; margin-inline: calc(-1 * var(--gutter)); padding: .9rem var(--gutter) .8rem; border-top: 0; border-bottom: 1px solid color-mix(in oklab, currentColor 22%, transparent); scroll-snap-type: x mandatory; }
+    .picker button { flex: none; min-width: 4.2rem; scroll-snap-align: start; }
+    .picker i { width: 2.2rem; height: 2.2rem; }
+    .fam { grid-column: 1; grid-row: 3; padding: 1.2rem 0 .6rem; }
+    .fname { font-size: clamp(3.2rem, 1rem + 12vw, 5.2rem); margin-bottom: .8rem; }
+    .hkw { font-size: 1.25rem; margin-bottom: .6rem; }
+    .hwhy { font-size: .95rem; margin-bottom: .7rem; }
+    .scene { grid-column: 1; grid-row: 4; padding: .6rem 0 1.6rem; }
+    .mock { aspect-ratio: 1.75; }
+    .mock p { display: none; }
+    .mock .mbody { max-width: 74%; }
+    .mock .orn2 { right: 5%; width: 13%; }
+    .hnu i { height: 1.8rem; }
+  }
+  @media (max-width: 860px) and (max-height: 760px) { .hwhy { display: none; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  .lead { font-size: var(--step-1); line-height: 1.45; }
+  .layers { display: grid; grid-template-columns: repeat(3, 1fr); margin: 2.4rem 0; border-top: 1px solid var(--fg); }
+  .layers div { padding: 1.3rem 1.4rem 1.4rem 0; }
+  .layers div + div { padding-left: 1.4rem; border-left: 1px solid var(--line-2); }
+  .layers b { display: block; font: 900 clamp(3rem, 2rem + 3vw, 5rem)/.8 var(--f-display); font-variation-settings: "opsz" 144; color: var(--accent); letter-spacing: -0.05em; }
+  .layers h3 { margin: .9rem 0 .4rem !important; }
+  .layers p { margin: 0; font-size: var(--step--1); color: var(--muted); }
+  @media (max-width: 760px) { .layers { grid-template-columns: 1fr; } .layers div, .layers div + div { padding: 1.2rem 0; border-left: 0; border-bottom: 1px solid var(--line-2); } }
+
+  /* Lámina de cada familia: banda a sangre */
+  .band.plate { margin: 7rem 0 2.4rem calc(50% - 50vw); padding-block: clamp(3rem, 7vw, 5.5rem); }
+  .band.plate.edge { box-shadow: inset 0 1px 0 oklch(100% 0 0 / .1), inset 0 -1px 0 oklch(100% 0 0 / .1); }
+  .plate .inner { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: end; gap: 1.2rem 3rem; }
+  .prose .plate h2 { margin: 0; max-width: none; font-size: clamp(3rem, 1rem + 7vw, 8.4rem); font-weight: 850; line-height: .84; letter-spacing: -0.055em; color: inherit; }
+  .prose .plate h2 .n { color: inherit; opacity: .7; font-weight: 600; }
+  .prose .plate h2.metal { background: linear-gradient(100deg, #8C5A2B 0%, #E8D7B0 30%, #C9A227 50%, #7A5A1E 72%, #E8D7B0 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .prose .plate h2.metal .n { color: #EFE3C8; -webkit-text-fill-color: #EFE3C8; }
+  .plate .kw { display: flex; flex-wrap: wrap; gap: .2rem 1.2rem; list-style: none; padding: 0; margin: 0 0 .8rem; font: italic 400 var(--step-2)/1.1 var(--f-display); font-variation-settings: "opsz" 72; }
+  .plate .kw li { margin: 0; }
+  .plate .kw li + li::before { content: ""; display: inline-block; width: .9rem; height: 1px; margin: 0 1.2rem 0 -.6rem; vertical-align: .35em; background: currentColor; opacity: .5; }
+  .plate .kw li::marker { content: none; }
+  .plate .pwhy { margin: 0; max-width: 40ch; font-size: var(--step-0); line-height: 1.45; opacity: .9; }
+  @media (max-width: 760px) { .plate .inner { grid-template-columns: 1fr; } .band.plate { margin-top: 5rem; } }
+
+  /* Cuatro matices */
+  .nuances { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; margin: 1.6rem 0 2.4rem; }
+  .nuances figure { margin: 0; min-width: 0; }
+  .nuances i { display: block; height: clamp(6rem, 10vw, 9rem); padding: .6rem .7rem; background: var(--s); color: var(--t); box-shadow: 0 0 0 1px var(--line); font: 600 .78rem/1 var(--f-ui); font-style: normal; }
+  .nuances figcaption { padding-top: .75rem; font-size: var(--step--1); line-height: 1.45; }
+  .nuances b { display: block; margin-bottom: .3rem; font: 750 var(--step-1)/1 var(--f-display); letter-spacing: -0.02em; }
+  .nuances code { font-size: .72rem; white-space: nowrap; }
+  .nuances p { margin: .45rem 0 0; color: var(--muted); }
+  @media (max-width: 760px) { .nuances { grid-template-columns: 1fr 1fr; gap: 1.4rem 1rem; } }
+
+  /* Dónde sí / riesgos */
+  .uses { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 1.4rem 0 1rem; border-top: 1px solid var(--line-2); }
+  .uses > div { padding: 0 1.6rem 0 0; }
+  .uses > div + div { padding: 0 0 0 1.6rem; border-left: 1px solid var(--line-2); }
+  .uses h3 { margin: 1.2rem 0 .7rem !important; font-size: var(--step-0) !important; font-family: var(--f-ui) !important; font-weight: 650 !important; letter-spacing: 0 !important; }
+  .uses .risk h3 { color: color-mix(in oklab, var(--c-ojo) 60%, var(--fg)); }
+  .uses ul { margin: 0 0 .6rem; padding-left: 1.1rem; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .uses li strong { color: var(--fg); font-weight: 600; }
+  .uses .risk li::marker { color: var(--c-ojo); }
+  @media (max-width: 760px) { .uses { grid-template-columns: 1fr; } .uses > div, .uses > div + div { padding: 0; border-left: 0; } .uses > div + div { border-top: 1px solid var(--line); margin-top: .6rem; } }
+
+  /* Combinaciones */
+  .combos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; margin: 1rem 0 2rem; }
+  .combos figure { margin: 0; min-width: 0; }
+  .tri { display: flex; height: 3.6rem; border-radius: var(--radius-s); overflow: hidden; box-shadow: 0 0 0 1px var(--line-2); }
+  .combos figcaption { padding-top: .7rem; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .combos figcaption b { display: block; color: var(--fg); font: 650 var(--step-0)/1.2 var(--f-ui); margin-bottom: .2rem; }
+  .combos .vals { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .5rem; }
+  .combos .vals code { font-size: .7rem; }
+  @media (max-width: 760px) { .combos { grid-template-columns: 1fr; } }
+
+  /* Así sí / Así no */
+  .sisno { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 2.5vw, 2rem); margin: 2.4rem 0; }
+  .sisno figure { margin: 0; display: grid; grid-template-rows: auto 1fr auto; }
+  .sisno .tag { display: flex; align-items: center; gap: .55rem; margin-bottom: .7rem; font: 600 var(--step--1)/1 var(--f-ui); }
+  .sisno .tag::before { content: ""; width: 1.6rem; height: 3px; background: var(--c-idea); }
+  .sisno .no .tag::before { background: var(--c-ojo); }
+  .sisno figcaption { margin-top: .8rem; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .sisno figcaption b { color: var(--fg); font-weight: 600; }
+  .mini { min-height: 13rem; padding: 1.3rem 1.4rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; font-family: var(--f-ui); }
+  .mini .nav { display: flex; justify-content: space-between; font: 600 .8rem/1 var(--f-ui); }
+  .mini h4 { margin: 0; font: 750 clamp(1.5rem, 1.1rem + 1.2vw, 2.1rem)/1 var(--f-display); letter-spacing: -0.03em; }
+  .mini p { margin: 0; font-size: .86rem; }
+  @media (max-width: 640px) { .sisno { grid-template-columns: 1fr; } }
+
+  .statement { font-weight: 850; font-size: clamp(2.1rem, 1.2rem + 3.6vw, 4.4rem); line-height: .95; letter-spacing: -0.045em; max-width: 18ch !important; }
+  .statement em { font-style: italic; font-weight: 400; color: var(--accent); }
+
+  /* Tabla resumen */
+  .table-wrap table { min-width: 860px; }
+  .table-wrap th[scope="row"] { white-space: nowrap; color: var(--fg); font-weight: 650; }
+  .table-wrap .dot { display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; margin-right: .55rem; vertical-align: -.05em; box-shadow: 0 0 0 1px var(--line-2); }
+
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="color-significado">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="ink" aria-hidden="true"></div>
+    <div class="hero-head">
+      <div>
+        <p data-kicker>Lección</p>
+        <h1 id="t">Qué transmite cada color</h1>
+      </div>
+      <span class="chip" data-meta>25 min</span>
+    </div>
+    <div class="fam" aria-live="polite">
+      <span class="fname">Rojo</span>
+      <ul class="hkw"><li>pasión</li><li>urgencia</li><li>apetito</li></ul>
+      <p class="hwhy">Sangre y fuego: lo que en la naturaleza obliga a reaccionar ya.</p>
+      <a class="hgo" href="#rojo">Leer la sección de este color</a>
+    </div>
+    <div class="scene">
+      <div class="mock" role="img" aria-label="Mini web de ejemplo pintada con la familia elegida" style="--sb:#FBEDE3; --sf:#6A1424; --sa:#D11F3A; --sat:#FFFFFF; --so:#F0806F">
+        <span class="orn" aria-hidden="true"></span><span class="orn2" aria-hidden="true"></span>
+        <div class="mnav"><b>Brasa</b><span aria-hidden="true"><i></i><i></i><i></i></span></div>
+        <div class="mbody"><h2>Horno de leña a 450 grados</h2><p>Pizzería en el centro de Castelló</p><span class="mbtn">Pide para llevar</span></div>
+      </div>
+      <div class="hnu"><div style="--s:#F0806F"><i></i><small>Claro</small><b>Coral</b></div><div style="--s:#6A1424"><i></i><small>Oscuro</small><b>Burdeos</b></div><div style="--s:#D11F3A"><i></i><small>Vivo</small><b>Cereza</b></div><div style="--s:#A65446"><i></i><small>Apagado</small><b>Teja</b></div></div>
+    </div>
+    <div class="picker" role="group" aria-label="Familias de color"><button type="button" data-i="0" aria-pressed="true"><i style="background:#D11F3A"></i><span>Rojo</span></button><button type="button" data-i="1" aria-pressed="false"><i style="background:#FF6A13"></i><span>Naranja</span></button><button type="button" data-i="2" aria-pressed="false"><i style="background:#F3DF2C"></i><span>Amarillo</span></button><button type="button" data-i="3" aria-pressed="false"><i style="background:#0E9F6E"></i><span>Verde</span></button><button type="button" data-i="4" aria-pressed="false"><i style="background:#2450FF"></i><span>Azul</span></button><button type="button" data-i="5" aria-pressed="false"><i style="background:#7B3FF2"></i><span>Violeta</span></button><button type="button" data-i="6" aria-pressed="false"><i style="background:#FF3D8B"></i><span>Rosa</span></button><button type="button" data-i="7" aria-pressed="false"><i style="background:#C2552E"></i><span>Tierras</span></button><button type="button" data-i="8" aria-pressed="false"><i style="background:#0B0B0B"></i><span>Negro</span></button><button type="button" data-i="9" aria-pressed="false"><i style="background:#F3EEE3"></i><span>Blancos</span></button><button type="button" data-i="10" aria-pressed="false"><i style="background:#B9BCC0"></i><span>Grises</span></button><button type="button" data-i="11" aria-pressed="false"><i style="background:#C9A227"></i><span>Dorado</span></button></div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p class="lead">En la lección anterior aprendiste a leer un color: tono, luz, saturación, temperatura. Ahora toca lo que más te preguntarán los clientes: <em>qué dice</em> cada color, y sobre todo <em>por qué</em>. Si sabes el porqué, puedes defender una propuesta, prever cómo la recibirá su público y saber cuándo romper la norma.</p>
+
+      <h2 id="antes">Asociaciones, no leyes</h2>
+      <p>Lo primero, con claridad: <strong>los colores no tienen significados fijos</strong>. Lo que transmiten son asociaciones que hemos aprendido, y cambian de una cultura a otra. En buena parte de Asia oriental el blanco se ha asociado tradicionalmente al luto; en China el rojo es suerte y celebración, no peligro. Todo lo que leerás aquí está pensado para un contexto occidental y, en concreto, español.</p>
+      <p>Que sean asociaciones no les quita utilidad. Al contrario: si sabes de dónde viene cada una, sabes cuánto pesa. Vienen de tres sitios:</p>
+      <div class="layers wide">
+        <div><b>1</b><h3>La naturaleza</h3><p>El fuego quema, el cielo está lejos, la sangre alarma, lo verde da de comer. Son las asociaciones más fuertes y más compartidas.</p></div>
+        <div><b>2</b><h3>La cultura</h3><p>El luto negro, el violeta del 8M, el amarillo que trae mala suerte en el teatro. Cambian con el país y con la época.</p></div>
+        <div><b>3</b><h3>El sector</h3><p>Los bancos azules, las farmacias verdes, las rebajas rojas. Son convenciones: seguirlas da confianza y romperlas, diferencia.</p></div>
+      </div>
+      <p>Y hay dos cosas que pesan tanto como el color: <strong>la competencia</strong> (si las cinco clínicas de tu ciudad son azules, el azul ya no te distingue) y <strong>el tono de la marca</strong> (un rojo burdeos y un rojo cereza son el mismo tono y dicen cosas casi opuestas). Por eso, en cada familia verás cuatro matices: claro, oscuro, vivo y apagado. Lo aprendido en <a href="color-leer.html">Cómo se lee un color</a> se aplica aquí todo el rato: la luz y la saturación cambian el mensaje tanto como el tono.</p>
+
+      <p class="statement">El color dice <em>qué</em>. La luz y la saturación dicen <em>cómo</em>.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando un cliente diga «quiero que transmita confianza», no saltes directamente al azul. Pregunta primero qué tipo de confianza (la del banco, la del médico de familia, la del artesano del barrio) y mira qué colores usa su competencia. A veces la confianza más creíble es la de un verde botella o una tierra, precisamente porque nadie más la usa.</p>
+      </div>
+
+      <div class="band plate" style="--band-bg:#A8181E; --band-fg:#FBEDE3"><div class="inner">
+        <h2 id="rojo" class="">Rojo</h2>
+        <div class="plate-side"><ul class="kw"><li>pasión</li><li>urgencia</li><li>apetito</li></ul><p class="pwhy">Sangre y fuego: lo que en la naturaleza obliga a reaccionar ya.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El rojo es el color de la sangre y del fuego, las dos cosas que en la naturaleza piden una reacción inmediata: huir, atacar, acercarse. De ahí sale todo lo que transmite. <strong>Urgencia y alarma</strong> (las señales de stop, los extintores, los botones de emergencia), <strong>pasión y deseo</strong> (la piel que se enciende, el corazón) y <strong>energía</strong>. Es también el color que más rápido destaca sobre un fondo verde o neutro, y por eso las frutas maduras y las señales de peligro lo usan.</p>
+<p>En España suma otra capa: es el color de las rebajas, de los carteles de «oferta» y de los precios tachados. Cuando lo ves en grande en una web, el cerebro entiende «aquí pasa algo, date prisa».</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <p>El mismo rojo cambia de mensaje según su luz y su saturación. Fíjate en la distancia que hay entre el cereza (deseo) y el burdeos (tradición): es el mismo tono, con otra luz.</p>
+      <div class="nuances wide">
+        <figure style="--s:#F0806F; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Coral</b><code>#F0806F</code> <code>oklch(72% 0.141 30)</code><p>Amable, veraniego, juvenil. El rojo pierde la amenaza y gana simpatía.</p></figcaption></figure>
+        <figure style="--s:#6A1424; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Burdeos</b><code>#6A1424</code> <code>oklch(35% 0.119 16)</code><p>Vino, terciopelo, tradición. Pasión con calma: elegante y adulto.</p></figcaption></figure>
+        <figure style="--s:#D11F3A; --t:#FFFFFF"><i><span>Vivo</span></i><figcaption><b>Cereza</b><code>#D11F3A</code> <code>oklch(56% 0.208 21)</code><p>Pasión, deseo, impacto. Tira a rosa, así que suena más sensual que agresivo.</p></figcaption></figure>
+        <figure style="--s:#A65446; --t:#FFFFFF"><i><span>Apagado</span></i><figcaption><b>Teja</b><code>#A65446</code> <code>oklch(54% 0.111 31)</code><p>Tierra cocida, Mediterráneo. Cálido y artesanal, sin ninguna urgencia.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Restauración</strong>: pizzerías, asadores, comida rápida. Recuerda a la brasa, al tomate y a la carne, y transmite rapidez.</li><li><strong>Ofertas y comercio</strong>: etiquetas de descuento, cuentas atrás, «últimas unidades». Aprovecha la urgencia.</li><li><strong>Deporte y entretenimiento</strong>: energía y competición.</li><li><strong>Bodegas</strong>, en burdeos: es literalmente el color del vino tinto.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>En una interfaz, el rojo ya significa «error»</strong>. Si tu botón de compra es rojo, compite con los mensajes de error del formulario.</li><li><strong>Salud y finanzas</strong>: sangre, pérdidas, números en negativo. Justo lo que no quieres asociar.</li><li><strong>En grandes superficies agobia</strong>: un fondo rojo entero cansa en segundos.</li><li><strong>Daltonismo</strong>: el rojo y el verde a la misma luz se confunden.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#F3EEE3; flex:6"></i><i style="background:#1C1714; flex:3"></i><i style="background:#C8102E; flex:1.2"></i></div><figcaption><b>Cartel clásico</b>Crema, tinta y rojo: la combinación de la imprenta y del cartel de toda la vida. El crema suaviza el rojo y la tinta le da estructura.<span class="vals"><code>#F3EEE3</code> <code>#1C1714</code> <code>#C8102E</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#0F1B3D; flex:6"></i><i style="background:#F4F1EA; flex:3"></i><i style="background:#D11F3A; flex:1.2"></i></div><figcaption><b>Náutico</b>Marino y rojo se oponen en temperatura: el marino da autoridad y el rojo, el punto de energía.<span class="vals"><code>#0F1B3D</code> <code>#F4F1EA</code> <code>#D11F3A</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#6A1424; flex:6"></i><i style="background:#E9D9C3; flex:3"></i><i style="background:#B08D57; flex:1.2"></i></div><figcaption><b>Bodega</b>Burdeos, arena y oro viejo: tres colores del mundo del vino, con la misma calma.<span class="vals"><code>#6A1424</code> <code>#E9D9C3</code> <code>#B08D57</code></span></figcaption></figure>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span><p>El rojo vivo en pantallas OLED parece aún más intenso y, en texto pequeño sobre fondo oscuro, «sangra»: los bordes vibran. Para texto en rojo sobre oscuro sube la luz hacia el coral; para un aviso en el móvil, mejor un fondo rojo suave con texto oscuro que letras rojas finas.</p></div>
+
+      <div class="band plate" style="--band-bg:#E8601C; --band-fg:#1D1410"><div class="inner">
+        <h2 id="naranja" class="">Naranja</h2>
+        <div class="plate-side"><ul class="kw"><li>energía</li><li>cercanía</li><li>optimismo</li></ul><p class="pwhy">El fuego amable: el calor del sol de la tarde y de la fruta madura, sin la amenaza del rojo.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El naranja es el lado amable del fuego: la luz del atardecer, las brasas que calientan, la naranja y la mandarina. Tiene la energía del rojo, pero más luz y nada de sangre, así que <strong>activa sin asustar</strong>. Por eso transmite optimismo, entusiasmo y cercanía.</p>
+<p>También es el color de la visibilidad: chalecos, conos de obra, la bombona de butano. Se ve desde lejos y no se confunde con el paisaje. Y como es tan informal, suena a <strong>accesible</strong>: muchas marcas que quieren decir «barato y sin complicaciones» lo eligen. Eso es una ventaja y un riesgo a la vez.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <div class="nuances wide">
+        <figure style="--s:#F7BE95; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Melocotón</b><code>#F7BE95</code> <code>oklch(84% 0.085 57)</code><p>Suave, piel, cuidado. Cosmética natural y productos para bebés.</p></figcaption></figure>
+        <figure style="--s:#8C3A17; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Óxido</b><code>#8C3A17</code> <code>oklch(45% 0.121 41)</code><p>Otoño, cuero, hierro viejo. Cálido y robusto, con aire industrial.</p></figcaption></figure>
+        <figure style="--s:#FF6A13; --t:#1A1512"><i><span>Vivo</span></i><figcaption><b>Butano</b><code>#FF6A13</code> <code>oklch(70% 0.200 44)</code><p>Señal, visibilidad, informalidad. El de la bombona: imposible no verlo.</p></figcaption></figure>
+        <figure style="--s:#C0805E; --t:#1A1512"><i><span>Apagado</span></i><figcaption><b>Arcilla</b><code>#C0805E</code> <code>oklch(66% 0.093 49)</code><p>Barro, artesanía, verano mediterráneo. Cercano sin hacer ruido.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Educación infantil y ocio</strong>: alegre, enérgico y sin estereotipo de género.</li><li><strong>Botones de acción</strong> en webs frías: un naranja sobre azul o gris es el CTA más visible que existe.</li><li><strong>Alimentación</strong>: fruta, zumos, panadería, en sus versiones cálidas.</li><li><strong>Bricolaje y herramientas</strong>: visibilidad, trabajo, manos a la obra.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Puede abaratar</strong>: el naranja vivo en grande suena a «low cost». Para algo premium, pásate al naranja quemado o al óxido.</li><li><strong>El blanco sobre naranja casi nunca se lee</strong>: un naranja medio con texto blanco ronda 3:1. Usa texto en tinta o un naranja más oscuro.</li><li><strong>Naranja vivo y negro</strong> evoca Halloween si no lo controlas.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#F3EEE3; flex:6"></i><i style="background:#111111; flex:3"></i><i style="background:#D9541E; flex:1.2"></i></div><figcaption><b>Mesa</b>Crema, tinta y naranja quemado: el naranja apagado parece sofisticado y el crema lo acoge. La paleta del vídeo.<span class="vals"><code>#F3EEE3</code> <code>#111111</code> <code>#D9541E</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#0F1B3D; flex:6"></i><i style="background:#F2EEE6; flex:3"></i><i style="background:#FF6A13; flex:1.2"></i></div><figcaption><b>Contra el frío</b>El naranja es el complementario del azul: sobre marino salta más que ningún otro color.<span class="vals"><code>#0F1B3D</code> <code>#F2EEE6</code> <code>#FF6A13</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#5B6B3A; flex:6"></i><i style="background:#F1E7D6; flex:3"></i><i style="background:#C0805E; flex:1.2"></i></div><figcaption><b>Huerto</b>Oliva, lino y arcilla: los tres son cálidos y apagados, por eso conviven sin pelearse.<span class="vals"><code>#5B6B3A</code> <code>#F1E7D6</code> <code>#C0805E</code></span></figcaption></figure>
+      </div>
+
+      <div class="band plate" style="--band-bg:#F2C12E; --band-fg:#1F1A10"><div class="inner">
+        <h2 id="amarillo" class="">Amarillo</h2>
+        <div class="plate-side"><ul class="kw"><li>alegría</li><li>atención</li><li>luz</li></ul><p class="pwhy">El color del sol y el más luminoso de todos: por eso alegra y, junto al negro, avisa.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El amarillo es el sol y la luz. A plena saturación es el color más luminoso que existe: un amarillo puro está muchísimo más cerca del blanco que un azul o un rojo puros. Por eso <strong>alegra</strong> (es luz, verano, girasoles, limones) y por eso <strong>llama la atención</strong> antes que ningún otro.</p>
+<p>Junto al negro forma la señal de aviso más fuerte de la naturaleza: avispas, serpientes, ranas venenosas. Las señales de obra y de peligro la copian por la misma razón. Y en España tiene una curiosidad cultural que demuestra que todo esto son asociaciones: en el teatro, el amarillo trae mala suerte, y muchos actores se niegan a vestirlo en escena.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <div class="nuances wide">
+        <figure style="--s:#F7E3A1; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Mantequilla</b><code>#F7E3A1</code> <code>oklch(92% 0.087 93)</code><p>Suave, casero, tierno. Cocina, repostería, ropa de bebé.</p></figcaption></figure>
+        <figure style="--s:#9C7414; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Ocre</b><code>#9C7414</code> <code>oklch(58% 0.114 83)</code><p>Tierra, pigmento, arte. Cálido y adulto, con poso.</p></figcaption></figure>
+        <figure style="--s:#F3DF2C; --t:#1A1512"><i><span>Vivo</span></i><figcaption><b>Limón</b><code>#F3DF2C</code> <code>oklch(89% 0.178 102)</code><p>Ácido, fresco, juvenil. Tira a verde, así que es más frío que alegre.</p></figcaption></figure>
+        <figure style="--s:#C9A23A; --t:#1A1512"><i><span>Apagado</span></i><figcaption><b>Mostaza</b><code>#C9A23A</code> <code>oklch(73% 0.127 88)</code><p>Retro, años setenta, diseño. El amarillo con más estilo.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Construcción, reformas, maquinaria</strong>: señal, trabajo, seguridad.</li><li><strong>Infancia</strong>: sol, juego, energía; en mantequilla, suavidad.</li><li><strong>Comida rápida y ofertas</strong>: atención inmediata.</li><li><strong>Diseño y moda</strong>, en mostaza u ocre: un amarillo con criterio.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Casi nunca sirve para texto</strong>: amarillo sobre blanco no llega ni a 1,5:1. El amarillo va de fondo, con tinta encima.</li><li><strong>Cansa en grandes superficies</strong>: tanta luz fatiga la vista.</li><li><strong>Se ensucia con facilidad</strong>: un amarillo con poca luz se convierte en verde oliva o en marrón, y se lee como «enfermo».</li></ul></div>
+      </div>
+      <div class="sisno">
+        <figure class="no"><span class="tag">Así no</span>
+          <div class="mini" style="background:#FFFFFF; color:#1C1A17"><div class="nav"><span>Reformas Ribes</span><span>Obras</span></div><h4 style="color:#F3DF2C">Visita y presupuesto gratis</h4><p>Amarillo limón sobre blanco: 1,4:1.</p></div>
+          <figcaption><b>Amarillo como color de texto.</b> El amarillo tiene casi tanta luz como el blanco, así que sobre blanco el titular desaparece.</figcaption></figure>
+        <figure><span class="tag">Así sí</span>
+          <div class="mini" style="background:#F3DF2C; color:#1C1A17"><div class="nav"><span>Reformas Ribes</span><span>Obras</span></div><h4>Visita y presupuesto gratis</h4><p>Tinta sobre amarillo: casi 13:1.</p></div>
+          <figcaption><b>Amarillo como fondo, tinta encima.</b> El amarillo pone la atención y la tinta, la lectura. Es la lógica de las señales de obra.</figcaption></figure>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#1C1A17; flex:6"></i><i style="background:#F5F0E6; flex:3"></i><i style="background:#F3D21C; flex:1.2"></i></div><figcaption><b>Señal</b>Tinta y amarillo: el máximo contraste de luz posible. Impacto de obra o de flyer.<span class="vals"><code>#1C1A17</code> <code>#F5F0E6</code> <code>#F3D21C</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#1E2A4A; flex:6"></i><i style="background:#F4EFE4; flex:3"></i><i style="background:#E8B537; flex:1.2"></i></div><figcaption><b>Clásico marino</b>El amarillo yema sobre marino: cálido contra frío, claro contra oscuro. Elegante y alegre a la vez.<span class="vals"><code>#1E2A4A</code> <code>#F4EFE4</code> <code>#E8B537</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#4B2E5E; flex:6"></i><i style="background:#F1ECF4; flex:3"></i><i style="background:#C9A23A; flex:1.2"></i></div><figcaption><b>Complementario</b>Mostaza y berenjena son opuestos en la rueda; apagados los dos, la pareja es sofisticada en lugar de chillona.<span class="vals"><code>#4B2E5E</code> <code>#F1ECF4</code> <code>#C9A23A</code></span></figcaption></figure>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span><p>Al sol, los amarillos claros desaparecen sobre blanco y los fondos amarillos deslumbran. En el móvil, el amarillo funciona mejor como bloque de fondo con texto en tinta (un aviso, una etiqueta de oferta) que como color de líneas o iconos finos.</p></div>
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Quieres destacar «Envío gratis desde 50 €» en la tienda online de un cliente cuya marca es amarillo limón. ¿Cómo lo haces?</p>
+        <ol>
+          <li>Con el texto en amarillo limón sobre el fondo blanco de la web.</li>
+          <li>Con una franja de fondo amarillo y el texto en tinta.</li>
+          <li>Con el texto en amarillo sobre un fondo crema, para que sea más cálido.</li>
+        </ol>
+        <p class="why">El amarillo vivo tiene casi tanta luz como el blanco o el crema, así que como color de texto no se lee (en torno a 1,4:1). Como fondo, con tinta encima, supera de largo el 4,5:1 y conserva toda su capacidad de llamar la atención.</p>
+      </div>
+
+      <div class="band plate" style="--band-bg:#1F4D36; --band-fg:#EEF2E6"><div class="inner">
+        <h2 id="verde" class="">Verde</h2>
+        <div class="plate-side"><ul class="kw"><li>naturaleza</li><li>salud</li><li>equilibrio</li></ul><p class="pwhy">El paisaje fértil: donde hay verde hay agua, comida y sombra.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>Durante toda la historia humana, un paisaje verde significaba agua, comida y sombra: un sitio donde sobrevivir. De ahí que el verde transmita <strong>naturaleza, salud, crecimiento y calma</strong>. Es un color de equilibrio: ni avanza como los cálidos ni se aleja tanto como el azul.</p>
+<p>Además, la cultura le ha añadido significados concretos. Es el «adelante» del semáforo, la cruz de las farmacias españolas y el color de la bolsa cuando sube. Todo apunta a lo mismo: <strong>bien, sigue, esto es sano</strong>.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <div class="nuances wide">
+        <figure style="--s:#BDE3CA; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Menta</b><code>#BDE3CA</code> <code>oklch(88% 0.052 156)</code><p>Frescura, higiene, ligereza. Clínicas, cosmética, bebidas.</p></figcaption></figure>
+        <figure style="--s:#1C4532; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Botella</b><code>#1C4532</code> <code>oklch(35% 0.057 161)</code><p>Tradición, biblioteca, club de golf. Serio, clásico y caro.</p></figcaption></figure>
+        <figure style="--s:#0E9F6E; --t:#1A1512"><i><span>Vivo</span></i><figcaption><b>Esmeralda</b><code>#0E9F6E</code> <code>oklch(62% 0.133 162)</code><p>Joya, vitalidad, lujo fresco. Tira a azul: verde frío y brillante.</p></figcaption></figure>
+        <figure style="--s:#94A688; --t:#1A1512"><i><span>Apagado</span></i><figcaption><b>Salvia</b><code>#94A688</code> <code>oklch(70% 0.047 133)</code><p>Calma, bienestar, hogar. Natural sin ser obvio.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Alimentación ecológica, agricultura, jardinería</strong>: el origen literal del producto.</li><li><strong>Salud y farmacia</strong>, en mentas y verdes azulados: frescura e higiene.</li><li><strong>Bienestar y hogar</strong>, en salvia: calma adulta.</li><li><strong>Lo clásico y caro</strong>, en verde botella: clubes, licores, papelería fina.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>El cliché verde</strong>: todo lo «eco» es verde y con hojas. Si la competencia ya lo usa, el verde no te diferencia; puede incluso sonar a lavado de imagen.</li><li><strong>Verde y rojo a la misma luz</strong>: vibran y los confunde quien tiene daltonismo.</li><li><strong>Lima y neón</strong> pueden abaratar y cansar si se usan en grande.</li><li><strong>Verde quirófano</strong>: un verde azulado grisáceo en salud puede sonar a hospital frío.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#1C4532; flex:6"></i><i style="background:#F2EAD8; flex:3"></i><i style="background:#B08D57; flex:1.2"></i></div><figcaption><b>Club</b>Verde botella, crema y oro viejo: la combinación de las bibliotecas y las etiquetas clásicas. Caro sin gritar.<span class="vals"><code>#1C4532</code> <code>#F2EAD8</code> <code>#B08D57</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#94A688; flex:6"></i><i style="background:#F4EFE6; flex:3"></i><i style="background:#C2552E; flex:1.2"></i></div><figcaption><b>Terraza</b>Salvia y terracota: verde apagado y naranja tierra, casi complementarios pero suaves. Mediterráneo y cálido.<span class="vals"><code>#94A688</code> <code>#F4EFE6</code> <code>#C2552E</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#E9F4EE; flex:6"></i><i style="background:#14352A; flex:3"></i><i style="background:#FF8A65; flex:1.2"></i></div><figcaption><b>Fresco</b>Menta muy clara, verde profundo y un coral: el coral es el complementario cálido que da vida.<span class="vals"><code>#E9F4EE</code> <code>#14352A</code> <code>#FF8A65</code></span></figcaption></figure>
+      </div>
+
+      <div class="band plate" style="--band-bg:#173A7A; --band-fg:#F1F4FA"><div class="inner">
+        <h2 id="azul" class="">Azul</h2>
+        <div class="plate-side"><ul class="kw"><li>confianza</li><li>calma</li><li>orden</li></ul><p class="pwhy">El cielo y el agua: lo que está siempre ahí y no cambia.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El azul es el color del cielo y del agua: lo que está siempre ahí, lo que no cambia, lo que está lejos. Por eso transmite <strong>calma, estabilidad y fiabilidad</strong>, y por eso bancos, aseguradoras y clínicas lo eligen: quieren que confíes en ellos a largo plazo.</p>
+<p>Su significado cambia mucho con la luz y la saturación. <strong>Oscurecido a marino</strong> gana autoridad: es el color de los uniformes, de los trajes y de las instituciones. <strong>Saturado a eléctrico</strong> deja de tranquilizar y pasa a sonar a pantalla, a tecnología, a energía digital. <strong>Aclarado a celeste</strong> se vuelve aire y suavidad. Y como es frío, también transmite limpieza (agua) y distancia (profesionalidad, a veces frialdad).</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <p>Ninguna familia cambia tanto con la luz como el azul: del celeste al marino pasas de la cuna al uniforme.</p>
+      <div class="nuances wide">
+        <figure style="--s:#A9CDEB; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Celeste</b><code>#A9CDEB</code> <code>oklch(83% 0.057 244)</code><p>Calma, aire, infancia. Salud amable y bebés.</p></figcaption></figure>
+        <figure style="--s:#0F1B3D; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Marino</b><code>#0F1B3D</code> <code>oklch(23% 0.067 267)</code><p>Autoridad, uniforme, traje. Serio, formal y fiable.</p></figcaption></figure>
+        <figure style="--s:#2450FF; --t:#FFFFFF"><i><span>Vivo</span></i><figcaption><b>Eléctrico</b><code>#2450FF</code> <code>oklch(53% 0.261 266)</code><p>Tecnología, pantalla, energía digital. Deja de tranquilizar y empieza a zumbar.</p></figcaption></figure>
+        <figure style="--s:#5E7287; --t:#FFFFFF"><i><span>Apagado</span></i><figcaption><b>Pizarra</b><code>#5E7287</code> <code>oklch(54% 0.041 250)</code><p>Sobrio, discreto, nórdico. Confianza sin protagonismo.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Banca, seguros, asesorías</strong>: estabilidad y seriedad, en marino.</li><li><strong>Salud</strong>: limpieza y calma, en azules medios y celestes.</li><li><strong>Tecnología y SaaS</strong>: orden y precisión, en azules vivos.</li><li><strong>Limpieza, agua, piscinas, náutica</strong>: el origen literal.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>No diferencia</strong>: es el color más usado en webs corporativas. Si todos tus competidores son azules, el tuyo desaparece entre ellos.</li><li><strong>Frío e impersonal</strong> si no lo compensas con un neutro cálido o con fotos humanas.</li><li><strong>Poco apetitoso</strong>: en la naturaleza casi no hay comida azul, y en restauración resta apetito.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#0F1B3D; flex:6"></i><i style="background:#FFFFFF; flex:3"></i><i style="background:#FF3D8B; flex:1.2"></i></div><figcaption><b>Tab</b>Marino, blanco y rosa fuerte: el marino da seriedad y el rosa, juventud. La paleta del segundo vídeo.<span class="vals"><code>#0F1B3D</code> <code>#FFFFFF</code> <code>#FF3D8B</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#173A7A; flex:6"></i><i style="background:#F3EEE3; flex:3"></i><i style="background:#E8601C; flex:1.2"></i></div><figcaption><b>Cálido y fiable</b>El crema calienta al azul y el naranja (su complementario) le da un punto de acción.<span class="vals"><code>#173A7A</code> <code>#F3EEE3</code> <code>#E8601C</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#5E7287; flex:6"></i><i style="background:#EEF1F4; flex:3"></i><i style="background:#0F1B3D; flex:1.2"></i></div><figcaption><b>Nórdico</b>Pizarra, niebla y marino: todo frío y todo apagado. Tranquilo, técnico, muy limpio.<span class="vals"><code>#5E7287</code> <code>#EEF1F4</code> <code>#0F1B3D</code></span></figcaption></figure>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span><p>Los filtros nocturnos del móvil (Night Shift, luz nocturna) quitan luz azul: los azules pierden fuerza y los blancos amarillean. Si la marca es azul, revísala con el filtro: un azul eléctrico puede quedarse en un azul grisáceo sin carácter.</p></div>
+      <div class="quiz" data-answer="2">
+        <p class="q">Una asesoría fiscal de Castelló quiere transmitir confianza, pero sus cinco competidores directos tienen webs azules. ¿Qué le propones?</p>
+        <ol>
+          <li>Un azul más saturado que el de la competencia, para destacar.</li>
+          <li>Buscar la confianza por otro camino: un verde botella o un marino con neutros cálidos y un acento que nadie use, y explicar por qué sigue transmitiendo seriedad.</li>
+          <li>Rojo, porque es el color que más llama la atención.</li>
+        </ol>
+        <p class="why">El azul transmite confianza, pero si todos lo usan deja de diferenciar. El verde botella comparte la seriedad (oscuro, frío, clásico) y el marino con crema se separa por la temperatura. El rojo llamaría la atención con el mensaje equivocado: urgencia y alarma, justo lo que no quiere sentir alguien que viene a hablar de sus impuestos.</p>
+      </div>
+
+      <div class="band plate" style="--band-bg:#4A2574; --band-fg:#F3EEF8"><div class="inner">
+        <h2 id="violeta" class="">Violeta</h2>
+        <div class="plate-side"><ul class="kw"><li>lujo</li><li>misterio</li><li>creatividad</li></ul><p class="pwhy">Escaso en la naturaleza y durante siglos el tinte más caro: color de reyes.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El violeta es raro en la naturaleza: algunas flores, alguna fruta, poco más. Y durante siglos fue carísimo de fabricar. La púrpura de Tiro se obtenía de miles de caracoles marinos para teñir una sola prenda, así que solo podían vestirla emperadores y reyes. De ahí viene lo que transmite: <strong>lujo, poder, misterio y espiritualidad</strong>. Algo que no es de este mundo cotidiano.</p>
+<p>En España, además, tiene dos lecturas muy fuertes: el morado de la Semana Santa (la penitencia en la liturgia) y el violeta del feminismo, el color del 8 de marzo. Ninguna es mala, pero pesan: una marca violeta puede leerse como un posicionamiento.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <div class="nuances wide">
+        <figure style="--s:#C9B8E8; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Lavanda</b><code>#C9B8E8</code> <code>oklch(81% 0.069 301)</code><p>Calma, cosmética, romanticismo. Provenza en un bote.</p></figcaption></figure>
+        <figure style="--s:#3B1E4A; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Berenjena</b><code>#3B1E4A</code> <code>oklch(30% 0.083 313)</code><p>Noche, misterio, lujo íntimo. Dramático y caro.</p></figcaption></figure>
+        <figure style="--s:#7B3FF2; --t:#FFFFFF"><i><span>Vivo</span></i><figcaption><b>Violeta eléctrico</b><code>#7B3FF2</code> <code>oklch(55% 0.247 291)</code><p>Creatividad, tecnología, videojuegos. Futuro y fantasía.</p></figcaption></figure>
+        <figure style="--s:#9C849E; --t:#1A1512"><i><span>Apagado</span></i><figcaption><b>Malva</b><code>#9C849E</code> <code>oklch(64% 0.047 324)</code><p>Nostalgia, vintage, delicadeza. Elegante y algo melancólico.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Belleza, cosmética y bienestar</strong>, en lavandas y malvas.</li><li><strong>Creatividad, tecnología y videojuegos</strong>, en violetas eléctricos: futuro, imaginación.</li><li><strong>Lujo nocturno</strong>, en berenjena: coctelerías, joyería, la torre al anochecer.</li><li><strong>Chocolate y repostería premium</strong>, en violetas oscuros.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Lecturas ideológicas o religiosas</strong> según el contexto, sobre todo en España.</li><li><strong>Puede parecer artificial</strong>: los violetas muy saturados no existen en la naturaleza y en sectores «naturales» chirrían.</li><li><strong>Violetas medios con poco contraste</strong>: el texto blanco sobre un violeta medio suele quedarse corto.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#2A1840; flex:6"></i><i style="background:#F5EEE2; flex:3"></i><i style="background:#F0B44C; flex:1.2"></i></div><figcaption><b>La torre</b>Violeta noche, crema y ámbar: la paleta de la torre de lujo. El ámbar es casi complementario y parece luz de ventana.<span class="vals"><code>#2A1840</code> <code>#F5EEE2</code> <code>#F0B44C</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#C9B8E8; flex:6"></i><i style="background:#2B2433; flex:3"></i><i style="background:#94A688; flex:1.2"></i></div><figcaption><b>Jardín</b>Lavanda y salvia: dos colores apagados de temperaturas opuestas que se encuentran en la misma luz.<span class="vals"><code>#C9B8E8</code> <code>#2B2433</code> <code>#94A688</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#7B3FF2; flex:6"></i><i style="background:#0E0B14; flex:3"></i><i style="background:#FF3D8B; flex:1.2"></i></div><figcaption><b>Neón</b>Violeta eléctrico, casi negro y rosa fuerte: análogos y vivos, energía de noche y de pantalla.<span class="vals"><code>#7B3FF2</code> <code>#0E0B14</code> <code>#FF3D8B</code></span></figcaption></figure>
+      </div>
+
+      <div class="band plate" style="--band-bg:#FF3D8B; --band-fg:#1F0B14"><div class="inner">
+        <h2 id="rosa" class="">Rosa</h2>
+        <div class="plate-side"><ul class="kw"><li>ternura</li><li>juventud</li><li>atrevimiento</li></ul><p class="pwhy">Rojo con luz: la pasión suavizada, la piel, las flores y los dulces.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El rosa es rojo con luz: conserva la calidez y la piel del rojo, pero pierde la sangre y la amenaza. Por eso transmite <strong>ternura, dulzura y cercanía</strong>: flores, mejillas, algodón de azúcar, merengue.</p>
+<p>La asociación del rosa con las niñas es más reciente de lo que parece: se consolidó durante el siglo XX y hoy pesa cada vez menos. Por eso el <strong>rosa fuerte</strong> ha pasado a significar otra cosa: atrevimiento, modernidad, una marca joven que no se toma demasiado en serio. Es el rosa de la landing «tab». Y el <strong>rosa empolvado</strong> se ha vuelto un neutro cálido de moda, elegante y adulto.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <div class="nuances wide">
+        <figure style="--s:#F2C9CF; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Rosa palo</b><code>#F2C9CF</code> <code>oklch(87% 0.047 8)</code><p>Delicado, romántico. Bodas, lencería, cosmética suave.</p></figcaption></figure>
+        <figure style="--s:#A3154F; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Frambuesa</b><code>#A3154F</code> <code>oklch(47% 0.176 4)</code><p>Intenso, sofisticado, adulto. El rosa que no pide permiso.</p></figcaption></figure>
+        <figure style="--s:#FF3D8B; --t:#1A1512"><i><span>Vivo</span></i><figcaption><b>Rosa fuerte</b><code>#FF3D8B</code> <code>oklch(67% 0.233 2)</code><p>Atrevido, moderno, divertido. Energía joven, nada cursi.</p></figcaption></figure>
+        <figure style="--s:#C99A9E; --t:#1A1512"><i><span>Apagado</span></i><figcaption><b>Empolvado</b><code>#C99A9E</code> <code>oklch(73% 0.056 13)</code><p>Elegante, sereno, de tendencia. Calidez sin dulzura.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Pastelería, heladería, dulces</strong>: el color literal del merengue y la fresa.</li><li><strong>Cosmética, moda, bodas</strong>, en palos y empolvados.</li><li><strong>Apps y marcas jóvenes</strong>, en rosa fuerte, sobre todo junto a un marino o un negro.</li><li><strong>Floristerías</strong> y regalos.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>El cliché de género</strong>: rosa como único color de una marca infantil la encasilla.</li><li><strong>Infantiliza</strong> si lo usas claro y saturado en un sector serio.</li><li><strong>Rosa claro sobre blanco</strong>: no se lee. El rosa fuerte necesita texto oscuro encima, no blanco, para pasar el contraste.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#0F1B3D; flex:6"></i><i style="background:#FFFFFF; flex:3"></i><i style="background:#FF3D8B; flex:1.2"></i></div><figcaption><b>Tab</b>Marino y rosa fuerte: la seriedad del marino deja que el rosa sea divertido sin parecer infantil.<span class="vals"><code>#0F1B3D</code> <code>#FFFFFF</code> <code>#FF3D8B</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#C99A9E; flex:6"></i><i style="background:#F6EFEA; flex:3"></i><i style="background:#1C4532; flex:1.2"></i></div><figcaption><b>Jardín inglés</b>Rosa empolvado y verde botella: casi complementarios, los dos apagados. Clásico y fresco.<span class="vals"><code>#C99A9E</code> <code>#F6EFEA</code> <code>#1C4532</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#A3154F; flex:6"></i><i style="background:#FBE9EC; flex:3"></i><i style="background:#E8B537; flex:1.2"></i></div><figcaption><b>Fiesta</b>Frambuesa y yema: cálidos los dos, con luces muy distintas. Alegre y con carácter.<span class="vals"><code>#A3154F</code> <code>#FBE9EC</code> <code>#E8B537</code></span></figcaption></figure>
+      </div>
+
+      <div class="band plate" style="--band-bg:#5E3A22; --band-fg:#F6EBDD"><div class="inner">
+        <h2 id="tierras" class="">Marrones y tierras</h2>
+        <div class="plate-side"><ul class="kw"><li>artesanía</li><li>calidez</li><li>tradición</li></ul><p class="pwhy">La tierra, la madera, el cuero, el café y el pan: materiales hechos a mano que envejecen bien.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>Técnicamente, el marrón no es un tono propio: es naranja o amarillo con poca luz. Por eso conserva la calidez de los cálidos, pero sin su energía. Y es el color de los materiales: <strong>tierra, madera, cuero, café, chocolate, pan tostado, barro</strong>. Cosas naturales, hechas a mano, que envejecen bien.</p>
+<p>De ahí que transmita <strong>artesanía, honestidad, estabilidad y tradición</strong>. Una web con tierras dice «aquí no hay plástico». El papel kraft lleva esa idea al extremo: es el envoltorio sin blanquear, el que no se esfuerza por parecer otra cosa.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <div class="nuances wide">
+        <figure style="--s:#CDAE84; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Kraft</b><code>#CDAE84</code> <code>oklch(77% 0.067 75)</code><p>Papel de estraza, cartón. Honesto, ecológico, sin artificio.</p></figcaption></figure>
+        <figure style="--s:#3D2417; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Chocolate</b><code>#3D2417</code> <code>oklch(29% 0.044 48)</code><p>Café, cacao, cuero. Intenso, gourmet, nocturno.</p></figcaption></figure>
+        <figure style="--s:#C2552E; --t:#FFFFFF"><i><span>Vivo</span></i><figcaption><b>Terracota</b><code>#C2552E</code> <code>oklch(58% 0.150 39)</code><p>Barro cocido, Mediterráneo. El marrón con energía.</p></figcaption></figure>
+        <figure style="--s:#8A7A6A; --t:#1A1512"><i><span>Apagado</span></i><figcaption><b>Topo</b><code>#8A7A6A</code> <code>oklch(59% 0.031 67)</code><p>Piedra, lino, hormigón cálido. Neutro con alma.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Café, panadería, chocolate, aceite</strong>: el color del producto.</li><li><strong>Bodegas y cervecerías artesanas</strong>: barrica, malta, madera.</li><li><strong>Artesanía, muebles, outdoor</strong>: materiales y durabilidad.</li><li><strong>Packaging ecológico</strong>, en kraft.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Sucio o aburrido</strong> si es grisáceo o se mezcla con colores fríos sin cuidado.</li><li><strong>Poca energía</strong>: en tecnología o deporte suena a viejo.</li><li><strong>Higiene</strong>: en salud o limpieza no sugiere nada limpio.</li><li>Un aviso de andar por casa: en España «un marrón» es un problema. Ningún cliente te lo dirá, pero úsalo con gracia.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#3D2417; flex:6"></i><i style="background:#F3EEE3; flex:3"></i><i style="background:#C2552E; flex:1.2"></i></div><figcaption><b>Tostadero</b>Chocolate, crema y terracota: una familia entera de cálidos con tres luces bien separadas.<span class="vals"><code>#3D2417</code> <code>#F3EEE3</code> <code>#C2552E</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#CDAE84; flex:6"></i><i style="background:#1F2B24; flex:3"></i><i style="background:#5B6B3A; flex:1.2"></i></div><figcaption><b>Bosque</b>Kraft, verde casi negro y oliva: tierra y hoja, la paleta del outdoor.<span class="vals"><code>#CDAE84</code> <code>#1F2B24</code> <code>#5B6B3A</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#8A7A6A; flex:6"></i><i style="background:#F1EEEA; flex:3"></i><i style="background:#1F4E5F; flex:1.2"></i></div><figcaption><b>Contrapunto</b>Topo y azul petróleo: el petróleo es el complementario frío y da aire a los marrones.<span class="vals"><code>#8A7A6A</code> <code>#F1EEEA</code> <code>#1F4E5F</code></span></figcaption></figure>
+      </div>
+
+      <div class="band plate edge" style="--band-bg:#0B0B0B; --band-fg:#F3F0EA"><div class="inner">
+        <h2 id="negro" class="">Negro</h2>
+        <div class="plate-side"><ul class="kw"><li>elegancia</li><li>poder</li><li>misterio</li></ul><p class="pwhy">La noche y la ausencia de luz; y durante siglos, el tinte más difícil y caro de conseguir.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El negro es la noche y la ausencia de luz, así que transmite <strong>misterio, seriedad y poder</strong>. Pero su asociación con el lujo tiene además una historia muy española: en el siglo XVI la corte de Felipe II puso de moda el negro, y conseguir un negro profundo que no virase a marrón era caro y difícil (se lograba con el palo de Campeche traído de América). Vestir de negro era vestir caro.</p>
+<p>Hoy el negro funciona en la moda y el lujo por otra razón: <strong>no compite</strong>. Deja que el producto sea el protagonista. Y en la tradición española también es el luto, una lectura que conviene recordar en sectores delicados.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <p>En los neutros no hay vivo ni apagado: lo que cambia es la temperatura y la profundidad. Un negro con un poco de marrón y uno con un poco de azul cuentan historias distintas.</p>
+      <div class="nuances wide">
+        <figure style="--s:#000000; --t:#FFFFFF"><i><span>Puro</span></i><figcaption><b>Negro puro</b><code>#000000</code> <code>oklch(0% 0 0)</code><p>Absoluto, duro, gráfico. Máximo contraste, poca suavidad.</p></figcaption></figure>
+        <figure style="--s:#1C1714; --t:#FFFFFF"><i><span>Cálido</span></i><figcaption><b>Tinta café</b><code>#1C1714</code> <code>oklch(21% 0.010 53)</code><p>Editorial, papel, artesanía. Negro con calidez humana.</p></figcaption></figure>
+        <figure style="--s:#111827; --t:#FFFFFF"><i><span>Frío</span></i><figcaption><b>Negro azulado</b><code>#111827</code> <code>oklch(21% 0.032 265)</code><p>Tecnología, noche, precisión. Negro de pantalla.</p></figcaption></figure>
+        <figure style="--s:#2E2D2B; --t:#FFFFFF"><i><span>Suave</span></i><figcaption><b>Carbón</b><code>#2E2D2B</code> <code>oklch(30% 0.004 85)</code><p>Grafito, pizarra. Peso sin la dureza del negro.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Moda, lujo, joyería, sastrería</strong>: elegancia y fondo neutro para el producto.</li><li><strong>Tecnología premium y fotografía</strong>: las imágenes brillan sobre negro.</li><li><strong>Gastronomía de autor, coctelerías, cervecerías urbanas</strong>: noche y carácter.</li><li><strong>Tipografía</strong>: el negro (o una tinta) es casi siempre el color del texto.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Lúgubre o pesado</strong> si todo es negro y no hay respiro.</li><li><strong>El negro puro sobre blanco puro</strong> es durísimo; para texto, una tinta (<code>#111</code> a <code>#1C1714</code>) se lee igual y cansa menos.</li><li><strong>Luto</strong>: en funerarias es correcto; en salud o infancia, frío.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#0B0B0B; flex:6"></i><i style="background:#F3F0EA; flex:3"></i><i style="background:#B08D57; flex:1.2"></i></div><figcaption><b>Sastrería</b>Negro, hueso y oro viejo: lujo clásico. El oro da calor al negro sin romper la sobriedad.<span class="vals"><code>#0B0B0B</code> <code>#F3F0EA</code> <code>#B08D57</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#111111; flex:6"></i><i style="background:#F3EEE3; flex:3"></i><i style="background:#D9541E; flex:1.2"></i></div><figcaption><b>Editorial</b>Tinta, crema y un solo acento vivo: el negro hace que cualquier color parezca más intenso.<span class="vals"><code>#111111</code> <code>#F3EEE3</code> <code>#D9541E</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#111827; flex:6"></i><i style="background:#E6E9EE; flex:3"></i><i style="background:#2450FF; flex:1.2"></i></div><figcaption><b>Pantalla</b>Negro azulado, niebla y azul eléctrico: todo frío, precisión tecnológica.<span class="vals"><code>#111827</code> <code>#E6E9EE</code> <code>#2450FF</code></span></figcaption></figure>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span><p>En muchas pantallas OLED, al hacer scroll sobre negro puro aparecen estelas o manchas moradas, porque los píxeles apagados tardan en encenderse. Un fondo casi negro (<code>#0B0B0B</code> a <code>#121212</code>) lo reduce y apenas se distingue. Y en modo oscuro, evita el texto blanco puro al 100 %: un hueso o un gris muy claro cansa menos.</p></div>
+
+      <div class="band plate" style="--band-bg:#F3EEE3; --band-fg:#1C1714"><div class="inner">
+        <h2 id="blancos" class="">Blanco y cremas</h2>
+        <div class="plate-side"><ul class="kw"><li>pureza</li><li>espacio</li><li>calma</li></ul><p class="pwhy">La luz y el vacío. El blanco puro es artificial; los blancos de la naturaleza son cremas.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El blanco es la luz máxima y el espacio vacío. Transmite <strong>limpieza, pureza, orden y calma</strong>: es la bata del médico, la cal de las casas de pueblo, el vestido de novia, la sala de exposiciones. En una web, más blanco significa más aire y, casi siempre, más sensación de calidad, porque el espacio vacío es caro (dice «no necesitamos llenarlo todo»).</p>
+<p>La clave está en la temperatura. El blanco puro de pantalla es <strong>artificial</strong>: en la naturaleza casi no existe y el que vemos en la vida real suele estar blanqueado químicamente. Los blancos naturales son cremas: el papel sin blanquear, el algodón, la lana, el hueso. Por eso el crema transmite calidez y tradición, y el blanco nieve, tecnología y asepsia.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <p>Como con el negro, el matiz de un blanco es su temperatura. La diferencia entre nieve y crema parece mínima en una muestra y decisiva en una web entera.</p>
+      <div class="nuances wide">
+        <figure style="--s:#F4F7FA; --t:#1A1512"><i><span>Frío</span></i><figcaption><b>Nieve</b><code>#F4F7FA</code> <code>oklch(97% 0.005 248)</code><p>Clínico, técnico, digital. Limpio hasta la frialdad.</p></figcaption></figure>
+        <figure style="--s:#FFFFFF; --t:#1A1512"><i><span>Neutro</span></i><figcaption><b>Blanco puro</b><code>#FFFFFF</code> <code>oklch(100% 0 0)</code><p>Máxima luz, cero personalidad. Lienzo para el contenido.</p></figcaption></figure>
+        <figure style="--s:#F3EEE3; --t:#1A1512"><i><span>Cálido</span></i><figcaption><b>Crema</b><code>#F3EEE3</code> <code>oklch(95% 0.016 86)</code><p>Papel, algodón, pan. Acogedor y editorial.</p></figcaption></figure>
+        <figure style="--s:#E8DFCC; --t:#1A1512"><i><span>Envejecido</span></i><figcaption><b>Hueso</b><code>#E8DFCC</code> <code>oklch(91% 0.027 86)</code><p>Marfil, lino crudo, archivo. Tradición y artesanía.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Clínicas, salud, limpieza</strong>: higiene (mejor blanco roto que nieve, para no parecer quirófano).</li><li><strong>Arquitectura, galerías, lujo minimalista</strong>: espacio y silencio.</li><li><strong>Webs editoriales, marcas artesanas</strong>, en cremas.</li><li><strong>Tiendas online</strong>: el blanco deja que las fotos de producto manden.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Frío y sin personalidad</strong> si todo es blanco nieve con grises.</li><li><strong>Deslumbra por la noche</strong>, sobre todo en el móvil.</li><li><strong>Un crema con demasiado color</strong> (croma alto) parece amarillento o sucio. Los buenos cremas están casi en el gris.</li></ul></div>
+      </div>
+      <div class="sisno">
+        <figure class="no"><span class="tag">Así no</span>
+          <div class="mini" style="background:#F5E3B3; color:#2B2118"><div class="nav"><span>Alba Arquitectura</span><span>Proyectos</span></div><h4>Casas con la luz del Mediterráneo</h4><p>Crema con demasiado color: <code style="background:none">oklch(92% 0.065 90)</code>.</p></div>
+          <figcaption><b>Un crema con croma alto</b> deja de leerse como blanco cálido y pasa a parecer amarillo, o papel viejo con manchas.</figcaption></figure>
+        <figure><span class="tag">Así sí</span>
+          <div class="mini" style="background:#F3EEE3; color:#1C1714"><div class="nav"><span>Alba Arquitectura</span><span>Proyectos</span></div><h4>Casas con la luz del Mediterráneo</h4><p>Crema casi gris: <code style="background:none">oklch(95% 0.016 86)</code>.</p></div>
+          <figcaption><b>Un crema casi gris</b> se percibe como blanco, pero cálido. El buen crema apenas tiene color: con eso basta.</figcaption></figure>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#F3EEE3; flex:6"></i><i style="background:#111111; flex:3"></i><i style="background:#D9541E; flex:1.2"></i></div><figcaption><b>Mesa</b>El crema acoge al naranja y suaviza la tinta. Cálido, editorial.<span class="vals"><code>#F3EEE3</code> <code>#111111</code> <code>#D9541E</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#FFFFFF; flex:6"></i><i style="background:#0F1B3D; flex:3"></i><i style="background:#FF3D8B; flex:1.2"></i></div><figcaption><b>Nítido</b>Blanco puro con marino y rosa: el blanco frío potencia el contraste y la energía.<span class="vals"><code>#FFFFFF</code> <code>#0F1B3D</code> <code>#FF3D8B</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#E8DFCC; flex:6"></i><i style="background:#3D2417; flex:3"></i><i style="background:#1C4532; flex:1.2"></i></div><figcaption><b>Archivo</b>Hueso, chocolate y verde botella: todo envejecido, como una biblioteca.<span class="vals"><code>#E8DFCC</code> <code>#3D2417</code> <code>#1C4532</code></span></figcaption></figure>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span><p>Un fondo blanco puro en un teléfono por la noche, con el resto del sistema en modo oscuro, deslumbra. Un crema o un blanco roto (<code>#F7F4EE</code>) se lee igual de limpio y molesta menos; y si la web tiene versión oscura con <code>prefers-color-scheme</code>, todavía mejor.</p></div>
+
+      <div class="band plate" style="--band-bg:#B9BCC0; --band-fg:#16181B"><div class="inner">
+        <h2 id="grises" class="">Grises</h2>
+        <div class="plate-side"><ul class="kw"><li>neutralidad</li><li>técnica</li><li>sobriedad</li></ul><p class="pwhy">Piedra, hormigón, acero y cielo nublado: lo que está sin tomar partido.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El gris es la ausencia de saturación: ni cálido ni frío del todo, ni claro ni oscuro del todo. Es el color de la <strong>piedra, el hormigón, el acero y el cielo nublado</strong>. Transmite neutralidad, seriedad, técnica y equilibrio, y también, si no se cuida, tristeza y aburrimiento (el día gris).</p>
+<p>Lo importante del gris es que <strong>casi nunca es gris del todo</strong>. Un poquito de tono lo calienta (topo, greige) o lo enfría (pizarra), y ese matiz decide el ambiente de la web entera. Y como no tiene color propio, se contagia del vecino: junto a un naranja parecerá azulado, como viste en la lámina de Albers.</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <p>El gris se lee por su luz y por su temperatura. Elegir entre un gris pizarra y un topo es elegir entre oficina y casa.</p>
+      <div class="nuances wide">
+        <figure style="--s:#DADBDD; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Perla</b><code>#DADBDD</code> <code>oklch(89% 0 0)</code><p>Discreto, limpio, técnico. Superficie sin protagonismo.</p></figcaption></figure>
+        <figure style="--s:#33363B; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Antracita</b><code>#33363B</code> <code>oklch(33% 0.010 261)</code><p>Robusto, industrial, premium. Casi negro, más amable.</p></figcaption></figure>
+        <figure style="--s:#6B7480; --t:#FFFFFF"><i><span>Frío</span></i><figcaption><b>Pizarra</b><code>#6B7480</code> <code>oklch(56% 0.022 256)</code><p>Tecnológico, profesional, nublado. Orden y distancia.</p></figcaption></figure>
+        <figure style="--s:#8E857A; --t:#1A1512"><i><span>Cálido</span></i><figcaption><b>Topo</b><code>#8E857A</code> <code>oklch(62% 0.020 73)</code><p>Piedra al sol, lino, greige. Neutro acogedor.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Industria, ingeniería, automoción</strong>: técnica y robustez, en antracitas.</li><li><strong>Arquitectura e interiorismo</strong>: hormigón, piedra, en grises cálidos.</li><li><strong>Tecnología y SaaS</strong>: la base neutra de casi toda interfaz.</li><li><strong>Como estructura</strong>: textos secundarios, bordes, superficies.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Aburrido y sin emoción</strong> si no hay ni un color que lo despierte.</li><li><strong>Texto gris claro</strong>: el error más común de las webs «elegantes». Un gris sobre blanco por debajo de 4,5:1 no se lee.</li><li><strong>Grises neutros junto a colores saturados</strong> se tiñen solos y pueden parecer sucios.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#33363B; flex:6"></i><i style="background:#ECEDEE; flex:3"></i><i style="background:#F2B705; flex:1.2"></i></div><figcaption><b>Industria</b>Antracita, perla y amarillo: el gris pone la seriedad y el amarillo, la señal. Maquinaria, obra.<span class="vals"><code>#33363B</code> <code>#ECEDEE</code> <code>#F2B705</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#8E857A; flex:6"></i><i style="background:#F3EEE3; flex:3"></i><i style="background:#1C1714; flex:1.2"></i></div><figcaption><b>Piedra</b>Topo, crema y tinta: todo cálido y casi sin color. Arquitectura tranquila.<span class="vals"><code>#8E857A</code> <code>#F3EEE3</code> <code>#1C1714</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#6B7480; flex:6"></i><i style="background:#F4F6F8; flex:3"></i><i style="background:#FF6A13; flex:1.2"></i></div><figcaption><b>Contraste</b>Pizarra y butano: frío y apagado contra cálido y vivo. El naranja salta.<span class="vals"><code>#6B7480</code> <code>#F4F6F8</code> <code>#FF6A13</code></span></figcaption></figure>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span><p>Al sol, los grises claros desaparecen: un texto secundario en gris medio que en la oficina se lee, en la calle no existe. En el móvil, sube el contraste de los textos grises por encima del mínimo y no confíes la información importante a un gris.</p></div>
+
+      <div class="band plate edge" style="--band-bg:#17140F; --band-fg:#EFE3C8"><div class="inner">
+        <h2 id="dorado" class="metal">Dorado y metálicos</h2>
+        <div class="plate-side"><ul class="kw"><li>lujo</li><li>valor</li><li>celebración</li></ul><p class="pwhy">El metal que no se oxida y escasea: valor, premio, eternidad.</p></div>
+      </div></div>
+      <h3>Por qué transmite eso</h3>
+      <p>El oro es escaso, brilla y no se oxida: no pierde su aspecto con los siglos. Por eso significa <strong>valor, riqueza, éxito y eternidad</strong>. Las coronas, las medallas, los anillos de boda y los premios lo usan por la misma razón. La plata comparte parte del mensaje, pero fría: modernidad, tecnología, elegancia sobria. El cobre y el bronce, cálidos y terrosos, suenan a artesanía y a antigüedad.</p>
+<p>El problema es que <strong>el metal no es un color, es un reflejo</strong>. Lo que hace que el oro parezca oro son los brillos y las sombras que cambian cuando lo mueves. Un dorado plano en una pantalla pierde todo eso y se queda en un ocre o un mostaza. Hay tres salidas honestas: usar ese ocre con orgullo (oro viejo, como un sello), sugerir el metal con un degradado sutil de dos o tres paradas, o usar fotos reales de material (pan de oro, estampado en caliente).</p>
+      <h3>Claro, oscuro, vivo, apagado</h3>
+      <div class="nuances wide">
+        <figure style="--s:#E8D7B0; --t:#1A1512"><i><span>Claro</span></i><figcaption><b>Champán</b><code>#E8D7B0</code> <code>oklch(88% 0.055 87)</code><p>Celebración discreta, bodas, perfume. Lujo suave.</p></figcaption></figure>
+        <figure style="--s:#8C5A2B; --t:#FFFFFF"><i><span>Oscuro</span></i><figcaption><b>Bronce</b><code>#8C5A2B</code> <code>oklch(51% 0.091 62)</code><p>Artesanía, antigüedad, medalla. Cálido y terroso.</p></figcaption></figure>
+        <figure style="--s:#C9A227; --t:#1A1512"><i><span>Vivo</span></i><figcaption><b>Oro</b><code>#C9A227</code> <code>oklch(73% 0.138 90)</code><p>Riqueza, premio, ostentación. En plano, roza el mostaza.</p></figcaption></figure>
+        <figure style="--s:#A07D2E; --t:#1A1512"><i><span>Apagado</span></i><figcaption><b>Oro viejo</b><code>#A07D2E</code> <code>oklch(61% 0.105 84)</code><p>Tradición, sello, etiqueta de vino. El oro elegante.</p></figcaption></figure>
+      </div>
+      <div class="uses wide">
+        <div><h3>Dónde funciona y por qué</h3><ul><li><strong>Joyería, relojería, bodas</strong>: el producto es literalmente oro.</li><li><strong>Bodegas y aceites premium</strong>: las etiquetas con estampado dorado dicen «reserva».</li><li><strong>Hoteles, restaurantes de lujo, belleza premium</strong>, siempre en poca cantidad.</li><li><strong>Premios, aniversarios, ediciones especiales</strong>.</li></ul></div>
+        <div class="risk"><h3>Riesgos y cuándo evitarlo</h3><ul><li><strong>Hortera</strong> si hay mucho, si el degradado parece un arcoíris amarillo o si va con biseles y sombras.</li><li><strong>Ostentación</strong>: en sectores que venden confianza o precio justo, ahuyenta.</li><li><strong>Texto dorado sobre blanco</strong>: casi nunca pasa el contraste. El dorado va sobre oscuro.</li></ul></div>
+      </div>
+      <h3>Con qué combina</h3>
+      <div class="combos wide">
+        <figure><div class="tri"><i style="background:#0B0B0B; flex:6"></i><i style="background:#EFE3C8; flex:3"></i><i style="background:#C9A227; flex:1.2"></i></div><figcaption><b>Joyero</b>Negro y oro: el contraste de luz hace brillar al dorado. Lujo de escaparate.<span class="vals"><code>#0B0B0B</code> <code>#EFE3C8</code> <code>#C9A227</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#0F1B3D; flex:6"></i><i style="background:#F3EEE3; flex:3"></i><i style="background:#B08D57; flex:1.2"></i></div><figcaption><b>Institución</b>Marino y oro viejo: uniformes, escudos, banca privada. Autoridad con calidez.<span class="vals"><code>#0F1B3D</code> <code>#F3EEE3</code> <code>#B08D57</code></span></figcaption></figure>
+        <figure><div class="tri"><i style="background:#1C4532; flex:6"></i><i style="background:#F2EAD8; flex:3"></i><i style="background:#B08D57; flex:1.2"></i></div><figcaption><b>Club</b>Verde botella y oro: la combinación de las etiquetas de licor y las bibliotecas.<span class="vals"><code>#1C4532</code> <code>#F2EAD8</code> <code>#B08D57</code></span></figcaption></figure>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span><p>Los degradados dorados se ven con bandas en algunas pantallas de móvil y los brillos simulados pierden gracia a tamaño pequeño. En el teléfono, un oro viejo plano y bien elegido funciona mejor que un degradado complicado, y una foto real de un detalle dorado vale más que cualquier efecto CSS.</p></div>
+      <figure class="lab" data-title="Oro en pantalla" data-hint="Prueba los cuatro tratamientos" data-height="440" data-height-mobile="620" data-stage="dark" style="--hm:620px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="modes" id="modes">
+            <button data-m="plano" class="on">Dorado plano</button>
+            <button data-m="viejo">Oro viejo</button>
+            <button data-m="sutil">Degradado sutil</button>
+            <button data-m="exceso">Exceso</button>
+          </div>
+          <div class="shop plano" id="shop">
+            <div class="ring" aria-hidden="true"></div>
+            <div>
+              <p class="logo">Valls</p>
+              <p class="sub">Joyería desde 1962. Alianzas grabadas a mano en Vila-real.</p>
+              <span class="btn">Ver colección</span>
+            </div>
+          </div>
+          <p id="say"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 14px; background: #0e0c09; color: #efe3c8; font-family: var(--f-sans); }
+          .modes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+          .modes button { font: 600 13px var(--f-sans); background: none; color: inherit; border: 1px solid #4a4030; border-radius: 99px; padding: 0 14px; min-height: 40px; cursor: pointer; }
+          .modes .on { background: #efe3c8; color: #14120e; }
+          .shop { display: grid; grid-template-columns: 150px 1fr; gap: 28px; align-items: center; padding: 30px 28px; background: #14120e; }
+          /* Cada tratamiento define el «metal» como un fondo */
+          .plano  { --g: #C9A227; }
+          .viejo  { --g: #A07D2E; }
+          .sutil  { --g: linear-gradient(105deg, #8C5A2B, #E8D7B0 42%, #C9A227 58%, #7A5A1E); }
+          .exceso { --g: linear-gradient(180deg, #fff6a0, #ffd700 30%, #b8860b 49%, #fff6a0 51%, #daa520 80%, #8b6508); }
+          .logo { margin: 0; font: 700 64px/1 var(--f-serif); letter-spacing: -0.02em; background: var(--g); -webkit-background-clip: text; background-clip: text; color: transparent; }
+          .exceso .logo { filter: drop-shadow(2px 2px 0 #5a3d00) drop-shadow(0 0 12px rgb(255 215 0 / .7)); }
+          .ring { width: 150px; aspect-ratio: 1; border-radius: 50%; background: var(--g); -webkit-mask: radial-gradient(circle, transparent 56%, #000 57%); mask: radial-gradient(circle, transparent 56%, #000 57%); }
+          .sub { margin: 10px 0 18px; font-size: 14px; color: #cfc3a8; max-width: 34ch; }
+          .btn { display: inline-block; padding: 12px 18px; border-radius: 99px; background: var(--g); color: #14120e; font-size: 13px; font-weight: 700; }
+          .exceso .btn { box-shadow: inset 0 2px 0 #fff8c0, inset 0 -3px 0 #7a5500, 0 0 18px rgb(255 215 0 / .6); }
+          #say { margin: 12px 0 0; font: 400 15px/1.5 var(--f-read); min-height: 4.5em; }
+          @media (max-width: 520px) { .shop { grid-template-columns: 1fr; gap: 18px; } .ring { width: 96px; } .logo { font-size: 48px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const SAY = {
+            plano: 'Un dorado plano: sin brillos ni sombras, el ojo no lee metal. Se queda en un mostaza amable. Correcto, pero no parece oro.',
+            viejo: 'Oro viejo plano, más apagado y oscuro: deja de intentar parecer metal y se presenta como un sello o una etiqueta de vino. Es la opción más elegante y la que mejor envejece.',
+            sutil: 'Un degradado de cuatro paradas imita cómo la luz recorre una superficie curva: aparece el reflejo y el ojo lee metal. Úsalo solo en piezas pequeñas (logo, icono, filete).',
+            exceso: 'Brillos de arcoíris, bisel, resplandor: todo lo que hace que el dorado parezca de bazar. El exceso de efectos dice «quiero parecer caro», que es lo contrario de serlo.',
+          };
+          modes.addEventListener('click', (e) => {
+            const m = e.target.dataset.m; if (!m) return;
+            modes.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b === e.target));
+            shop.className = 'shop ' + m; say.textContent = SAY[m];
+          });
+          say.textContent = SAY.plano;
+        </script>
+        <figcaption>El metal es reflejo, no color: por eso un dorado plano parece ocre. Las dos salidas con criterio son el oro viejo plano, que no finge, y un degradado sutil en piezas pequeñas. El tercer camino, el exceso, es lo que hace que el dorado resulte hortera.</figcaption>
+      </figure>
+      <div class="quiz" data-answer="2">
+        <p class="q">Una bodega familiar de la Plana quiere que su tienda online «se vea premium» y te pide dorado. ¿Qué haces?</p>
+        <ol>
+          <li>Un degradado dorado brillante en los titulares y en todos los botones.</li>
+          <li>Oro viejo plano en pocos detalles (el sello, un filete, los iconos) sobre burdeos o crema, y fotos reales de la etiqueta con su estampado.</li>
+          <li>Un fondo dorado en toda la portada.</li>
+        </ol>
+        <p class="why">Lo premium se transmite con contención. El oro viejo plano parece un sello, el burdeos es literalmente el vino y las fotos del estampado real enseñan el metal de verdad. El degradado en todas partes y el fondo dorado caen en la ostentación.</p>
+      </div>
+
+
+      <h2 id="negocio">El mismo negocio en doce colores</h2>
+      <p>Para cerrar el catálogo, pruébalo al revés: un negocio fijo y las doce familias. Elige uno de los tres, pasa por los colores y lee por qué cada uno encaja, necesita matices o chirría. Fíjate en que ningún color es bueno o malo en sí mismo: depende de lo que vende el negocio y de a quién.</p>
+
+      <figure class="lab" data-title="Un negocio, doce colores" data-hint="Elige un negocio y recorre los colores" data-height="450" data-height-mobile="640" style="--hm:640px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="biz" id="biz"></div>
+          <div class="cols" id="cols"></div>
+          <div class="site" id="site">
+            <nav><b id="brand"></b><span>Inicio</span><span>Contacto</span></nav>
+            <h1 id="head"></h1>
+            <button id="cta"></button>
+            <i class="shape"></i>
+          </div>
+          <p class="verdict"><b id="tag"></b> <span id="why"></span></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 14px; background: #1d1713; color: #f2eadd; font-family: var(--f-sans); }
+          .biz, .cols { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+          .biz button { font: 600 13px var(--f-sans); border: 1px solid #5a4d44; background: none; color: inherit; border-radius: 99px; padding: 0 14px; min-height: 40px; cursor: pointer; }
+          .biz .on { background: #f2eadd; color: #1d1713; }
+          .cols button { width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .2); }
+          .cols .on { outline: 2px solid #f2eadd; outline-offset: 3px; }
+          .site { position: relative; overflow: hidden; padding: 22px 26px 28px; min-height: 230px; background: var(--bg); color: var(--fg); transition: background .4s, color .4s; }
+          nav { display: flex; gap: 16px; font-size: 13px; position: relative; z-index: 1; } nav b { margin-right: auto; font-size: 15px; }
+          h1 { position: relative; z-index: 1; max-width: 15ch; margin: 40px 0 18px; font: 400 clamp(28px, 5.5vw, 42px)/1 var(--f-serif); }
+          #cta { position: relative; z-index: 1; font: 600 14px var(--f-sans); border: 0; border-radius: 99px; padding: 0 18px; min-height: 44px; background: var(--ac); color: var(--on); }
+          .shape { position: absolute; right: -40px; bottom: -60px; width: 220px; height: 220px; border-radius: 50%; background: var(--ac); opacity: .25; }
+          .verdict { margin: 12px 0 0; font: 400 15px/1.5 var(--f-read); min-height: 4.5em; }
+          #tag { font: 700 12px var(--f-sans); padding: 4px 8px; border-radius: 4px; margin-right: 6px; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Paleta de cada familia: fondo, texto, acento, texto sobre el acento
+          const P = [{"id": "rojo", "n": "Rojo", "dot": "#D11F3A", "bg": "#FBEDE3", "fg": "#6A1424", "ac": "#D11F3A", "on": "#FFFFFF"}, {"id": "naranja", "n": "Naranja", "dot": "#FF6A13", "bg": "#FFF1E4", "fg": "#3A1A0C", "ac": "#FF6A13", "on": "#1D1410"}, {"id": "amarillo", "n": "Amarillo", "dot": "#F3DF2C", "bg": "#1C1A17", "fg": "#F5F0E6", "ac": "#F3D21C", "on": "#1C1A17"}, {"id": "verde", "n": "Verde", "dot": "#0E9F6E", "bg": "#F2F1E8", "fg": "#1C4532", "ac": "#0E7A55", "on": "#FFFFFF"}, {"id": "azul", "n": "Azul", "dot": "#2450FF", "bg": "#F4F7FB", "fg": "#0F1B3D", "ac": "#2450FF", "on": "#FFFFFF"}, {"id": "violeta", "n": "Violeta", "dot": "#7B3FF2", "bg": "#F4F0F8", "fg": "#3B1E4A", "ac": "#7B3FF2", "on": "#FFFFFF"}, {"id": "rosa", "n": "Rosa", "dot": "#FF3D8B", "bg": "#FCEFF1", "fg": "#5A0F2E", "ac": "#FF3D8B", "on": "#1F0B14"}, {"id": "tierras", "n": "Marrones y tierras", "dot": "#C2552E", "bg": "#EFE3D0", "fg": "#3D2417", "ac": "#B24E29", "on": "#FFFFFF"}, {"id": "negro", "n": "Negro", "dot": "#0B0B0B", "bg": "#0E0E0E", "fg": "#F3F0EA", "ac": "#F3F0EA", "on": "#0E0E0E"}, {"id": "blancos", "n": "Blanco y cremas", "dot": "#F3EEE3", "bg": "#FFFFFF", "fg": "#1C1714", "ac": "#1C1714", "on": "#FFFFFF"}, {"id": "grises", "n": "Grises", "dot": "#8E9196", "bg": "#ECEDEE", "fg": "#16181B", "ac": "#F2B705", "on": "#16181B"}, {"id": "dorado", "n": "Dorado y metálicos", "dot": "#C9A227", "bg": "#14120E", "fg": "#EFE3C8", "ac": "#C9A227", "on": "#14120E"}];
+          const B = [['Clínica dental', 'Clínica Sonríe', 'Tu sonrisa, sin prisas ni sustos', 'Pide cita'],
+                     ['Cervecería artesana', 'Cervesa del Grau', 'Cerveza artesana a dos calles del puerto', 'Ver cervezas'],
+                     ['Moda infantil', 'Petit Tren', 'Ropa para jugar, manchar y volver a jugar', 'Ver colección']];
+          // E = encaja, M = con matices, C = chirría
+          const V = { "rojo": [ "C|El rojo es sangre y alarma: justo lo que no quiere ver un paciente con miedo al dentista.", "M|En burdeos o teja funciona (calidez de bar, vino, madera); en rojo vivo suena a comida rápida.", "M|Alegre y con energía, pero como acento: en grandes superficies agobia a padres y niños." ], "naranja": [ "M|Cercano y optimista: válido para odontopediatría, pero menos serio que un azul o un verde.", "E|Es el ámbar de la cerveza y la calidez de la barra: energía y cercanía.", "E|Alegre, enérgico y sin estereotipo de género. Uno de los mejores colores para infancia." ], "amarillo": [ "C|Como base es señal de aviso; un pequeño acento de alegría sí puede funcionar.", "E|Es el color de la cerveza y del cereal. Con tinta o negro gana carácter.", "E|Sol y juego. En mantequilla, suave y tierno para ropa de bebé." ], "verde": [ "E|Salud, frescura e higiene. En menta o verde azulado tranquiliza.", "E|Botella, lúpulo y campo. El verde botella con crema es un clásico de bar.", "M|Natural y ecológico. En salvia, perfecto para moda orgánica; en vivo, más deportivo." ], "azul": [ "E|Calma, limpieza y confianza. Es el estándar del sector, y por eso también cuesta diferenciarse.", "M|Frío y poco apetitoso como base. Un marino con dorado puede dar aire de cervecería clásica.", "M|Un celeste suave funciona, pero cuidado con caer en el «azul para niños»." ], "violeta": [ "M|La lavanda calma, pero se lee más como estética o spa que como salud dental.", "M|Original para una cerveza negra o de frutos rojos; poco natural para toda la gama.", "M|La lavanda es dulce y moderna; el violeta eléctrico ya suena adolescente." ], "rosa": [ "M|El empolvado da calidez a una clínica estética; en dental general resta seriedad.", "C|Rompe con el sector. Solo si la marca quiere provocar a propósito.", "M|Funciona, pero el rosa como único color encasilla la tienda en «ropa de niña»." ], "tierras": [ "C|El marrón no sugiere limpieza, que es lo primero que busca un paciente.", "E|Malta, madera, barrica y artesanía: el color del producto.", "M|Kraft y tostados para moda sostenible; menos alegre que lo que el público espera." ], "negro": [ "C|Luto y frialdad. Como mucho, en una clínica estética de lujo.", "E|Stout, pizarra y carácter de taberna urbana, con un acento cálido.", "C|Demasiado adulto y serio para el público y para lo que se vende." ], "blancos": [ "E|Higiene y luz. Mejor un blanco roto que un nieve, para no parecer quirófano.", "M|Limpio pero sin sabor: necesita un color con carácter que diga «cerveza».", "E|Como base, deja que la ropa y las fotos pongan el color." ], "grises": [ "M|Serio y técnico, pero frío: necesita un acento amable.", "M|Hormigón y acero de fábrica: sirve para una cervecería industrial con acento ámbar.", "C|Apagado para un público que vive en color." ], "dorado": [ "C|Sugiere lujo y precio alto: ahuyenta a quien busca confianza.", "M|Para etiquetas premium y ediciones especiales, sobre negro o verde botella.", "C|Como base no; un detalle dorado para ceremonias y bautizos, sí." ] };
+          const TAG = { E: ['Encaja', '#7fd1a0'], M: ['Con matices', '#f0c46a'], C: ['Chirría', '#f08a7e'] };
+          let b = 0, c = 0;
+          B.forEach((x, i) => { const el = document.createElement('button'); el.textContent = x[0]; el.onclick = () => { b = i; draw(); }; biz.append(el); });
+          P.forEach((p, i) => { const el = document.createElement('button'); el.style.background = p.dot; el.title = p.n; el.setAttribute('aria-label', p.n); el.onclick = () => { c = i; draw(); }; cols.append(el); });
+          function draw() {
+            const p = P[c], [, brandTxt, headTxt, ctaTxt] = B[b], [k, txt] = V[p.id][b].split('|');
+            biz.querySelectorAll('button').forEach((x, i) => x.classList.toggle('on', i === b));
+            cols.querySelectorAll('button').forEach((x, i) => x.classList.toggle('on', i === c));
+            Object.entries({ bg: p.bg, fg: p.fg, ac: p.ac, on: p.on }).forEach(([n, v]) => site.style.setProperty('--' + n, v));
+            brand.textContent = brandTxt; head.textContent = headTxt; cta.textContent = ctaTxt;
+            tag.textContent = p.n + ': ' + TAG[k][0]; tag.style.background = TAG[k][1]; tag.style.color = '#1d1713';
+            why.textContent = txt;
+          }
+          draw();
+        </script>
+        <figcaption>Fíjate en los «con matices»: casi siempre el problema no es el tono, sino su luz o su saturación. Un rojo vivo chirría en una cervecería y un burdeos encaja. Esa es la conversación que puedes tener con un cliente cuando te pide un color concreto.</figcaption>
+      </figure>
+
+      <h2 id="tabla">Tabla resumen</h2>
+      <p>Las doce familias en una tabla para tenerla a mano. En el móvil, desliza la tabla hacia los lados.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Familia</th><th>Transmite</th><th>Por qué</th><th>Sectores</th><th>Cuidado con</th><th>Combina con</th></tr></thead>
+          <tbody>
+<tr><th scope="row"><span class="dot" style="background:#D11F3A"></span>Rojo</th><td>Pasión, urgencia, energía</td><td>Sangre y fuego: obligan a reaccionar</td><td>Restauración, ofertas, deporte, vino (burdeos)</td><td>Errores de interfaz, salud, finanzas</td><td>Crema y tinta, marino, oro viejo</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#FF6A13"></span>Naranja</th><td>Energía, cercanía, optimismo</td><td>El fuego amable: sol, brasa, fruta</td><td>Infancia, ocio, CTA, alimentación, bricolaje</td><td>Lo premium (abarata), texto blanco encima</td><td>Azul marino, crema y tinta, oliva</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#F3DF2C"></span>Amarillo</th><td>Alegría, atención, optimismo</td><td>El sol; con negro, la señal de peligro</td><td>Construcción, infancia, ofertas, diseño (mostaza)</td><td>Texto (no se lee), grandes superficies</td><td>Tinta, marino, berenjena</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#0E9F6E"></span>Verde</th><td>Naturaleza, salud, calma</td><td>El paisaje fértil: agua, comida, sombra</td><td>Ecológico, farmacia, bienestar, clásico (botella)</td><td>El cliché eco, rojo a su misma luz</td><td>Crema y oro viejo, terracota, coral</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#2450FF"></span>Azul</th><td>Confianza, calma, orden</td><td>Cielo y agua: lo que no cambia</td><td>Banca, seguros, salud, tecnología</td><td>No diferencia, frío, poco apetitoso</td><td>Crema y naranja, rosa fuerte, pizarra</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#7B3FF2"></span>Violeta</th><td>Lujo, misterio, creatividad</td><td>Raro en la naturaleza y tinte carísimo</td><td>Belleza, tecnología creativa, lujo nocturno</td><td>Lecturas ideológicas, artificialidad</td><td>Crema y ámbar, salvia, rosa</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#FF3D8B"></span>Rosa</th><td>Ternura, juventud, atrevimiento (fuerte)</td><td>Rojo con luz: piel, flores, dulces</td><td>Pastelería, cosmética, bodas, apps jóvenes</td><td>Cliché de género, infantilizar</td><td>Marino, verde botella, yema</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#C2552E"></span>Marrones y tierras</th><td>Artesanía, calidez, tradición</td><td>Tierra, madera, cuero, café</td><td>Café, panadería, bodega, artesanía</td><td>Salud, tecnología, grises sucios</td><td>Crema y terracota, oliva, petróleo</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#111827"></span>Negro</th><td>Elegancia, poder, misterio</td><td>La noche; el tinte caro del Siglo de Oro</td><td>Moda, lujo, tecnología premium, coctelería</td><td>Exceso lúgubre, luto, negro puro en texto</td><td>Hueso y oro, un acento vivo, azul eléctrico</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#F3EEE3"></span>Blanco y cremas</th><td>Pureza, espacio, calma</td><td>La luz y el vacío; el crema es el blanco natural</td><td>Clínicas, arquitectura, lujo minimalista, e-commerce</td><td>Frialdad (nieve), cremas amarillentos</td><td>Todo; tinta y naranja, marino</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#6B7480"></span>Grises</th><td>Neutralidad, técnica, sobriedad</td><td>Piedra, hormigón, acero, nublado</td><td>Industria, arquitectura, tecnología</td><td>Aburrimiento, texto gris claro</td><td>Un acento vivo, cremas, tinta</td></tr>
+<tr><th scope="row"><span class="dot" style="background:#C9A227"></span>Dorado y metálicos</th><td>Lujo, valor, celebración</td><td>Metal escaso que no se oxida</td><td>Joyería, bodas, bodega premium, hoteles</td><td>Exceso hortera, texto sobre blanco</td><td>Negro, marino, verde botella, burdeos</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>La columna «Combina con» es solo un avance. El porqué de que unos colores peguen y otros no (compartir luz, oponerse en temperatura, la proporción entre un vivo y un apagado) lo tienes en <a href="color-armonia.html">Por qué unos colores pegan</a>.</p>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Los colores transmiten asociaciones aprendidas, no leyes. Vienen de la naturaleza (las más fuertes), de la cultura y de las convenciones del sector.</li>
+          <li>Cada asociación tiene un origen concreto: el rojo es sangre y fuego, el azul es cielo y agua, el violeta fue el tinte más caro, el negro fue el lujo de la corte. Saber el origen te dice cuánto pesa.</li>
+          <li>La luz y la saturación cambian el mensaje tanto como el tono: cereza y burdeos, eléctrico y marino, limón y mostaza dicen cosas distintas.</li>
+          <li>La competencia y el tono de la marca pesan tanto como el color: el color correcto del sector puede ser justo el que no te diferencia.</li>
+          <li>Neutros y metálicos también hablan: el crema calienta, el blanco nieve enfría, el gris se contagia y el oro necesita brillo o sobriedad.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Elige tres clientes reales de la agencia de sectores distintos. Para cada uno, haz una tabla con su color principal: qué transmite y por qué, en qué matiz está (claro, oscuro, vivo o apagado), qué colores usan sus tres competidores principales y si su color encaja, necesita matices o chirría. Termina cada ficha con una frase que podrías decirle al cliente para defender o para proponer un cambio, con su porqué.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: doce familias. Al tocar una, la tinta se extiende desde el dedo y la portada se tiñe.
+  (() => {
+    const F = [{"id": "rojo", "name": "Rojo", "kw": ["pasión", "urgencia", "apetito"], "why": "Sangre y fuego: lo que en la naturaleza obliga a reaccionar ya.", "hb": "#A8181E", "hf": "#FBEDE3", "nu": [["Claro", "Coral", "#F0806F", "#1A1512"], ["Oscuro", "Burdeos", "#6A1424", "#FFFFFF"], ["Vivo", "Cereza", "#D11F3A", "#FFFFFF"], ["Apagado", "Teja", "#A65446", "#FFFFFF"]], "sc": {"brand": "Brasa", "head": "Horno de leña a 450 grados", "sub": "Pizzería en el centro de Castelló", "btn": "Pide para llevar", "sb": "#FBEDE3", "sf": "#6A1424", "sa": "#D11F3A", "sat": "#FFFFFF", "so": "#F0806F"}}, {"id": "naranja", "name": "Naranja", "kw": ["energía", "cercanía", "optimismo"], "why": "El fuego amable: el calor del sol de la tarde y de la fruta madura, sin la amenaza del rojo.", "hb": "#E8601C", "hf": "#1D1410", "nu": [["Claro", "Melocotón", "#F7BE95", "#1A1512"], ["Oscuro", "Óxido", "#8C3A17", "#FFFFFF"], ["Vivo", "Butano", "#FF6A13", "#1A1512"], ["Apagado", "Arcilla", "#C0805E", "#1A1512"]], "sc": {"brand": "Chispa", "head": "Robótica para peques curiosos", "sub": "Academia en Vila-real, de 6 a 12 años", "btn": "Clase de prueba gratis", "sb": "#FFF1E4", "sf": "#3A1A0C", "sa": "#FF6A13", "sat": "#1D1410", "so": "#F7BE95"}}, {"id": "amarillo", "name": "Amarillo", "kw": ["alegría", "atención", "luz"], "why": "El color del sol y el más luminoso de todos: por eso alegra y, junto al negro, avisa.", "hb": "#F2C12E", "hf": "#1F1A10", "nu": [["Claro", "Mantequilla", "#F7E3A1", "#1A1512"], ["Oscuro", "Ocre", "#9C7414", "#FFFFFF"], ["Vivo", "Limón", "#F3DF2C", "#1A1512"], ["Apagado", "Mostaza", "#C9A23A", "#1A1512"]], "sc": {"brand": "Reformas Ribes", "head": "Tu reforma, en 30 días y por escrito", "sub": "Obras y reformas en la Plana", "btn": "Pide presupuesto", "sb": "#1C1A17", "sf": "#F5F0E6", "sa": "#F3D21C", "sat": "#1C1A17", "so": "#C9A23A"}}, {"id": "verde", "name": "Verde", "kw": ["naturaleza", "salud", "equilibrio"], "why": "El paisaje fértil: donde hay verde hay agua, comida y sombra.", "hb": "#1F4D36", "hf": "#EEF2E6", "nu": [["Claro", "Menta", "#BDE3CA", "#1A1512"], ["Oscuro", "Botella", "#1C4532", "#FFFFFF"], ["Vivo", "Esmeralda", "#0E9F6E", "#1A1512"], ["Apagado", "Salvia", "#94A688", "#1A1512"]], "sc": {"brand": "Huerta de la Plana", "head": "Verdura ecológica, del campo a tu puerta", "sub": "Cestas semanales desde Vila-real", "btn": "Ver la cesta", "sb": "#F2F1E8", "sf": "#1C4532", "sa": "#0E7A55", "sat": "#FFFFFF", "so": "#94A688"}}, {"id": "azul", "name": "Azul", "kw": ["confianza", "calma", "orden"], "why": "El cielo y el agua: lo que está siempre ahí y no cambia.", "hb": "#173A7A", "hf": "#F1F4FA", "nu": [["Claro", "Celeste", "#A9CDEB", "#1A1512"], ["Oscuro", "Marino", "#0F1B3D", "#FFFFFF"], ["Vivo", "Eléctrico", "#2450FF", "#FFFFFF"], ["Apagado", "Pizarra", "#5E7287", "#FFFFFF"]], "sc": {"brand": "Clínica Dental Mar", "head": "Tu sonrisa, sin prisas ni sustos", "sub": "Castelló, junto al Grao", "btn": "Pide cita", "sb": "#F4F7FB", "sf": "#0F1B3D", "sa": "#2450FF", "sat": "#FFFFFF", "so": "#A9CDEB"}}, {"id": "violeta", "name": "Violeta", "kw": ["lujo", "misterio", "creatividad"], "why": "Escaso en la naturaleza y durante siglos el tinte más caro: color de reyes.", "hb": "#4A2574", "hf": "#F3EEF8", "nu": [["Claro", "Lavanda", "#C9B8E8", "#1A1512"], ["Oscuro", "Berenjena", "#3B1E4A", "#FFFFFF"], ["Vivo", "Violeta eléctrico", "#7B3FF2", "#FFFFFF"], ["Apagado", "Malva", "#9C849E", "#1A1512"]], "sc": {"brand": "Estudio Malva", "head": "Rituales de calma para la piel", "sub": "Estética y bienestar en Benicàssim", "btn": "Reservar", "sb": "#F4F0F8", "sf": "#3B1E4A", "sa": "#7B3FF2", "sat": "#FFFFFF", "so": "#C9B8E8"}}, {"id": "rosa", "name": "Rosa", "kw": ["ternura", "juventud", "atrevimiento"], "why": "Rojo con luz: la pasión suavizada, la piel, las flores y los dulces.", "hb": "#FF3D8B", "hf": "#1F0B14", "nu": [["Claro", "Rosa palo", "#F2C9CF", "#1A1512"], ["Oscuro", "Frambuesa", "#A3154F", "#FFFFFF"], ["Vivo", "Rosa fuerte", "#FF3D8B", "#1A1512"], ["Apagado", "Empolvado", "#C99A9E", "#1A1512"]], "sc": {"brand": "Obrador Merengue", "head": "Tartas que se recuerdan", "sub": "Pastelería por encargo en Onda", "btn": "Encargar tarta", "sb": "#FCEFF1", "sf": "#5A0F2E", "sa": "#FF3D8B", "sat": "#1F0B14", "so": "#F2C9CF"}}, {"id": "tierras", "name": "Tierras", "kw": ["artesanía", "calidez", "tradición"], "why": "La tierra, la madera, el cuero, el café y el pan: materiales hechos a mano que envejecen bien.", "hb": "#5E3A22", "hf": "#F6EBDD", "nu": [["Claro", "Kraft", "#CDAE84", "#1A1512"], ["Oscuro", "Chocolate", "#3D2417", "#FFFFFF"], ["Vivo", "Terracota", "#C2552E", "#FFFFFF"], ["Apagado", "Topo", "#8A7A6A", "#1A1512"]], "sc": {"brand": "Tostadero Albar", "head": "Café tostado cada martes", "sub": "Especialidad, en grano o molido", "btn": "Comprar café", "sb": "#EFE3D0", "sf": "#3D2417", "sa": "#B24E29", "sat": "#FFFFFF", "so": "#CDAE84"}}, {"id": "negro", "name": "Negro", "kw": ["elegancia", "poder", "misterio"], "why": "La noche y la ausencia de luz; y durante siglos, el tinte más difícil y caro de conseguir.", "hb": "#0B0B0B", "hf": "#F3F0EA", "nu": [["Puro", "Negro puro", "#000000", "#FFFFFF"], ["Cálido", "Tinta café", "#1C1714", "#FFFFFF"], ["Frío", "Negro azulado", "#111827", "#FFFFFF"], ["Suave", "Carbón", "#2E2D2B", "#FFFFFF"]], "sc": {"brand": "Sastrería Ortiz", "head": "Trajes a medida desde 1971", "sub": "Castelló de la Plana", "btn": "Pedir cita", "sb": "#0E0E0E", "sf": "#F3F0EA", "sa": "#F3F0EA", "sat": "#0E0E0E", "so": "#2E2D2B"}}, {"id": "blancos", "name": "Blancos", "kw": ["pureza", "espacio", "calma"], "why": "La luz y el vacío. El blanco puro es artificial; los blancos de la naturaleza son cremas.", "hb": "#F3EEE3", "hf": "#1C1714", "nu": [["Frío", "Nieve", "#F4F7FA", "#1A1512"], ["Neutro", "Blanco puro", "#FFFFFF", "#1A1512"], ["Cálido", "Crema", "#F3EEE3", "#1A1512"], ["Envejecido", "Hueso", "#E8DFCC", "#1A1512"]], "sc": {"brand": "Alba Arquitectura", "head": "Casas con la luz del Mediterráneo", "sub": "Estudio de arquitectura en Castelló", "btn": "Ver proyectos", "sb": "#FFFFFF", "sf": "#1C1714", "sa": "#1C1714", "sat": "#FFFFFF", "so": "#E8DFCC"}}, {"id": "grises", "name": "Grises", "kw": ["neutralidad", "técnica", "sobriedad"], "why": "Piedra, hormigón, acero y cielo nublado: lo que está sin tomar partido.", "hb": "#B9BCC0", "hf": "#16181B", "nu": [["Claro", "Perla", "#DADBDD", "#1A1512"], ["Oscuro", "Antracita", "#33363B", "#FFFFFF"], ["Frío", "Pizarra", "#6B7480", "#FFFFFF"], ["Cálido", "Topo", "#8E857A", "#1A1512"]], "sc": {"brand": "Estructuras Ferrer", "head": "Ingeniería para la industria cerámica", "sub": "Proyectos llave en mano", "btn": "Hablar con un ingeniero", "sb": "#ECEDEE", "sf": "#16181B", "sa": "#F2B705", "sat": "#16181B", "so": "#B9BCC0"}}, {"id": "dorado", "name": "Dorado", "kw": ["lujo", "valor", "celebración"], "why": "El metal que no se oxida y escasea: valor, premio, eternidad.", "hb": "#17140F", "hf": "#EFE3C8", "nu": [["Claro", "Champán", "#E8D7B0", "#1A1512"], ["Oscuro", "Bronce", "#8C5A2B", "#FFFFFF"], ["Vivo", "Oro", "#C9A227", "#1A1512"], ["Apagado", "Oro viejo", "#A07D2E", "#1A1512"]], "sc": {"brand": "Joyería Valls", "head": "Alianzas grabadas a mano", "sub": "Desde 1962 en Vila-real", "btn": "Ver colección", "sb": "#14120E", "sf": "#EFE3C8", "sa": "#C9A227", "sat": "#14120E", "so": "#A07D2E"}}];
+    const hero = document.querySelector('.hero'), ink = hero.querySelector('.ink');
+    const $ = (s) => hero.querySelector(s);
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const name = $('.fname');
+    let cur = 0, busy = null;
+    function fit() {
+      name.style.fontSize = '';
+      const avail = name.parentElement.clientWidth, w = name.scrollWidth;
+      if (w > avail) name.style.fontSize = (parseFloat(getComputedStyle(name).fontSize) * avail / w * 0.98) + 'px';
+    }
+    function fill(f) {
+      name.textContent = f.name; name.classList.toggle('metal', f.id === 'dorado');
+      $('.hkw').innerHTML = f.kw.map((k) => `<li>${k}</li>`).join('');
+      $('.hwhy').textContent = f.why;
+      $('.hgo').href = '#' + f.id;
+      const m = $('.mock'), s = f.sc;
+      ['sb', 'sf', 'sa', 'sat', 'so'].forEach((k) => m.style.setProperty('--' + k, s[k]));
+      m.querySelector('.mnav b').textContent = s.brand; m.querySelector('h2').textContent = s.head;
+      m.querySelector('p').textContent = s.sub; m.querySelector('.mbtn').textContent = s.btn;
+      $('.hnu').innerHTML = f.nu.map(([lab, n, h]) => `<div style="--s:${h}"><i></i><small>${lab}</small><b>${n}</b></div>`).join('');
+      hero.querySelectorAll('.picker button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.i === cur));
+      fit();
+    }
+    function apply(i, x, y) {
+      if (i === cur) return;
+      cur = i; const f = F[i];
+      hero.style.setProperty('--hf', f.hf); document.documentElement.style.setProperty('--top-fg', f.hf);
+      if (reduce || x == null) { hero.style.setProperty('--hb', f.hb); fill(f); return; }
+      const r = hero.getBoundingClientRect();
+      const px = x - r.left, py = y - r.top;
+      const rad = Math.hypot(Math.max(px, r.width - px), Math.max(py, r.height - py));
+      clearTimeout(busy);
+      ink.classList.remove('go'); void ink.offsetWidth;
+      ink.style.setProperty('--nb', f.hb); ink.style.setProperty('--x', px + 'px'); ink.style.setProperty('--y', py + 'px'); ink.style.setProperty('--r', rad + 'px');
+      ink.classList.add('go');
+      fill(f);
+      busy = setTimeout(() => { hero.style.setProperty('--hb', f.hb); ink.classList.remove('go'); }, 860);
+    }
+    hero.querySelectorAll('.picker button').forEach((b) => b.addEventListener('click', (e) => {
+      const rr = b.querySelector('i').getBoundingClientRect();
+      apply(+b.dataset.i, e.clientX || rr.left + rr.width / 2, e.clientY || rr.top + rr.height / 2);
+    }));
+    // Con el teclado: flechas para recorrer las familias
+    hero.querySelector('.picker').addEventListener('keydown', (e) => {
+      if (!['ArrowRight', 'ArrowLeft'].includes(e.key)) return;
+      const n = (cur + (e.key === 'ArrowRight' ? 1 : F.length - 1)) % F.length;
+      const b = hero.querySelector(`.picker button[data-i="${n}"]`); b.focus(); b.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+      const rr = b.getBoundingClientRect(); apply(n, rr.left + rr.width / 2, rr.top + rr.height / 2);
+    });
+    addEventListener('resize', fit);
+    document.fonts && document.fonts.ready.then(fit);
+    fill(F[0]);
+  })();
+
+</script>
+</body>
+</html>

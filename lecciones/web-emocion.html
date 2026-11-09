@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webs que venden emoción | Hora azul</title>
+<meta name="description" content="Siete sectores que se compran con el estómago: agencia e imprenta, restaurante, moda, hotel rural, inmobiliaria de lujo, gimnasio y portfolio. Paleta, tipografía, estructura, imagen y movimiento de cada uno, siempre con el porqué.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<meta name="theme-color" content="#2C0D23">
+<style>
+  /* Identidad de la lección: «Escaparate».
+     Ciruela oscuro, rosa claro y ámbar. Unbounded 700 para titulares, Inter Tight para leer.
+     El fondo oscuro hace de calle de noche: las siete webs son escaparates iluminados. */
+  :root {
+    --bg: oklch(22% 0.06 340);
+    --bg-2: oklch(26.5% 0.065 340);
+    --bg-3: oklch(32% 0.07 340);
+    --fg: oklch(95% 0.02 350);
+    --muted: oklch(80% 0.04 345);
+    --faint: oklch(68% 0.05 345);
+    --accent: oklch(78% 0.15 60);
+    --on-accent: oklch(22% 0.06 340);
+    --code-bg: oklch(16.5% 0.045 340);
+    --scheme: dark;
+    --f-display: "Unbounded", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 700;
+    --display-tracking: -0.04em;
+  }
+  body { font-size: clamp(1.04rem, 1rem + 0.2vw, 1.16rem); line-height: 1.64; }
+  .prose h2 { font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3.4rem); line-height: 1; letter-spacing: -0.045em; }
+  .prose h3 { font-size: clamp(1.1rem, 0.98rem + 0.55vw, 1.42rem); font-weight: 600; letter-spacing: -0.025em; margin-top: 2.6rem; }
+  .prose h3 + p { margin-top: 0; }
+  .prose strong { color: oklch(97% 0.015 350); }
+
+  /* =========================================================
+     Identidades de los siete sectores (las usan portada, bandas, fichas y «así sí / así no»)
+     ========================================================= */
+  .k-imprenta { --s-bg: #F2EFE8; --s-fg: #151515; --s-ac: #FF48B0; --s-ac2: #FFD23F; --s-n: #151515; --s-fd: "Bricolage", sans-serif; --s-fw: 800; --s-fs: 75%; --s-ft: -0.02em; --s-fb: "Inter Tight", sans-serif; }
+  .k-brasa    { --s-bg: #2A1A14; --s-fg: #F3E7D3; --s-ac: #E8A33D; --s-ac2: #B5381F; --s-fd: "Fraunces", serif; --s-fw: 600; --s-ft: -0.035em; --s-fb: "Inter Tight", sans-serif; }
+  .k-salitre  { --s-bg: #EFEAE2; --s-fg: #161514; --s-ac: #9C4A28; --s-ac2: #CFC6B8; --s-fd: "Bodoni Moda", serif; --s-fw: 500; --s-ft: -0.02em; --s-fb: "Inter Tight", sans-serif; }
+  .k-roure    { --s-bg: #E9E3D6; --s-fg: #2F3B2C; --s-ac: #A45E2E; --s-ac2: #9AA58A; --s-n: #2F3B2C; --s-fd: "Cormorant", serif; --s-fw: 500; --s-ft: -0.015em; --s-fb: "Jost", sans-serif; }
+  .k-orient   { --s-bg: #16151A; --s-fg: #E8DFD0; --s-ac: #C9A96E; --s-ac2: #8C8478; --s-fd: "Instrument Serif", serif; --s-fw: 400; --s-ft: -0.01em; --s-fb: "Archivo", sans-serif; }
+  .k-ferric   { --s-bg: #0E0F10; --s-fg: #F2F2EE; --s-ac: #C8FF2E; --s-ac2: #2A2C2E; --s-fd: "Big Shoulders", sans-serif; --s-fw: 900; --s-ft: 0; --s-up: uppercase; --s-fb: "Inter Tight", sans-serif; }
+  .k-clara    { --s-bg: #2B3DF5; --s-fg: #FFFFFF; --s-ac: #F5F3EF; --s-ac2: #1B1B1B; --s-n: #FFFFFF; --s-fd: "Syne", sans-serif; --s-fw: 800; --s-ft: -0.04em; --s-fb: "JetBrains Mono", monospace; }
+
+  /* =========================================================
+     Portada: el escaparate. Siete mini webs que se recorren deslizando.
+     ========================================================= */
+  @property --glow { syntax: "<color>"; inherits: true; initial-value: #E8A33D; }
+  .hero { --wh: min(64svh, 600px); display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); grid-template-rows: 1fr auto;
+    background: var(--bg); color: var(--fg); transition: --glow 0.9s var(--ease-out); }
+  /* La luz del escaparate toma el acento de la web activa */
+  .hero::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(55% 60% at 72% 58%, color-mix(in oklab, var(--glow) 30%, transparent), transparent 72%),
+                radial-gradient(45% 40% at 0% 0%, oklch(30% 0.09 340 / .9), transparent 70%); }
+  .hero-copy { grid-column: 1; grid-row: 1; align-self: center; padding: 6.5rem 1rem 1rem var(--gutter); }
+  .hero [data-kicker] { margin: 0; font: 600 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { font-size: clamp(2.5rem, 0.6rem + 4.3vw, 5.3rem); line-height: 0.9; letter-spacing: -0.06em; margin: 1.1rem 0 1.3rem; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero .lede { margin: 0; max-width: 34ch; font-size: var(--step-1); line-height: 1.38; color: var(--muted); }
+
+  .now { grid-column: 1; grid-row: 2; padding: 0 1rem 2.2rem var(--gutter); display: grid; gap: .25rem; }
+  .now p { margin: 0; }
+  .now-n { font: 600 var(--step--1)/1 var(--f-ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .now-n b { color: var(--accent); }
+  .now-name { font: 700 var(--step-1)/1.15 var(--f-display); letter-spacing: -0.03em; margin-top: .35rem !important; }
+  .now-words { font: 600 var(--step--1)/1.3 var(--f-ui); color: var(--accent); }
+  .now-why { font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); max-width: 40ch; min-height: 2.9em; }
+
+  .vitrina { grid-column: 2; grid-row: 1; align-self: center; position: relative; display: flex; gap: clamp(.9rem, 1.6vw, 1.5rem); margin: 0; padding: 6rem var(--gutter) 1rem 2rem;
+    list-style: none; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-left: 2rem; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 2rem); mask-image: linear-gradient(90deg, transparent, #000 2rem); }
+  .vitrina::-webkit-scrollbar { display: none; }
+  .vitrina li { flex: none; scroll-snap-align: start; }
+  .win { display: block; width: calc(var(--wh) * 0.7); color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+  .win:focus-visible { outline: none; }
+  .win:focus-visible .frame { outline: 3px solid var(--accent); outline-offset: 4px; }
+  .frame { position: relative; display: flex; flex-direction: column; height: var(--wh); overflow: hidden; border-radius: 14px; container-type: inline-size;
+    background: var(--s-bg); color: var(--s-fg); box-shadow: 0 0 0 1px oklch(100% 0 0 / .1), 0 40px 70px -30px oklch(8% 0.05 340 / .9);
+    transition: transform .6s var(--ease-out), box-shadow .6s var(--ease-out); }
+  .win.on .frame { transform: translateY(-8px); box-shadow: 0 0 0 1px oklch(100% 0 0 / .18), 0 50px 80px -30px color-mix(in oklab, var(--s-ac) 40%, oklch(8% 0.05 340)); }
+  .cap { display: flex; gap: .55rem; margin-top: .95rem; font: 600 var(--step--1)/1.25 var(--f-ui); color: var(--faint); transition: color .3s; }
+  .cap b { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .win.on .cap { color: var(--fg); }
+  .bar { display: flex; align-items: center; gap: 1.3cqi; padding: 2.6cqi 3.4cqi; font: 500 2.9cqi/1 var(--f-ui); background: color-mix(in oklab, var(--s-fg) 9%, var(--s-bg)); color: color-mix(in oklab, var(--s-fg) 62%, var(--s-bg)); }
+  .bar i { width: 1.9cqi; aspect-ratio: 1; border-radius: 50%; background: currentColor; opacity: .55; }
+  .bar span { margin-left: auto; margin-right: auto; padding: 1.1cqi 4cqi; border-radius: 99px; background: color-mix(in oklab, var(--s-fg) 7%, var(--s-bg)); }
+  .ws { position: relative; flex: 1; overflow: hidden; padding: 5cqi; }
+  .ws-nav { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 2cqi; font: 600 3.2cqi/1 var(--s-fb); }
+  .ws-nav b { font-family: var(--s-fd); font-weight: var(--s-fw); }
+  .ws-h { position: relative; z-index: 2; margin: 0; font-family: var(--s-fd); font-weight: var(--s-fw); letter-spacing: var(--s-ft); }
+  .ws-btn { position: absolute; z-index: 2; left: 5cqi; bottom: 5cqi; padding: 3.2cqi 5cqi; border-radius: 99px; font: 700 3.6cqi/1 var(--f-ui); }
+
+  /* 1 · Imprenta: papel, tinta y flúor */
+  .ws-imp .ws-nav b { font-size: 5.6cqi; font-stretch: 75%; letter-spacing: -0.02em; }
+  .ws-imp .ws-h { margin-top: 8cqi; font-size: 14.5cqi; line-height: .86; font-stretch: 75%; }
+  .ws-imp mark { background: var(--s-ac); color: var(--s-fg); padding: 0 1.4cqi; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .pile { position: absolute; right: -4cqi; bottom: 19cqi; width: 66cqi; height: 66cqi; }
+  .pile i { position: absolute; display: grid; place-items: center; width: 38cqi; aspect-ratio: 1 / 1.41; font: 800 7cqi/.9 "Bricolage", sans-serif; font-stretch: 75%; font-style: normal; text-align: center; box-shadow: 0 2cqi 5cqi rgb(0 0 0 / .2); }
+  .pile i:nth-child(1) { left: 0; top: 12cqi; rotate: -11deg; background: var(--s-ac2); font-size: 13cqi; z-index: 1; }
+  .pile i:nth-child(2) { left: 26cqi; top: 0; rotate: 7deg; background: radial-gradient(circle, rgb(21 21 21 / .9) 30%, transparent 33%) 0 0 / 3.2cqi 3.2cqi, var(--s-ac); }
+  .pile i:nth-child(3) { left: 30cqi; top: 27cqi; rotate: -3deg; z-index: 2; background: var(--s-fg); color: var(--s-ac); }
+  .ws-imp .ws-btn { background: var(--s-fg); color: var(--s-bg); }
+
+  /* 2 · Restaurante: brasa, lino y azafrán */
+  .ws-bra .ws-nav b { font-size: 6.4cqi; font-style: italic; }
+  .ws-bra .ws-h { margin-top: 9cqi; font-size: 11.5cqi; line-height: .95; }
+  .ws-bra .ws-h em { color: var(--s-ac); }
+  .ws-bra .status { position: relative; z-index: 2; margin: 4cqi 0 0; font: 500 3.4cqi/1.3 var(--f-ui); }
+  .ws-bra .status::before { content: ""; display: inline-block; width: 2cqi; height: 2cqi; margin-right: 1.6cqi; border-radius: 50%; background: oklch(76% 0.15 140); }
+  .paella { position: absolute; right: -30cqi; bottom: -32cqi; width: 104cqi; aspect-ratio: 1; border-radius: 50%;
+    background:
+      radial-gradient(ellipse 9% 3.6% at 34% 38%, #B5381F 60%, transparent 66%),
+      radial-gradient(ellipse 3.6% 9% at 58% 30%, #B5381F 60%, transparent 66%),
+      radial-gradient(ellipse 8% 3.4% at 46% 60%, #C2492E 60%, transparent 66%),
+      radial-gradient(circle at 63% 47%, #F3E7D3 0 2.6%, transparent 3%),
+      radial-gradient(circle at 40% 49%, #6F7A44 0 2.2%, transparent 2.6%),
+      radial-gradient(circle at 52% 42%, #6F7A44 0 1.8%, transparent 2.2%),
+      repeating-conic-gradient(from 8deg, rgb(255 236 200 / .08) 0 2deg, transparent 2deg 6deg),
+      radial-gradient(circle, #EDB04A 0 34%, #D8902F 50%, #A8641F 57%, #3A2620 58% 61%, #120B09 62% 69%, transparent 70%); }
+  .ws-bra .ws-btn { background: var(--s-ac); color: var(--s-bg); }
+
+  /* 3 · Moda: la interfaz se aparta */
+  .ws-sal { padding: 4cqi 5cqi; }
+  .ws-sal .ws-nav { font-size: 2.9cqi; font-weight: 500; }
+  .ws-sal .ws-nav b { font-size: 6.4cqi; letter-spacing: .12em; font-weight: 500; }
+  .ws-sal .photo { position: absolute; inset: 15cqi 5cqi 23cqi; overflow: hidden;
+    background: linear-gradient(112deg, transparent 0 28%, rgb(255 236 214 / .22) 28% 40%, transparent 40% 47%, rgb(255 236 214 / .22) 47% 59%, transparent 59%), linear-gradient(170deg, #BC7A52, #9C4A28 70%, #8A3F22); }
+  .ws-sal .photo svg { position: absolute; left: 70%; bottom: -2%; width: 50%; translate: -50% 0; filter: drop-shadow(5cqi 3cqi 4cqi rgb(60 20 5 / .35)); }
+  .ws-sal .ws-h { position: absolute; left: 9cqi; bottom: 27cqi; font-size: 9cqi; line-height: .95; font-style: italic; color: var(--s-bg); max-width: 44cqi; }
+  .ws-sal .foot { position: absolute; left: 5cqi; right: 5cqi; bottom: 7cqi; display: flex; justify-content: space-between; font: 500 3.1cqi/1 var(--f-ui); }
+  .ws-sal .foot u { text-underline-offset: .3em; }
+
+  /* 4 · Hotel rural: la paleta sale del paisaje */
+  .ws-rou { padding: 0; }
+  .ws-rou svg.land { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ws-rou .ws-nav { padding: 5cqi 5cqi 0; }
+  .ws-rou .ws-nav b { font-size: 6.6cqi; font-style: italic; }
+  .ws-rou .ws-h { padding: 0 5cqi; margin-top: 7cqi; font-size: 12.5cqi; line-height: .9; }
+  .ws-rou .ws-h em { color: var(--s-ac); }
+  .ws-rou .book { position: absolute; z-index: 2; left: 5cqi; right: 5cqi; bottom: 5cqi; display: flex; align-items: center; justify-content: space-between; gap: 2cqi; padding: 2cqi 2cqi 2cqi 4cqi; border-radius: 99px; background: var(--s-bg); color: var(--s-fg); font: 500 3.1cqi/1 var(--s-fb); }
+  .ws-rou .book span:last-child { padding: 2.8cqi 4cqi; border-radius: 99px; background: var(--s-ac); color: #fff; font-weight: 600; }
+
+  /* 5 · Inmobiliaria de lujo: la torre de los vídeos */
+  .ws-ori { background: url("../landing/media/torre-plantas.webp") 64% 50% / cover; }
+  .ws-ori::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, var(--s-bg) 0 18%, rgb(22 21 26 / .55) 45%, rgb(22 21 26 / 0) 70%), linear-gradient(rgb(22 21 26 / .45), transparent 22%); }
+  .ws-ori .ws-nav { font: 500 2.7cqi/1 var(--s-fb); font-stretch: 125%; letter-spacing: .28em; }
+  .ws-ori .low { position: absolute; z-index: 2; left: 5cqi; right: 5cqi; bottom: 6cqi; }
+  .ws-ori .ws-h { font-size: 12.5cqi; line-height: .92; }
+  .ws-ori .ws-h em { color: var(--s-ac); }
+  .ws-ori .meta { margin: 3.5cqi 0 4cqi; font: 400 2.9cqi/1.4 var(--s-fb); font-stretch: 112%; letter-spacing: .05em; color: color-mix(in oklab, var(--s-fg) 80%, transparent); }
+  .ws-ori .lnk { font: 500 3.2cqi/1 var(--s-fb); color: var(--s-ac); border-bottom: 1px solid currentColor; padding-bottom: 1.2cqi; }
+
+  /* 6 · Gimnasio: asfalto y lima */
+  .ws-fer::before { content: ""; position: absolute; left: -20%; right: -20%; top: 54%; height: 15cqi; background: var(--s-ac); rotate: -9deg; opacity: .14; }
+  .ws-fer .ws-nav b { font-size: 6.4cqi; letter-spacing: .02em; text-transform: uppercase; }
+  .ws-fer .ws-h { margin-top: 8cqi; font-size: 21cqi; line-height: .8; text-transform: uppercase; }
+  .ws-fer .ws-h span { color: var(--s-ac); }
+  .ws-fer .stats { position: relative; z-index: 2; display: flex; gap: 6cqi; margin-top: 6cqi; font: 600 3.1cqi/1.25 var(--f-ui); color: color-mix(in oklab, var(--s-fg) 75%, transparent); }
+  .ws-fer .stats b { display: block; font: 800 8cqi/1 "Big Shoulders", sans-serif; color: var(--s-fg); }
+  .ws-fer .ws-btn { bottom: 16cqi; background: var(--s-ac); color: var(--s-bg); text-transform: uppercase; letter-spacing: .04em; }
+  .ws-fer .mq { position: absolute; left: 0; bottom: 0; width: 100%; overflow: hidden; padding: 2.4cqi 0; background: var(--s-ac2); font: 800 4.6cqi/1 "Big Shoulders", sans-serif; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  .ws-fer .mq span { display: inline-block; padding-left: 4cqi; animation: mq 14s linear infinite; }
+  @keyframes mq { to { transform: translateX(-50%); } }
+
+  /* 7 · Portfolio: un azul propio a pantalla completa */
+  .ws-cla .ws-nav { font: 500 2.8cqi/1 var(--s-fb); }
+  .ws-cla .ws-h { margin-top: 9cqi; font-size: 14cqi; line-height: .86; }
+  .ws-cla .pos { position: relative; z-index: 2; margin: 4cqi 0 0; font: 400 3.2cqi/1.45 var(--s-fb); max-width: 78cqi; }
+  .ws-cla ol { position: absolute; z-index: 2; left: 5cqi; right: 5cqi; bottom: 5cqi; margin: 0; padding: 0; list-style: none; font: 500 3.1cqi/1 var(--s-fb); }
+  .ws-cla li { display: grid; grid-template-columns: 9cqi 1fr auto; align-items: center; gap: 3cqi; padding: 2.2cqi 0; border-top: 1px solid rgb(255 255 255 / .35); }
+  .ws-cla li i { height: 7cqi; border-radius: 1.2cqi; background: var(--t); }
+
+  .ctrl { grid-column: 2; grid-row: 2; display: flex; align-items: center; gap: .6rem; padding: 0 var(--gutter) 2.2rem 2rem; }
+  .arr { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border-radius: 50%; border: 1px solid var(--line-2); background: transparent; color: var(--fg); cursor: pointer; transition: background-color .2s, border-color .2s, opacity .2s; }
+  .arr:hover { border-color: var(--fg); }
+  .arr:disabled { opacity: .35; cursor: default; }
+  .arr svg { width: 18px; height: 18px; }
+  .ctrl .tip { font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .kick-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
+
+  @media (max-width: 900px) {
+    .hero { --wh: min(44svh, 400px); grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; align-content: start; }
+    .hero-copy { grid-row: 1; padding: 5.2rem var(--gutter) 0; }
+    .hero h1 { font-size: clamp(2.3rem, 1rem + 6.4vw, 3.6rem); margin: .8rem 0 .8rem; }
+    .hero .lede { font-size: 1rem; }
+    .vitrina { grid-column: 1; grid-row: 2; padding: 1.1rem var(--gutter) .7rem; scroll-padding-left: var(--gutter); -webkit-mask-image: none; mask-image: none; }
+    .now { grid-row: 3; padding: .3rem var(--gutter) 0; grid-template-columns: auto 1fr; column-gap: .8rem; align-items: baseline; }
+    .now-name { font-size: 1.05rem; margin-top: 0 !important; }
+    .now-words, .now-why { grid-column: 1 / -1; }
+    .now-why { min-height: 0; }
+    .ctrl { display: none; }
+    .cap { display: none; }
+    .now { padding-bottom: 1.2rem; }
+  }
+  @media (max-width: 900px) and (max-height: 760px) { .hero .lede { display: none; } .now-why { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .ws-fer .mq span { animation: none; } .hero { transition: none; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  /* Cinco palancas: números gigantes en fila */
+  .palancas { list-style: none; padding: 0 !important; margin: 2.6rem 0 3rem; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--fg); }
+  .palancas li { margin: 0; padding: 1.2rem 1.1rem 1.2rem 0; }
+  .palancas li + li { padding-left: 1.1rem; border-left: 1px solid var(--line-2); }
+  .palancas b { display: block; font: 700 clamp(2.6rem, 1.6rem + 3vw, 4.4rem)/.85 var(--f-display); letter-spacing: -0.06em; color: var(--accent); }
+  .palancas strong { display: block; margin: .9rem 0 .35rem; font: 700 var(--step-0)/1.2 var(--f-display); letter-spacing: -0.03em; }
+  .palancas span { display: block; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  @media (max-width: 900px) { .palancas { grid-template-columns: 1fr; } .palancas li, .palancas li + li { display: grid; grid-template-columns: 4rem 1fr; gap: 0 1rem; padding: 1rem 0; border-left: 0; border-bottom: 1px solid var(--line-2); } .palancas b { grid-row: span 2; font-size: 2.6rem; } .palancas strong { margin-top: .1rem; } }
+
+  /* Banda de cada sector: lleva su paleta y su tipografía */
+  .band.sector { --band-bg: var(--s-bg); --band-fg: var(--s-fg); margin: 7rem 0 3rem calc(50% - 50vw); padding-block: clamp(3.4rem, 7vw, 6rem); }
+  .band.sector .inner { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 2rem 4rem; align-items: end; }
+  .band.sector h2 { margin: 0; max-width: 11ch; scroll-margin-top: 4rem; font-family: var(--s-fd); font-weight: var(--s-fw); font-stretch: var(--s-fs, 100%); letter-spacing: var(--s-ft); text-transform: var(--s-up, none);
+    font-size: clamp(2.6rem, 1rem + 5.4vw, 6.4rem); line-height: .9; }
+  .band.sector h2 .n { font-family: var(--f-ui); font-weight: 600; font-stretch: 100%; text-transform: none; color: var(--s-n, var(--s-ac)); }
+  .band.sector .thesis { margin: 1.4rem 0 0; max-width: 34ch; font: 500 var(--step-1)/1.35 var(--s-fb); }
+  .band.sector .words { list-style: none; margin: 0; padding: 0; text-align: right; font-family: var(--s-fd); font-weight: var(--s-fw); font-stretch: var(--s-fs, 100%); letter-spacing: var(--s-ft); text-transform: var(--s-up, none); font-size: clamp(1.5rem, 1rem + 1.8vw, 2.5rem); line-height: 1.12; }
+  .band.sector .words li { margin: 0; }
+  .band.sector .words li:nth-child(2) { text-decoration: underline; text-decoration-color: var(--s-ac); text-decoration-thickness: .14em; text-underline-offset: .12em; }
+  .band.sector .who { margin: .9rem 0 0; font: 500 var(--step--1)/1.4 var(--f-ui); opacity: .82; }
+  .k-brasa.band h2, .k-roure.band h2 { font-style: italic; }
+  .k-brasa.band .words, .k-roure.band .words { font-style: italic; }
+  @media (max-width: 760px) { .band.sector .inner { grid-template-columns: 1fr; } .band.sector .words { text-align: left; display: flex; flex-wrap: wrap; gap: 0 .7em; font-size: 1.45rem; } }
+
+  /* Paleta proporcional con sus valores */
+  .pal { margin: 1.6rem 0 2rem; }
+  .pal-strip { display: flex; min-height: 12rem; border-radius: var(--radius-m); overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+  .pal-strip > div { flex: var(--w) 1 0; min-width: 10.5rem; display: flex; flex-direction: column; justify-content: flex-end; gap: .15rem; padding: 1rem; background: var(--c); color: var(--t); font: 500 .8rem/1.3 var(--f-ui); }
+  .pal-strip b { font: 700 1rem/1.2 var(--f-ui); }
+  .pal-strip span { opacity: .82; margin-bottom: .4rem; }
+  .pal-strip code { background: none; padding: 0; font-size: .74rem; color: inherit; }
+  .pal-copy { margin-top: .8rem; }
+  @media (max-width: 760px) { .pal-strip { flex-direction: column; min-height: 0; } .pal-strip > div { min-width: 0; display: grid; grid-template-columns: 1fr auto; column-gap: 1rem; padding: .85rem 1rem; } .pal-strip b, .pal-strip span { grid-column: 1; } .pal-strip span { margin: 0; } .pal-strip code { grid-column: 2; grid-row: 1; text-align: right; } .pal-strip code + code { grid-row: 2; } }
+
+  /* Muestra tipográfica en los colores del sector */
+  .spec { display: grid; grid-template-columns: auto 1fr; gap: 1rem 2.4rem; align-items: center; margin: 1.6rem 0 2rem; padding: clamp(1.4rem, 3vw, 2.4rem); border-radius: var(--radius-m); background: var(--s-bg); color: var(--s-fg); }
+  .spec .aa { margin: 0; font-family: var(--s-fd); font-weight: var(--s-fw); font-stretch: var(--s-fs, 100%); letter-spacing: var(--s-ft); font-size: clamp(4.5rem, 3rem + 5vw, 8.5rem); line-height: .8; color: var(--s-n, var(--s-ac)); }
+  .spec .h { margin: 0 0 .7rem; font-family: var(--s-fd); font-weight: var(--s-fw); font-stretch: var(--s-fs, 100%); letter-spacing: var(--s-ft); text-transform: var(--s-up, none); font-size: clamp(1.7rem, 1.1rem + 2vw, 2.8rem); line-height: .98; }
+  .spec .b { margin: 0 0 .9rem; font: 400 1rem/1.55 var(--s-fb); max-width: 46ch; }
+  .spec .m { margin: 0; font: 500 .8rem/1.3 var(--f-ui); opacity: .78; }
+  @media (max-width: 640px) { .spec { grid-template-columns: 1fr; } .spec .aa { font-size: 4.2rem; } }
+
+  /* Estructura de la home: el orden de la página como un esquema */
+  .home { list-style: none; counter-reset: h; padding: 0 !important; margin: 1.4rem 0 2rem; border-left: 2px solid var(--line-2); }
+  .home li { counter-increment: h; position: relative; margin: 0; padding: .6rem 0 .75rem 3.1rem; }
+  .home li::before { content: counter(h, decimal-leading-zero); position: absolute; left: .9rem; top: .78rem; font: 700 .78rem/1 var(--f-ui); color: var(--accent); font-variant-numeric: tabular-nums; }
+  .home li::after { content: ""; position: absolute; left: -6px; top: 1rem; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 2px var(--accent); }
+  .home li.cta::after { background: var(--accent); }
+  .home b { display: block; font: 700 var(--step-0)/1.3 var(--f-ui); }
+  .home span { display: block; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+
+  /* Medidor de movimiento */
+  .meter { display: flex; align-items: center; gap: 1rem; margin: .4rem 0 1.1rem; font: 600 var(--step--1)/1.3 var(--f-ui); }
+  .meter .track { display: grid; grid-template-columns: repeat(5, 1.6rem); gap: 4px; }
+  .meter .track i { height: .55rem; border-radius: 2px; background: var(--line-2); }
+  .meter .track i:nth-child(-n + 1) { background: var(--accent); }
+  .meter[data-v="2"] .track i:nth-child(-n + 2), .meter[data-v="3"] .track i:nth-child(-n + 3), .meter[data-v="4"] .track i:nth-child(-n + 4), .meter[data-v="5"] .track i { background: var(--accent); }
+
+  /* Así sí / Así no */
+  .sino { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; margin: 1.8rem 0 2.2rem; }
+  .sino figure { margin: 0; }
+  .sino figcaption { margin-top: .85rem; font: 400 var(--step--1)/1.5 var(--f-ui); color: var(--muted); }
+  .sino figcaption b { display: inline-block; margin-right: .45rem; padding: .18rem .6rem; border-radius: 99px; font-size: .76rem; font-weight: 700; }
+  .sino .si figcaption b { background: color-mix(in oklab, var(--ok) 28%, transparent); color: oklch(90% 0.1 150); }
+  .sino .no figcaption b { background: color-mix(in oklab, var(--ko) 30%, transparent); color: oklch(88% 0.08 20); }
+  @media (max-width: 760px) { .sino { grid-template-columns: 1fr; } }
+  .mk { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 10px; container-type: inline-size; font-family: var(--f-ui); background: var(--s-bg); color: var(--s-fg); box-shadow: 0 0 0 1px var(--line); }
+  .mk > * { position: absolute; margin: 0; }
+  .mk .nv { left: 4cqi; right: 4cqi; top: 3.4cqi; display: flex; justify-content: space-between; font: 600 2.4cqi/1 var(--f-ui); }
+  .mk .t { font-family: var(--s-fd); font-weight: var(--s-fw); font-stretch: var(--s-fs, 100%); letter-spacing: var(--s-ft); line-height: .92; }
+  .mk .p { font-size: 2.3cqi; line-height: 1.4; }
+  .mk .bt { padding: 1.8cqi 3.2cqi; border-radius: 99px; font: 700 2.4cqi/1 var(--f-ui); }
+  /* piezas de «así no» */
+  .mk.cheap { background: #fff; color: #333; font-family: Arial, sans-serif; }
+  .mk .badge { display: grid; place-items: center; width: 14cqi; aspect-ratio: 1; border-radius: 50%; background: #E3001B; color: #fff; font: 800 2.4cqi/1 Arial, sans-serif; rotate: -14deg; text-align: center; }
+  .mk .stock { background: linear-gradient(135deg, #b9c6d6, #e4e9ef); }
+  .mk .stock::before, .mk .stock::after { content: ""; position: absolute; bottom: 0; width: 26%; height: 62%; border-radius: 50% 50% 0 0; background: #95a3b5; }
+  .mk .stock::before { left: 22%; } .mk .stock::after { right: 22%; }
+  .mk .dots { left: 50%; translate: -50% 0; display: flex; gap: 1.2cqi; }
+  .mk .dots i { width: 1.6cqi; aspect-ratio: 1; border-radius: 50%; background: #fff; opacity: .7; }
+
+  /* Comparativa final */
+  .band.claim { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.claim p { margin: 0; max-width: 20ch; font: 700 clamp(1.9rem, 1rem + 3.4vw, 4.2rem)/1 var(--f-display); letter-spacing: -0.055em; }
+  .statement { font-size: clamp(1.9rem, 1.1rem + 3vw, 3.8rem); line-height: 1; letter-spacing: -0.055em; max-width: 19ch !important; }
+  .statement em { font-style: normal; color: var(--accent); }
+  .table-wrap table { min-width: 760px; }
+  .table-wrap td:first-child { font-weight: 650; white-space: nowrap; }
+  .reto h3 { margin-top: 0; }
+  .table-wrap .dot { display: inline-block; width: .8em; height: .8em; border-radius: 50%; margin-right: .15em; vertical-align: -.05em; box-shadow: 0 0 0 1px var(--line-2); }
+  /* ---- Mini composiciones de «así sí / así no», una pareja por sector ---- */
+  .mk .h em { font-style: inherit; }
+  .mk-imp .nv b { font: 800 3.6cqi/1 "Bricolage", sans-serif; font-stretch: 75%; }
+  .mk-imp .h { left: 4cqi; top: 13cqi; width: 54cqi; font-size: 9cqi; line-height: .95; }
+  .mk-imp mark { background: #FF48B0; color: inherit; padding: 0 1cqi; }
+  .mk-imp .fl { width: 19cqi; aspect-ratio: 1 / 1.41; box-shadow: 0 1cqi 3cqi rgb(0 0 0 / .18); }
+  .mk-imp .fl.a { right: 19cqi; top: 16cqi; background: #FFD23F; rotate: -10deg; }
+  .mk-imp .fl.b { right: 6cqi; top: 11cqi; background: radial-gradient(circle, rgb(21 21 21 / .85) 30%, transparent 34%) 0 0 / 1.6cqi 1.6cqi, #FF48B0; rotate: 7deg; }
+  .mk-imp .fl.c { right: 12cqi; top: 27cqi; background: #151515; rotate: -3deg; }
+  .mk-imp .bt { left: 4cqi; bottom: 6cqi; background: #151515; color: #F2EFE8; }
+  .mk-imp-no .top { left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 2.4cqi 4cqi; background: #1D4ED8; color: #fff; font: 700 2.3cqi/1 Arial, sans-serif; }
+  .mk-imp-no .top span { font-weight: 400; font-size: 1.9cqi; }
+  .mk-imp-no .stock { left: 4cqi; right: 52cqi; top: 13cqi; bottom: 28cqi; overflow: hidden; }
+  .mk-imp-no .t2 { left: 52cqi; right: 4cqi; top: 15cqi; font: 700 4.4cqi/1.15 Arial, sans-serif; color: #1D3A8A; }
+  .mk-imp-no .cards { left: 4cqi; right: 4cqi; bottom: 4cqi; height: 19cqi; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqi; }
+  .mk-imp-no .cards i { position: relative; background: #F1F4F8; border-radius: 1cqi; box-shadow: 0 1cqi 2cqi rgb(0 0 0 / .12); }
+  .mk-imp-no .cards i::before { content: ""; position: absolute; left: 50%; top: 3cqi; width: 5cqi; aspect-ratio: 1; translate: -50% 0; border-radius: 50%; background: #1D4ED8; opacity: .8; }
+  .mk-imp-no .cards i::after { content: ""; position: absolute; left: 20%; right: 20%; top: 10.5cqi; height: 1.2cqi; background: #C9D2DE; box-shadow: 0 2.4cqi 0 #DCE2EA; }
+
+  .mk-bra .pn { right: -12cqi; bottom: -22cqi; width: 58cqi; aspect-ratio: 1; border-radius: 50%; box-shadow: 0 3cqi 6cqi rgb(0 0 0 / .5);
+    background: radial-gradient(ellipse 9% 3.6% at 34% 38%, #B5381F 60%, transparent 66%), radial-gradient(ellipse 3.6% 9% at 60% 30%, #B5381F 60%, transparent 66%), radial-gradient(circle at 46% 52%, #6F7A44 0 2.4%, transparent 2.8%),
+      radial-gradient(circle, #EDB04A 0 34%, #D8902F 50%, #A8641F 57%, #3A2620 58% 61%, #120B09 62% 69%, transparent 70%); }
+  .mk-bra .nv b { font: italic 600 3.8cqi/1 "Fraunces", serif; }
+  .mk-bra .op { left: 4cqi; top: 13cqi; font-size: 2.2cqi; }
+  .mk-bra .op::before { content: ""; display: inline-block; width: 1.4cqi; height: 1.4cqi; margin-right: 1cqi; border-radius: 50%; background: #8FD16A; }
+  .mk-bra .h { left: 4cqi; top: 19cqi; width: 50cqi; font-size: 7.4cqi; }
+  .mk-bra .h em { color: #E8A33D; font-style: italic; }
+  .mk-bra .b1 { left: 4cqi; bottom: 7cqi; background: #E8A33D; color: #2A1A14; }
+  .mk-bra .b2 { left: 30cqi; bottom: 7cqi; border: 1px solid rgb(243 231 211 / .45); }
+  .mk-bra-no .sl { left: 0; right: 0; top: 0; height: 58%; display: flex; justify-content: space-between; align-items: center; padding: 0 2cqi; background: linear-gradient(135deg, #A7A39B, #D9D4CB); color: #fff; font: 400 7cqi/1 Arial, sans-serif; }
+  .mk-bra-no .dots { top: 52%; }
+  .mk-bra-no .w { left: 0; right: 0; top: 63%; text-align: center; font: italic 700 4.6cqi/1 "Times New Roman", serif; color: #8B1A1A; }
+  .mk-bra-no .pdf { left: 0; right: 0; top: 76%; text-align: center; font: 2.6cqi/1 Arial, sans-serif; color: #0645AD; text-decoration: underline; }
+  .mk-bra-no .ft { left: 0; right: 0; bottom: 3cqi; text-align: center; font: 1.9cqi/1 Arial, sans-serif; color: #999; }
+
+  .mk-sal .ph { left: 40cqi; right: 4cqi; top: 10cqi; bottom: 4cqi; overflow: hidden;
+    background: linear-gradient(112deg, transparent 0 28%, rgb(255 236 214 / .2) 28% 40%, transparent 40% 47%, rgb(255 236 214 / .2) 47% 59%, transparent 59%), linear-gradient(170deg, #BC7A52, #9C4A28 70%, #8A3F22); }
+  .mk-sal .ph::after { content: ""; position: absolute; left: 36%; bottom: 0; width: 32%; height: 88%; background: #EFEAE2; clip-path: polygon(38% 0, 62% 0, 68% 20%, 100% 100%, 0 100%, 32% 20%); }
+  .mk-sal .nv { font-size: 2cqi; font-weight: 500; align-items: center; }
+  .mk-sal .nv b { font: 500 3.6cqi/1 "Bodoni Moda", serif; letter-spacing: .14em; }
+  .mk-sal .h { left: 4cqi; top: 24cqi; width: 32cqi; font-size: 6.4cqi; font-style: italic; }
+  .mk-sal .lk { left: 4cqi; top: 49cqi; font-size: 2.2cqi; border-bottom: 1px solid; padding-bottom: .6cqi; }
+  .mk-sal-no .ph { left: 0; right: 0; top: 7cqi; bottom: 0; background: linear-gradient(170deg, #BC7A52, #9C4A28); }
+  .mk-sal-no .rb { left: 0; right: 0; top: 0; z-index: 2; padding: 2cqi; background: #E3001B; color: #fff; text-align: center; font: 800 2.8cqi/1 Arial, sans-serif; }
+  .mk-sal-no .pop { left: 50%; top: 55%; translate: -50% -50%; width: 50cqi; display: grid; gap: 1.6cqi; padding: 4cqi; background: #fff; color: #222; border-radius: 1.5cqi; text-align: center; font: 2.4cqi/1.3 Arial, sans-serif; box-shadow: 0 0 0 100cqi rgb(0 0 0 / .45); }
+  .mk-sal-no .pop b { font-size: 5cqi; color: #E3001B; }
+  .mk-sal-no .pop i { font-style: normal; padding: 1.8cqi; border-radius: 99px; background: #FF00AA; color: #fff; font-weight: 700; }
+  .mk-sal-no .badge { right: 5cqi; top: 12cqi; z-index: 2; }
+
+  .mk-rou svg { inset: 0; width: 100%; height: 100%; }
+  .mk-rou .nv b { font: italic 500 3.8cqi/1 "Cormorant", serif; }
+  .mk-rou .h { left: 4cqi; top: 13cqi; width: 60cqi; font-size: 8cqi; }
+  .mk-rou .h em { color: #8A4E26; font-style: italic; }
+  .mk-rou .bk { left: 4cqi; right: 4cqi; bottom: 4cqi; display: flex; justify-content: space-between; align-items: center; padding: 1.4cqi 1.4cqi 1.4cqi 3cqi; border-radius: 99px; background: #E9E3D6; font: 500 2.2cqi/1 "Jost", sans-serif; }
+  .mk-rou .bk i { font-style: normal; padding: 1.8cqi 3cqi; border-radius: 99px; background: #A45E2E; color: #fff; }
+  .mk-rou-no .tt { left: 0; right: 0; top: 3cqi; text-align: center; font: 700 3.6cqi/1 "Times New Roman", serif; color: #6B3E1F; letter-spacing: .06em; }
+  .mk-rou-no .room { left: 4cqi; top: 11cqi; width: 40cqi; height: 29cqi; background: radial-gradient(circle at 50% 30%, #FFFBE6, #D7C9A8 60%, #A8977A); }
+  .mk-rou-no .ic { left: 48cqi; right: 4cqi; top: 11cqi; display: grid; grid-template-columns: 1fr 1fr; gap: 1.4cqi; }
+  .mk-rou-no .ic i { padding: 2.2cqi 1cqi; border-radius: 1cqi; background: #EEF3E8; color: #3D6B2C; font: 2cqi/1 Arial, sans-serif; font-style: normal; text-align: center; }
+  .mk-rou-no .bb { left: 4cqi; right: 4cqi; bottom: 4cqi; padding: 2.4cqi; border-radius: 1cqi; background: #F39200; color: #fff; text-align: center; font: 800 3cqi/1.3 Arial, sans-serif; }
+  .mk-rou-no .bb span { display: block; font: 400 2cqi/1.3 Arial, sans-serif; }
+
+  .mk-ori .ph { inset: 0; background: url("../landing/media/torre-plantas.webp") 64% 50% / cover; }
+  .mk-ori .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #16151A 0 20%, rgb(22 21 26 / .45) 52%, transparent 78%); }
+  .mk-ori .nv { font: 500 1.9cqi/1 "Archivo", sans-serif; font-stretch: 125%; letter-spacing: .28em; }
+  .mk-ori .h { left: 4cqi; top: 22cqi; width: 40cqi; font-size: 7.6cqi; }
+  .mk-ori .h em { color: #C9A96E; }
+  .mk-ori .lk { left: 4cqi; bottom: 9cqi; padding-bottom: 1cqi; border-bottom: 1px solid; color: #C9A96E; font: 500 2.2cqi/1 "Archivo", sans-serif; }
+  .mk-ori-no .fb { left: 3cqi; right: 3cqi; top: 3cqi; display: flex; gap: 1.2cqi; }
+  .mk-ori-no .fb i { flex: 1; padding: 1.6cqi; border: 1px solid #CCC; color: #555; font: 2cqi/1 Arial, sans-serif; font-style: normal; }
+  .mk-ori-no .fb b { padding: 1.6cqi 2.4cqi; background: #0A7D3B; color: #fff; font: 700 2cqi/1 Arial, sans-serif; }
+  .mk-ori-no .gr { left: 3cqi; right: 3cqi; top: 12cqi; bottom: 3cqi; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4cqi; }
+  .mk-ori-no .gr i { position: relative; background: linear-gradient(135deg, #C8CDD4, #9AA3AD); }
+  .mk-ori-no .gr i:nth-child(odd) { background: linear-gradient(135deg, #D8CBB6, #A99B85); }
+  .mk-ori-no .gr s { position: absolute; left: 1cqi; top: 1cqi; padding: .8cqi 1cqi; background: #E3001B; color: #fff; font: 800 1.6cqi/1 Arial, sans-serif; text-decoration: none; }
+  .mk-ori-no .call { right: 4cqi; bottom: 5cqi; padding: 2cqi 3cqi; border-radius: 99px; background: #E3001B; color: #fff; font: 800 2.6cqi/1 Arial, sans-serif; box-shadow: 0 1cqi 3cqi rgb(0 0 0 / .3); }
+
+  .mk-fer .nv b { font: 900 3.8cqi/1 "Big Shoulders", sans-serif; }
+  .mk-fer .h { left: 4cqi; top: 12cqi; width: 70cqi; font-size: 13cqi; line-height: .8; text-transform: uppercase; }
+  .mk-fer .h span { color: #C8FF2E; }
+  .mk-fer .bt { left: 4cqi; bottom: 7cqi; border-radius: 1cqi; background: #C8FF2E; color: #0E0F10; }
+  .mk-fer .pr { left: 29cqi; bottom: 7.4cqi; font-size: 2.2cqi; color: #C9CAC4; }
+  .mk-fer .pr b { font: 800 4cqi/1 "Big Shoulders", sans-serif; color: #F2F2EE; }
+  .mk-fer-no { background: #111 !important; }
+  .mk-fer-no .bgph { inset: 0; background: repeating-linear-gradient(60deg, #3B3B3B 0 4cqi, #6D6D6D 4cqi 6cqi, #222 6cqi 9cqi); }
+  .mk-fer-no .t1 { left: 4cqi; right: 4cqi; top: 8cqi; font: 900 6cqi/1 Impact, "Arial Black", sans-serif; color: #FF2BD6; text-shadow: 0 0 2cqi #FF2BD6; }
+  .mk-fer-no .t2 { left: 4cqi; right: 22cqi; top: 20cqi; font: 700 2.6cqi/1.3 Arial, sans-serif; color: #00F0FF; }
+  .mk-fer-no .b1, .mk-fer-no .b2 { bottom: 6cqi; padding: 2cqi 3cqi; font: 900 2.6cqi/1 Arial, sans-serif; }
+  .mk-fer-no .b1 { left: 4cqi; background: #39FF14; color: #111; }
+  .mk-fer-no .b2 { left: 27cqi; background: #FF2BD6; color: #fff; }
+
+  .mk-cla .h { left: 4cqi; top: 5cqi; font-size: 11cqi; line-height: .86; }
+  .mk-cla .ps { left: 4cqi; top: 26cqi; font: 400 2.2cqi/1.4 "JetBrains Mono", monospace; }
+  .mk-cla .lst { left: 4cqi; right: 4cqi; bottom: 4cqi; height: 21cqi; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1.6cqi; }
+  .mk-cla .lst i { border-radius: .8cqi; background: var(--t); }
+  .mk-cla-no .ld { left: 0; right: 0; top: 3cqi; text-align: center; color: #888; font: 2.2cqi/1 Arial, sans-serif; }
+  .mk-cla-no .sk { left: 4cqi; top: 11cqi; width: 36cqi; display: grid; grid-template-columns: auto 1fr; gap: 2cqi 2cqi; align-items: center; color: #333; font: 2cqi/1 Arial, sans-serif; }
+  .mk-cla-no .sk i { height: 2cqi; border-radius: 99px; background: linear-gradient(90deg, #7B2FF7 var(--p), #EEE var(--p)); }
+  .mk-cla-no .tn { left: 44cqi; right: 4cqi; top: 10cqi; bottom: 4cqi; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1cqi; }
+  .mk-cla-no .tn i:nth-child(3n) { background: #C9D6DF; } .mk-cla-no .tn i:nth-child(3n + 1) { background: #E2D4C4; } .mk-cla-no .tn i:nth-child(3n + 2) { background: #D5D5D5; }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="web-emocion">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="hero-copy">
+      <div class="kick-row"><p data-kicker>Lección 11, Diseño web</p><span class="chip" data-meta>30 min</span></div>
+      <h1 id="t">Webs que venden <em>emoción</em></h1>
+      <p class="lede">Siete sectores donde se compra con el estómago. Siete escaparates, cada uno con su paleta, su letra y su ritmo. Desliza para recorrerlos y toca uno para ir a su sección.</p>
+    </div>
+
+    <ul class="vitrina" aria-label="Escaparate: siete webs de ejemplo, una por sector">
+      <li><a class="win k-imprenta" href="#imprenta" data-name="Agencia creativa e imprenta" data-words="Impacto, ingenio, rapidez" data-why="Papel, tinta y flúor: el idioma de la imprenta, con un solo grito de color.">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>tintaviva.es</span></div>
+          <div class="ws ws-imp">
+            <div class="ws-nav"><b>tinta viva</b><span>Trabajos&nbsp;&nbsp;Precios</span></div>
+            <p class="ws-h">Que tu flyer <mark>no acabe</mark> en el suelo.</p>
+            <div class="pile" aria-hidden="true"><i>2x1</i><i></i><i>Mercat<br>de nit</i></div>
+            <span class="ws-btn">Presupuesto en 2 h</span>
+          </div></div>
+        <span class="cap"><b>01</b>Agencia e imprenta</span></a></li>
+
+      <li><a class="win k-brasa" href="#restaurante" data-name="Restaurante y bar" data-words="Apetito, calidez, ganas" data-why="Brasa, lino y azafrán: colores de fuego y de comida. Ni rastro de azul.">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>arroceriabrasa.es</span></div>
+          <div class="ws ws-bra">
+            <div class="paella" aria-hidden="true"></div>
+            <div class="ws-nav"><b>Brasa</b><span>Carta&nbsp;&nbsp;Reservar</span></div>
+            <p class="ws-h">Arroz <em>a la leña,</em> frente al mar.</p>
+            <p class="status">Hoy abrimos a las 13:00</p>
+            <span class="ws-btn">Reservar mesa</span>
+          </div></div>
+        <span class="cap"><b>02</b>Restaurante y bar</span></a></li>
+
+      <li><a class="win k-salitre" href="#moda" data-name="Moda" data-words="Deseo, identidad, ligereza" data-why="Neutros de lino crudo para que la ropa ponga el color.">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>salitre.store</span></div>
+          <div class="ws ws-sal">
+            <div class="ws-nav"><span>Mujer&nbsp;&nbsp;Hombre</span><b>SALITRE</b><span>Cesta (0)</span></div>
+            <div class="photo" aria-hidden="true"><svg viewBox="0 0 100 170"><path d="M50 2v6M34 13l16-6 16 6" fill="none" stroke="#3a2418" stroke-width="1.6"/><path d="M38 13h5l3 15q4 3 8 0l3-15h5l-2 22q7 10 5 22l16 104q-31 9-62 0l16-104q-2-12 5-22z" fill="#EFEAE2"/><path d="M45 60q-6 50-14 96M56 60q4 50 10 97" fill="none" stroke="#d6cdbf" stroke-width="1.2"/></svg></div>
+            <p class="ws-h">Lino que se arruga bonito.</p>
+            <div class="foot"><span>Verano 26</span><u>Ver la colección</u></div>
+          </div></div>
+        <span class="cap"><b>03</b>Moda</span></a></li>
+
+      <li><a class="win k-roure" href="#hotel" data-name="Hotel rural y turismo" data-words="Calma, autenticidad, evasión" data-why="La paleta sale del paisaje: piedra seca, encina y teja.">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>masdelroure.com</span></div>
+          <div class="ws ws-rou">
+            <svg class="land" viewBox="0 0 100 140" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="hsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9E3D6"/><stop offset=".55" stop-color="#E6CFB0"/><stop offset="1" stop-color="#D9A877"/></linearGradient></defs><rect width="100" height="140" fill="url(#hsky)"/><circle cx="72" cy="80" r="8" fill="#E2A46A"/><path d="M0 88l14-8 13 5 17-12 16 9 14-7 26 9v66H0z" fill="#9AA58A"/><path d="M0 100l20-9 18 7 17-9 18 8 27-6v49H0z" fill="#6E7B62"/><path d="M0 114l26-8 24 6 30-8 20 4v32H0z" fill="#2F3B2C"/><path d="M61 104h11v7H61z" fill="#E9E3D6"/><path d="M59.5 104.5l7.5-5 7.5 5z" fill="#A45E2E"/></svg>
+            <div class="ws-nav"><b>Mas del Roure</b><span>Reservar</span></div>
+            <p class="ws-h">Donde el silencio <em>tiene paisaje</em></p>
+            <div class="book"><span>14 – 16 jun, 2 personas</span><span>Ver fechas</span></div>
+          </div></div>
+        <span class="cap"><b>04</b>Hotel rural</span></a></li>
+
+      <li><a class="win k-orient" href="#lujo" data-name="Inmobiliaria de lujo" data-words="Exclusividad, serenidad, aspiración" data-why="Casi negro, arena y un dorado apagado: el lujo susurra.">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>casaorient.es</span></div>
+          <div class="ws ws-ori">
+            <div class="ws-nav"><span>CASA ORIENT</span><span>MENÚ</span></div>
+            <div class="low">
+              <p class="ws-h">Vivir por encima <em>del mar</em></p>
+              <p class="meta">Benicàssim. 24 residencias. Entrega en 2027.</p>
+              <span class="lnk">Concertar visita privada</span>
+            </div>
+          </div></div>
+        <span class="cap"><b>05</b>Inmobiliaria de lujo</span></a></li>
+
+      <li><a class="win k-ferric" href="#gimnasio" data-name="Gimnasio y deporte" data-words="Energía, superación, tribu" data-why="Asfalto y lima ácida: contraste máximo para una energía máxima.">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>ferric.club</span></div>
+          <div class="ws ws-fer">
+            <div class="ws-nav"><b>Fèrric</b><span>Horario&nbsp;&nbsp;Tarifas</span></div>
+            <p class="ws-h">Más fuerte que <span>ayer</span></p>
+            <div class="stats"><span><b>06–23 h</b>todos los días</span><span><b>39 €</b>al mes</span></div>
+            <span class="ws-btn">Prueba gratis</span>
+            <div class="mq" aria-hidden="true"><span>Fuerza — Hyrox — Boxeo — Movilidad — Fuerza — Hyrox — Boxeo — Movilidad — </span></div>
+          </div></div>
+        <span class="cap"><b>06</b>Gimnasio y deporte</span></a></li>
+
+      <li><a class="win k-clara" href="#portfolio" data-name="Portfolio creativo" data-words="Personalidad, criterio, curiosidad" data-why="Un azul propio a pantalla completa: la firma. Los proyectos traen el resto del color.">
+        <div class="frame"><div class="bar"><i></i><i></i><i></i><span>claraventura.es</span></div>
+          <div class="ws ws-cla">
+            <div class="ws-nav"><span>CV</span><span>Proyectos&nbsp;&nbsp;Info</span></div>
+            <p class="ws-h">Clara Ventura</p>
+            <p class="pos">Dirección de arte en Valencia. Identidades y campañas que se recuerdan.</p>
+            <ol><li><i style="--t:#E8A33D"></i>Bodega Clot<span>2026</span></li><li><i style="--t:#F2EFE8"></i>Festival Lluna<span>2025</span></li><li><i style="--t:#1B1B1B"></i>Cerámica Rius<span>2025</span></li></ol>
+          </div></div>
+        <span class="cap"><b>07</b>Portfolio creativo</span></a></li>
+    </ul>
+
+    <div class="now" aria-live="polite">
+      <p class="now-n"><b data-n>01</b> de 07</p>
+      <p class="now-name" data-name>Agencia creativa e imprenta</p>
+      <p class="now-words" data-words>Impacto, ingenio, rapidez</p>
+      <p class="now-why" data-why>Papel, tinta y flúor: el idioma de la imprenta, con un solo grito de color.</p>
+    </div>
+    <div class="ctrl">
+      <button class="arr" type="button" data-dir="-1" aria-label="Web anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="arr" type="button" data-dir="1" aria-label="Web siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></button>
+      <span class="tip">Desliza el escaparate o usa las flechas</span>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En «Cómo se piensa una web» aprendiste a ir del brief a las decisiones. Aquí lo aplicas a los negocios donde la gente compra con el estómago: un arroz frente al mar, una camisa de lino, dos noches en el Maestrazgo, un ático, la persona que quieres ser cuando sales del gimnasio. Son siete sectores que verás muchas veces en la agencia, cada uno contado como una web real: qué tiene que sentir quien entra, con qué colores, con qué letra, en qué orden, con qué fotos y a qué ritmo. Y, sobre todo, <strong>por qué</strong>.</p>
+
+      <h2>Qué significa vender emoción</h2>
+      <p>Hay negocios que se eligen comparando datos: una gestoría, un seguro, un proveedor de tornillos. Ahí la web tiene que dar seguridad, y lo verás en la próxima lección. En otros, lo que se compra es una sensación: cómo te vas a sentir cenando, durmiendo, vistiéndote o viviendo en un sitio. En esos, la decisión arranca en la emoción y la razón llega después a justificarla con el precio, el horario o la ubicación.</p>
+      <p>Por eso una web de emoción hace dos trabajos seguidos: primero <strong>provoca el deseo</strong> (imagen, color, letra, ritmo) y justo después <strong>resuelve la parte práctica sin fricción</strong> (reservar, ver precios, llamar). Si solo hace lo primero, enamora y no vende. Si solo hace lo segundo, parece un formulario.</p>
+
+      <h3>Las cinco palancas</h3>
+      <p>Todo lo que vas a ver en los sectores se reduce a cinco decisiones. Están ordenadas por el peso que tienen en estas webs:</p>
+      <ol class="palancas wide">
+        <li><b>1</b><strong>Imagen</strong><span>Es la prueba de la experiencia. En emoción ocupa más superficie que el texto porque la gente se imagina dentro de una foto, no de un párrafo.</span></li>
+        <li><b>2</b><strong>Color</strong><span>Es el clima. Antes de leer nada ya sabes si el sitio es cálido o frío, ruidoso o tranquilo.</span></li>
+        <li><b>3</b><strong>Tipografía</strong><span>Es la voz. La misma frase en una didona o en una condensada suena a desfile o a grito de estadio.</span></li>
+        <li><b>4</b><strong>Ritmo</strong><span>Movimiento y espacio. Lento y con aire es calma; rápido y apretado es energía.</span></li>
+        <li><b>5</b><strong>Estructura</strong><span>El orden en que cuentas la historia: qué va primero define qué emoción manda.</span></li>
+      </ol>
+
+      <h3>Cómo leer cada sector</h3>
+      <p>Cada sector abre con una banda en sus propios colores y su propia tipografía, con las tres palabras que tiene que transmitir. Después viene su mini web (con el botón «Ver en móvil») y, debajo, las decisiones una a una: paleta con HEX y OKLCH para copiar, tipografía, orden de la home, fotografía, movimiento, errores típicos y adaptación al teléfono. Los negocios son inventados, pero son el tipo de cliente que entra por la puerta de una agencia de Castellón o Valencia.</p>
+
+      <div class="callout ojo"><span class="t">Antes de empezar</span>
+        <p>Lo que transmite un color es una asociación cultural, no una ley física. Todo lo que leerás aquí vale para el contexto occidental y español de hoy. Funciona porque compartimos referencias (el fuego es cálido, el monte es verde, el oro es valioso), pero el sector, la competencia de la zona y el tono de cada marca pesan tanto como el color. Úsalo como punto de partida razonado, no como receta.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En un teléfono el escaparate es una sola pantalla: una imagen, una frase y un botón. Todo lo demás llega con el scroll. Por eso en cada sector verás qué se queda en esa primera pantalla y qué baja. Y una regla común a los siete: la acción principal (reservar, llamar, probar, pedir presupuesto) tiene que poder hacerse con el pulgar sin buscarla.</p>
+      </div>
+
+      <!-- =========================================================
+           1 · AGENCIA CREATIVA E IMPRENTA
+           ========================================================= -->
+      <div class="band sector k-imprenta" id="imprenta-band"><div class="inner">
+        <div>
+          <h2 id="imprenta">Agencia creativa e imprenta</h2>
+          <p class="thesis">Vende atención. Si su propia web no la consigue, nadie le va a encargar la suya.</p>
+          <p class="who">Ejemplo: Tinta Viva, estudio creativo e imprenta en Castelló.</p>
+        </div>
+        <ul class="words" aria-label="Tres palabras"><li>Impacto</li><li>Ingenio</li><li>Rapidez</li></ul>
+      </div></div>
+
+      <p>El cliente de una imprenta o de una agencia pequeña (un bar que abre, una comisión de fiestas, una tienda que hace rebajas) no compra papel ni diseño: compra que la gente mire. Eso convierte la web en la primera muestra del producto. Si es gris, el cliente piensa que su flyer también lo será. Por eso aquí la emoción es el <strong>impacto</strong>, y va acompañada de dos promesas prácticas que en este sector deciden la venta: <strong>rapidez</strong> y precio claro, porque el encargo suele ser urgente y repetido.</p>
+
+      <figure class="lab" data-title="Tinta Viva, estudio e imprenta" data-hint="Toca los flyers" data-height="560" data-height-mobile="640">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav">
+            <b class="logo">tinta viva</b>
+            <nav><a href="#t">Trabajos</a><a href="#p">Precios</a><a class="cta" href="#p">Presupuesto</a></nav>
+          </header>
+          <section class="hero">
+            <div>
+              <p class="tag">Estudio creativo e imprenta en Castelló</p>
+              <h1>Que tu flyer <mark>no acabe</mark> en el suelo.</h1>
+              <p class="sub">Diseñamos e imprimimos flyers, carteles y rótulos que la gente se guarda. Respuesta en 2 horas, impresión en 24.</p>
+              <a class="btn" href="#p">Pide presupuesto</a>
+            </div>
+            <div class="pile" id="t" aria-label="Trabajos recientes">
+              <button class="f f1" style="--r:-10deg"><b>2x1</b><span>Bar Cocó, jueves</span></button>
+              <button class="f f2" style="--r:6deg"><b>Festa de barri</b><span>El Grau, 14 de junio</span></button>
+              <button class="f f3" style="--r:-3deg"><b>Mercat de nit</b><span>Cada viernes</span></button>
+            </div>
+          </section>
+          <div class="mq" aria-hidden="true"><span>Flyers — Carteles — Rótulos — Packaging — Branding — Flyers — Carteles — Rótulos — Packaging — Branding — </span></div>
+          <section class="precios" id="p">
+            <h2>Precios claros, sin sorpresas</h2>
+            <ul>
+              <li><b>500 flyers A5</b><span>Papel de 135 g, a dos caras</span><em>desde 39 €</em></li>
+              <li><b>50 carteles A3</b><span>Estucado mate</span><em>desde 45 €</em></li>
+              <li><b>Diseño de flyer</b><span>Dos propuestas y un cambio</span><em>desde 60 €</em></li>
+            </ul>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F2EFE8; color: #151515; }
+          a { color: inherit; text-decoration: none; }
+          .nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; }
+          .logo { font: 800 28px/1 var(--f-grotesk); font-stretch: 75%; letter-spacing: -.02em; }
+          nav { display: flex; gap: 18px; align-items: center; font-weight: 600; font-size: 14px; }
+          nav .cta, .btn { background: #151515; color: #F2EFE8; padding: 11px 16px; border-radius: 99px; }
+          /* Titular condensado: ocupa la pantalla como un cartel ocupa una pared */
+          .hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; padding: 18px 24px 44px; }
+          .tag { font-size: 13px; font-weight: 600; margin: 0 0 14px; }
+          h1 { font: 800 clamp(52px, 11vw, 96px)/.85 var(--f-grotesk); font-stretch: 75%; letter-spacing: -.02em; margin: 0; }
+          /* El flúor nunca va en el texto: es fondo de texto negro (5,9:1) */
+          mark { background: #FF48B0; color: inherit; padding: 0 .06em; }
+          .sub { max-width: 34ch; font-size: 16px; line-height: 1.5; margin: 18px 0 22px; }
+          .btn { display: inline-block; padding: 15px 22px; font-weight: 700; transition: background .2s, color .2s; }
+          .btn:hover { background: #FF48B0; color: #151515; }
+          .pile { position: relative; min-height: 330px; }
+          .f { position: absolute; width: 185px; aspect-ratio: 1 / 1.41; border: 0; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;
+            text-align: left; cursor: pointer; color: #151515; box-shadow: 0 16px 30px rgb(0 0 0 / .18);
+            transform: rotate(var(--r)); transition: transform .5s cubic-bezier(.34, 1.56, .64, 1); }
+          .f:hover { transform: rotate(0deg) translateY(-8px); }
+          .f b { font: 800 46px/.86 var(--f-grotesk); font-stretch: 75%; }
+          .f span { font-size: 12px; font-weight: 700; }
+          .f1 { background: #FFD23F; left: 0; top: 50px; }
+          /* Trama de semitono: el guiño a la imprenta */
+          .f2 { background: #FF48B0; left: 30%; top: 0; }
+          .f2::after { content: ""; position: absolute; inset: 58% 0 0; background: radial-gradient(circle, rgb(21 21 21 / .8) 30%, transparent 34%) 0 0 / 8px 8px; }
+          .f2 span { position: relative; z-index: 1; align-self: start; background: #FF48B0; padding: 2px 4px; }
+          .f3 { background: #151515; color: #FF48B0; left: 42%; top: 120px; }
+          .mq { overflow: hidden; background: #151515; color: #F2EFE8; padding: 13px 0; font: 800 24px/1 var(--f-grotesk); font-stretch: 75%; white-space: nowrap; }
+          .mq span { display: inline-block; animation: mq 20s linear infinite; }
+          @keyframes mq { to { transform: translateX(-50%); } }
+          .precios { padding: 44px 24px 60px; }
+          h2 { font: 800 46px/.9 var(--f-grotesk); font-stretch: 75%; margin: 0 0 22px; }
+          ul { list-style: none; margin: 0; padding: 0; border-top: 2px solid #151515; }
+          li { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 14px 0; border-bottom: 1px solid rgb(21 21 21 / .2); }
+          li span { font-size: 14px; color: #4a4a4a; }
+          li em { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; font-weight: 800; background: #FFD23F; padding: 6px 10px; }
+          @media (max-width: 600px) {
+            .hero { grid-template-columns: 1fr; }
+            nav a:not(.cta) { display: none; }
+            .pile { min-height: 270px; } .f { width: 140px; padding: 12px; } .f b { font-size: 34px; }
+            .f1 { left: 2%; top: 40px; } .f2 { left: 30%; } .f3 { left: 54%; top: 90px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Tocar un flyer lo trae delante, como sobre el mostrador
+          let z = 3;
+          document.querySelectorAll('.f').forEach((f) =>
+            f.addEventListener('click', () => { f.style.zIndex = ++z; }));
+        </script>
+        <figcaption>Fíjate en el orden: titular que promete atención, trabajo real en la misma pantalla (no una foto del equipo), la marquesina de servicios y, enseguida, precios con «desde». En una imprenta el precio visible quita el miedo a pedir presupuesto.</figcaption>
+      </figure>
+
+      <h3>Paleta: papel, tinta y flúor</h3>
+      <div class="pal wide" data-name="Tinta Viva">
+        <div class="pal-strip">
+          <div data-var="papel" style="--c:#F2EFE8;--t:#151515;--w:6"><b>Papel</b><span>Fondo</span><code>#F2EFE8</code><code>oklch(95.3% 0.010 87)</code></div>
+          <div data-var="tinta" style="--c:#151515;--t:#F2EFE8;--w:2.5"><b>Tinta</b><span>Texto y botones</span><code>#151515</code><code>oklch(19.6% 0 0)</code></div>
+          <div data-var="fluor" style="--c:#FF48B0;--t:#151515;--w:1"><b>Rosa flúor</b><span>Acento</span><code>#FF48B0</code><code>oklch(69.3% 0.236 350)</code></div>
+          <div data-var="amarillo" style="--c:#FFD23F;--t:#151515;--w:.6"><b>Amarillo</b><span>Precios, etiquetas</span><code>#FFD23F</code><code>oklch(87.9% 0.162 91)</code></div>
+        </div>
+        <button class="btn pal-copy" type="button">Copiar variables</button>
+      </div>
+      <p><strong>El papel</strong> no es blanco puro porque recuerda al soporte: el blanco ligeramente cálido del papel offset tiene tacto, el blanco de pantalla no. <strong>La tinta</strong> es un negro casi puro porque es literalmente el color con el que se imprime y da el máximo contraste (15,9:1), lo que deja que el acento grite sin ayuda. <strong>El rosa flúor</strong> recuerda a las tintas fluorescentes de la risografía, que se han convertido en el idioma de los estudios independientes: un color que no existe en la naturaleza sino en el papel impreso dice «aquí se imprime». <strong>El amarillo</strong> es el de cuatricromía, el color más luminoso que existe, el que el ojo ve primero (por eso es el de la señalización); aquí marca precios y etiquetas.</p>
+      <p>Por qué pegan: dos acentos muy saturados y vecinos en temperatura (los dos cálidos y luminosos) sobre una base casi sin color. Los neutros absorben el grito y los acentos nunca comparten superficie con el texto largo. Un detalle de contraste que manda en todo el diseño: el negro sobre el rosa da 5,9:1 y se lee perfecto, pero el rosa sobre el papel da menos de 3:1. Por eso el rosa siempre es <em>fondo</em> de texto negro, nunca color de texto.</p>
+
+      <h3>Tipografía: grotesca condensada con carácter</h3>
+      <div class="spec k-imprenta">
+        <p class="aa" aria-hidden="true">Aa</p>
+        <div><p class="h">Que tu flyer no acabe en el suelo.</p><p class="b">500 flyers A5 a dos caras desde 39 €. Respuesta en 2 horas, impresión en 24. Recogida en el taller o envío a toda la provincia.</p><p class="m">Bricolage condensada 800 para titulares, Inter Tight 400 y 700 para precios y plazos</p></div>
+      </div>
+      <p>Una condensada cabe más grande: el mismo titular ocupa la pantalla como un cartel ocupa una pared, y eso es exactamente lo que vende este cliente. Bricolage, además, tiene un punto imperfecto y de cartel, con remates que parecen hechos a mano, que transmite ingenio en lugar de corrección corporativa. Para precios y plazos, una sans neutra (Inter Tight): lo que hay que leer rápido no debe tener personalidad, debe tener claridad. Si el estudio es más de branding que de imprenta, puedes subir el ingenio con una display más rara (Syne, Unbounded) y bajar el tono de taller.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="home">
+        <li><b>Portada con titular-golpe y trabajo real</b><span>Demuestra en tres segundos que saben llamar la atención. Una foto del equipo sonriendo no demuestra nada.</span></li>
+        <li><b>Trabajos recientes con contexto</b><span>Para quién, qué pedía y qué pasó. Es la prueba, y el contexto convierte un mosaico bonito en argumento.</span></li>
+        <li><b>Servicios con precio «desde»</b><span>El cliente de imprenta compara. Un precio orientativo le quita el miedo a preguntar.</span></li>
+        <li><b>Plazos y proceso en tres pasos</b><span>El encargo suele ser urgente: «en 24 h» es emoción práctica.</span></li>
+        <li><b>Opiniones de negocios del barrio</b><span>Cercanía: el bar de la esquina confía en lo que usa el bar de enfrente.</span></li>
+        <li class="cta"><b>Presupuesto corto, con subida de archivo y WhatsApp</b><span>Tres campos y un botón. Cada campo de más es un cliente que se va a la imprenta online.</span></li>
+      </ol>
+
+      <h3>Fotografía e imagen</h3>
+      <p>Su propio trabajo fotografiado en uso: el flyer sobre la barra del bar, el cartel pegado en una pared de verdad, el packaging en una mano. Luz dura de día y sombras marcadas, o planos cenitales sobre una mesa, porque enseñan el papel, la textura y el color real de la tinta. Evita los mockups genéricos descargados: todos los estudios usan los mismos y el ojo los reconoce como plantilla, justo lo contrario de lo que se vende.</p>
+
+      <h3>Movimiento</h3>
+      <p class="meter" data-v="4"><span class="track"><i></i><i></i><i></i><i></i><i></i></span>Alto y juguetón</p>
+      <p>Aquí el movimiento es parte del argumento: pegatinas que entran con un pequeño rebote, una marquesina con los servicios, flyers que se enderezan al pasar o al tocar. El rebote (un <em>easing</em> que se pasa y vuelve) transmite gracia porque imita algo físico y ligero, como un papel que cae. El límite: nada de animaciones que retrasen el titular o el botón, y nada de secuestrar el scroll. El ingenio se demuestra en los detalles, no haciendo esperar.</p>
+
+      <h3>Errores típicos</h3>
+      <div class="sino wide">
+        <figure class="si">
+          <div class="mk k-imprenta mk-imp" aria-hidden="true">
+            <div class="nv"><b>tinta viva</b><span>Trabajos&nbsp;&nbsp;Precios&nbsp;&nbsp;Presupuesto</span></div>
+            <p class="t h">Que tu flyer <mark>no acabe</mark> en el suelo.</p>
+            <i class="fl a"></i><i class="fl b"></i><i class="fl c"></i>
+            <span class="bt">Pide presupuesto</span>
+          </div>
+          <figcaption><b>Así sí</b>La web es la primera muestra: titular con intención, trabajo real y un único botón.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="mk cheap mk-imp-no" aria-hidden="true">
+            <div class="top"><b>GRUPO IMPRESIÓN</b><span>Inicio&nbsp; Empresa&nbsp; Servicios&nbsp; Blog&nbsp; Contacto</span></div>
+            <div class="stock"></div>
+            <p class="t2">Soluciones integrales de comunicación 360º</p>
+            <div class="cards"><i></i><i></i><i></i></div>
+          </div>
+          <figcaption><b>Así no</b>Azul corporativo, foto de banco y una frase que podría decir cualquiera. Vende creatividad con una plantilla: se contradice.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><strong>La plantilla corporativa.</strong> Es el error más caro, porque niega lo que vendes.</li>
+        <li><strong>Usar todos los colores a la vez.</strong> Rosa, amarillo, azul y verde al mismo nivel no es energía, es feria. Un acento manda y el otro acompaña.</li>
+        <li><strong>Portfolio sin contexto</strong> o con logos del software que usas («Photoshop, Illustrator»): al cliente le da igual la herramienta.</li>
+        <li><strong>Esconder precios y plazos.</strong> En este sector, «consúltanos» suena a caro y lento.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El encargo de imprenta llega muchas veces desde el teléfono y con prisa. Pon un botón fijo abajo, «Presupuesto por WhatsApp», y deja subir el archivo desde la galería. El titular condensado aguanta bien en vertical (tres líneas a unos 52 px), pero los trabajos pasan de mosaico a carrusel horizontal con <code>scroll-snap</code>, uno por pantalla. La marquesina, más lenta o quieta: en una pantalla pequeña el movimiento constante distrae del botón.</p>
+      </div>
+
+      <!-- =========================================================
+           2 · RESTAURANTE Y BAR
+           ========================================================= -->
+      <div class="band sector k-brasa" id="restaurante-band"><div class="inner">
+        <div>
+          <h2 id="restaurante">Restaurante y bar</h2>
+          <p class="thesis">Vende un plan para esta noche. Tiene que abrir el apetito y resolver la reserva en dos toques.</p>
+          <p class="who">Ejemplo: Arrocería Brasa, en el Grau de Castelló.</p>
+        </div>
+        <ul class="words" aria-label="Tres palabras"><li>Apetito</li><li>Calidez</li><li>Ganas</li></ul>
+      </div></div>
+
+      <p>Quien entra en la web de un restaurante quiere dos cosas en este orden: imaginarse sentado allí y saber si puede ir hoy. La emoción es el <strong>apetito</strong> y el ambiente («quiero estar ahí»); la parte práctica es horario, carta, teléfono y reserva. Gran parte de esas visitas llega desde el móvil, a menudo desde el coche o desde otro bar. Por eso esta es la web donde más se nota si la emoción y la practicidad están en la misma pantalla o separadas por tres clics.</p>
+
+      <figure class="lab" data-title="Arrocería Brasa" data-hint="Desliza dentro de la demo" data-height="560" data-height-mobile="660">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav">
+            <b class="logo">Brasa</b>
+            <nav><a href="#c">Carta</a><a href="#c">El sitio</a><a class="cta" href="#">Reservar</a></nav>
+          </header>
+          <section class="hero">
+            <div class="copy">
+              <p class="open"><i></i>Hoy abrimos de 13:00 a 16:00 y de 20:30 a 23:30</p>
+              <h1>Arroz <em>a la leña,</em> frente al mar.</h1>
+              <p class="sub">Arrocería en el Grau de Castelló. Fuego de leña de naranjo, producto de la lonja y una terraza que mira al puerto.</p>
+              <div class="acts"><a class="btn" href="#">Reservar mesa</a><a class="ghost" href="#">Llamar</a></div>
+            </div>
+            <div class="pan" aria-hidden="true"></div>
+          </section>
+          <section class="carta" id="c">
+            <h2>De la carta</h2>
+            <ul>
+              <li><b>Arroz del senyoret</b><i></i><span>18 €</span><small>Gamba, sepia y caldo de roca</small></li>
+              <li><b>Arroz negro con alcachofa</b><i></i><span>17 €</span><small>De temporada, de octubre a abril</small></li>
+              <li><b>Fideuà de la lonja</b><i></i><span>19 €</span><small>Con allioli de la casa</small></li>
+            </ul>
+            <a class="all" href="#">Ver la carta completa</a>
+          </section>
+          <!-- Solo en el móvil: lo práctico siempre a mano -->
+          <nav class="dock"><a class="btn" href="#">Reservar</a><a href="#">Llamar</a><a href="#">Cómo llegar</a></nav>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #2A1A14; color: #F3E7D3; }
+          a { color: inherit; text-decoration: none; }
+          .nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 26px; position: relative; z-index: 2; }
+          .logo { font: italic 600 30px/1 var(--f-fraunces); }
+          nav { display: flex; gap: 20px; align-items: center; font-size: 14px; font-weight: 500; }
+          .cta, .btn { background: #E8A33D; color: #2A1A14; padding: 11px 18px; border-radius: 99px; font-weight: 700; }
+          .hero { position: relative; min-height: 430px; padding: 26px 26px 50px; overflow: hidden; }
+          .copy { position: relative; z-index: 1; max-width: 420px; }
+          .open { display: flex; gap: 9px; align-items: center; margin: 0 0 16px; font-size: 13px; color: #DCCBB1; }
+          .open i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #8FD16A; box-shadow: 0 0 0 4px rgb(143 209 106 / .18); }
+          h1 { font: 600 clamp(44px, 8vw, 70px)/.95 var(--f-fraunces); letter-spacing: -.035em; margin: 0; }
+          h1 em { color: #E8A33D; font-weight: 500; }
+          .sub { font-size: 16px; line-height: 1.55; color: #E6D6BF; margin: 18px 0 24px; max-width: 36ch; }
+          .acts { display: flex; gap: 12px; align-items: center; }
+          .btn { padding: 15px 24px; }
+          .ghost { padding: 14px 20px; border: 1px solid rgb(243 231 211 / .4); border-radius: 99px; font-weight: 600; }
+          /* El plato hace de foto: cálido y saturado sobre fondo oscuro, brilla */
+          .pan { position: absolute; right: -130px; top: 10px; width: 500px; aspect-ratio: 1; border-radius: 50%;
+            box-shadow: 0 40px 80px rgb(0 0 0 / .55); animation: gira 90s linear infinite;
+            background:
+              radial-gradient(ellipse 9% 3.6% at 34% 38%, #B5381F 60%, transparent 66%),
+              radial-gradient(ellipse 3.6% 9% at 60% 30%, #B5381F 60%, transparent 66%),
+              radial-gradient(ellipse 8% 3.4% at 46% 62%, #C2492E 60%, transparent 66%),
+              radial-gradient(circle at 64% 50%, #F3E7D3 0 2.6%, transparent 3%),
+              radial-gradient(circle at 40% 50%, #6F7A44 0 2.2%, transparent 2.6%),
+              repeating-conic-gradient(rgb(255 236 200 / .08) 0 2deg, transparent 2deg 6deg),
+              radial-gradient(circle, #EDB04A 0 34%, #D8902F 50%, #A8641F 57%, #3A2620 58% 61%, #120B09 62% 69%, transparent 70%); }
+          @keyframes gira { to { rotate: 360deg; } }
+          .carta { padding: 40px 26px 100px; background: #F3E7D3; color: #2A1A14; }
+          .carta h2 { font: italic 600 40px/1 var(--f-fraunces); margin: 0 0 18px; }
+          .carta ul { list-style: none; padding: 0; margin: 0; }
+          .carta li { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 2px 10px; padding: 12px 0; font-size: 17px; }
+          .carta li i { border-bottom: 2px dotted rgb(42 26 20 / .35); }
+          .carta li span { font-weight: 700; font-variant-numeric: tabular-nums; }
+          .carta small { grid-column: 1 / -1; color: #6B5446; font-size: 14px; }
+          .all { display: inline-block; margin-top: 16px; font-weight: 700; border-bottom: 2px solid #B5381F; }
+          .dock { display: none; }
+          @media (max-width: 600px) {
+            .nav nav a:not(.cta) { display: none; }
+            .hero { padding-bottom: 290px; }
+            .acts .ghost { display: none; }
+            .pan { width: 380px; right: -70px; top: auto; bottom: -120px; }
+            .dock { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 6px; position: fixed; z-index: 5; left: 10px; right: 10px; bottom: 10px;
+              padding: 6px; border-radius: 99px; background: rgb(42 26 20 / .94); color: #F3E7D3; font-size: 14px; font-weight: 600; text-align: center; box-shadow: 0 10px 30px rgb(0 0 0 / .3); }
+            .dock a { padding: 13px 0; border-radius: 99px; }
+          }
+        </script>
+        <figcaption>El horario de hoy va encima del titular, no en el pie: es lo que más se busca. La carta está en HTML, con precios y descripción, legible y rastreable por Google. En «Ver en móvil» aparece la barra fija con Reservar, Llamar y Cómo llegar.</figcaption>
+      </figure>
+
+      <h3>Paleta: brasa, lino y azafrán</h3>
+      <div class="pal wide" data-name="Arrocería Brasa">
+        <div class="pal-strip">
+          <div data-var="brasa" style="--c:#2A1A14;--t:#F3E7D3;--w:6"><b>Brasa</b><span>Fondo</span><code>#2A1A14</code><code>oklch(23.7% 0.028 41)</code></div>
+          <div data-var="lino" style="--c:#F3E7D3;--t:#2A1A14;--w:2.6"><b>Lino</b><span>Texto, carta</span><code>#F3E7D3</code><code>oklch(93.2% 0.030 81)</code></div>
+          <div data-var="azafran" style="--c:#E8A33D;--t:#2A1A14;--w:1"><b>Azafrán</b><span>Botón principal</span><code>#E8A33D</code><code>oklch(76.5% 0.140 73)</code></div>
+          <div data-var="tomate" style="--c:#B5381F;--t:#F3E7D3;--w:.6"><b>Tomate</b><span>Detalles</span><code>#B5381F</code><code>oklch(52.2% 0.166 33)</code></div>
+        </div>
+        <button class="btn pal-copy" type="button">Copiar variables</button>
+      </div>
+      <p><strong>La brasa</strong> es un marrón casi negro con un punto rojizo: la luz baja de un comedor por la noche. Un fondo oscuro y cálido hace que la comida brille, porque las fotos de comida son cálidas y saturadas, y junto a un oscuro parecen más luminosas (es el contraste simultáneo que verás en «Cómo se lee un color»). <strong>El lino</strong> es crema, no blanco: el blanco puro sobre marrón se ve frío, de oficina; el crema es el mantel. <strong>El azafrán</strong> es el color del arroz y del fuego, y es el botón de reservar porque es lo más luminoso de la página (7,7:1 con el texto oscuro encima). <strong>El tomate</strong> es el rojo de la ñora: apetito y urgencia, pero solo en detalles pequeños, como el subrayado de «Ver la carta» o la etiqueta del plato del día.</p>
+      <p>Por qué pegan: es una armonía análoga cálida (marrón, rojo, naranja y amarillo son vecinos en el círculo), así que todos parecen de la misma cocina. El contraste no lo pone el tono sino la luz: fondo muy oscuro, texto muy claro. ¿Y el azul? Hay muy pocos alimentos azules, así que no lo asociamos a comida. En la costa solo funciona como guiño al mar (una marisquería) y en dosis pequeñas. Si el local es un bar de vermut y tapas, sube la saturación hacia el rojo vermut; si es un gastronómico, oscurece y apaga la paleta: menos color es más silencio, y el silencio es caro.</p>
+
+      <h3>Tipografía: una serif blanda con gesto</h3>
+      <div class="spec k-brasa">
+        <p class="aa" aria-hidden="true"><i>Aa</i></p>
+        <div><p class="h">Arroz <i>a la leña,</i> frente al mar.</p><p class="b">Arroz del senyoret, 18 €. Gamba, sepia y caldo de roca. Hoy abrimos de 13:00 a 16:00 y de 20:30 a 23:30.</p><p class="m">Fraunces 600 y su cursiva para titulares, Inter Tight para horarios y precios</p></div>
+      </div>
+      <p>Fraunces es una serif de remates suaves y algo caprichosos que recuerda a las cartas de bistró y a las etiquetas de conserva antiguas: tradición, pero cercana. Su cursiva aporta el gesto de la pizarra escrita a mano sin la ilegibilidad de una manuscrita de verdad, que en una carta pequeña en el móvil se lee fatal. Horarios y precios van en Inter Tight con cifras tabulares, porque una columna de precios que baila parece descuidada. Para una cervecería, cambia la serif blanda por una egipcia (Zilla Slab): sus remates gruesos suenan a madera, barril y taller.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="home">
+        <li class="cta"><b>Portada: plato estrella, horario de hoy, Reservar y Llamar</b><span>Apetito y acción en la misma pantalla. El horario de hoy, no el de la semana.</span></li>
+        <li><b>La carta en HTML, con destacados</b><span>Se lee en el móvil, se puede buscar y Google la entiende. Nunca un PDF de 12 MB.</span></li>
+        <li><b>El sitio: terraza, comedor, ambiente</b><span>No se vende solo la comida: se vende el plan de esta noche.</span></li>
+        <li><b>Quiénes somos, en tres líneas</b><span>Autenticidad: la familia, la leña, la lonja. Breve, porque nadie viene a leer.</span></li>
+        <li><b>Dos o tres opiniones reales</b><span>Prueba social con nombre, no estrellitas sueltas.</span></li>
+        <li class="cta"><b>Reserva, mapa, horario completo y teléfono</b><span>Todo lo práctico junto al final, por si alguien ha bajado hasta aquí.</span></li>
+      </ol>
+
+      <h3>Fotografía e imagen</h3>
+      <p>El plato de cerca, con luz natural lateral (de ventana) que dibuja la textura del arroz; vapor; manos sirviendo; mesas con gente de verdad sin posar. La luz lateral funciona porque crea sombras pequeñas que dan volumen y apetito; el flash frontal aplana la comida y la vuelve gris. Para el ambiente, la terraza al atardecer, cuando la luz es cálida como la paleta. Evita la paella perfecta de banco de imágenes: el cliente la reconoce y piensa que la tuya no es así.</p>
+
+      <h3>Movimiento</h3>
+      <p class="meter" data-v="2"><span class="track"><i></i><i></i><i></i><i></i><i></i></span>Bajo y suave</p>
+      <p>Fundidos cortos, un acercamiento lentísimo sobre la foto del plato (el efecto Ken Burns) o, como en la demo, la paella girando a una vuelta cada minuto y medio: se nota sin que lo notes. Poco movimiento porque quien busca el horario tiene hambre y prisa, y cualquier animación que se interponga es fricción. La calidez la ponen el color y la foto, no la coreografía.</p>
+
+      <h3>Errores típicos</h3>
+      <div class="sino wide">
+        <figure class="si">
+          <div class="mk k-brasa mk-bra" aria-hidden="true">
+            <i class="pn"></i>
+            <div class="nv"><b>Brasa</b><span>Carta&nbsp;&nbsp;Reservar</span></div>
+            <p class="op">Hoy abrimos a las 13:00</p>
+            <p class="t h">Arroz <em>a la leña,</em> frente al mar.</p>
+            <span class="bt b1">Reservar mesa</span><span class="bt b2">Llamar</span>
+          </div>
+          <figcaption><b>Así sí</b>Plato, horario de hoy y dos botones. Se decide en una pantalla.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="mk cheap mk-bra-no" aria-hidden="true">
+            <div class="sl"><span>‹</span><span>›</span></div>
+            <div class="dots"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p class="w">Bienvenidos a nuestra web</p>
+            <p class="pdf">Descargar carta (PDF, 12 MB)</p>
+            <p class="ft">Horario: consultar en Facebook</p>
+          </div>
+          <figcaption><b>Así no</b>Slider de seis fotos, «Bienvenidos», carta en PDF y el horario fuera de la web.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><strong>La carta en PDF.</strong> En el móvil obliga a hacer zoom, pesa y no la encuentra Google.</li>
+        <li><strong>Música que suena sola</strong> o vídeos con sonido: la web se abre en el trabajo o en el bus.</li>
+        <li><strong>El horario en el pie de página</strong> o, peor, solo en redes sociales.</li>
+        <li><strong>Reservar con un formulario de contacto</strong> que nadie sabe si llegará. Si no hay sistema de reservas, un botón de llamar y uno de WhatsApp.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Barra fija abajo con tres acciones: Reservar, Llamar (un enlace <code>tel:</code>) y Cómo llegar (enlace a mapas), siempre al alcance del pulgar. El horario de hoy arriba del todo. La foto de portada, vertical (4:5), hecha para el teléfono, no recortada de la horizontal. La carta, con las categorías en una fila de pestañas que se desliza en horizontal. Y el fondo oscuro tiene otra ventaja en la calle de noche: no deslumbra.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">El dueño de una arrocería te pide el fondo azul marino «porque es el color del mar». ¿Qué le propones?</p>
+        <ol>
+          <li>Azul marino de fondo y el texto en blanco puro, que contrasta mejor.</li>
+          <li>Una base oscura y cálida (brasa) con el azul solo como guiño pequeño, porque el azul no se asocia a comida y enfría las fotos.</li>
+          <li>Fondo blanco puro para que las fotos se vean tal cual.</li>
+        </ol>
+        <p class="why">La comida casi nunca es azul y una base fría apaga la calidez de las fotos de comida. El mar puede estar en un detalle (un filete, un icono, la foto de la terraza), pero la emoción que vende es el apetito. Y el blanco puro funciona, pero se ve más frío y de catálogo que un crema o un oscuro cálido.</p>
+      </div>
+
+      <!-- =========================================================
+           3 · MODA
+           ========================================================= -->
+      <div class="band sector k-salitre" id="moda-band"><div class="inner">
+        <div>
+          <h2 id="moda">Moda</h2>
+          <p class="thesis">Vende una versión de ti. La interfaz se aparta para que mande la ropa.</p>
+          <p class="who">Ejemplo: Salitre, moda de lino hecha en Valencia.</p>
+        </div>
+        <ul class="words" aria-label="Tres palabras"><li>Deseo</li><li>Identidad</li><li>Ligereza</li></ul>
+      </div></div>
+
+      <p>En moda nadie compra una camisa: compra cómo se va a ver con ella y qué dice de quién es. La emoción es el <strong>deseo</strong> («así quiero verme») y la <strong>identidad</strong> (qué tipo de persona lleva esta marca). La foto hace casi todo ese trabajo, así que la web tiene que comportarse como el marco de un cuadro: bueno, discreto y al servicio de lo que enseña. Después, en la ficha de producto, toca resolver tallas, envíos y devoluciones sin fricción, porque la duda de la talla es lo que más compras frena.</p>
+
+      <figure class="lab" data-title="Salitre, tienda de moda" data-hint="Pasa o toca un producto" data-height="560" data-height-mobile="640">
+        <script type="text/x-demo" data-lang="html">
+          <p class="ann">Envío gratis desde 60 €. Devoluciones en 30 días.</p>
+          <header class="nav">
+            <nav class="l"><a href="#">Mujer</a><a href="#">Hombre</a><a href="#">Lino</a></nav>
+            <b class="logo">SALITRE</b>
+            <nav class="r"><a href="#">Buscar</a><a href="#">Cesta (0)</a></nav>
+          </header>
+          <section class="camp">
+            <div class="img" aria-hidden="true"><svg viewBox="0 0 100 170"><use href="#vestido" fill="#EFEAE2"/></svg></div>
+            <div class="txt"><p>Verano 26</p><h1>Lino que se arruga bonito.</h1><a href="#n">Ver la colección</a></div>
+          </section>
+          <section class="new" id="n">
+            <div class="head"><h2>Novedades</h2><a href="#">Ver todo</a></div>
+            <div class="grid">
+              <a class="p" href="#"><div class="ph" style="--bg:#DCD4C8"><svg viewBox="0 0 100 170"><use href="#camisa" fill="#F6F2EA"/></svg></div><b>Camisa Albufera</b><span>79 €</span></a>
+              <a class="p" href="#"><div class="ph" style="--bg:#CDBEAD"><svg viewBox="0 0 100 170"><use href="#vestido" fill="#9C4A28"/></svg></div><b>Vestido Malvarrosa</b><span>119 €</span></a>
+              <a class="p" href="#"><div class="ph" style="--bg:#E3DDD3"><svg viewBox="0 0 100 170"><use href="#pantalon" fill="#2A2724"/></svg></div><b>Pantalón Serrano</b><span>89 €</span></a>
+            </div>
+          </section>
+          <!-- Siluetas de prenda que hacen de foto -->
+          <svg width="0" height="0" style="position:absolute"><defs>
+            <path id="vestido" d="M38 13h5l3 15q4 3 8 0l3-15h5l-2 22q7 10 5 22l16 104q-31 9-62 0l16-104q-2-12 5-22z"/>
+            <path id="camisa" d="M32 30l12-5q6 7 12 0l12 5 20 22-10 12-9-8v84H31V56l-9 8-10-12z"/>
+            <path id="pantalon" d="M30 22h40l7 128H57L50 62l-7 88H23z"/>
+          </defs></svg>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #EFEAE2; color: #161514; }
+          a { color: inherit; text-decoration: none; }
+          .ann { margin: 0; padding: 8px; text-align: center; font-size: 12px; background: #161514; color: #EFEAE2; }
+          .nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 16px 24px; font-size: 13px; }
+          .nav nav { display: flex; gap: 16px; } .nav .r { justify-content: flex-end; }
+          /* Didona: el idioma de las revistas de moda */
+          .logo { font: 500 26px/1 var(--f-bodoni); letter-spacing: .16em; }
+          .camp { position: relative; height: 400px; margin: 0 24px; overflow: hidden; }
+          .img { position: absolute; inset: 0;
+            background: linear-gradient(112deg, transparent 0 28%, rgb(255 236 214 / .2) 28% 40%, transparent 40% 47%, rgb(255 236 214 / .2) 47% 59%, transparent 59%),
+                        linear-gradient(170deg, #BC7A52, #9C4A28 70%, #8A3F22); }
+          .img svg { position: absolute; left: 62%; bottom: -3%; height: 106%; translate: -50% 0; filter: drop-shadow(28px 14px 18px rgb(60 20 5 / .35)); }
+          .txt { position: absolute; left: 30px; bottom: 30px; color: #EFEAE2; }
+          .txt p { margin: 0 0 10px; font-size: 13px; }
+          h1 { margin: 0 0 16px; max-width: 8ch; font: italic 500 clamp(40px, 7vw, 62px)/.95 var(--f-bodoni); }
+          .txt a { font-size: 14px; border-bottom: 1px solid; padding-bottom: 3px; }
+          .new { padding: 34px 24px 50px; }
+          .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; font-size: 14px; }
+          h2 { margin: 0; font: 500 30px/1 var(--f-bodoni); }
+          .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+          .ph { display: grid; place-items: center; aspect-ratio: 3 / 4; overflow: hidden; background: var(--bg); }
+          .ph svg { width: 60%; transition: scale .8s cubic-bezier(.22, 1, .36, 1), translate .8s cubic-bezier(.22, 1, .36, 1); filter: drop-shadow(8px 8px 10px rgb(0 0 0 / .12)); }
+          /* Segunda «foto»: el detalle del tejido. Al pasar con ratón o al tocar */
+          @media (hover: hover) { .p:hover svg { scale: 2.1; translate: 0 22%; } }
+          .p.alt svg { scale: 2.1; translate: 0 22%; }
+          .p b { display: block; margin-top: 10px; font-size: 14px; font-weight: 500; }
+          .p span { font-size: 14px; color: #5A554F; }
+          @media (max-width: 600px) {
+            .nav { grid-template-columns: auto 1fr auto; padding: 14px 16px; }
+            .nav .l a + a, .nav .r a:first-child { display: none; }
+            .logo { text-align: center; font-size: 22px; }
+            .camp { margin: 0 12px; height: 470px; }
+            .img svg { left: 68%; height: 72%; }
+            .txt { top: 22px; bottom: auto; left: 20px; }
+            h1 { font-size: 36px; margin-bottom: 12px; }
+            .new { padding: 28px 12px 40px; }
+            .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // En táctil no hay hover: el toque alterna entre la prenda y su detalle
+          document.querySelectorAll('.p').forEach((p) =>
+            p.addEventListener('click', (e) => { e.preventDefault(); p.classList.toggle('alt'); }));
+        </script>
+        <figcaption>La interfaz es casi invisible: texto pequeño, negro sobre hueso, sin botones de colores. La única mancha de color es la campaña. La barra de envío gratis arriba no es decoración: responde a la primera objeción antes de que aparezca.</figcaption>
+      </figure>
+
+      <h3>Paleta: neutros de lino y un acento de temporada</h3>
+      <div class="pal wide" data-name="Salitre">
+        <div class="pal-strip">
+          <div data-var="hueso" style="--c:#EFEAE2;--t:#161514;--w:6"><b>Hueso</b><span>Fondo</span><code>#EFEAE2</code><code>oklch(93.9% 0.012 80)</code></div>
+          <div data-var="negro" style="--c:#161514;--t:#EFEAE2;--w:2"><b>Negro</b><span>Texto e interfaz</span><code>#161514</code><code>oklch(19.6% 0.003 68)</code></div>
+          <div data-var="greige" style="--c:#CFC6B8;--t:#161514;--w:1.6"><b>Greige</b><span>Fondo de producto</span><code>#CFC6B8</code><code>oklch(83.0% 0.022 79)</code></div>
+          <div data-var="arcilla" style="--c:#9C4A28;--t:#FFFFFF;--w:.8"><b>Arcilla</b><span>Acento de campaña</span><code>#9C4A28</code><code>oklch(50.7% 0.119 42)</code></div>
+        </div>
+        <button class="btn pal-copy" type="button">Copiar variables</button>
+      </div>
+      <p><strong>El hueso</strong> recuerda al lino crudo, el material de la marca, y es más suave que el blanco: con él, los tonos tierra de las prendas no se ven sucios. <strong>El negro</strong> es el de una revista: autoridad editorial y máximo contraste para el texto pequeño. <strong>El greige</strong> (entre gris y beige) es el color de estudio que unifica fotos de producto hechas en días distintos. <strong>La arcilla</strong> es el acento de temporada: la terracota de la cerámica y de las paredes al sol. Es la única que cambia cada campaña; el resto es el armario fijo de la marca.</p>
+      <p>Por qué neutros: la ropa trae su propio color, y una interfaz de colores fuertes compite con ella y además altera cómo se percibe. Una camisa crema junto a un rosa fuerte parece verdosa: el contraste simultáneo empuja los colores vecinos hacia el opuesto. Neutros cálidos y poco saturados mantienen honesto el color de la prenda, y eso es emoción (la foto luce) y es negocio (lo que llega a casa se parece a lo que viste). Si la marca es de moda infantil, el mismo principio vale con pasteles muy apagados; si es streetwear, negro, blanco y un único acento ácido.</p>
+
+      <h3>Tipografía: didona para el deseo, sans para comprar</h3>
+      <div class="spec k-salitre">
+        <p class="aa" aria-hidden="true">Aa</p>
+        <div><p class="h"><i>Lino que se arruga bonito.</i></p><p class="b">Camisa Albufera, 79 €. Lino lavado a la piedra, tejido en Valencia. Tallas de la XS a la XL. Envío gratis desde 60 €.</p><p class="m">Bodoni Moda 500 y su cursiva para logotipo y titulares, Inter Tight para tallas, precios y botones</p></div>
+      </div>
+      <p>Bodoni Moda es una didona: contraste extremo entre trazos gruesos y finos y remates como un hilo. Ese contraste solo se sostiene a gran tamaño y en buen papel, así que nació asociado a lo caro, y las revistas de moda llevan casi un siglo usando didonas en sus cabeceras. Por eso una didona grande dice «moda» antes de que leas la palabra. El riesgo es el mismo que su virtud: a tamaño pequeño los trazos finos desaparecen. Nunca en párrafos, botones ni precios; ahí va Inter Tight, pequeña y clara, que no compite con nada.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="home">
+        <li><b>Campaña a sangre: una imagen, una frase, un enlace</b><span>El deseo primero. Sin texto encima de la cara de nadie.</span></li>
+        <li class="cta"><b>Novedades (de 4 a 8 productos)</b><span>Del deseo a la prenda concreta en un scroll.</span></li>
+        <li><b>Categorías visuales</b><span>Orientarse: vestidos, camisas, lino. Con foto, no con una lista.</span></li>
+        <li><b>Editorial o lookbook</b><span>Aspiración y venta cruzada: cómo se combina una prenda con otra.</span></li>
+        <li><b>Valores: material, hecho en Valencia, envíos y devoluciones</b><span>La razón que justifica el precio y quita el miedo a comprar online.</span></li>
+        <li><b>Newsletter, discreta</b><span>Al final, como invitación, no como peaje.</span></li>
+      </ol>
+
+      <h3>Fotografía e imagen</h3>
+      <p>Coherencia ante todo: misma luz, mismo tratamiento de color y misma distancia en todas las fotos de producto, porque una tienda con fotos de diez estilos parece un mercadillo. Formato vertical (4:5 o 3:4), porque el cuerpo es vertical y en el móvil ocupa la pantalla. Dos fotos por producto como mínimo: la prenda sola sobre greige y la prenda puesta o el detalle del tejido. La campaña, en un lugar con carácter y luz de tarde (cal blanca, mar, una pared de terracota), porque ahí es donde se vende la identidad.</p>
+
+      <h3>Movimiento</h3>
+      <p class="meter" data-v="2"><span class="track"><i></i><i></i><i></i><i></i><i></i></span>Bajo y elegante</p>
+      <p>El movimiento que vende en moda es el que acerca la prenda: el cambio a la segunda foto al pasar o al tocar, el zoom al detalle, una transición de página suave al entrar en la ficha. Curvas de salida largas y lentas (como la <code>cubic-bezier(.22, 1, .36, 1)</code> de la demo), porque se sienten como tela que cae. Nada de efectos que retrasen ver la ropa.</p>
+
+      <h3>Errores típicos</h3>
+      <div class="sino wide">
+        <figure class="si">
+          <div class="mk k-salitre mk-sal" aria-hidden="true">
+            <div class="ph"></div>
+            <div class="nv"><span>Mujer&nbsp;&nbsp;Hombre</span><b>SALITRE</b><span>Cesta (0)</span></div>
+            <p class="t h">Lino que se arruga bonito.</p>
+            <p class="lk">Ver la colección</p>
+          </div>
+          <figcaption><b>Así sí</b>Una campaña, una frase y la interfaz retirada. El deseo tiene espacio para aparecer.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="mk cheap mk-sal-no" aria-hidden="true">
+            <div class="rb">REBAJAS -50% EN TODO. ¡SOLO HOY!</div>
+            <div class="ph"></div>
+            <div class="pop"><b>¡ESPERA!</b><span>10% de descuento si te suscribes</span><i>Suscribirme</i></div>
+            <span class="badge">-50%</span>
+          </div>
+          <figcaption><b>Así no</b>Rojo de rebajas, ventana de suscripción al entrar y etiquetas de descuento encima de la foto.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><strong>El pop-up de descuento al entrar.</strong> Interrumpe el deseo antes de que nazca. Si lo usas, que salga tras un rato de navegación o al ir a cerrar.</li>
+        <li><strong>El rojo de rebajas por toda la web.</strong> Abarata la marca durante meses para ganar unos días.</li>
+        <li><strong>Fotos con luces distintas</strong> y miniaturas pequeñas: la prenda no se ve y la tienda parece improvisada.</li>
+        <li><strong>Botones de colores</strong> que compiten con la ropa. En una tienda de moda el botón más llamativo puede ser negro.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Rejilla de dos columnas, nunca tres: cada prenda necesita al menos media pantalla para verse. En la ficha, galería que se desliza con el dedo y puntos que indican cuántas fotos hay; selector de talla con botones grandes (44 px como mínimo); botón «Añadir a la cesta» fijo abajo; los filtros, en una hoja que sube desde abajo. La foto de campaña necesita su propia versión vertical: recortar la horizontal suele dejar a la modelo sin cabeza o sin prenda.</p>
+      </div>
+
+      <!-- =========================================================
+           4 · HOTEL RURAL Y TURISMO
+           ========================================================= -->
+      <div class="band sector k-roure" id="hotel-band"><div class="inner">
+        <div>
+          <h2 id="hotel">Hotel rural y turismo</h2>
+          <p class="thesis">Vende tiempo lento. Cada decisión de diseño tiene que bajar pulsaciones.</p>
+          <p class="who">Ejemplo: Mas del Roure, hotel rural en el Maestrazgo.</p>
+        </div>
+        <ul class="words" aria-label="Tres palabras"><li>Calma</li><li>Autenticidad</li><li>Evasión</li></ul>
+      </div></div>
+
+      <p>Quien mira la web de un hotel rural suele hacerlo desde su mesa de trabajo un martes cualquiera. La web es una ventana: tiene que transmitir <strong>calma</strong> (desconexión, silencio, aire), <strong>autenticidad</strong> (piedra, monte, gente del lugar) y, al final, la tranquilidad práctica de reservar directamente con el hotel, con precio y disponibilidad claros. Lo que se vende no es la cama: es el tiempo que vas a pasar allí.</p>
+
+      <figure class="lab" data-title="Mas del Roure, hotel rural" data-hint="Desliza dentro de la demo" data-height="540" data-height-mobile="640">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero">
+            <svg class="land" viewBox="-100 120 600 180" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+              <circle class="ly" data-s=".05" cx="300" cy="170" r="22" fill="#E2A46A"/>
+              <path class="ly" data-s=".12" d="M-500 160l220 10 180 5 100 5 60-26 50 14 70-40 60 30 60-22 100 30 100-15 180 20 220-12v134H-500z" fill="#9AA58A"/>
+              <path class="ly" data-s=".2" d="M-500 205l200-18 200 13 100 14 80-30 70 22 70-30 70 26 110-20 100 18 200-16 200 14v118H-500z" fill="#6E7B62"/>
+              <path class="ly" data-s=".3" d="M-500 236l250 10 150-6 100 6 100-26 100 18 120-26 80 12 100 6 150-10 250 8v76H-500z" fill="#2F3B2C"/>
+              <g class="ly" data-s=".3"><path d="M246 222h40v22h-40z" fill="#E9E3D6"/><path d="M240 223l26-16 26 16z" fill="#A45E2E"/><path d="M262 232h8v12h-8z" fill="#2F3B2C"/></g>
+            </svg>
+            <header class="nav"><b class="logo">Mas del Roure</b><nav><a href="#e">Habitaciones</a><a href="#e">Entorno</a><a class="cta" href="#">Reservar</a></nav></header>
+            <div class="copy">
+              <p class="kick">Hotel rural en el Maestrazgo, a 1.100 metros</p>
+              <h1>Donde el silencio <em>tiene paisaje</em></h1>
+            </div>
+            <form class="book" onsubmit="return false">
+              <label>Llegada<input type="date" value="2026-06-12"></label>
+              <label>Salida<input type="date" value="2026-06-14"></label>
+              <button>Ver disponibilidad</button>
+            </form>
+          </section>
+          <section class="exp" id="e">
+            <h2>Aquí el tiempo va de otra manera</h2>
+            <div class="cols">
+              <article><b>Desayuno de masía</b><p>Pan de leña, cuajada y miel de romero de los vecinos.</p></article>
+              <article><b>Rutas desde la puerta</b><p>Tres senderos entre encinas y muros de piedra seca.</p></article>
+              <article><b>Un cielo sin farolas</b><p>Telescopio en la terraza y mantas para las noches de agosto.</p></article>
+            </div>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #E9E3D6; color: #2F3B2C; font-family: var(--f-jost); }
+          a { color: inherit; text-decoration: none; }
+          /* El cielo es el fondo; el paisaje, una franja abajo que no pisa el titular */
+          .hero { position: relative; min-height: 520px; display: flex; flex-direction: column; overflow: hidden; background: linear-gradient(#E9E3D6, #E6CFB0 55%, #D9A877); }
+          .land { position: absolute; left: 0; bottom: 0; width: 100%; height: 46%; }
+          .ly { transition: transform .1s linear; }
+          .nav, .copy, .book { position: relative; z-index: 1; }
+          .nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 28px; font-size: 14px; }
+          .logo { font: italic 500 28px/1 var(--f-cormorant); }
+          nav { display: flex; gap: 22px; align-items: center; }
+          .cta { border: 1px solid #2F3B2C; padding: 9px 16px; border-radius: 99px; }
+          .copy { padding: 30px 28px 0; max-width: 720px; animation: llega 1.8s cubic-bezier(.22, 1, .36, 1) both; }
+          .kick { margin: 0 0 12px; font-size: 14px; letter-spacing: .02em; }
+          /* Garalda ligera y grande: ritmo lento, mucho aire */
+          h1 { margin: 0; font: 500 clamp(46px, 8.5vw, 80px)/.92 var(--f-cormorant); letter-spacing: -.015em; }
+          h1 em { color: #8A4E26; }
+          .book { margin: auto 28px 28px; display: flex; align-items: end; gap: 12px; padding: 12px 12px 12px 22px; border-radius: 22px; background: rgb(233 227 214 / .94); box-shadow: 0 20px 40px -20px rgb(47 59 44 / .5); }
+          label { display: grid; gap: 2px; font-size: 12px; }
+          input { border: 0; background: none; color: inherit; font-size: 16px; padding: 4px 0; }
+          button { margin-left: auto; border: 0; border-radius: 14px; padding: 15px 20px; background: #A45E2E; color: #fff; font-weight: 600; cursor: pointer; }
+          .exp { padding: 56px 28px 64px; }
+          h2 { margin: 0 0 28px; max-width: 14ch; font: italic 500 44px/1 var(--f-cormorant); }
+          .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+          .cols b { display: block; padding-top: 14px; border-top: 1px solid #9AA58A; font-weight: 500; }
+          .cols p { margin: 6px 0 0; font-size: 15px; line-height: 1.55; color: #4A5546; }
+          @keyframes llega { from { opacity: 0; transform: translateY(14px); } }
+          @media (max-width: 600px) {
+            .nav nav a:not(.cta) { display: none; }
+            .hero { min-height: 600px; }
+            .land { width: 280%; max-width: none; height: 58%; left: 50%; translate: -50% 0; }
+            .book { flex-wrap: wrap; margin: auto 14px 14px; padding: 12px 14px; }
+            label { flex: 1 1 40%; min-width: 0; }
+            input { width: 100%; min-width: 0; }
+            button { width: 100%; }
+            .cols { grid-template-columns: 1fr; gap: 18px; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Parallax muy suave: cada capa del paisaje se mueve a su ritmo
+          const capas = document.querySelectorAll('.ly');
+          addEventListener('scroll', () => capas.forEach((c) =>
+            c.style.transform = `translateY(${scrollY * c.dataset.s}px)`), { passive: true });
+        </script>
+        <figcaption>Todo el color de la página sale del paisaje dibujado. El buscador de fechas está, pero discreto y abajo: primero te imaginas allí, después miras si hay sitio. Desliza y fíjate en el parallax: lento, casi imperceptible.</figcaption>
+      </figure>
+
+      <h3>Paleta: la que ya tiene el paisaje</h3>
+      <div class="pal wide" data-name="Mas del Roure">
+        <div class="pal-strip">
+          <div data-var="piedra" style="--c:#E9E3D6;--t:#2F3B2C;--w:6"><b>Piedra</b><span>Fondo</span><code>#E9E3D6</code><code>oklch(91.7% 0.019 86)</code></div>
+          <div data-var="encina" style="--c:#2F3B2C;--t:#E9E3D6;--w:2.4"><b>Encina</b><span>Texto</span><code>#2F3B2C</code><code>oklch(33.6% 0.030 139)</code></div>
+          <div data-var="salvia" style="--c:#9AA58A;--t:#1E261C;--w:1.4"><b>Salvia</b><span>Superficies, líneas</span><code>#9AA58A</code><code>oklch(70.6% 0.040 125)</code></div>
+          <div data-var="teja" style="--c:#A45E2E;--t:#FFFFFF;--w:.8"><b>Teja</b><span>Botón de reservar</span><code>#A45E2E</code><code>oklch(55.3% 0.110 53)</code></div>
+        </div>
+        <button class="btn pal-copy" type="button">Copiar variables</button>
+      </div>
+      <p><strong>La piedra</strong> es el crema grisáceo de los muros de piedra seca del Maestrazgo. <strong>La encina</strong> es el verde casi negro del monte mediterráneo, y hace de color de texto: 9,2:1 sobre la piedra, legible de sobra y más suave que el negro, porque el negro puro sería ciudad. <strong>La salvia</strong> es el verde gris del matorral, para líneas, ilustraciones y superficies. <strong>La teja</strong> es el tejado y el atardecer: el único color con algo de saturación, y por eso es el botón de reservar (blanco encima, 5:1).</p>
+      <p>Por qué funciona: todos los colores tienen poco croma salvo el acento, y la poca saturación es calma (nada grita, nada pide atención). Y como salen del propio lugar, la paleta es una promesa: lo que ves en la web es lo que verás al llegar. Esa coherencia es autenticidad. Si el hotel está en la playa, el mismo método da arena, azul agua apagado y blanco cal; si es turismo activo (barrancos, bici), sube la saturación y añade un naranja de seguridad, porque la emoción pasa de calma a aventura.</p>
+
+      <h3>Tipografía: garalda ligera y geométrica limpia</h3>
+      <div class="spec k-roure">
+        <p class="aa" aria-hidden="true"><i>Aa</i></p>
+        <div><p class="h"><i>Donde el silencio tiene paisaje</i></p><p class="b">Seis habitaciones de piedra y madera. Desde 120 € la noche con desayuno. Llegada a partir de las 15:00, salida sin prisa hasta las 12:00.</p><p class="m">Cormorant y su cursiva para titulares, Jost para reservas, precios y texto</p></div>
+      </div>
+      <p>Cormorant es una serif de inspiración garalda, ligera y de trazos finos, con un ritmo pausado que pide tamaño grande y mucho aire alrededor: justo lo que transmite calma. Su cursiva sirve para las frases que evocan («donde el silencio…»). Jost es una geométrica limpia, de círculos y rectas, que da claridad a lo práctico (fechas, precios, horarios) y moderniza el conjunto para que no caiga en lo rústico anticuado. El contraste entre las dos es claro, una serif delicada y una sans ordenada, y por eso conviven sin pelearse. Cuándo no: Cormorant en texto pequeño se ve débil, así que los párrafos van en Jost.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="home">
+        <li><b>Paisaje a pantalla completa, una frase y el buscador de fechas discreto</b><span>Evasión primero, acción a mano pero sin prisa.</span></li>
+        <li><b>La experiencia: qué vas a hacer</b><span>Desayuno, rutas, cielo. Se vende el tiempo, no los metros de la habitación.</span></li>
+        <li><b>Habitaciones, pocas y con precio «desde»</b><span>Concreción. Pocas porque es un hotel pequeño y eso es parte del encanto.</span></li>
+        <li><b>El entorno y cómo llegar</b><span>El destino es parte del producto. En montaña, información práctica de acceso.</span></li>
+        <li><b>Opiniones de huéspedes</b><span>Prueba social, mejor con frases concretas («la cuajada del desayuno») que con notas.</span></li>
+        <li class="cta"><b>Reserva directa con una ventaja</b><span>Mejor precio, salida tarde o una botella de vino: la razón para no reservar en una plataforma.</span></li>
+      </ol>
+
+      <h3>Fotografía e imagen</h3>
+      <p>Luz natural de primera y última hora, cuando es cálida y rasante; planos abiertos del paisaje alternados con detalles táctiles (la piedra, una manta de lana, el pan). Personas de espaldas mirando el paisaje: quien mira la web se proyecta en ellas, mientras que una cara posando mirando a cámara rompe la ilusión. Evita el gran angular extremo en las habitaciones (deforma y genera desconfianza al llegar), el flash y el HDR exagerado de cielos imposibles.</p>
+
+      <h3>Movimiento</h3>
+      <p class="meter" data-v="1"><span class="track"><i></i><i></i><i></i><i></i><i></i></span>Mínimo y lento</p>
+      <p>Fundidos largos (más de un segundo), un parallax suave entre las capas del paisaje o un vídeo silencioso de niebla en bucle. Nada rápido, nada que rebote: la velocidad contradice la calma que vendes. Si dudas entre animar algo o no, no lo animes.</p>
+
+      <h3>Errores típicos</h3>
+      <div class="sino wide">
+        <figure class="si">
+          <div class="mk k-roure mk-rou" aria-hidden="true">
+            <svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMax slice"><rect width="160" height="100" fill="#E6CFB0"/><circle cx="118" cy="58" r="7" fill="#E2A46A"/><path d="M0 64l26-10 22 6 30-14 26 12 26-8 30 10v40H0z" fill="#9AA58A"/><path d="M0 76l36-10 30 8 32-10 30 8 32-6v34H0z" fill="#6E7B62"/><path d="M0 88l44-8 40 6 50-8 26 4v18H0z" fill="#2F3B2C"/></svg>
+            <div class="nv"><b>Mas del Roure</b><span>Reservar</span></div>
+            <p class="t h">Donde el silencio <em>tiene paisaje</em></p>
+            <span class="bk">12 – 14 jun&nbsp;&nbsp;<i>Ver fechas</i></span>
+          </div>
+          <figcaption><b>Así sí</b>El paisaje habla primero; la reserva espera abajo, visible y tranquila.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="mk cheap mk-rou-no" aria-hidden="true">
+            <p class="tt">HOTEL CON ENCANTO ***</p>
+            <div class="room"></div>
+            <div class="ic"><i>WiFi gratis</i><i>Parking</i><i>TV plana</i><i>Aire acondicionado</i><i>Mascotas</i><i>Calefacción</i></div>
+            <div class="bb">BUSCAR DISPONIBILIDAD <span>Adultos 2 | Niños 0 | Habitaciones 1</span></div>
+          </div>
+          <figcaption><b>Así no</b>Empieza por la lista de servicios y un buscador de agencia. Vende la tele, no el silencio.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><strong>Empezar por los iconos de servicios</strong> (wifi, parking, televisión): son condiciones mínimas, no emociones. Van en la ficha de la habitación.</li>
+        <li><strong>Un buscador gigante de agencia</strong> en la portada, con seis campos: convierte la evasión en un trámite.</li>
+        <li><strong>El motor de reservas externo sin integrar,</strong> con otros colores y otra letra: al llegar al pago parece otra web y da desconfianza.</li>
+        <li><strong>Galerías de sesenta fotos</strong> sin orden. Doce bien elegidas cuentan mejor la historia.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Botón fijo abajo, «Ver disponibilidad», que abre el selector de fechas nativo del teléfono (<code>input type="date"</code>): es el que el usuario ya conoce y funciona mejor que cualquier calendario hecho a medida. Foto de portada vertical, la frase evocadora más corta y el resto, debajo. Y un detalle que se agradece en montaña: el botón «Cómo llegar» y dos líneas sobre el acceso (curvas, última gasolinera, cobertura), porque muchas veces se consulta la web ya en la carretera.</p>
+      </div>
+
+      <!-- =========================================================
+           5 · INMOBILIARIA DE LUJO
+           ========================================================= -->
+      <div class="band sector k-orient" id="lujo-band"><div class="inner">
+        <div>
+          <h2 id="lujo">Inmobiliaria de lujo</h2>
+          <p class="thesis">Vende un estilo de vida, no metros. El lujo se nota sobre todo en lo que no hay.</p>
+          <p class="who">Ejemplo: Casa Orient, residencias frente al mar en Benicàssim.</p>
+        </div>
+        <ul class="words" aria-label="Tres palabras"><li>Exclusividad</li><li>Serenidad</li><li>Aspiración</li></ul>
+      </div></div>
+
+      <p>Es el sector de la torre de los vídeos que te gustaron. Quien compra una vivienda de lujo tiene opciones y no tiene prisa, así que cualquier señal de presión («¡última oportunidad!») rompe la ilusión. Hay que transmitir <strong>exclusividad</strong> (no es para todos), <strong>serenidad</strong> (nadie te empuja) y <strong>aspiración</strong> (así podría ser tu vida). Hasta el tono del texto cambia: aquí se trata de usted y se invita a una visita privada, no se vende.</p>
+
+      <figure class="lab" data-title="Casa Orient, residencias de lujo" data-hint="Desliza dentro de la demo" data-height="560" data-height-mobile="660" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero">
+            <div class="img" aria-hidden="true"></div>
+            <header class="nav"><span class="logo">CASA ORIENT</span><nav><a href="#r">Residencias</a><a href="#r">Ubicación</a><a href="#v">Contacto</a></nav></header>
+            <div class="copy">
+              <h1>Vivir por encima <em>del mar</em></h1>
+              <p class="meta">Benicàssim. 24 residencias frente al Mediterráneo. Entrega en 2027.</p>
+              <a class="lnk" href="#v">Concertar visita privada</a>
+            </div>
+          </section>
+          <section class="res" id="r">
+            <div class="pic" aria-hidden="true"></div>
+            <div class="info">
+              <p class="k">Residencia 23</p>
+              <h2>Ático Levante</h2>
+              <dl>
+                <div><dt>Superficie</dt><dd>214 m²</dd></div><div><dt>Terraza</dt><dd>90 m²</dd></div>
+                <div><dt>Dormitorios</dt><dd>4</dd></div><div><dt>Precio</dt><dd>Desde 1,9 M€</dd></div>
+              </dl>
+              <a class="lnk" href="#v">Solicitar el dossier</a>
+            </div>
+          </section>
+          <section class="visit" id="v">
+            <h2>Una visita, a su ritmo</h2>
+            <p>Le recibimos en la residencia piloto con cita previa, sin prisas. Atención directa con nuestro equipo.</p>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #16151A; color: #E8DFD0; font-family: var(--f-archivo); }
+          a { color: inherit; text-decoration: none; }
+          .hero { position: relative; height: 540px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+          /* La foto entra despacio: la lentitud es señal de seguridad */
+          .img { position: absolute; inset: 0; background: url("../landing/media/torre-plantas.webp") 62% 50% / cover; animation: posa 2.6s cubic-bezier(.22, 1, .36, 1) both; }
+          .img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #16151A 0 12%, rgb(22 21 26 / .5) 45%, transparent 70%), linear-gradient(rgb(22 21 26 / .5), transparent 25%); }
+          .nav, .copy { position: relative; z-index: 1; }
+          .nav { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; font-size: 12px; letter-spacing: .08em; }
+          /* Ancha y espaciada en pequeño: calma y precisión de arquitecto */
+          .logo { font-stretch: 125%; letter-spacing: .3em; font-size: 12px; }
+          nav { display: flex; gap: 26px; }
+          .copy { padding: 0 32px 40px; animation: aparece 1.6s .7s cubic-bezier(.22, 1, .36, 1) both; }
+          h1 { margin: 0; max-width: 12ch; font: 400 clamp(44px, 7.4vw, 74px)/.95 var(--f-serif); letter-spacing: -.01em; }
+          h1 em { color: #C9A96E; }
+          .meta { margin: 16px 0 24px; font-size: 13px; letter-spacing: .04em; color: #CFC6B7; }
+          .lnk { display: inline-block; padding-bottom: 6px; border-bottom: 1px solid #C9A96E; color: #C9A96E; font-size: 14px; letter-spacing: .04em; }
+          .res { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; padding: 70px 32px; }
+          .pic { aspect-ratio: 4 / 5; background: url("../landing/media/azotea.webp") 30% 50% / cover; }
+          .k { margin: 0 0 10px; font-size: 12px; letter-spacing: .2em; color: #8C8478; font-stretch: 125%; }
+          h2 { margin: 0 0 24px; font: 400 44px/1 var(--f-serif); }
+          dl { margin: 0 0 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+          dt { font-size: 11px; letter-spacing: .14em; color: #8C8478; }
+          dd { margin: 4px 0 0; font: 400 24px/1 var(--f-serif); }
+          .visit { padding: 70px 32px 90px; border-top: 1px solid rgb(201 169 110 / .25); text-align: center; }
+          .visit p { max-width: 42ch; margin: 0 auto; line-height: 1.7; color: #CFC6B7; }
+          @keyframes posa { from { transform: scale(1.08); opacity: 0; } }
+          @keyframes aparece { from { opacity: 0; transform: translateY(16px); } }
+          @media (max-width: 600px) {
+            .hero { height: 620px; }
+            .nav { padding: 20px; } .nav nav a:not(:last-child) { display: none; }
+            .copy { padding: 0 20px 32px; }
+            .res { grid-template-columns: 1fr; padding: 48px 20px; gap: 28px; }
+            .visit { padding: 56px 20px 70px; }
+          }
+        </script>
+        <figcaption>Cuenta lo que no hay: ni filtros, ni miniaturas, ni precios tachados, ni tres botones. Una imagen que entra despacio, una frase, un enlace. Los datos (metros, dormitorios, precio) aparecen después, con aire y en una letra ancha y pequeña.</figcaption>
+      </figure>
+
+      <h3>Paleta: casi negro, arena y un dorado apagado</h3>
+      <div class="pal wide" data-name="Casa Orient">
+        <div class="pal-strip">
+          <div data-var="ebano" style="--c:#16151A;--t:#E8DFD0;--w:6"><b>Ébano</b><span>Fondo</span><code>#16151A</code><code>oklch(19.9% 0.010 295)</code></div>
+          <div data-var="arena" style="--c:#E8DFD0;--t:#16151A;--w:2.4"><b>Arena</b><span>Texto</span><code>#E8DFD0</code><code>oklch(90.7% 0.022 81)</code></div>
+          <div data-var="champan" style="--c:#C9A96E;--t:#16151A;--w:.9"><b>Champán</b><span>Acento: líneas y enlaces</span><code>#C9A96E</code><code>oklch(75.0% 0.085 82)</code></div>
+          <div data-var="piedra" style="--c:#8C8478;--t:#16151A;--w:1"><b>Piedra</b><span>Texto secundario</span><code>#8C8478</code><code>oklch(61.7% 0.020 78)</code></div>
+        </div>
+        <button class="btn pal-copy" type="button">Copiar variables</button>
+      </div>
+      <p><strong>El ébano</strong> es un casi negro con un punto violeta: la noche, una galería con las luces bajas. Los fondos oscuros enmarcan la fotografía como en un museo y hacen brillar las ventanas iluminadas de la hora azul. <strong>La arena</strong> es el texto: crema en vez de blanco, porque el blanco puro sobre negro deslumbra y se ve técnico; la arena es cálida (13,7:1). <strong>El champán</strong> es un dorado con poco croma, solo en líneas finas, cifras y enlaces. <strong>La piedra</strong> es el gris cálido de los datos secundarios (4,9:1 sobre el fondo).</p>
+      <p>Por qué funciona: es casi monocromática, con todos los colores cerca del mismo tono cálido, y lo que cambia es la luz. Esa contención es elegancia: nada compite, todo está decidido. Y el dorado tiene truco. El oro de verdad es un metal y, en pantalla, un amarillo saturado (<code>#FFD700</code>) se lee como plástico; bajar el croma y oscurecer un poco lo acerca al reflejo del metal. La regla práctica: el dorado, poco y fino. En superficies grandes o en degradados brillantes cae en lo hortera.</p>
+
+      <h3>Tipografía: serif fina y sans ancha en pequeño</h3>
+      <div class="spec k-orient">
+        <p class="aa" aria-hidden="true">Aa</p>
+        <div><p class="h">Vivir por encima del mar</p><p class="b" style="font-stretch:112%;letter-spacing:.02em">Ático Levante. 214 m² y una terraza de 90 m² orientada al este. Cuatro dormitorios. Desde 1,9 M€.</p><p class="m">Instrument Serif 400 para titulares, Archivo ancha (112–125 %) para datos y texto</p></div>
+      </div>
+      <p>Instrument Serif es una serif de contraste fino y proporciones estrechas, elegante sin el dramatismo de la didona. En peso normal y a gran tamaño, susurra en vez de gritar, y en el lujo quien grita pierde. La compañera es Archivo en su versión ancha, en tamaño pequeño y con el espaciado abierto: lo ancho y espaciado se lee despacio, con calma y precisión de plano de arquitecto. Es la misma pareja que usa la web de la torre del proyecto final. Las mayúsculas espaciadas aquí sí tienen sentido (el logotipo, las etiquetas de datos), porque son el código visual del sector, pero en dosis pequeñas.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="home">
+        <li><b>Imagen o vídeo a pantalla completa con muy poco texto</b><span>Aspiración pura. Si hay que leer mucho, no es lujo.</span></li>
+        <li><b>El lugar: la vista, el mar, la luz</b><span>Se vende un estilo de vida antes que una vivienda.</span></li>
+        <li><b>Residencias seleccionadas, pocas y grandes, con planos</b><span>Exclusividad: tres opciones bien contadas valen más que treinta miniaturas.</span></li>
+        <li><b>Materiales y detalles</b><span>La razón que justifica el precio: piedra, carpintería, domótica, arquitecto.</span></li>
+        <li><b>Servicio privado: quién te atiende</b><span>Trato personal, con nombre y cara.</span></li>
+        <li class="cta"><b>Visita privada: formulario corto y teléfono directo</b><span>Una invitación, no un «comprar ahora».</span></li>
+      </ol>
+
+      <h3>Fotografía e imagen</h3>
+      <p>Fotografía de arquitectura profesional o renders de calidad, a la hora azul o a la hora dorada, cuando las ventanas encendidas y el cielo de color hacen el trabajo emocional. Verticales rectas (con corrección de perspectiva), porque las paredes que caen transmiten descuido. Vídeo lento con dron para el entorno. Evita el gran angular que deforma, las fotos hechas con el móvil y las marcas de agua del portal: cada una resta un cero al precio percibido.</p>
+
+      <h3>Movimiento</h3>
+      <p class="meter" data-v="2"><span class="track"><i></i><i></i><i></i><i></i><i></i></span>Medio, siempre lento</p>
+      <p>Imágenes que se asientan al entrar (de una escala de 1,08 a 1 en más de dos segundos), parallax suave y, en el caso más ambicioso, un vídeo que avanza con el scroll, como la torre de la lección de secuencias. El tempo importa más que la cantidad: lento es seguro, rápido es nervioso. Quien tiene algo valioso no necesita correr para enseñarlo.</p>
+
+      <h3>Errores típicos</h3>
+      <div class="sino wide">
+        <figure class="si">
+          <div class="mk k-orient mk-ori" aria-hidden="true">
+            <div class="ph"></div>
+            <div class="nv"><span>CASA ORIENT</span><span>MENÚ</span></div>
+            <p class="t h">Vivir por encima <em>del mar</em></p>
+            <p class="lk">Concertar visita privada</p>
+          </div>
+          <figcaption><b>Así sí</b>Una imagen, una frase, una invitación. El silencio visual es la señal de lujo.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="mk cheap mk-ori-no" aria-hidden="true">
+            <div class="fb"><i>Tipo</i><i>Precio</i><i>Zona</i><i>Habitaciones</i><b>BUSCAR</b></div>
+            <div class="gr"><i><s>¡REBAJADO!</s></i><i></i><i><s>¡OPORTUNIDAD!</s></i><i></i><i></i><i><s>¡NUEVO!</s></i><i></i><i></i></div>
+            <span class="call">¡LLAMA YA!</span>
+          </div>
+          <figcaption><b>Así no</b>Aspecto de portal: filtros, miniaturas iguales y etiquetas de urgencia. Grita «stock», no «exclusivo».</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><strong>Parecer un portal inmobiliario.</strong> Filtros y rejillas de miniaturas dicen «hay muchas como esta».</li>
+        <li><strong>Precios tachados y urgencias.</strong> La presión es lo contrario de la serenidad.</li>
+        <li><strong>Demasiadas llamadas a la acción</strong> y un chat flotante insistente.</li>
+        <li><strong>Fotos de baja calidad</strong> en una vivienda de siete cifras: el visitante deduce que el resto también se ha hecho barato.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El vídeo de portada necesita su versión vertical propia (9:16), no un recorte. Galería a pantalla completa que se desliza con el dedo, planos que se pueden ampliar con dos dedos y, abajo, dos accesos discretos: llamar y WhatsApp. Ojo con la letra ancha y espaciada: en pequeño en el móvil necesita al menos 14–15 px para no convertirse en una línea de puntos. Y los fondos oscuros, en un OLED, hacen que la foto parezca flotar: una ventaja de este sector.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">En Casa Orient el cliente quiere el dorado «más brillante, que se note que es lujo». ¿Qué pasará si pones <code>#FFD700</code> en botones y titulares?</p>
+        <ol>
+          <li>Se verá más exclusivo porque el amarillo es el color más luminoso.</li>
+          <li>No cambia nada: el dorado siempre transmite lujo.</li>
+          <li>Se verá más barato: un amarillo saturado en superficies grandes se lee como plástico, no como metal.</li>
+        </ol>
+        <p class="why">El oro real refleja; en pantalla, lo que se acerca a ese reflejo es un dorado con poco croma y en dosis finas. Un amarillo puro y saturado recuerda más a un cartel de ofertas que a un anillo. La forma de explicárselo al cliente: el lujo se nota por contención, no por cantidad.</p>
+      </div>
+
+      <!-- =========================================================
+           6 · GIMNASIO Y DEPORTE
+           ========================================================= -->
+      <div class="band sector k-ferric" id="gimnasio-band"><div class="inner">
+        <div>
+          <h2 id="gimnasio">Gimnasio y deporte</h2>
+          <p class="thesis">Vende la persona que quieres ser. Energía arriba, fricción abajo.</p>
+          <p class="who">Ejemplo: Fèrric Training Club, entrenamiento en grupo en Vila-real.</p>
+        </div>
+        <ul class="words" aria-label="Tres palabras"><li>Energía</li><li>Superación</li><li>Tribu</li></ul>
+      </div></div>
+
+      <p>Un gimnasio de entrenamiento en grupo vende tres cosas: <strong>energía</strong> (las ganas de moverte), <strong>superación</strong> (la persona que serás en tres meses) y <strong>pertenencia</strong> (una tribu que te espera a las siete de la tarde). Y tiene que desactivar el miedo de quien empieza: «¿estaré a la altura?, ¿cuánto cuesta?, ¿hay permanencia?». Por eso aquí conviven la web más intensa de la lección y la información más clara: horario y precio sin esconder.</p>
+
+      <figure class="lab" data-title="Fèrric Training Club" data-hint="Cambia el día del horario" data-height="560" data-height-mobile="660" data-stage="dark">
+        <script type="text/x-demo" data-lang="html">
+          <header class="nav"><b class="logo">Fèrric</b><nav><a href="#h">Clases</a><a href="#h">Horario</a><a class="cta" href="#">Prueba gratis</a></nav></header>
+          <section class="hero">
+            <h1><span class="l"><span>Más</span></span> <span class="l"><span>fuerte</span></span> <span class="l"><span>que <em>ayer</em></span></span></h1>
+            <p class="sub">Fuerza, hyrox y boxeo en grupos pequeños en Vila-real. Coaches que se saben tu nombre desde el primer día.</p>
+            <div class="acts"><a class="btn" href="#">Prueba una clase gratis</a><p class="price"><b>39 €</b> al mes, sin permanencia</p></div>
+          </section>
+          <div class="mq" aria-hidden="true"><span>Fuerza — Hyrox — Boxeo — Movilidad — Open box — Fuerza — Hyrox — Boxeo — Movilidad — Open box — </span></div>
+          <section class="horario" id="h">
+            <h2>Horario</h2>
+            <div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-d="0">Lun–Vie</button><button role="tab" aria-selected="false" data-d="1">Sábado</button><button role="tab" aria-selected="false" data-d="2">Domingo</button></div>
+            <ul id="lista"></ul>
+          </section>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #0E0F10; color: #F2F2EE; }
+          a { color: inherit; text-decoration: none; }
+          .nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; font-size: 14px; font-weight: 600; }
+          .logo { font: 900 30px/1 var(--f-shoulders); text-transform: uppercase; letter-spacing: .02em; }
+          nav { display: flex; gap: 20px; align-items: center; }
+          .cta, .btn { background: #C8FF2E; color: #0E0F10; padding: 11px 16px; border-radius: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; }
+          .hero { position: relative; padding: 22px 24px 44px; overflow: hidden; }
+          .hero::before { content: ""; position: absolute; left: -10%; right: -10%; top: 46%; height: 90px; background: #C8FF2E; opacity: .1; rotate: -7deg; }
+          /* Condensada, vertical, de dorsal: cabe enorme y suena a estadio */
+          h1 { position: relative; margin: 0; font: 900 clamp(64px, 15vw, 150px)/.8 var(--f-shoulders); text-transform: uppercase; }
+          h1 em { font-style: normal; color: #C8FF2E; }
+          /* Entrada rápida, línea a línea, con frenada fuerte */
+          .l { display: inline-block; overflow: hidden; vertical-align: top; padding: .16em 0 .04em; margin-top: -.16em; }
+          .l > span { display: inline-block; animation: sube .55s cubic-bezier(.16, 1, .3, 1) both; }
+          .l:nth-of-type(2) > span { animation-delay: .08s; } .l:nth-of-type(3) > span { animation-delay: .16s; }
+          @keyframes sube { from { transform: translateY(105%); } }
+          .sub { position: relative; max-width: 38ch; margin: 22px 0 24px; font-size: 16px; line-height: 1.5; color: #C9CAC4; }
+          .acts { position: relative; display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; }
+          .btn { padding: 16px 22px; font-size: 15px; }
+          .price { margin: 0; font-size: 14px; color: #C9CAC4; }
+          .price b { font: 800 28px/1 var(--f-shoulders); color: #F2F2EE; margin-right: 4px; }
+          .mq { overflow: hidden; background: #2A2C2E; padding: 14px 0; font: 800 26px/1 var(--f-shoulders); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+          .mq span { display: inline-block; animation: mq 16s linear infinite; }
+          @keyframes mq { to { transform: translateX(-50%); } }
+          .horario { padding: 40px 24px 56px; }
+          h2 { margin: 0 0 18px; font: 900 48px/1 var(--f-shoulders); text-transform: uppercase; }
+          .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+          .tabs button { min-height: 44px; padding: 0 16px; border: 1px solid #3A3C3F; border-radius: 6px; background: none; color: inherit; font-weight: 700; cursor: pointer; }
+          .tabs [aria-selected="true"] { background: #F2F2EE; color: #0E0F10; border-color: #F2F2EE; }
+          ul { list-style: none; margin: 0; padding: 0; }
+          li { display: grid; grid-template-columns: 70px 1fr auto; gap: 12px; align-items: baseline; padding: 13px 0; border-bottom: 1px solid #2A2C2E; }
+          li b { font: 800 22px/1 var(--f-shoulders); color: #C8FF2E; font-variant-numeric: tabular-nums; }
+          li span { color: #A9AAA4; font-size: 14px; }
+          @media (max-width: 600px) { .nav nav a:not(.cta) { display: none; } .hero { padding-top: 14px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // El horario en pestañas por día: una tabla semanal no cabe en un móvil
+          const dias = [
+            [['07:00', 'Fuerza', 'Marta'], ['09:30', 'Movilidad', 'Joan'], ['14:00', 'Hyrox', 'Marta'], ['19:00', 'Boxeo', 'Iván'], ['20:30', 'Fuerza', 'Joan']],
+            [['09:00', 'Hyrox por equipos', 'Marta'], ['11:00', 'Open box', 'Libre']],
+            [['10:00', 'Movilidad suave', 'Joan']],
+          ];
+          const tabs = document.querySelectorAll('[role=tab]');
+          function pinta(d) {
+            tabs.forEach((t) => t.setAttribute('aria-selected', t.dataset.d == d));
+            lista.innerHTML = dias[d].map(([h, c, q]) => `<li><b>${h}</b>${c}<span>${q}</span></li>`).join('');
+          }
+          tabs.forEach((t) => t.addEventListener('click', () => pinta(t.dataset.d)));
+          pinta(0);
+        </script>
+        <figcaption>Pulsa «Reiniciar» para ver la entrada del titular: rápida, línea a línea y con frenada seca. Debajo, todo lo contrario: precio visible junto al botón y horario por días, sin animación, porque lo práctico no se adorna.</figcaption>
+      </figure>
+
+      <h3>Paleta: asfalto, tiza y lima ácida</h3>
+      <div class="pal wide" data-name="Fèrric">
+        <div class="pal-strip">
+          <div data-var="asfalto" style="--c:#0E0F10;--t:#F2F2EE;--w:6"><b>Asfalto</b><span>Fondo</span><code>#0E0F10</code><code>oklch(16.8% 0.003 248)</code></div>
+          <div data-var="tiza" style="--c:#F2F2EE;--t:#0E0F10;--w:2.2"><b>Tiza</b><span>Texto</span><code>#F2F2EE</code><code>oklch(96.0% 0.005 106)</code></div>
+          <div data-var="grafito" style="--c:#2A2C2E;--t:#F2F2EE;--w:1.4"><b>Grafito</b><span>Superficies</span><code>#2A2C2E</code><code>oklch(29.2% 0.005 248)</code></div>
+          <div data-var="acido" style="--c:#C8FF2E;--t:#0E0F10;--w:.8"><b>Ácido</b><span>Botón y una palabra</span><code>#C8FF2E</code><code>oklch(92.9% 0.221 124)</code></div>
+        </div>
+        <button class="btn pal-copy" type="button">Copiar variables</button>
+      </div>
+      <p><strong>El asfalto</strong> es un casi negro: intensidad, noche, el suelo de caucho del box. Un fondo muy oscuro da sensación de potencia y deja que el acento salte. <strong>La tiza</strong> es un blanco roto, el magnesio de las manos (17:1 sobre el fondo). <strong>El grafito</strong> separa bloques sin romper la oscuridad. <strong>El ácido</strong> es la lima de alta visibilidad del material deportivo y de los chalecos reflectantes: un color con una luminosidad altísima que el ojo encuentra antes que nada, y por eso significa «ve».</p>
+      <p>Por qué funciona: el contraste de luz es extremo (casi negro contra casi blanco y un acento luminosísimo), y el contraste extremo se siente como intensidad. Hay un solo color saturado sobre acromáticos, y esa disciplina impide que la energía se convierta en ruido. La lima solo vive en el botón y en una palabra del titular. Ojo: no todos los deportes venden esta emoción. Un estudio de pilates o yoga vende lo contrario (calma, cuidado), y su paleta se parece más a la del hotel rural: arena, salvia, terracota suave. El sector no decide la estética; la emoción sí.</p>
+
+      <h3>Tipografía: condensada de dorsal</h3>
+      <div class="spec k-ferric">
+        <p class="aa" aria-hidden="true">AA</p>
+        <div><p class="h">Más fuerte que ayer</p><p class="b">Fuerza, hyrox y boxeo en grupos de doce. Abierto de 06:00 a 23:00 todos los días. 39 € al mes, sin permanencia. La primera clase, gratis.</p><p class="m">Big Shoulders 900 en mayúsculas para titulares, Inter Tight para horario y tarifas</p></div>
+      </div>
+      <p>Big Shoulders nació para la señalética de la ciudad de Chicago y tiene el aire de los números de un dorsal o de un marcador de estadio. Es condensada, y lo condensado es vertical: la letra se estira hacia arriba, como un cuerpo en tensión, y cabe enorme. En mayúsculas y en peso 900 suena a grito de ánimo. Las mayúsculas, solo en titulares: un párrafo entero en mayúsculas se lee mal y suena a enfado. Horario y tarifas, en Inter Tight, porque ahí quien lee está decidiendo y necesita claridad, no épica.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="home">
+        <li class="cta"><b>Portada: claim, Prueba gratis y el precio a la vista</b><span>Energía y, en la misma línea, la respuesta a «¿cuánto cuesta?».</span></li>
+        <li><b>Disciplinas</b><span>Qué puedo hacer aquí. Una marquesina o una lista con foto.</span></li>
+        <li><b>Horario por días</b><span>¿Encaja en mi vida? Es la segunda pregunta de todo el mundo.</span></li>
+        <li><b>Tarifas claras</b><span>Dos o tres opciones, sin letra pequeña. «Consúltanos» espanta.</span></li>
+        <li><b>Coaches y comunidad</b><span>La tribu: caras reales y nombres. Es lo que hace que la gente se quede.</span></li>
+        <li><b>Historias de socios</b><span>Superación contada por gente normal, no por modelos.</span></li>
+        <li class="cta"><b>Ubicación y prueba gratis otra vez</b><span>Quien ha llegado hasta aquí ya está convencido: ponle el botón delante.</span></li>
+      </ol>
+
+      <h3>Fotografía e imagen</h3>
+      <p>Gente real del propio gimnasio, sudando, en movimiento (un poco de desenfoque de movimiento ayuda), con contraluz duro y mucho contraste. El blanco y negro con el acento lima encima funciona muy bien: unifica fotos de distintas sesiones y refuerza la paleta. Evita las fotos de banco con modelos perfectos: intimidan a quien empieza (la persona que más necesitas convencer) y no son tu tribu.</p>
+
+      <h3>Movimiento</h3>
+      <p class="meter" data-v="4"><span class="track"><i></i><i></i><i></i><i></i><i></i></span>Alto, rápido y corto</p>
+      <p>Aquí el ritmo es la emoción: titulares que entran desde abajo, marquesinas, contadores que suben. Duraciones cortas (entre 200 y 600 ms) con curvas de salida fuertes, que arrancan muy rápido y frenan en seco, como un gesto deportivo. La diferencia con la imprenta: allí el movimiento rebota (gracia), aquí frena (potencia). El límite: el horario y los precios nunca se animan, porque ahí la gente lee.</p>
+
+      <h3>Errores típicos</h3>
+      <div class="sino wide">
+        <figure class="si">
+          <div class="mk k-ferric mk-fer" aria-hidden="true">
+            <div class="nv"><b>FÈRRIC</b><span>Horario&nbsp;&nbsp;Tarifas</span></div>
+            <p class="t h">Más fuerte que <span>ayer</span></p>
+            <span class="bt">PRUEBA GRATIS</span>
+            <p class="pr"><b>39 €</b> al mes, sin permanencia</p>
+          </div>
+          <figcaption><b>Así sí</b>Un solo acento, en el botón y en una palabra. El precio, al lado.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="mk cheap mk-fer-no" aria-hidden="true">
+            <div class="bgph"></div>
+            <p class="t1">¡¡TRANSFORMA TU CUERPO!!</p>
+            <p class="t2">EL MEJOR GIMNASIO DE LA ZONA CON LAS MEJORES MÁQUINAS Y LOS MEJORES PROFESIONALES</p>
+            <span class="b1">¡APÚNTATE!</span><span class="b2">CONSULTA PRECIOS</span>
+          </div>
+          <figcaption><b>Así no</b>Tres neones compitiendo, texto en mayúsculas sobre la foto sin velo y el precio escondido.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><strong>Esconder el precio.</strong> Es la primera duda; si no la resuelves, la resuelve otro gimnasio.</li>
+        <li><strong>Neón en todo.</strong> Si todo grita, nada se oye: el acento pierde su función de señal.</li>
+        <li><strong>Texto sobre foto sin velo</strong> ni degradado: con fotos de alto contraste, la mitad del texto desaparece.</li>
+        <li><strong>Todo en mayúsculas,</strong> párrafos incluidos.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El horario semanal en tabla no cabe: pestañas por día, como en la demo, con botones de 44 px. Botón fijo «Prueba gratis» y, si hay app de reservas, el enlace directo. La condensada es una aliada en vertical: dos o tres palabras por línea a tamaño enorme sin desbordar. La lima, a pleno sol, sigue viéndose (por eso es el color de los chalecos), pero sobre el blanco no se lee: mantenla siempre sobre oscuro.</p>
+      </div>
+
+      <!-- =========================================================
+           7 · PORTFOLIO CREATIVO
+           ========================================================= -->
+      <div class="band sector k-clara" id="portfolio-band"><div class="inner">
+        <div>
+          <h2 id="portfolio">Portfolio creativo</h2>
+          <p class="thesis">Vende tu criterio. Tiene que recordarse y, a la vez, dejar ver el trabajo.</p>
+          <p class="who">Ejemplo: Clara Ventura, directora de arte en Valencia.</p>
+        </div>
+        <ul class="words" aria-label="Tres palabras"><li>Personalidad</li><li>Criterio</li><li>Curiosidad</li></ul>
+      </div></div>
+
+      <p>Quien contrata a un creativo ve decenas de portfolios seguidos. El tuyo tiene que transmitir <strong>personalidad</strong> (que se te recuerde al cerrar la pestaña), <strong>criterio</strong> (y seleccionar es la primera prueba de criterio) y <strong>curiosidad</strong> (ganas de abrir un proyecto más). Es el único sector donde el producto eres tú, así que la web es a la vez escaparate y muestra. Te interesa especialmente: es el tipo de web que harás para ti.</p>
+
+      <figure class="lab" data-title="Clara Ventura, portfolio" data-hint="Toca un proyecto" data-height="560" data-height-mobile="660">
+        <script type="text/x-demo" data-lang="html">
+          <section class="hero">
+            <header class="nav"><b>CV</b><nav><a href="#w">Proyectos</a><a href="#w">Info</a><a href="#m">Contacto</a></nav></header>
+            <h1>Clara<br>Ventura</h1>
+            <p class="pos">Directora de arte en Valencia. Identidades y campañas para marcas que quieren que las miren dos veces.</p>
+            <p class="av"><i></i>Disponible desde enero</p>
+          </section>
+          <section class="work" id="w">
+            <div class="row"><button class="pr" aria-expanded="false"><span>2026</span><b>Bodega Clot</b><span>Identidad y etiquetas</span></button>
+              <div class="pv"><div class="art a1"></div><p>Una bodega de la Plana que quería dejar de parecer de supermercado. Una etiqueta tipográfica por parcela. Hoy está en la carta de catorce restaurantes de Valencia.</p></div></div>
+            <div class="row"><button class="pr" aria-expanded="false"><span>2025</span><b>Festival Lluna</b><span>Campaña</span></button>
+              <div class="pv"><div class="art a2"></div><p>Cartelería y redes para un festival de música nocturno. Una luna que crece cada semana hasta el día del concierto.</p></div></div>
+            <div class="row"><button class="pr" aria-expanded="false"><span>2025</span><b>Cerámica Rius</b><span>Packaging</span></button>
+              <div class="pv"><div class="art a3"></div><p>Cajas para un taller de azulejo hecho a mano. El patrón de cada caja es el del azulejo que lleva dentro.</p></div></div>
+          </section>
+          <footer id="m"><p>¿Hablamos?</p><a href="#">hola@claraventura.es</a></footer>
+          <div class="float" aria-hidden="true"></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #F5F3EF; color: #1B1B1B; font-family: var(--f-mono); }
+          a { color: inherit; }
+          /* El azul de firma, a pantalla completa, solo en el marco */
+          .hero { background: #2B3DF5; color: #fff; padding: 20px 24px 36px; }
+          .nav { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 40px; }
+          .nav nav { display: flex; gap: 18px; } .nav a { text-decoration: none; }
+          h1 { margin: 0; font: 800 clamp(44px, 13.5vw, 140px)/.84 var(--f-syne); letter-spacing: -.045em; }
+          .pos { max-width: 44ch; margin: 22px 0 14px; font-size: 14px; line-height: 1.6; }
+          .av { margin: 0; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+          .av i { width: 8px; height: 8px; border-radius: 50%; background: #9BFFB4; }
+          .work { padding: 20px 24px 10px; }
+          .pr { width: 100%; display: grid; grid-template-columns: 60px 1fr auto; gap: 12px; align-items: baseline; padding: 18px 0; border: 0; border-bottom: 1px solid #D6D3CC; background: none; color: inherit; text-align: left; cursor: pointer; font-size: 13px; }
+          .pr b { font: 800 clamp(26px, 5vw, 40px)/1 var(--f-syne); letter-spacing: -.03em; transition: color .2s, translate .3s; }
+          .pr span:last-child { color: #6B6B67; }
+          @media (hover: hover) { .pr:hover b { color: #2B3DF5; translate: 8px 0; } }
+          /* El caso se abre al tocar */
+          .pv { display: none; padding-top: 14px; }
+          .row.open .pv { display: block; animation: abre .5s cubic-bezier(.22, 1, .36, 1); }
+          @keyframes abre { from { opacity: 0; transform: translateY(-8px); } }
+          .art { height: 200px; border-radius: 4px; }
+          .pv p { max-width: 52ch; margin: 0; padding: 12px 0 20px; font-size: 13px; line-height: 1.6; color: #444; }
+          .a1, .float.a1 { background: radial-gradient(ellipse 9% 34% at 50% 58%, #1B1B1B 96%, transparent), linear-gradient(#E8A33D, #C9832A); }
+          .a2, .float.a2 { background: radial-gradient(circle at 60% 40%, #F5F3EF 0 18%, transparent 18.5%), #1B1B1B; }
+          .a3, .float.a3 { background: conic-gradient(from 45deg, #2B3DF5 0 25%, #F5F3EF 0 50%, #2B3DF5 0 75%, #F5F3EF 0) 0 0 / 44px 44px; }
+          /* Con ratón: miniatura flotante que sigue al cursor */
+          .float { position: fixed; left: 0; top: 0; width: 200px; height: 140px; pointer-events: none; opacity: 0; transition: opacity .25s; border-radius: 4px; z-index: 5; }
+          .float.on { opacity: 1; }
+          footer { padding: 40px 24px 60px; }
+          footer p { margin: 0 0 8px; font-size: 13px; color: #6B6B67; }
+          footer a { overflow-wrap: anywhere; font: 800 clamp(19px, 5vw, 44px)/1.1 var(--f-syne); letter-spacing: -.03em; text-decoration-color: #2B3DF5; text-underline-offset: .15em; }
+          @media (max-width: 600px) { .pr { grid-template-columns: 1fr auto; } .pr span:first-child { display: none; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Tocar abre el caso (funciona igual con dedo y con ratón)
+          document.querySelectorAll('.row').forEach((row) => {
+            const b = row.querySelector('.pr');
+            b.addEventListener('click', () => b.setAttribute('aria-expanded', row.classList.toggle('open')));
+          });
+          // Solo con ratón fino: la miniatura sigue al cursor. En táctil no existe el hover
+          if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            const f = document.querySelector('.float');
+            document.querySelectorAll('.pr').forEach((b, i) => {
+              b.addEventListener('mouseenter', () => { f.className = `float on a${i + 1}`; });
+              b.addEventListener('mouseleave', () => f.classList.remove('on'));
+              b.addEventListener('mousemove', (e) => { f.style.translate = `${e.clientX + 24}px ${e.clientY - 70}px`; });
+            });
+          }
+        </script>
+        <figcaption>El azul solo vive en el marco (portada, hover, subrayado del correo); los proyectos llevan su propio color. En escritorio, al pasar por un proyecto aparece una miniatura que sigue al ratón; en el móvil eso no existe, así que tocar abre el caso con imagen y contexto.</figcaption>
+      </figure>
+
+      <h3>Paleta: neutros para el trabajo y un color de firma</h3>
+      <div class="pal wide" data-name="Clara Ventura">
+        <div class="pal-strip">
+          <div data-var="blanco-roto" style="--c:#F5F3EF;--t:#1B1B1B;--w:5"><b>Blanco roto</b><span>Fondo de proyectos</span><code>#F5F3EF</code><code>oklch(96.5% 0.006 85)</code></div>
+          <div data-var="ultramar" style="--c:#2B3DF5;--t:#FFFFFF;--w:2.6"><b>Ultramar</b><span>Firma: portada y detalles</span><code>#2B3DF5</code><code>oklch(49.5% 0.266 268)</code></div>
+          <div data-var="grafito" style="--c:#1B1B1B;--t:#F5F3EF;--w:1.6"><b>Grafito</b><span>Texto</span><code>#1B1B1B</code><code>oklch(22.2% 0 0)</code></div>
+          <div data-var="gris" style="--c:#6B6B67;--t:#FFFFFF;--w:.9"><b>Gris</b><span>Datos de ficha</span><code>#6B6B67</code><code>oklch(52.7% 0.006 107)</code></div>
+        </div>
+        <button class="btn pal-copy" type="button">Copiar variables</button>
+      </div>
+      <p><strong>El blanco roto</strong> y <strong>el grafito</strong> son el fondo neutro de los proyectos: cada trabajo trae su propia paleta y no debe chocar con la tuya. <strong>El ultramar</strong> es la firma, usado sin miedo a pantalla completa en la portada y en pequeños detalles (hover, subrayados), nunca encima de los proyectos. <strong>El gris</strong> es para año, cliente y rol (4,8:1 sobre el blanco roto).</p>
+      <p>Por qué este azul: un azul muy saturado y un punto violeta tiene tradición artística (Yves Klein convirtió un ultramar parecido en su firma y lo patentó), y gracias a esa saturación se lee como «arte» y no como «banco». Un azul marino apagado diría fiabilidad; este dice audacia. Lo importante no es el azul en sí sino el gesto: un único color propio, usado con valentía en un sitio y con disciplina en el resto, es una marca personal que se recuerda. Podría ser un rojo, un verde o un naranja; la regla es la misma.</p>
+
+      <h3>Tipografía: display con firma y mono de archivo</h3>
+      <div class="spec k-clara">
+        <p class="aa" aria-hidden="true">Aa</p>
+        <div><p class="h">Clara Ventura</p><p class="b" style="font-size:.9rem">2026. Bodega Clot. Identidad y etiquetas. Una etiqueta tipográfica por parcela.</p><p class="m">Syne 800 para el nombre y los títulos, JetBrains Mono para fichas, datos y textos cortos</p></div>
+      </div>
+      <p>Syne en peso 800 es ancha, rara y con mucha personalidad: funciona como firma, igual que una caligrafía. Usarla solo en el nombre y en los títulos de proyecto la convierte en tu logotipo sin necesidad de dibujar uno. La mono pone el contrapunto: ordenada, técnica, de catálogo o de archivo, como las fichas de un museo (año, cliente, rol). Esa pareja dice «creativo con criterio», que es exactamente lo que quieres vender. Si escribes casos de estudio largos, cambia la mono por una sans de lectura en los párrafos: la mono cansa a partir de tres líneas.</p>
+
+      <h3>Estructura de la home</h3>
+      <ol class="home">
+        <li><b>Nombre y qué haces, en una frase</b><span>En tres segundos tienen que saber si encajas con lo que buscan.</span></li>
+        <li class="cta"><b>Proyectos seleccionados, de cuatro a seis, grandes</b><span>La prueba. Seleccionar es criterio; enseñarlo todo es no tenerlo.</span></li>
+        <li><b>Cada proyecto, un caso breve</b><span>Reto, idea y resultado. Sin contexto, solo son imágenes bonitas.</span></li>
+        <li><b>Sobre ti, con una foto real</b><span>Las personas contratan a personas.</span></li>
+        <li><b>Clientes y reconocimientos</b><span>Confianza, en una línea discreta.</span></li>
+        <li class="cta"><b>Correo visible y fácil de copiar</b><span>Sin formulario de seis campos. El que te quiere contratar, te escribe.</span></li>
+      </ol>
+
+      <h3>Fotografía e imagen</h3>
+      <p>El trabajo en uso, fotografiado bien: la etiqueta en la botella, el cartel en la calle, la app en una mano. Si usas mockups, que sean de calidad y coherentes entre sí. En la lista de proyectos, todas las miniaturas con el mismo formato (el orden visual es parte del criterio); dentro de cada caso, libertad total. Y una foto tuya de verdad, no un avatar ilustrado: ayuda a que te recuerden como persona.</p>
+
+      <h3>Movimiento</h3>
+      <p class="meter" data-v="3"><span class="track"><i></i><i></i><i></i><i></i><i></i></span>Medio, con firma</p>
+      <p>Es el sector donde más movimiento se permite, porque el movimiento también es firma: miniaturas que siguen al cursor, títulos que se desplazan al pasar, transiciones entre páginas (las View Transitions de la parte técnica). Puede subir hasta el máximo si eres motion designer. El límite es claro: nunca un preloader largo, nunca un scroll secuestrado que impida llegar al trabajo, y siempre una versión tranquila para quien tiene activado reducir el movimiento.</p>
+
+      <h3>Errores típicos</h3>
+      <div class="sino wide">
+        <figure class="si">
+          <div class="mk k-clara mk-cla" aria-hidden="true">
+            <p class="t h">Clara<br>Ventura</p>
+            <p class="ps">Directora de arte en Valencia.</p>
+            <div class="lst"><i style="--t:#E8A33D"></i><i style="--t:#1B1B1B"></i><i style="--t:#F5F3EF"></i></div>
+          </div>
+          <figcaption><b>Así sí</b>Nombre, una frase y tres proyectos grandes. Personalidad en el marco, protagonismo para el trabajo.</figcaption>
+        </figure>
+        <figure class="no">
+          <div class="mk cheap mk-cla-no" aria-hidden="true">
+            <p class="ld">Cargando experiencia… 87 %</p>
+            <div class="sk"><span>Photoshop</span><i style="--p:95%"></i><span>Illustrator</span><i style="--p:90%"></i><span>Creatividad</span><i style="--p:100%"></i></div>
+            <div class="tn"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <figcaption><b>Así no</b>Preloader, barras de habilidades con porcentaje y una rejilla con todo lo que has hecho.</figcaption>
+        </figure>
+      </div>
+      <ul>
+        <li><strong>Enseñarlo todo.</strong> Cuarenta proyectos dicen que no sabes elegir.</li>
+        <li><strong>Barras de habilidades con porcentaje.</strong> ¿Qué significa un 80 % de Photoshop? Nadie lo sabe; mejor un proyecto que lo demuestre.</li>
+        <li><strong>Preloaders y animaciones de entrada largas.</strong> El que revisa portfolios no espera.</li>
+        <li><strong>El nombre ilegible</strong> por exceso de estilo, o el correo escondido detrás de un formulario.</li>
+      </ul>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El hover no existe: la miniatura que sigue al cursor se convierte en un toque que abre el caso (como en la demo) o en una imagen siempre visible junto a cada título. Comprueba con <code>@media (hover: hover) and (pointer: fine)</code> antes de activar efectos de ratón. El nombre gigante tiene que partir bien en dos líneas en vertical; con una display ancha como Syne, prueba el tamaño a 360 px. Y el correo, como enlace <code>mailto:</code> grande y fácil de tocar.</p>
+      </div>
+
+      <!-- =========================================================
+           Comparativa
+           ========================================================= -->
+      <h2>Los siete, frente a frente</h2>
+      <p>Si pones las siete webs en fila, aparece un patrón: lo que cambia de una a otra no es el «tipo de negocio» sino la emoción que hay que provocar y el ritmo al que hay que provocarla. Calma pide croma bajo, serif ligera y movimiento lento (hotel, lujo). Energía pide contraste extremo, condensadas y movimiento rápido (gimnasio, imprenta). Deseo pide neutros y que la interfaz se aparte (moda). Apetito pide calidez análoga y oscuridad (restaurante). Personalidad pide un gesto propio y valiente (portfolio).</p>
+
+      <div class="band claim"><div class="inner"><p>El sector no decide la estética. Decide la emoción, y la emoción decide la estética.</p></div></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Sector</th><th>Emoción</th><th>Paleta</th><th>Tipografía</th><th>Movimiento</th><th>Acción principal</th></tr></thead>
+          <tbody>
+            <tr><td>Agencia e imprenta</td><td>Impacto</td><td><span class="dot" style="background:#F2EFE8"></span><span class="dot" style="background:#151515"></span><span class="dot" style="background:#FF48B0"></span> Neutro y flúor</td><td>Grotesca condensada</td><td>Alto, con rebote</td><td>Pedir presupuesto</td></tr>
+            <tr><td>Restaurante</td><td>Apetito</td><td><span class="dot" style="background:#2A1A14"></span><span class="dot" style="background:#F3E7D3"></span><span class="dot" style="background:#E8A33D"></span> Análoga cálida, oscura</td><td>Serif blanda</td><td>Bajo</td><td>Reservar o llamar</td></tr>
+            <tr><td>Moda</td><td>Deseo</td><td><span class="dot" style="background:#EFEAE2"></span><span class="dot" style="background:#161514"></span><span class="dot" style="background:#9C4A28"></span> Neutros y acento de temporada</td><td>Didona</td><td>Bajo, elegante</td><td>Ver colección</td></tr>
+            <tr><td>Hotel rural</td><td>Calma</td><td><span class="dot" style="background:#E9E3D6"></span><span class="dot" style="background:#2F3B2C"></span><span class="dot" style="background:#A45E2E"></span> Del paisaje, croma bajo</td><td>Garalda ligera</td><td>Mínimo</td><td>Ver disponibilidad</td></tr>
+            <tr><td>Lujo</td><td>Exclusividad</td><td><span class="dot" style="background:#16151A"></span><span class="dot" style="background:#E8DFD0"></span><span class="dot" style="background:#C9A96E"></span> Casi monocroma, dorado apagado</td><td>Serif fina y sans ancha</td><td>Medio, lento</td><td>Visita privada</td></tr>
+            <tr><td>Gimnasio</td><td>Energía</td><td><span class="dot" style="background:#0E0F10"></span><span class="dot" style="background:#F2F2EE"></span><span class="dot" style="background:#C8FF2E"></span> Contraste extremo, un ácido</td><td>Condensada de dorsal</td><td>Alto, frenada seca</td><td>Prueba gratis</td></tr>
+            <tr><td>Portfolio</td><td>Personalidad</td><td><span class="dot" style="background:#F5F3EF"></span><span class="dot" style="background:#2B3DF5"></span><span class="dot" style="background:#1B1B1B"></span> Neutros y un color de firma</td><td>Display y mono</td><td>Medio, con firma</td><td>Escribir un correo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Y lo que tienen en común, que es igual de importante: en los siete la imagen ocupa más que el texto, en los siete hay un único acento que señala la acción, y en los siete la parte práctica (precio, horario, reserva, contacto) está a un toque de la emoción. La emoción atrae; la claridad cierra la venta.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando un cliente te pida «algo moderno» o «algo elegante», no empieces por el color. Pregúntale qué tiene que sentir su cliente en los tres primeros segundos y qué tiene que hacer después. Con esas dos respuestas, esta tabla te da el punto de partida y tú solo tienes que ajustarlo a su marca y a su competencia. Y si un sector parece pedir una estética que no encaja con la emoción del negocio concreto (un gimnasio de yoga, un bar de vermut gastronómico), manda la emoción.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Te encargan la web de un estudio de pilates boutique en Castelló. Es «deporte». ¿Qué dirección eliges?</p>
+        <ol>
+          <li>Arena, salvia y una terracota suave; una serif ligera o una redondeada; movimiento lento y mucho aire.</li>
+          <li>Asfalto y lima ácida con una condensada en mayúsculas, como el gimnasio de la lección.</li>
+          <li>Blanco puro y azul corporativo, porque transmite salud.</li>
+        </ol>
+        <p class="why">El pilates boutique vende calma, cuidado y bienestar, no intensidad. Su emoción está mucho más cerca del hotel rural que del box de fuerza: croma bajo, letra delicada, ritmo lento. Es la prueba de que se diseña para la emoción, no para la etiqueta del sector.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Una web de emoción hace dos trabajos seguidos: provoca el deseo (imagen, color, letra, ritmo) y resuelve la parte práctica sin fricción, en la misma pantalla.</li>
+          <li>La paleta sale de la emoción y del propio negocio: el fuego para un restaurante, el paisaje para un hotel, el lino para una marca de lino, la tinta para una imprenta.</li>
+          <li>La tipografía es la voz: didona para el deseo, garalda ligera para la calma, condensada para la energía, una display rara para la firma personal. Y siempre una sans clara para lo práctico.</li>
+          <li>El ritmo comunica tanto como el color: lento es calma y seguridad, rápido es energía. Lo práctico (precios, horarios) no se anima nunca.</li>
+          <li>En el móvil, la primera pantalla es una imagen, una frase y una acción al alcance del pulgar.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Elige un cliente real de la agencia que venda emoción (un restaurante, un alojamiento, una tienda de ropa) y haz su ficha completa siguiendo esta lección: tres palabras, paleta de cuatro colores con su papel y su porqué, pareja tipográfica, orden de la home en seis secciones, criterio de fotografía y nivel de movimiento del 1 al 5. Después busca tres competidores de la zona y comprueba qué emoción transmiten en los tres primeros segundos. Termina maquetando solo la primera pantalla, empezando por la versión de 390 px.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: el escaparate. La web activa (la que queda a la izquierda al deslizar,
+  // o la que señalas con el ratón) tiñe la luz de la portada y escribe su ficha.
+  (() => {
+    const hero = document.querySelector('.hero');
+    const track = hero.querySelector('.vitrina');
+    const wins = [...track.querySelectorAll('.win')];
+    const arrows = [...hero.querySelectorAll('.arr')];
+    const now = hero.querySelector('.now');
+    const out = ['n', 'name', 'words', 'why'].reduce((o, k) => (o[k] = now.querySelector(`[data-${k}]`), o), {});
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let cur = -1;
+    function set(i) {
+      if (i === cur) return;
+      cur = i;
+      const w = wins[i];
+      wins.forEach((x, j) => x.classList.toggle('on', j === i));
+      out.n.textContent = String(i + 1).padStart(2, '0');
+      out.name.textContent = w.dataset.name;
+      out.words.textContent = w.dataset.words;
+      out.why.textContent = w.dataset.why;
+      hero.style.setProperty('--glow', getComputedStyle(w).getPropertyValue('--s-ac').trim());
+    }
+    const pad = () => parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0;
+    function nearest() {
+      const x = track.getBoundingClientRect().left + pad();
+      let best = 0, d = Infinity;
+      wins.forEach((w, j) => { const dd = Math.abs(w.getBoundingClientRect().left - x); if (dd < d) { d = dd; best = j; } });
+      return best;
+    }
+    function edges() {
+      arrows[0].disabled = track.scrollLeft < 4;
+      arrows[1].disabled = track.scrollLeft > track.scrollWidth - track.clientWidth - 4;
+    }
+    let raf = 0;
+    track.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { set(nearest()); edges(); }); }, { passive: true });
+    wins.forEach((w, j) => {
+      w.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') set(j); });
+      w.addEventListener('focus', () => set(j));
+    });
+    arrows.forEach((b) => b.addEventListener('click', () => {
+      const i = Math.max(0, Math.min(wins.length - 1, nearest() + Number(b.dataset.dir)));
+      const li = wins[i].parentElement;
+      track.scrollTo({ left: li.offsetLeft - pad(), behavior: reduce ? 'auto' : 'smooth' });
+    }));
+    set(0); edges();
+  })();
+
+  // «Copiar variables» de cada paleta: HEX con el OKLCH en un comentario
+  document.querySelectorAll('.pal').forEach((p) => {
+    const b = p.querySelector('.pal-copy');
+    b.addEventListener('click', async () => {
+      const lines = [...p.querySelectorAll('[data-var]')].map((d) => {
+        const [hex, ok] = d.querySelectorAll('code');
+        return `  --${d.dataset.var}: ${hex.textContent}; /* ${ok.textContent} */`;
+      });
+      const txt = `/* ${p.dataset.name} */\n:root {\n${lines.join('\n')}\n}`;
+      try { await navigator.clipboard.writeText(txt); b.textContent = 'Copiado'; }
+      catch { b.textContent = 'No se pudo copiar'; }
+      setTimeout(() => (b.textContent = 'Copiar variables'), 1600);
+    });
+  });
+</script>
+</body>
+</html>

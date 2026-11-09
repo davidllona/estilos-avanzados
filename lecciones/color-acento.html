@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El toque: acentos que lo cambian todo | Hora azul</title>
+<meta name="description" content="Qué es un acento de color y por qué uno vale más que tres: acentos por temperatura, complementarios, dorados, neón y tierra; un catálogo de bases con tres toques cada una, y dónde y cuánto usarlo.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<meta name="theme-color" content="#10213E">
+<style>
+  /* Identidad de la lección: «Un toque».
+     Marino profundo, crema y un acento que cambia: la portada deja elegir entre seis
+     y toda la página (números, callouts, enlaces) adopta el elegido.
+     Instrument Serif en cursiva para titulares, Inter Tight para leer. */
+  :root {
+    --bg: oklch(25% 0.06 260);
+    --bg-2: oklch(28.5% 0.06 260);
+    --bg-3: oklch(33% 0.06 260);
+    --fg: oklch(95% 0.02 85);
+    --muted: oklch(80% 0.025 260);
+    --faint: oklch(68% 0.03 260);
+    --accent: oklch(80% 0.15 85);
+    --on-accent: oklch(25% 0.06 260);
+    --code-bg: oklch(18% 0.045 260);
+    --scheme: dark;
+    --f-display: "Instrument Serif", Georgia, serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 400;
+    --display-tracking: -0.02em;
+    --f-fraunces: "Fraunces", Georgia, serif;
+    --f-jost: "Jost", system-ui, sans-serif;
+    --f-round: "Nunito", system-ui, sans-serif;
+    --f-slab: "Zilla Slab", Rockwell, serif;
+    --f-shoulders: "Big Shoulders", Impact, sans-serif;
+  }
+  html { transition: none; }
+  body { font-size: clamp(1.04rem, 1rem + 0.22vw, 1.17rem); line-height: 1.64; }
+  .prose h2 { font-style: italic; font-size: clamp(2.5rem, 1.5rem + 3.6vw, 5rem); line-height: .92; letter-spacing: -0.03em; }
+  .prose h3 { font-style: italic; font-size: clamp(1.7rem, 1.3rem + 1.2vw, 2.4rem); letter-spacing: -0.01em; }
+  .prose h2 .n, .prose h3 .n { font-style: normal; }
+  .quiz .q { font-style: italic; font-size: clamp(1.45rem, 1.2rem + .8vw, 1.9rem); line-height: 1.12; }
+  .acc-t, .prose h2 .n, .callout.criterio .t, .prose li::marker, .toc a.active { transition: color .5s, border-color .5s; }
+
+  /* =========================================================
+     Portada: la misma landing con seis acentos
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); grid-template-rows: 1fr auto; column-gap: clamp(1.5rem, 4vw, 4rem);
+    padding: 5.6rem var(--gutter) 0; background: var(--bg); color: var(--fg); }
+  .h-copy { grid-column: 1; grid-row: 1; align-self: center; padding-bottom: 1.4rem; }
+  .hero [data-kicker] { margin: 0 0 1.2rem; font: 600 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { margin: 0 0 1.4rem; font-style: italic; font-size: clamp(4.4rem, 2rem + 7vw, 9.6rem); line-height: .8; letter-spacing: -0.04em; }
+  .hero h1 em { position: relative; color: var(--accent); transition: color .5s var(--ease-out); }
+  .hero h1 em::after { content: ""; position: absolute; left: .02em; right: .08em; bottom: .06em; height: .06em; border-radius: 99px; background: currentColor; transform-origin: left; animation: draw 1.1s .3s var(--ease-out) both; }
+  @keyframes draw { from { transform: scaleX(0); } }
+  .hero h1 span { display: block; margin-top: clamp(1.3rem, .6rem + 1.6vw, 2.4rem); font: 400 clamp(1.35rem, .9rem + 1.3vw, 2.1rem)/1.1 var(--f-display); font-style: italic; letter-spacing: -0.01em; color: var(--fg); }
+  .hero .lede { margin: 0 0 1.8rem; max-width: 38ch; font-size: var(--step-0); line-height: 1.5; color: var(--muted); }
+  .picker { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .5rem; max-width: 30rem; margin: 0 0 1.4rem; }
+  .picker button { display: grid; justify-items: center; gap: .45rem; padding: 0; border: 0; background: none; color: var(--muted); font: 600 .74rem/1.1 var(--f-ui); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .picker i { width: 100%; max-width: 3.4rem; aspect-ratio: 1; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px transparent; transition: box-shadow .3s, transform .3s var(--ease-out); }
+  .picker button[aria-pressed="true"] { color: var(--fg); }
+  .picker button[aria-pressed="true"] i { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--fg); transform: scale(1.06); }
+  @media (hover: hover) { .picker button:hover i { transform: scale(1.06); } }
+  .verdict { max-width: 40ch; min-height: 8.6em; }
+  .verdict b { display: block; font: 400 clamp(1.7rem, 1.2rem + 1.4vw, 2.5rem)/1 var(--f-display); font-style: italic; color: var(--accent); transition: color .5s; }
+  .verdict b span { color: var(--fg); }
+  .verdict p { margin: .5rem 0 0; font-size: var(--step--1); line-height: 1.55; color: var(--muted); }
+
+  /* La landing de ejemplo dentro de un marco de navegador */
+  .h-mock { grid-column: 2; grid-row: 1; align-self: center; }
+  .frame { border-radius: 14px; overflow: hidden; background: oklch(21% 0.055 260); box-shadow: 0 0 0 1px oklch(100% 0 0 / .1), 0 50px 90px -40px oklch(5% .03 260 / .8); }
+  .frame-bar { display: flex; align-items: center; gap: .4rem; padding: .6rem .9rem; border-bottom: 1px solid oklch(100% 0 0 / .08); font: 500 .72rem/1 var(--f-ui); color: var(--faint); }
+  .frame-bar i { width: .55rem; height: .55rem; border-radius: 50%; background: oklch(100% 0 0 / .16); }
+  .frame-bar span { margin: 0 auto; padding: .3rem 1.2rem; border-radius: 99px; background: oklch(100% 0 0 / .06); }
+  .salitre { container-type: inline-size; color: var(--fg); font-family: var(--f-ui); }
+  .s-nav { display: flex; align-items: center; gap: 1.4rem; padding: 1rem 1.4rem; font-size: .78rem; color: var(--muted); }
+  .s-nav b { margin-right: auto; font: 400 1.5rem/1 var(--f-display); font-style: italic; color: var(--fg); }
+  .s-ghost { padding: .45rem .9rem; border-radius: 99px; border: 1px solid var(--accent); color: var(--fg); transition: border-color .5s; }
+  .s-main { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; padding: .8rem 1.4rem 1.4rem; align-items: center; }
+  .s-copy small { display: block; margin-bottom: .8rem; font-size: .74rem; color: var(--muted); }
+  .s-copy .s-h { margin: 0 0 .9rem; font: 400 clamp(2rem, 7.6cqi, 3.6rem)/.92 var(--f-display); letter-spacing: -0.02em; }
+  .s-h em { white-space: nowrap; background: linear-gradient(var(--accent), var(--accent)) 0 92% / 100% .09em no-repeat; padding-bottom: .02em; }
+  .s-copy p { margin: 0 0 1.1rem; max-width: 30ch; font-size: .82rem; line-height: 1.45; color: var(--muted); }
+  .s-cta { display: inline-flex; align-items: center; min-height: 42px; padding: 0 1.2rem; border-radius: 99px; background: var(--accent); color: var(--on-accent); font-weight: 650; font-size: .82rem; transition: background-color .5s; }
+  .s-price { margin: .9rem 0 0 !important; font-size: .76rem !important; }
+  .s-price b { color: var(--fg); font-weight: 650; }
+  .s-pic { position: relative; aspect-ratio: .92; border-radius: 10px; overflow: hidden; background: linear-gradient(oklch(34% .07 262), oklch(44% .06 255) 58%, oklch(30% .06 255) 58.2%, oklch(22% .055 258)); }
+  .s-pic .sun { position: absolute; left: 50%; top: 37%; width: 34%; aspect-ratio: 1; translate: -50% 0; border-radius: 50%; background: var(--accent); transition: background-color .5s; }
+  .s-pic .sea { position: absolute; left: 0; right: 0; top: 58%; bottom: 0; background: oklch(26% .06 258); }
+  .s-pic .sea::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 9px, oklch(95% .02 85 / .1) 9px 10px); }
+  .s-pic .glint { position: absolute; left: 50%; top: 58%; width: 28%; height: 26%; translate: -50% 0; background: repeating-linear-gradient(var(--accent) 0 2px, transparent 2px 9px); opacity: .55; -webkit-mask: linear-gradient(#000, transparent); mask: linear-gradient(#000, transparent); transition: background .5s; }
+  .s-pic .house { position: absolute; left: 7%; bottom: 30%; width: 30%; height: 30%; background: oklch(95% .02 85); clip-path: polygon(0 28%, 50% 0, 100% 28%, 100% 100%, 0 100%); }
+  .s-pic .house::after { content: ""; position: absolute; left: 36%; bottom: 0; width: 28%; height: 46%; border-radius: 99px 99px 0 0; background: oklch(25% .06 260); }
+  .s-card { position: absolute; right: 6%; bottom: 7%; display: flex; align-items: center; gap: .55rem; padding: .6rem .8rem; border-radius: 10px; background: oklch(95% .02 85); color: oklch(25% .06 260); font: 600 .72rem/1.25 var(--f-ui); box-shadow: 0 14px 30px -12px oklch(5% .03 260 / .7); }
+  .s-card i { width: .6rem; height: .6rem; flex: none; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 35%, transparent); transition: background-color .5s; }
+  .s-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid oklch(100% 0 0 / .08); }
+  .s-stats div { padding: .9rem 1.4rem; font-size: .72rem; color: var(--muted); }
+  .s-stats div + div { border-left: 1px solid oklch(100% 0 0 / .08); }
+  .s-stats b { display: block; font: 400 1.6rem/1 var(--f-display); color: var(--fg); }
+  .s-stats b span { color: var(--accent); transition: color .5s; }
+
+  .h-foot { grid-column: 1 / -1; grid-row: 2; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.4rem; margin-top: 2.4rem; padding: 1rem 0 1.3rem; border-top: 1px solid var(--line-2); font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .h-foot code { background: none; padding: 0; color: var(--fg); font-size: .86rem; }
+  .h-foot i { display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; vertical-align: -.08em; margin-right: .4rem; background: var(--accent); }
+  .h-foot .chip { margin-left: auto; color: var(--fg); }
+
+  @media (max-width: 1100px) {
+    .hero { grid-template-columns: minmax(0, 1fr); padding-top: 5rem; }
+    .h-copy, .h-mock, .h-foot { grid-column: 1; grid-row: auto; }
+    .h-copy { display: grid; grid-template-columns: 1fr 1fr; gap: 0 2rem; align-items: end; }
+    .h-copy > :is([data-kicker], h1) { grid-column: 1 / -1; }
+    .verdict { min-height: 0; }
+  }
+  @media (max-width: 760px) {
+    .hero { padding-top: 4.6rem; }
+    .h-copy { display: block; padding-bottom: 1rem; }
+    .hero [data-kicker] { margin-bottom: .7rem; }
+    .hero h1 { font-size: clamp(4rem, 2rem + 10vw, 5.4rem); margin-bottom: 1rem; }
+    .hero h1 span { margin-top: 1rem; font-size: 1.3rem; }
+    .hero .lede { display: none; }
+    .picker { gap: .4rem; margin-bottom: 1rem; }
+    .picker i { max-width: 2.9rem; }
+    .picker span { font-size: .66rem; }
+    .verdict { min-height: 0; }
+    .verdict b { font-size: 1.6rem; }
+    .verdict p { font-size: .86rem; }
+    .frame-bar { display: none; }
+    .s-nav { padding: .8rem 1rem; } .s-nav span { display: none; }
+    .s-main { grid-template-columns: 1.1fr .9fr; gap: .9rem; padding: .4rem 1rem 1rem; align-items: end; }
+    .s-copy small, .s-copy p:not(.s-price):not(.s-h) { display: none; }
+    .s-copy .s-h { font-size: 2rem; }
+    .s-cta { min-height: 38px; padding: 0 .9rem; font-size: .74rem; }
+    .s-pic { aspect-ratio: .8; }
+    .s-card { right: 4%; left: 4%; bottom: 5%; padding: .45rem .55rem; font-size: .6rem; }
+    .s-stats div { padding: .6rem 1rem; font-size: .62rem; } .s-stats b { font-size: 1.25rem; }
+    .h-foot { margin-top: 1rem; }
+    .h-foot .chip { margin-left: 0; }
+  }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  /* Paleta con proporción y valores (como en las demás lecciones de color) */
+  .pal { margin: 1.8rem 0 2.2rem; }
+  .pal-bar { display: flex; height: 3.2rem; border-radius: var(--radius-s); overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+  .pal-leg { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: .9rem 1rem; margin: .9rem 0 0 !important; padding: 0 !important; }
+  .pal-leg li { display: grid; grid-template-columns: 1rem 1fr; gap: 0 .55rem; margin: 0; font: 500 .8rem/1.4 var(--f-ui); }
+  .pal-leg li i { grid-row: span 3; width: 1rem; height: 1rem; border-radius: 50%; margin-top: .15rem; box-shadow: 0 0 0 1px var(--line-2); }
+  .pal-leg small { color: var(--muted); font: 400 .74rem/1.35 var(--f-code); }
+
+  /* Mini web reutilizable */
+  .mw { --mf: var(--f-display); container-type: inline-size; overflow: hidden; border-radius: 14px; background: var(--b); color: var(--i); font-family: var(--f-ui); box-shadow: 0 30px 60px -36px oklch(5% .03 260 / .8); }
+  .mw-nav { display: flex; align-items: center; gap: 1rem; padding: .8rem 1.1rem; font-size: .76rem; }
+  .mw-nav b { margin-right: auto; font: var(--mnw, 400) 1.15rem/1 var(--mf); font-style: var(--es, normal); letter-spacing: -0.01em; }
+  .mw-nav span { opacity: .75; }
+  .mw-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 0 1rem; border-radius: 999px; background: var(--a); color: var(--on, var(--b)); font: 650 .76rem/1 var(--f-ui); white-space: nowrap; }
+  .mw-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1rem; align-items: end; padding: .6rem 1.1rem 1.2rem; }
+  .mw-copy small { display: block; margin-bottom: .5rem; font-size: .72rem; opacity: .8; }
+  .mw-copy strong { display: block; margin-bottom: .6rem; font: var(--mw, 400) clamp(1.4rem, 7.5cqi, 2.3rem)/.98 var(--mf); letter-spacing: -0.02em; text-wrap: balance; }
+  .mw-copy strong em { color: var(--e, var(--a)); font-style: var(--es, italic); }
+  .mw-copy p { margin: 0 0 .9rem; font-size: .78rem; line-height: 1.45; opacity: .85; max-width: 32ch; }
+  .mw-art { position: relative; aspect-ratio: 1.15; border-radius: 10px; overflow: hidden; background: var(--s); }
+  .mw-art i { position: absolute; display: block; }
+  .mw-art i:nth-child(1) { left: 14%; right: 30%; bottom: 0; top: 24%; border-radius: 999px 999px 0 0; background: var(--p); }
+  .mw-art i:nth-child(2) { right: 12%; top: 12%; width: 24%; aspect-ratio: 1; border-radius: 50%; background: var(--a2, var(--a)); }
+  .mw-art i:nth-child(3) { left: 0; right: 0; bottom: 0; height: 16%; background: var(--t, var(--i)); }
+  @container (max-width: 440px) { .mw-nav span { display: none; } .mw-body { grid-template-columns: 1fr; } .mw-art { aspect-ratio: 2.3; order: -1; } }
+
+  /* Así sí / Así no */
+  .sino { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem 1.6rem; margin: 2.4rem 0 2.8rem; }
+  .sino figure { margin: 0; }
+  .sino figcaption { display: flex; align-items: center; gap: .5rem; margin-bottom: .7rem; font: 700 var(--step--1)/1 var(--f-ui); }
+  .sino figcaption::before { content: ""; flex: none; width: .9rem; height: .9rem; border-radius: 50%; background: var(--ok); }
+  .sino .no figcaption::before { background: var(--ko); border-radius: 2px; rotate: 45deg; width: .75rem; height: .75rem; }
+  .sino figure > p { margin: .7rem 0 0; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .sino .diff { grid-column: 1 / -1; margin: 0; padding-top: 1rem; border-top: 1px solid var(--line-2); font: 400 var(--step-2)/1.15 var(--f-display); font-style: italic; max-width: 40ch; }
+  @media (max-width: 700px) { .sino { grid-template-columns: 1fr; } }
+
+  /* Búsqueda visual: un acento frente a cuatro colores */
+  .search { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 3vw, 2.4rem); margin: 2.4rem 0; }
+  .search figure { margin: 0; }
+  .dots { display: grid; grid-template-columns: repeat(10, 1fr); gap: clamp(.4rem, 1.2vw, .8rem); padding: clamp(1rem, 3vw, 1.8rem); border-radius: 14px; background: var(--bg-2); }
+  .dots i { aspect-ratio: 1; border-radius: 50%; background: var(--d, oklch(95% .02 85 / .85)); }
+  .dots i.t { background: var(--accent); transition: background-color .5s; }
+  .search figcaption { margin-top: .7rem; font-size: var(--step--1); color: var(--muted); }
+  .search figcaption b { color: var(--fg); }
+  @media (max-width: 640px) { .search { grid-template-columns: 1fr; } }
+
+  /* Matriz de temperatura 2 × 2 */
+  .matrix { display: grid; grid-template-columns: 7rem 1fr 1fr; gap: .8rem; margin: 2.4rem 0; align-items: stretch; }
+  .matrix .lbl { display: grid; align-content: center; font: 600 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .matrix .col { text-align: left; align-content: end; }
+  .matrix figure { margin: 0; }
+  .matrix figcaption { margin-top: .55rem; font-size: var(--step--1); line-height: 1.45; color: var(--muted); }
+  .matrix figcaption b { display: block; color: var(--fg); font-weight: 650; }
+  @media (max-width: 760px) { .matrix { grid-template-columns: 1fr; } .matrix .lbl { display: none; } .matrix figure::before { content: attr(data-l); display: block; margin-bottom: .4rem; font: 700 var(--step--1)/1 var(--f-ui); color: var(--fg); } }
+
+  /* Tres «tickets» complementarios */
+  .tickets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2.4rem 0; }
+  .ticket { position: relative; display: grid; align-content: space-between; gap: 2.2rem; min-height: 15rem; padding: 1.3rem; border-radius: 14px; background: var(--b); color: var(--i); overflow: hidden; }
+  .ticket::after { content: ""; position: absolute; right: -2.2rem; top: -2.2rem; width: 7rem; aspect-ratio: 1; border-radius: 50%; background: var(--a); }
+  .ticket small { font: 600 .74rem/1.2 var(--f-ui); opacity: .8; }
+  .ticket b { display: block; font: 400 2.1rem/.95 var(--f-display); font-style: italic; }
+  .ticket b em { color: var(--a); }
+  .ticket p { margin: .6rem 0 0; font-size: .8rem; line-height: 1.45; opacity: .85; }
+  .ticket .tk-btn { justify-self: start; display: inline-flex; align-items: center; min-height: 40px; padding: 0 1rem; border-radius: 99px; background: var(--a); color: var(--on); font: 650 .8rem/1 var(--f-ui); }
+  @media (max-width: 860px) { .tickets { grid-template-columns: 1fr; } .ticket { min-height: 12rem; } }
+
+  /* Dorados en pantalla */
+  .golds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 2.2rem 0; border-top: 1px solid var(--fg); }
+  .golds div { padding: 1.1rem 1.1rem 1.2rem 0; }
+  .golds div + div { padding-left: 1.1rem; border-left: 1px solid var(--line-2); }
+  .golds i { display: block; height: 5.5rem; border-radius: 6px; background: var(--g); margin-bottom: .8rem; }
+  .golds i.metal { background: linear-gradient(115deg, color-mix(in oklab, var(--g), #000 18%), var(--g) 38%, color-mix(in oklab, var(--g), #fff 30%) 52%, var(--g) 66%, color-mix(in oklab, var(--g), #000 12%)); }
+  .golds b { display: block; font: 400 1.5rem/1 var(--f-display); font-style: italic; }
+  .golds small { display: block; margin: .3rem 0 .5rem; font: 400 .74rem/1.4 var(--f-code); color: var(--muted); }
+  .golds p { margin: 0; font-size: var(--step--1); line-height: 1.45; color: var(--muted); }
+  @media (max-width: 860px) { .golds { grid-template-columns: 1fr 1fr; } .golds div:nth-child(3) { padding-left: 0; border-left: 0; } .golds div:nth-child(n+3) { border-top: 1px solid var(--line-2); } }
+
+  /* Banda de neón */
+  .band.neon { --band-bg: oklch(17% 0.004 264); --band-fg: oklch(95% 0.003 106); }
+  .neon-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .neon-row div { padding: 1.4rem; border-radius: 14px; background: oklch(22% .006 264); }
+  .neon-row b { display: block; font: 400 clamp(2.2rem, 1.6rem + 2vw, 3.4rem)/.9 var(--f-display); font-style: italic; color: var(--n); text-shadow: 0 0 18px color-mix(in oklab, var(--n) 55%, transparent); }
+  .neon-row p { margin: .8rem 0 0; font-size: var(--step--1); color: oklch(80% 0.01 264); }
+  .neon-row small { display: block; margin-top: .6rem; font: 400 .74rem/1.4 var(--f-code); color: oklch(70% 0.01 264); }
+  .band.neon .neon-head { margin: 0 0 1.6rem; max-width: 22ch; font: 400 clamp(2rem, 1.2rem + 3vw, 3.8rem)/.95 var(--f-display); font-style: italic; }
+  @media (max-width: 760px) { .neon-row { grid-template-columns: 1fr; } }
+
+  /* Tira de pigmentos tierra a sangre */
+  .earth { display: grid; grid-template-columns: repeat(5, 1fr); height: clamp(10rem, 22vw, 15rem); margin-block: 2.6rem; }
+  .earth i { position: relative; font-style: normal; display: flex; flex-direction: column; justify-content: flex-end; padding: .9rem; color: oklch(97% .01 80); }
+  .earth b { font: 400 clamp(1.1rem, .7rem + 1.4vw, 1.9rem)/1 var(--f-display); font-style: italic; }
+  .earth small { font: 400 .72rem/1.4 var(--f-code); opacity: .9; }
+  @media (max-width: 640px) { .earth { grid-template-columns: 1fr 1fr 1fr; height: auto; } .earth i { min-height: 7rem; padding: .6rem; } .earth small { font-size: .6rem; } }
+
+  /* Catálogo base + toque */
+  .cat { margin: 2.4rem 0; }
+  .cat-row { display: grid; grid-template-columns: 15rem 1fr; gap: 1.6rem; padding: 1.8rem 0; border-top: 1px solid var(--line-2); }
+  .cat-head { align-self: start; }
+  .cat-n { font: 600 var(--step--1)/1 var(--f-ui); color: var(--accent); transition: color .5s; }
+  .cat-head h3 { margin: .5rem 0 .4rem !important; font-size: clamp(1.6rem, 1.2rem + 1vw, 2.1rem) !important; }
+  .cat-head p { margin: 0 0 .8rem; font-size: var(--step--1); color: var(--muted); line-height: 1.45; }
+  .cat-vals { font: 400 .74rem/1.9 var(--f-code) !important; color: var(--fg) !important; }
+  .cat-vals small { color: var(--muted); }
+  .cat-vals i { display: inline-block; width: .75rem; height: .75rem; border-radius: 50%; margin-right: .4rem; vertical-align: -.1em; box-shadow: 0 0 0 1px var(--line-2); }
+  .cat-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .cat-tile { margin: 0; }
+  .cat-demo { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: .6rem; height: 8.4rem; padding: .9rem; border-radius: 12px; background: var(--b); color: var(--i); overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+  .cat-demo b { font: 400 3.4rem/.8 var(--f-display); font-style: italic; }
+  .cat-line { position: absolute; left: .9rem; top: 1rem; width: 3.2rem; height: 4px; border-radius: 99px; background: var(--a); }
+  .cat-btn { padding: .55rem .85rem; border-radius: 99px; background: var(--a); color: var(--at); font: 650 .76rem/1 var(--f-ui); }
+  .cat-tile figcaption { display: grid; gap: .1rem; margin-top: .7rem; font-size: var(--step--1); line-height: 1.5; }
+  .cat-tile figcaption b { font: 400 1.35rem/1.1 var(--f-display); font-style: italic; }
+  .cat-tile figcaption small { font: 400 .72rem/1.4 var(--f-code); color: var(--muted); }
+  .cat-tile figcaption span { margin: .35rem 0 .25rem; color: var(--muted); }
+  .cat-tile .cat-cr { font-family: var(--f-ui) !important; color: var(--faint) !important; }
+  @media (max-width: 960px) { .cat-row { grid-template-columns: 1fr; gap: 1rem; } .cat-vals br { display: none; } .cat-vals small { margin-right: .9rem; } }
+  @media (max-width: 760px) { .cat-tiles { grid-template-columns: 1fr; } .cat-tile { display: grid; grid-template-columns: 6.5rem 1fr; gap: .9rem; align-items: start; } .cat-demo { height: 6.5rem; grid-template-columns: 1fr; padding: .6rem; } .cat-demo b { font-size: 2.2rem; } .cat-btn { justify-self: start; font-size: .64rem; padding: .4rem .55rem; } .cat-line { left: .6rem; top: .7rem; width: 2rem; } .cat-tile figcaption { margin-top: 0; } }
+
+  /* Dónde y cuánto: maqueta anotada */
+  .where { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(1.4rem, 4vw, 3rem); align-items: center; margin: 2.4rem 0; }
+  .where .mw { position: relative; }
+  .pin { position: relative; z-index: 2; display: inline-grid; place-items: center; width: 1.45rem; height: 1.45rem; margin-left: .3rem; vertical-align: middle; border-radius: 50%; background: oklch(25% .06 260); color: oklch(95% .02 85); font: 700 .7rem/1 var(--f-ui); font-style: normal; letter-spacing: 0; box-shadow: 0 0 0 2px var(--accent); }
+  .where ol { margin: 0 !important; padding: 0 !important; list-style: none; counter-reset: w; }
+  .where li { position: relative; padding: 0 0 1rem 2.4rem; margin: 0; counter-increment: w; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .where li::before { content: counter(w); position: absolute; left: 0; top: 0; display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: oklch(25% .06 260); color: var(--fg); font: 700 .75rem/1 var(--f-ui); box-shadow: 0 0 0 2px var(--accent); }
+  .where li b { display: block; color: var(--fg); font-weight: 650; }
+  @media (max-width: 760px) { .where { grid-template-columns: 1fr; } }
+
+  .band.cream { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.cream p { margin: 0; max-width: 17ch; font: 400 clamp(2.4rem, 1.2rem + 5vw, 6.2rem)/.9 var(--f-display); font-style: italic; letter-spacing: -0.03em; }
+  .band.cream em { color: color-mix(in oklab, var(--accent) 70%, oklch(25% .06 260)); transition: color .5s; font-style: italic; }
+  .statement { font-style: italic; font-size: clamp(2.2rem, 1.3rem + 3.6vw, 4.6rem); line-height: .95; letter-spacing: -0.03em; max-width: 17ch !important; }
+  .statement em { color: var(--accent); transition: color .5s; }
+  @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="color-acento">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="h-copy">
+      <p data-kicker>Lección, Color</p>
+      <h1 id="t">El <em>toque</em><span>acentos que lo cambian todo</span></h1>
+      <p class="lede">La misma web en marino y crema con seis acentos distintos. Elige uno: cambia el carácter de la marca entera, y debajo tienes el porqué. Toda la lección se queda con el que elijas.</p>
+      <div class="picker" role="group" aria-label="Acento de la página">
+        <button type="button" aria-pressed="true" data-a="mostaza" style="--c:#EAB532"><i></i><span>Mostaza</span></button>
+        <button type="button" aria-pressed="false" data-a="coral" style="--c:#F87B5C"><i></i><span>Coral</span></button>
+        <button type="button" aria-pressed="false" data-a="dorado" style="--c:#DBC18C"><i></i><span>Dorado</span></button>
+        <button type="button" aria-pressed="false" data-a="lima" style="--c:#C0F447"><i></i><span>Lima</span></button>
+        <button type="button" aria-pressed="false" data-a="rosa" style="--c:#FC3289"><i></i><span>Rosa fuerte</span></button>
+        <button type="button" aria-pressed="false" data-a="terracota" style="--c:#D3754F"><i></i><span>Terracota</span></button>
+      </div>
+      <div class="verdict" aria-live="polite"><b data-vname>Mostaza, <span>retro y optimista</span></b><p data-vwhy>La mostaza es un amarillo con un punto de marrón: recuerda a los setenta y al sol de la tarde. Sobre marino es el contraste clásico de opuestos (azul frente a amarillo), pero sin estridencia.</p></div>
+    </div>
+
+    <div class="h-mock">
+      <div class="frame" aria-label="Landing de ejemplo: apartamentos Salitre, con el acento elegido">
+        <div class="frame-bar" aria-hidden="true"><i></i><i></i><i></i><span>salitre.es</span></div>
+        <div class="salitre">
+          <div class="s-nav"><b>Salitre</b><span>Apartamentos</span><span>La playa</span><span>Cómo llegar</span><span class="s-ghost">Reservar</span></div>
+          <div class="s-main">
+            <div class="s-copy">
+              <small>Apartamentos frente al mar en Orpesa</small>
+              <p class="s-h">El mar, a <em>dos pasos.</em></p>
+              <p>Seis apartamentos de dos dormitorios con terraza sobre la playa de la Concha.</p>
+              <span class="s-cta">Ver disponibilidad</span>
+              <p class="s-price">desde <b>96 €</b> la noche</p>
+            </div>
+            <div class="s-pic" aria-hidden="true"><i class="sun"></i><i class="sea"></i><i class="glint"></i><i class="house"></i><span class="s-card"><i></i>Quedan 3 noches libres en julio</span></div>
+          </div>
+          <div class="s-stats"><div><b>6<span>.</span></b>apartamentos</div><div><b>40<span> m</span></b>hasta el agua</div><div><b>4,9<span>/5</span></b>en reseñas</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h-foot">
+      <span><i></i>Acento <code data-hex>#EAB532</code> <code data-ok>oklch(80% 0.15 85)</code></span>
+      <span>Sobre el marino: <code data-cr>8,5:1</code></span>
+      <span class="chip" data-meta>18 min</span>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>En la portada solo cambia un color. La base marina, el crema, la tipografía, la foto y el texto son idénticos en las seis versiones. Y aun así, con la mostaza parece un apartamento de los setenta reformado con gusto; con el dorado, un sitio caro; con la lima, un club de deportes de agua; con la terracota, una casa de pueblo junto al mar.</p>
+      <p>Eso es un acento: el color que más poder tiene por centímetro cuadrado. Esta lección va de cómo elegirlo con intención y de por qué cada uno cambia el mensaje. Una aclaración que vale para todo lo que sigue: lo que «transmite» cada color son asociaciones culturales (las de aquí, España y el contexto occidental), no leyes físicas. Son muy útiles para decidir y para argumentar, pero el sector, la competencia y el tono de la marca pesan tanto como el color.</p>
+
+      <h2>Qué es un acento</h2>
+      <p>Un acento es el color que se sale de la paleta base para marcar lo importante: el botón, la palabra clave, el dato que hay que recordar. Funciona porque es <strong>la excepción</strong>. Si la página es marino y crema, el ojo se va directo a lo único que no es ni marino ni crema.</p>
+      <p>No es una forma de hablar. La búsqueda visual funciona así: cuando un elemento se diferencia de los demás en un solo rasgo, como el color, lo encuentras casi al instante, haya diez o cien elementos alrededor. Cuando hay varios colores compitiendo, tienes que buscar uno por uno. Compruébalo: en los dos paneles hay un punto del acento que has elegido arriba.</p>
+
+      <div class="search wide" data-search>
+        <figure><div class="dots" data-dots="1" aria-hidden="true"></div><figcaption><b>Un solo acento.</b> Lo encuentras antes de buscarlo.</figcaption></figure>
+        <figure><div class="dots" data-dots="4" aria-hidden="true"></div><figcaption><b>Cuatro colores.</b> El mismo punto, ahora tienes que buscarlo.</figcaption></figure>
+      </div>
+
+      <p>Por eso <strong>un acento vale más que tres</strong>. Con uno, la página tiene una sola señal y el usuario sabe qué es lo importante sin pensarlo. Con tres, cada uno le quita fuerza a los otros dos: el ojo salta de uno a otro y la página parece nerviosa. Hay además un efecto de memoria conocido en psicología como efecto Von Restorff: de una lista de cosas parecidas, recordamos mejor la que es distinta. Si todo es distinto, no se recuerda nada en especial.</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Un acento</figcaption>
+          <div class="mw" style="--b:#F3EEE3;--i:#111111;--a:#D9541E;--on:#111111;--p:#111111;--s:#E4DDCF;--a2:#D9541E;--t:#111111;--es:italic">
+            <div class="mw-nav"><b>Ruta</b><span>Producto</span><span>Precios</span><span class="mw-btn">Probar gratis</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Software para talleres mecánicos</small><strong>Tu taller, <em>sin papeles.</em></strong><p>Citas, presupuestos y facturas en una sola pantalla. Hecho en Castelló.</p><span class="mw-btn">Empezar ahora</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>El naranja solo está en los botones, una palabra y un círculo. Sabes qué hacer en medio segundo.</p>
+        </figure>
+        <figure class="no"><figcaption>Tres acentos</figcaption>
+          <div class="mw" style="--b:#F3EEE3;--i:#111111;--a:#D9541E;--on:#111111;--p:#2B6FD8;--s:#E4DDCF;--a2:#2FA36B;--t:#8A3FD1;--es:italic;--e:#2B6FD8">
+            <div class="mw-nav"><b>Ruta</b><span style="color:#2FA36B;opacity:1">Producto</span><span>Precios</span><span class="mw-btn" style="background:#2FA36B;color:#111">Probar gratis</span></div>
+            <div class="mw-body"><div class="mw-copy"><small style="color:#8A3FD1;opacity:1">Software para talleres mecánicos</small><strong>Tu taller, <em>sin papeles.</em></strong><p>Citas, presupuestos y facturas en una sola pantalla. Hecho en Castelló.</p><span class="mw-btn">Empezar ahora</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Naranja, azul, verde y violeta. Cada uno parece importante, así que ninguno lo es. ¿Cuál es el botón principal?</p>
+        </figure>
+        <p class="diff">El acento no es un color bonito más: es una señal. Una página solo aguanta una señal principal.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando un cliente pide «más color», casi nunca quiere más colores: quiere más carácter. Antes de añadir un segundo acento, prueba a cambiar el que tienes por uno con más personalidad (de un azul genérico a un coral, de un verde estándar a una lima) o a darle más protagonismo en un solo sitio (un titular entero en el acento, por ejemplo).</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil el acento ocupa más porcentaje de pantalla sin que lo decidas: un botón de ancho completo en 390 px es mucha superficie de color. Si además el botón es fijo abajo (sticky), está en todas las pantallas. Compénsalo quitando el acento de otros sitios en la versión móvil, por ejemplo de los iconos o de las etiquetas.</p>
+      </div>
+
+      <h2>Acento por temperatura</h2>
+      <p>La forma más sencilla de elegir un acento es por contraste de temperatura con la base. Lo cálido avanza (parece más cerca, pide atención) y lo frío retrocede (se aleja, calma). Así que:</p>
+      <ul>
+        <li><strong>Un acento cálido sobre una base fría da calidez y cercanía.</strong> El naranja, el coral o el ámbar sobre un azul hacen que la marca parezca más humana sin perder la confianza del azul.</li>
+        <li><strong>Un acento frío sobre una base cálida da frescura.</strong> Un turquesa o un verde agua sobre crema o arena hacen que la marca parezca más limpia, más ligera, menos pesada.</li>
+      </ul>
+      <p>Si el acento tiene la misma temperatura que la base, refuerza lo que ya hay: más frío si todo es frío, más acogedor (y más pesado) si todo es cálido. No es un error, pero tienes que saber que lo estás haciendo.</p>
+
+      <div class="matrix wide">
+        <span></span><span class="lbl col">Acento frío</span><span class="lbl col">Acento cálido</span>
+        <span class="lbl">Base fría<br>(clínica dental)</span>
+        <figure data-l="Base fría, acento frío">
+          <div class="mw" style="--b:#EEF4F9;--i:#13294B;--a:#2563EB;--on:#FFFFFF;--p:#13294B;--s:#DCE7F1;--t:#13294B;--mf:var(--f-ui);--mw:650;--es:normal;--mnw:700">
+            <div class="mw-nav"><b>Dental Sorolla</b><span class="mw-btn">Pedir cita</span></div>
+            <div class="mw-body"><div class="mw-copy"><strong>Sonríe <em>sin miedo</em>.</strong><span class="mw-btn">Primera visita gratis</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <figcaption><b>Eficaz, pero fría</b>Todo azul: transmite tecnología y limpieza, también distancia. Parece un hospital privado.</figcaption>
+        </figure>
+        <figure data-l="Base fría, acento cálido">
+          <div class="mw" style="--b:#EEF4F9;--i:#13294B;--a:#F28B6B;--on:#13294B;--p:#13294B;--s:#DCE7F1;--t:#13294B;--mf:var(--f-ui);--mw:650;--es:normal;--mnw:700;--e:#C2532F">
+            <div class="mw-nav"><b>Dental Sorolla</b><span class="mw-btn">Pedir cita</span></div>
+            <div class="mw-body"><div class="mw-copy"><strong>Sonríe <em>sin miedo</em>.</strong><span class="mw-btn">Primera visita gratis</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <figcaption><b>Cercana</b>El melocotón humaniza el azul: la misma clínica parece un sitio donde te van a tratar con cariño.</figcaption>
+        </figure>
+        <span class="lbl">Base cálida<br>(heladería)</span>
+        <figure data-l="Base cálida, acento frío">
+          <div class="mw" style="--b:#F7EFE3;--i:#3A2418;--a:#4FC1C0;--on:#3A2418;--p:#E8C9A4;--s:#F0E2CF;--t:#3A2418;--mf:var(--f-round);--mw:800;--es:normal;--mnw:800;--e:#1A8584">
+            <div class="mw-nav"><b>Gelats Marina</b><span class="mw-btn">Sabores</span></div>
+            <div class="mw-body"><div class="mw-copy"><strong>Helado <em>de verdad</em>.</strong><span class="mw-btn">Ver los sabores</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <figcaption><b>Fresca</b>El turquesa sobre crema y galleta es exactamente lo que pide un helado: dulce y frío a la vez.</figcaption>
+        </figure>
+        <figure data-l="Base cálida, acento cálido">
+          <div class="mw" style="--b:#F7EFE3;--i:#3A2418;--a:#E8762B;--on:#3A2418;--p:#E8C9A4;--s:#F0E2CF;--t:#3A2418;--mf:var(--f-round);--mw:800;--es:normal;--mnw:800;--e:#B2541A">
+            <div class="mw-nav"><b>Gelats Marina</b><span class="mw-btn">Sabores</span></div>
+            <div class="mw-body"><div class="mw-copy"><strong>Helado <em>de verdad</em>.</strong><span class="mw-btn">Ver los sabores</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <figcaption><b>Acogedora, pero pesada</b>Todo cálido: parece una pastelería o un horno. Para un helado le falta el frío.</figcaption>
+        </figure>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Pregúntale al producto qué le falta. Una clínica ya transmite limpieza (le falta calidez: acento cálido). Una heladería ya es dulce (le falta frescor: acento frío). Una asesoría ya es seria (le falta cercanía). El acento sirve para añadir el ingrediente que la base no tiene.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El modo nocturno de los móviles (Night Shift en iPhone, «luz nocturna» en Android) tiñe la pantalla de cálido y le quita fuerza a los acentos fríos: un turquesa se vuelve verdoso y un azul se apaga. Si el acento frío es la clave de la marca, dale algo más de luz y de saturación de lo que pediría el escritorio.</p>
+      </div>
+
+      <h2>Acento complementario</h2>
+      <p>Cuando lo que necesitas es que algo <em>salte</em> (el botón de reservar en una página llena de fotos, el precio en una ficha de producto), el acento más potente es el complementario de la base: el color opuesto en la rueda. Verde y rosa, azul y naranja, violeta y amarillo.</p>
+      <p>Salta tanto por dos motivos. Primero, es la máxima diferencia de tono posible: no comparte nada con lo que le rodea. Segundo, el contraste simultáneo: rodeado de su opuesto, un color parece más intenso de lo que es. El naranja sobre azul petróleo se ve más naranja que sobre blanco.</p>
+
+      <div class="tickets wide">
+        <div class="ticket" style="--b:#173A2B;--i:#F4EEE1;--a:#F4887A;--on:#173A2B">
+          <div><small>Floristería, Benicarló</small><b>Ramos <em>de temporada</em>.</b><p>Verde botella y coral: la flor frente a la hoja.</p></div>
+          <span class="tk-btn">Encargar un ramo</span>
+        </div>
+        <div class="ticket" style="--b:#0E3B4A;--i:#F2F0EA;--a:#F07A28;--on:#0B1B22">
+          <div><small>Escuela de surf, Benicàssim</small><b>Tu primera <em>ola</em>.</b><p>Petróleo y naranja: el mar frente al sol de la tarde.</p></div>
+          <span class="tk-btn">Reservar clase</span>
+        </div>
+        <div class="ticket" style="--b:#3B2468;--i:#F6F1FF;--a:#F2D541;--on:#2A1A4A">
+          <div><small>Sala de conciertos, Valencia</small><b>Esta noche, <em>en directo</em>.</b><p>Violeta y amarillo limón: la noche frente a la luz del foco.</p></div>
+          <span class="tk-btn">Comprar entradas</span>
+        </div>
+      </div>
+
+      <p>El complementario tiene una trampa: <strong>la luz</strong>. Si el acento y la base tienen una luminosidad parecida, no salta: vibra. Un naranja medio sobre un azul medio produce un borde que tiembla y cuesta leer. Lo que hace que el coral funcione sobre el verde botella es que el verde es oscuro y el coral claro. Pruébalo en el laboratorio.</p>
+
+      <figure class="lab" data-title="¿Cuánto salta el acento?" data-hint="Gira el acento por la rueda" data-height="500" data-height-mobile="640" style="--hm:640px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <label>Tono del acento <input id="h" type="range" min="0" max="359" value="25"></label>
+            <button id="eq" aria-pressed="false">Igualar la luz con la base</button>
+          </div>
+          <main class="page">
+            <nav><b>Arrels</b><span>Ramos</span><span>Bodas</span><span>Talleres</span></nav>
+            <h1>Flores del <em>huerto</em>, no del almacén.</h1>
+            <div class="row">
+              <div class="ph"></div><div class="ph"></div><div class="ph"></div>
+            </div>
+            <a class="cta" id="cta">Encargar un ramo</a>
+          </main>
+          <p class="out"><b id="d"></b> <span id="why"></span></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #111; color: #eee; font-size: 14px; }
+          .ctrl { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 10px 14px; }
+          label { display: flex; gap: 8px; align-items: center; } input { width: 170px; height: 40px; }
+          button { min-height: 40px; padding: 0 12px; border-radius: 99px; border: 1px solid #fff4; background: none; color: inherit; cursor: pointer; }
+          button[aria-pressed="true"] { background: #fff; color: #111; }
+          .page { margin: 0 14px; padding: 16px 20px 22px; border-radius: 14px; background: #173A2B; color: #F4EEE1; }
+          nav { display: flex; gap: 18px; font-size: 13px; opacity: .85; } nav b { margin-right: auto; font: italic 400 22px var(--f-serif); }
+          h1 { margin: 18px 0 16px; font: 400 clamp(28px, 5vw, 42px)/1 var(--f-serif); max-width: 16ch; }
+          h1 em { color: var(--acc); }
+          .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+          .ph { aspect-ratio: 1.4; border-radius: 8px; background: linear-gradient(160deg, #2c5a44, #1f4634); }
+          .cta { display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 99px; background: var(--acc); color: var(--on); font-weight: 650; }
+          .out { margin: 12px 14px; color: #ccc; line-height: 1.5; max-width: 70ch; } .out b { color: #fff; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const BASE_H = 160, BASE_L = 0.32;                  // verde botella: oklch(32% 0.05 160)
+          const h = document.querySelector('#h'), eq = document.querySelector('#eq');
+          function paint() {
+            const H = +h.value, same = eq.getAttribute('aria-pressed') === 'true';
+            const L = same ? BASE_L + 0.04 : 0.76;
+            document.body.style.setProperty('--acc', `oklch(${L} 0.15 ${H})`);
+            document.body.style.setProperty('--on', L > 0.6 ? '#173A2B' : '#F4EEE1');
+            // Distancia de tono con la base, de 0 a 180 grados
+            const dist = Math.round(Math.abs(((H - BASE_H + 540) % 360) - 180));
+            let why = dist < 45 ? 'Casi el mismo tono que la base: el acento se integra, pero no salta.'
+              : dist < 120 ? 'Tensión media: se distingue, sin pelearse con el verde.'
+              : dist < 160 ? 'Casi opuesto: salta mucho y sigue siendo elegante.'
+              : 'Complementario: el máximo contraste de tono. Es lo que más salta.';
+            if (same) why = 'Con la misma luz que la base, ni el complementario funciona: el botón se hunde o vibra. El contraste que se ve primero es el de luz.';
+            d.textContent = `${dist}° de distancia.`;
+            document.querySelector('#why').textContent = why;
+          }
+          h.oninput = paint;
+          eq.onclick = () => { eq.setAttribute('aria-pressed', eq.getAttribute('aria-pressed') !== 'true'); paint(); };
+          paint();
+        </script>
+        <figcaption>Gira el tono y mira el botón. Hacia el rosa y el coral (25°–0°), el opuesto del verde, el botón es lo primero que ves. Hacia los verdes se funde con la base. Ahora pulsa «Igualar la luz»: incluso en el complementario el botón deja de saltar. El tono decide cuánta tensión hay; la luz decide si se ve.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>No hace falta el complementario exacto. Un vecino del opuesto (30° a un lado) suele quedar más sofisticado y menos de manual: sobre verde botella, un coral o un salmón en lugar de un rosa magenta puro; sobre azul marino, un mandarina o un ámbar en lugar del naranja exacto.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Una web tiene fondo azul petróleo medio (oklch 50 %). Pones el botón en un naranja también al 50 % de luz, su complementario. ¿Qué pasa?</p>
+        <ol>
+          <li>Salta muchísimo, porque son opuestos.</li>
+          <li>El botón vibra y no destaca tanto como esperabas: tienen la misma luz.</li>
+          <li>Se ve gris, porque los complementarios se anulan.</li>
+        </ol>
+        <p class="why">Los complementarios se intensifican, pero el ojo separa primero por luz. Con la misma luminosidad, el borde vibra y el botón no se despega del fondo. Aclara el naranja (o oscurece el petróleo) y salta de verdad. Los complementarios solo se «anulan» si los mezclas como pintura, no si los pones uno al lado del otro.</p>
+      </div>
+
+      <h2>Dorado y metálicos</h2>
+      <p>El dorado transmite lujo por una razón muy antigua: el oro es raro, no se oxida y refleja la luz. Durante siglos fue el material de lo valioso y de lo sagrado. Pero en una pantalla el oro no brilla: un «dorado» plano es, técnicamente, un amarillo apagado o un ocre. Por eso el dorado digital funciona por <strong>asociación</strong>, no por brillo, y necesita que todo lo demás le ayude a parecer oro.</p>
+
+      <div class="golds wide">
+        <div><i style="--g:#D9A21B"></i><b>Mostaza</b><small>#D9A21B<br>oklch(74% 0.147 83)</small><p>Demasiado saturado: no parece oro, parece mostaza o un amarillo sucio. Es el error más común.</p></div>
+        <div><i style="--g:#B8963E"></i><b>Latón</b><small>#B8963E<br>oklch(69% 0.113 88)</small><p>Apagado y medio: el dorado más creíble para filetes y logos sobre fondos oscuros.</p></div>
+        <div><i style="--g:#DCC79A"></i><b>Champán</b><small>#DCC79A<br>oklch(84% 0.064 86)</small><p>Muy claro y poco saturado: lujo tranquilo y moderno. El del acento «dorado» de la portada.</p></div>
+        <div><i class="metal" style="--g:#A8803A"></i><b>Oro viejo</b><small>#A8803A<br>oklch(62% 0.100 79)</small><p>Con un degradado tonal muy suave (claro y oscuro de la misma familia) sugiere metal sin parecer un efecto.</p></div>
+      </div>
+
+      <p>Para que un dorado parezca lujo y no imitación, rodéalo de lo que acompaña al oro de verdad: <strong>fondos profundos</strong> (marino, verde botella, burdeos, negro), <strong>mucho espacio</strong>, una serif fina y <strong>poca cantidad</strong>. El oro es caro porque es poco: un filete, un logo, un número. Una superficie grande de dorado deja de ser oro y pasa a ser un color marrón amarillento.</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="mw" style="--b:#10213E;--i:#F5EEE0;--a:#DCC79A;--on:#10213E;--p:#1A2F55;--s:#162a4c;--a2:#DCC79A;--t:#DCC79A;--es:italic">
+            <div class="mw-nav"><b>Villa Amalia</b><span>Suites</span><span>Spa</span><span class="mw-btn" style="background:none;color:#DCC79A;box-shadow:inset 0 0 0 1px #DCC79A">Reservar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small style="letter-spacing:.2em;font-size:.62rem">HOTEL BOUTIQUE</small><strong>Doce suites frente <em>al Mediterráneo.</em></strong><p>Desayuno en la terraza, spa y un silencio que no se compra.</p><span class="mw-btn">Ver suites</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Marino profundo, champán en una palabra, un botón y un filete. Mucho aire y una serif fina. El dorado parece caro porque hay poco.</p>
+        </figure>
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="mw" style="--b:#FFFFFF;--i:#3a2a00;--a:linear-gradient(180deg,#F7E07A,#C8961E 55%,#8C6510);--on:#3a2a00;--p:#D4AF37;--s:#FFF4C9;--a2:#C8961E;--t:#D4AF37;--es:italic;--e:#C8961E">
+            <div class="mw-nav"><b style="color:#C8961E;text-shadow:1px 1px 0 #7a5a10">Villa Amalia</b><span>Suites</span><span>Spa</span><span class="mw-btn">Reservar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small style="color:#C8961E;opacity:1">¡Hotel de lujo 5 estrellas!</small><strong style="color:#C8961E;text-shadow:2px 2px 0 #7a5a10">Doce suites frente <em>al Mediterráneo.</em></strong><p>Desayuno en la terraza, spa y un silencio que no se compra.</p><span class="mw-btn">Ver suites</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Dorado saturado sobre blanco puro, degradado brillante, sombra en el texto y en grandes superficies. Sobre blanco el «oro» parece mostaza y el titular no se lee.</p>
+        </figure>
+        <p class="diff">El dorado es lujo cuando es poco, apagado y sobre oscuro. Mucho, brillante y sobre blanco, es bisutería.</p>
+      </div>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Las señales de dorado hortera: degradados de «metal» con brillos y biseles, dorado sobre blanco puro, texto dorado con sombra, dorado junto a rojo intenso y negro brillante a la vez (suena a casino), y dorado en tipografías manuscritas recargadas. Si un cliente pide «dorado», casi siempre quiere decir «que parezca caro»: dale champán o latón en un detalle, no oro de purpurina.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los dorados claros (champán) sobre fondo claro desaparecen al sol: tienen muy poco contraste de luz. En el móvil, usa el dorado solo sobre fondos oscuros, o reserva para él los elementos grandes (un número, un titular) y nunca el texto pequeño ni el icono de 16 px.</p>
+      </div>
+
+      <h2>Neón y eléctricos</h2>
+      <p>Los acentos neón (lima, cian eléctrico, rosa fluorescente, naranja seguridad) transmiten energía, tecnología y noche. ¿Por qué? Porque <strong>casi no existen en la naturaleza</strong>. Las superficies naturales rara vez tienen tanto croma; los colores así los vemos en pantallas, carteles luminosos, ropa deportiva técnica y señalización. El cerebro los asocia a lo artificial, lo nuevo y lo rápido. Por eso una marca de deporte o un software los adoptan: quieren parecer modernos y eléctricos.</p>
+
+      <div class="band neon">
+        <div class="inner">
+          <p class="neon-head">El neón brilla en la oscuridad y se apaga a pleno sol.</p>
+          <div class="neon-row">
+            <div style="--n:#C6F432"><b>Lima</b><p>Grafito y lima: un box de crossfit o una app de entreno. Pura energía.</p><small>#C6F432 sobre #1C1D1F: 13,2:1</small></div>
+            <div style="--n:#29D3F0"><b>Cian</b><p>Azul noche y cian: un SaaS de datos, una ingeniería, una empresa de drones.</p><small>#29D3F0 sobre #0B1026: 10,5:1</small></div>
+            <div style="--n:#FF2E93"><b>Rosa neón</b><p>Negro y rosa: un bar de copas, un festival, una marca de moda urbana.</p><small>#FF2E93 sobre #0A0A0A: 5,7:1</small></div>
+          </div>
+        </div>
+      </div>
+
+      <p>El neón necesita una base oscura. Sobre negro o grafito, el contraste simultáneo hace que parezca emitir luz; sobre blanco, el mismo color pierde la magia y además deja de leerse. La lima sobre blanco tiene un contraste de 1,3:1: es invisible como texto. Si un cliente quiere lima en una web blanca, úsala como fondo de un botón con texto oscuro, nunca como color de letra.</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="mw" style="--b:#1C1D1F;--i:#F2F2F0;--a:#C6F432;--on:#1C1D1F;--p:#2A2C2F;--s:#232528;--a2:#C6F432;--t:#2A2C2F;--mf:var(--f-shoulders,'Big Shoulders');--mw:800;--es:normal">
+            <div class="mw-nav"><b style="font-family:'Big Shoulders';font-weight:800">BOX GRAU</b><span>Clases</span><span>Tarifas</span><span class="mw-btn">Prueba gratis</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Crossfit y halterofilia</small><strong style="font-family:'Big Shoulders';text-transform:uppercase">Entrena <em>más fuerte</em>, no más.</strong><p>Grupos de ocho personas con entrenador. De 6:30 a 22:00.</p><span class="mw-btn">Reservar clase</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Lima sobre grafito: parece que brilla. Una palabra, el botón y un círculo bastan para que la web suene a energía.</p>
+        </figure>
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="mw" style="--b:#FFFFFF;--i:#1C1D1F;--a:#C6F432;--on:#FFFFFF;--p:#EFEFEF;--s:#F7F7F7;--a2:#C6F432;--t:#C6F432;--mw:800;--es:normal">
+            <div class="mw-nav"><b style="font-family:'Big Shoulders';font-weight:800">BOX GRAU</b><span>Clases</span><span>Tarifas</span><span class="mw-btn">Prueba gratis</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Crossfit y halterofilia</small><strong style="font-family:'Big Shoulders';text-transform:uppercase">Entrena <em>más fuerte</em>, no más.</strong><p>Grupos de ocho personas con entrenador. De 6:30 a 22:00.</p><span class="mw-btn">Reservar clase</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>La misma lima sobre blanco: la palabra destacada no se lee y el botón con texto blanco es ilegible. Lo que en oscuro era energía, aquí es un error.</p>
+        </figure>
+        <p class="diff">El neón es un acento nocturno: pide oscuridad para brillar y texto oscuro encima cuando hace de fondo.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un neón cansa rápido. Úsalo en muy poca superficie y nunca para textos largos; si la página tiene mucho contenido, baja un poco su croma en los elementos secundarios (un hover, un borde) y guarda el neón puro para el botón principal. Y cuidado con el cliché: grafito, lima y tipografía condensada es el uniforme de cien gimnasios. Si eliges neón, busca otra decisión que te distinga (una tipografía inesperada, una foto con carácter).</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los móviles con pantalla P3 (casi todos los iPhone y muchos Android) muestran los neón todavía más vivos que tu monitor: lo que en escritorio es intenso, en el teléfono puede deslumbrar en modo oscuro y con el brillo alto. Pruébalo de noche, en la cama: si molesta a la vista, baja el croma un poco solo en la versión móvil o en <code>@media (prefers-color-scheme: dark)</code>.</p>
+      </div>
+
+      <h2>Acentos tierra</h2>
+      <p>Terracota, ocre, siena, óxido, oliva. Los acentos tierra transmiten lo artesanal, lo natural y lo mediterráneo, y la razón es literal: son los colores de los <strong>pigmentos de tierra</strong>, óxidos de hierro y arcillas que se usan desde las pinturas rupestres. Son el color del barro cocido, de la teja, del aceite, de la piedra al sol. Cuando los ves, piensas en cosas hechas a mano y en materiales que envejecen bien.</p>
+
+      <div class="earth bleed" aria-label="Cinco colores tierra">
+        <i style="background:#C8932E;color:#2a1a08"><b>Ocre</b><small>#C8932E</small></i>
+        <i style="background:#C0623F"><b>Terracota</b><small>#C0623F</small></i>
+        <i style="background:#A0522D"><b>Siena</b><small>#A0522D</small></i>
+        <i style="background:#9A4A2A"><b>Óxido</b><small>#9A4A2A</small></i>
+        <i style="background:#6E7A3A"><b>Oliva</b><small>#6E7A3A</small></i>
+      </div>
+
+      <p>Funcionan como acento porque, aunque son apagados, son cálidos y tienen un tono claro. Pero al ser apagados no saltan como un neón: <strong>señalan con calma</strong>. Por eso piden una base que les deje sitio, como un crema, un hueso, un lino o una piedra clara, y una tinta oscura cálida (marrón, no negro azulado). Con una tipografía serif o slab, el conjunto suena a taller, a almazara o a masía.</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="mw" style="--b:#F2EEE6;--i:#2E2219;--a:#A9502F;--on:#F2EEE6;--p:#D9CBB6;--s:#E8E0D2;--a2:#C0623F;--t:#2E2219;--mf:var(--f-slab,'Zilla Slab');--mw:700;--es:normal;--e:#9A4A2A">
+            <div class="mw-nav"><b style="font-family:'Zilla Slab';font-weight:700">Terra de Morella</b><span>Piezas</span><span>Taller</span><span class="mw-btn">Visitar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Cerámica hecha a mano</small><strong style="font-family:'Zilla Slab'">Platos que <em>se notan</em> en la mano.</strong><p>Torno, esmaltes de la casa y cursos de fin de semana.</p><span class="mw-btn">Ver piezas</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Terracota sobre hueso cálido, tinta marrón y una slab. Todo comparte temperatura y el acento se lee como barro cocido. El botón usa la terracota un punto más oscura para que el texto se lea.</p>
+        </figure>
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="mw" style="--b:#E3E7EC;--i:#0F1A2A;--a:#A9502F;--on:#F2EEE6;--p:#C7CFD9;--s:#D5DBE2;--a2:#C0623F;--t:#0F1A2A;--mw:700;--es:normal;--e:#9A4A2A">
+            <div class="mw-nav"><b style="font-family:'Zilla Slab';font-weight:700">Terra de Morella</b><span>Piezas</span><span>Taller</span><span class="mw-btn">Visitar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Cerámica hecha a mano</small><strong style="font-family:'Zilla Slab'">Platos que <em>se notan</em> en la mano.</strong><p>Torno, esmaltes de la casa y cursos de fin de semana.</p><span class="mw-btn">Ver piezas</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>La misma terracota sobre un gris frío y una tinta azulada. El contraste de temperatura la agrisa y parece sucia, como óxido en una chapa.</p>
+        </figure>
+        <p class="diff">Un acento tierra pide una base de su misma temperatura. Sobre frío, la tierra parece suciedad.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>El riesgo de lo tierra es que todo se vuelva marrón: base arena, acento terracota, fotos de madera, tipografía marrón. Parece antiguo y triste. Mete un elemento fresco: un blanco limpio en las superficies, un verde oliva junto al terracota, o un toque frío pequeño (un azul petróleo en el pie). Lo artesanal también puede ser actual.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los colores tierra tienen croma bajo, y en pantallas pequeñas con el brillo automático bajado se pueden ver grises. Si el acento terracota es el color del botón principal, comprueba en el móvil que se sigue distinguiendo claramente del fondo, y si no, oscurécelo un punto (hacia el óxido) en lugar de saturarlo.</p>
+      </div>
+
+      <div class="band cream"><div class="inner"><p>El acento no decora. <em>Dice qué es lo importante</em> y en qué tono lo dice.</p></div></div>
+
+      <h2>El catálogo «base + toque»</h2>
+      <p>Once bases con tres acentos cada una. En cada acento tienes su valor en HEX y OKLCH, qué transmite y por qué funciona con esa base, y el contraste del botón (con el texto que mejor se lee encima) y del acento sobre la base. Recuerda: para un texto pequeño en el color del acento necesitas 4,5:1 sobre la base; para un subrayado, un icono o un titular grande basta con 3:1.</p>
+
+      <div class="cat wide"><section class="cat-row" style="--b:#F3EEE3;--i:#111111"><header class="cat-head"><span class="cat-n">01</span><h3>Crema y tinta</h3><p>La base de «mesa»: papel cálido y casi negro.</p><p class="cat-vals"><i style="background:#F3EEE3"></i>Base #F3EEE3 <small>oklch(95% 0.016 86)</small><br><i style="background:#111111"></i>Tinta #111111 <small>oklch(18% 0 0)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#D9541E;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Naranja quemado</b><small>#D9541E</small><small>oklch(62% 0.178 40)</small><span>Cálido sobre cálido: el naranja parece de la familia del crema, así que el conjunto es coherente y humano. Es el toque de «mesa»: energía sin frialdad, ideal para un SaaS que quiere parecer cercano.</span><small class="cat-cr">Botón 4.7:1, sobre la base 3.5:1</small></figcaption></figure><figure class="cat-tile" style="--a:#2B4FD8;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Azul cobalto</b><small>#2B4FD8</small><small>oklch(49% 0.213 267)</small><span>Frío sobre cálido: el cobalto salta por contraste de temperatura y suena a libro, a sello, a editorial. Para un estudio de diseño o una librería que quiere parecer culta y actual.</span><small class="cat-cr">Botón 6.5:1, sobre la base 5.6:1</small></figcaption></figure><figure class="cat-tile" style="--a:#2F6B4F;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Verde bosque</b><small>#2F6B4F</small><small>oklch(48% 0.078 161)</small><span>Un acento apagado y profundo: no grita, firma. Sobre crema transmite sostenibilidad y calma. Para una marca de cosmética natural o una consultora ambiental.</span><small class="cat-cr">Botón 6.3:1, sobre la base 5.4:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#0F1B3D;--i:#FFFFFF"><header class="cat-head"><span class="cat-n">02</span><h3>Marino y blanco</h3><p>La base de «tab»: azul profundo y blanco limpio.</p><p class="cat-vals"><i style="background:#0F1B3D"></i>Base #0F1B3D <small>oklch(23% 0.067 267)</small><br><i style="background:#FFFFFF"></i>Tinta #FFFFFF <small>oklch(100% 0 0)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#FF3D8B;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Rosa fuerte</b><small>#FF3D8B</small><small>oklch(67% 0.233 2)</small><span>El toque de «tab»: un rosa casi neón que rompe la seriedad del marino. Funciona porque el marino es oscuro y apagado y el rosa claro y vivo: los tres contrastes a la vez. Público joven, apps, fintech informal.</span><small class="cat-cr">Botón 5.7:1, sobre la base 5.1:1</small></figcaption></figure><figure class="cat-tile" style="--a:#EAB532;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Mostaza</b><small>#EAB532</small><small>oklch(80% 0.150 85)</small><span>Azul y amarillo son opuestos; la mostaza (amarillo con un punto de marrón) suaviza el choque y añade nostalgia. Retro, optimista, de los setenta: una cervecería, una marca de surf, una escuela.</span><small class="cat-cr">Botón 10.0:1, sobre la base 9.0:1</small></figcaption></figure><figure class="cat-tile" style="--a:#F87B5C;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Coral</b><small>#F87B5C</small><small>oklch(72% 0.160 35)</small><span>Un cálido de piel sobre un frío profundo: humaniza el azul sin restarle confianza. Bueno para seguros, clínicas o turismo familiar que quieren parecer serios y cercanos a la vez.</span><small class="cat-cr">Botón 7.2:1, sobre la base 6.4:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#173A2B;--i:#F4EEE1"><header class="cat-head"><span class="cat-n">03</span><h3>Verde botella y crema</h3><p>Tradición: farmacia antigua, club inglés, vino.</p><p class="cat-vals"><i style="background:#173A2B"></i>Base #173A2B <small>oklch(32% 0.049 163)</small><br><i style="background:#F4EEE1"></i>Tinta #F4EEE1 <small>oklch(95% 0.018 86)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#D4B26A;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Dorado</b><small>#D4B26A</small><small>oklch(78% 0.099 85)</small><span>El dorado apagado sobre verde profundo es el de las etiquetas de licor y los rótulos de botica: lujo tradicional. Pocas líneas finas, nunca superficies grandes.</span><small class="cat-cr">Botón 9.3:1, sobre la base 6.2:1</small></figcaption></figure><figure class="cat-tile" style="--a:#F2A68C;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Salmón</b><small>#F2A68C</small><small>oklch(79% 0.098 40)</small><span>Casi el complementario del verde, pero claro y suave: rejuvenece una base muy seria sin romperla. Para una floristería, una pastelería con historia o una marca de té.</span><small class="cat-cr">Botón 9.5:1, sobre la base 6.3:1</small></figcaption></figure><figure class="cat-tile" style="--a:#F28C28;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Mandarina</b><small>#F28C28</small><small>oklch(73% 0.161 59)</small><span>Más vivo y más cálido: el verde se vuelve campestre y alegre. Para una cervecería artesana, un mercado o un festival al aire libre.</span><small class="cat-cr">Botón 7.7:1, sobre la base 5.1:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#FAFAF7;--i:#0A0A0A"><header class="cat-head"><span class="cat-n">04</span><h3>Blanco roto y negro</h3><p>Galería: el máximo de contención.</p><p class="cat-vals"><i style="background:#FAFAF7"></i>Base #FAFAF7 <small>oklch(98% 0.004 106)</small><br><i style="background:#0A0A0A"></i>Tinta #0A0A0A <small>oklch(14% 0 0)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#E63323;--at:#0A0A0A"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Rojo señal</b><small>#E63323</small><small>oklch(60% 0.216 30)</small><span>Sobre una base sin color, el rojo es la única señal: urgencia, moda, cartel suizo. Muy poco y muy bien colocado. Una revista, una marca de moda, una agencia.</span><small class="cat-cr">Botón 4.6:1, sobre la base 4.1:1</small></figcaption></figure><figure class="cat-tile" style="--a:#1F3FD1;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Ultramar</b><small>#1F3FD1</small><small>oklch(46% 0.225 266)</small><span>Un azul intenso tipo Klein: arte contemporáneo, museo, arquitectura. Más frío y más intelectual que el rojo. Ojo: como texto pequeño pide un peso alto.</span><small class="cat-cr">Botón 7.8:1, sobre la base 7.5:1</small></figcaption></figure><figure class="cat-tile" style="--a:#F5E43A;--at:#0A0A0A"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Amarillo limón</b><small>#F5E43A</small><small>oklch(91% 0.176 103)</small><span>No se puede usar como texto (casi no contrasta con el blanco). Se usa como fondo de subrayado o de etiqueta, con texto negro encima: alegre, tipo rotulador fosforito.</span><small class="cat-cr">Botón 15.1:1, sobre la base 1.3:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#1C1D1F;--i:#F2F2F0"><header class="cat-head"><span class="cat-n">05</span><h3>Grafito y blanco</h3><p>Oscuro técnico: gimnasio, software, audio.</p><p class="cat-vals"><i style="background:#1C1D1F"></i>Base #1C1D1F <small>oklch(23% 0.004 264)</small><br><i style="background:#F2F2F0"></i>Tinta #F2F2F0 <small>oklch(96% 0.003 106)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#C6F432;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Lima</b><small>#C6F432</small><small>oklch(90% 0.208 123)</small><span>Un verde amarillento de croma altísimo que sobre oscuro casi brilla. Energía, deporte y tecnología. Para un box de crossfit o una app de entreno.</span><small class="cat-cr">Botón 14.7:1, sobre la base 13.2:1</small></figcaption></figure><figure class="cat-tile" style="--a:#29D3F0;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Cian eléctrico</b><small>#29D3F0</small><small>oklch(80% 0.133 213)</small><span>Frío sobre neutro: suena a pantalla, a datos, a ciencia. Para un SaaS de analítica, una empresa de drones o una ingeniería.</span><small class="cat-cr">Botón 10.5:1, sobre la base 9.4:1</small></figcaption></figure><figure class="cat-tile" style="--a:#FF6A13;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Naranja seguridad</b><small>#FF6A13</small><small>oklch(70% 0.200 44)</small><span>El naranja de los chalecos y la maquinaria: industria, acción, herramienta. Para una empresa de reformas o de alquiler de maquinaria que quiere parecer moderna.</span><small class="cat-cr">Botón 6.6:1, sobre la base 5.9:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#EFE6D8;--i:#3A2A1E"><header class="cat-head"><span class="cat-n">06</span><h3>Arena y marrón</h3><p>Cálido y natural: lino, madera, barro.</p><p class="cat-vals"><i style="background:#EFE6D8"></i>Base #EFE6D8 <small>oklch(93% 0.021 79)</small><br><i style="background:#3A2A1E"></i>Tinta #3A2A1E <small>oklch(30% 0.031 58)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#C0623F;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Terracota</b><small>#C0623F</small><small>oklch(60% 0.130 41)</small><span>El acento de la misma familia: todo cálido, todo tierra. Coherencia artesanal para un taller de cerámica o una casa rural. Como texto pequeño no llega a 4.5:1: úsalo en botones con texto oscuro o en titulares grandes.</span><small class="cat-cr">Botón 4.6:1, sobre la base 3.4:1</small></figcaption></figure><figure class="cat-tile" style="--a:#6E7A3A;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Oliva</b><small>#6E7A3A</small><small>oklch(55% 0.089 118)</small><span>Un verde apagado que comparte saturación con la base: natural y mediterráneo. Aceite, vino ecológico, huerto. Tranquilo, nada estridente.</span><small class="cat-cr">Botón 4.7:1, sobre la base 3.8:1</small></figcaption></figure><figure class="cat-tile" style="--a:#1F5F6B;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Azul petróleo</b><small>#1F5F6B</small><small>oklch(45% 0.066 212)</small><span>El frío profundo que refresca una base muy cálida: el contraste de temperatura evita que todo parezca de color galleta. Para un hotel de costa o una marca de lino.</span><small class="cat-cr">Botón 7.2:1, sobre la base 5.8:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#F6E3E1;--i:#4A1622"><header class="cat-head"><span class="cat-n">07</span><h3>Rosa palo y granate</h3><p>Sofisticado y femenino sin ser infantil.</p><p class="cat-vals"><i style="background:#F6E3E1"></i>Base #F6E3E1 <small>oklch(93% 0.021 25)</small><br><i style="background:#4A1622"></i>Tinta #4A1622 <small>oklch(29% 0.079 10)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#E5412D;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Rojo tomate</b><small>#E5412D</small><small>oklch(61% 0.204 31)</small><span>Un rojo vivo de la misma familia que el rosa: atrevido y de moda. Funciona porque el rosa base es muy claro y apagado. Para una marca de cosmética joven o de calzado.</span><small class="cat-cr">Botón 4.6:1, sobre la base 3.3:1</small></figcaption></figure><figure class="cat-tile" style="--a:#C59B4B;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Dorado</b><small>#C59B4B</small><small>oklch(71% 0.110 81)</small><span>Rosa, granate y dorado: bodas, joyería, cosmética de gama alta. Contraste bajo con la base: úsalo en filetes, iconos y detalles, nunca para texto.</span><small class="cat-cr">Botón 7.3:1, sobre la base 2.1:1</small></figcaption></figure><figure class="cat-tile" style="--a:#7F9C84;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Verde salvia</b><small>#7F9C84</small><small>oklch(66% 0.048 150)</small><span>El complementario apagado del rosa: el contraste de las flores con sus hojas. Natural y elegante. Para una floristería o un estudio de bodas.</span><small class="cat-cr">Botón 6.3:1, sobre la base 2.4:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#EEF4F9;--i:#13294B"><header class="cat-head"><span class="cat-n">08</span><h3>Azul hielo y azul tinta</h3><p>Clínica y salud: limpio y fiable.</p><p class="cat-vals"><i style="background:#EEF4F9"></i>Base #EEF4F9 <small>oklch(96% 0.009 243)</small><br><i style="background:#13294B"></i>Tinta #13294B <small>oklch(28% 0.069 259)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#F28B6B;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Melocotón</b><small>#F28B6B</small><small>oklch(74% 0.134 38)</small><span>Un cálido suave sobre una base fría: la clínica deja de parecer un hospital y empieza a parecer un sitio donde te tratan bien. Para clínicas dentales y fisioterapia.</span><small class="cat-cr">Botón 7.8:1, sobre la base 2.2:1</small></figcaption></figure><figure class="cat-tile" style="--a:#2FB59A;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Verde menta</b><small>#2FB59A</small><small>oklch(70% 0.119 176)</small><span>Frío sobre frío, pero con un tono distinto: refuerza la idea de salud y limpieza. Para farmacias, nutrición o una app de citas médicas.</span><small class="cat-cr">Botón 7.4:1, sobre la base 2.3:1</small></figcaption></figure><figure class="cat-tile" style="--a:#F6C744;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Amarillo</b><small>#F6C744</small><small>oklch(85% 0.151 88)</small><span>El opuesto cálido y luminoso: optimismo, infancia. Para pediatría o una ortodoncia infantil. Como fondo de botón con texto en tinta, nunca como texto.</span><small class="cat-cr">Botón 11.8:1, sobre la base 1.4:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#3D1220;--i:#F3E9DA"><header class="cat-head"><span class="cat-n">09</span><h3>Burdeos y crema</h3><p>Bodega: vino, cuero, terciopelo.</p><p class="cat-vals"><i style="background:#3D1220"></i>Base #3D1220 <small>oklch(26% 0.069 3)</small><br><i style="background:#F3E9DA"></i>Tinta #F3E9DA <small>oklch(94% 0.023 78)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#D9B56D;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Dorado</b><small>#D9B56D</small><small>oklch(79% 0.100 84)</small><span>El clásico de las etiquetas de reserva: lujo tradicional, sobre todo con una serif fina. Para una bodega de la Plana con crianza en barrica.</span><small class="cat-cr">Botón 9.7:1, sobre la base 8.3:1</small></figcaption></figure><figure class="cat-tile" style="--a:#F2A3B3;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Rosa</b><small>#F2A3B3</small><small>oklch(80% 0.095 6)</small><span>De la misma familia que el burdeos, pero claro: moderniza la bodega sin perder el vino. Para vinos rosados, vermut o una enoteca joven.</span><small class="cat-cr">Botón 9.6:1, sobre la base 8.2:1</small></figcaption></figure><figure class="cat-tile" style="--a:#B9C46A;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Verde parra</b><small>#B9C46A</small><small>oklch(79% 0.115 115)</small><span>El color de la hoja de la vid: frente al burdeos es casi complementario y habla de campo y de vino natural. Para viticultura ecológica.</span><small class="cat-cr">Botón 10.0:1, sobre la base 8.6:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#E7E3DC;--i:#232220"><header class="cat-head"><span class="cat-n">10</span><h3>Piedra y grafito</h3><p>Arquitectura: hormigón, cal y acero.</p><p class="cat-vals"><i style="background:#E7E3DC"></i>Base #E7E3DC <small>oklch(92% 0.010 82)</small><br><i style="background:#232220"></i>Tinta #232220 <small>oklch(25% 0.004 85)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#B4532A;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Corten</b><small>#B4532A</small><small>oklch(56% 0.137 42)</small><span>El naranja oxidado del acero corten: material, cálido, de obra bien hecha. Para un estudio de arquitectura o una constructora de vivienda unifamiliar.</span><small class="cat-cr">Botón 5.0:1, sobre la base 3.9:1</small></figcaption></figure><figure class="cat-tile" style="--a:#5E6B3C;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Musgo</b><small>#5E6B3C</small><small>oklch(50% 0.071 122)</small><span>Un verde apagado que lleva la arquitectura al paisaje: integración, sostenibilidad. Para paisajismo o rehabilitación de masías.</span><small class="cat-cr">Botón 5.8:1, sobre la base 4.5:1</small></figcaption></figure><figure class="cat-tile" style="--a:#2E46C9;--at:#FFFFFF"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Ultramar</b><small>#2E46C9</small><small>oklch(47% 0.204 269)</small><span>Un azul de plano técnico: precisión y modernidad. Más frío y más arriesgado. Para un estudio joven que quiere parecer contemporáneo.</span><small class="cat-cr">Botón 7.4:1, sobre la base 5.8:1</small></figcaption></figure></div></section><section class="cat-row" style="--b:#1A1230;--i:#F6EEDF"><header class="cat-head"><span class="cat-n">11</span><h3>Violeta noche y crema</h3><p>La torre: el cielo después del atardecer.</p><p class="cat-vals"><i style="background:#1A1230"></i>Base #1A1230 <small>oklch(21% 0.057 293)</small><br><i style="background:#F6EEDF"></i>Tinta #F6EEDF <small>oklch(95% 0.022 83)</small></p></header><div class="cat-tiles"><figure class="cat-tile" style="--a:#F3B04A;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Ámbar</b><small>#F3B04A</small><small>oklch(80% 0.140 75)</small><span>La luz cálida de las ventanas encendidas en un edificio al anochecer: es el acento de la torre. Cálido sobre frío profundo: lujo, hogar, promesa.</span><small class="cat-cr">Botón 10.0:1, sobre la base 9.5:1</small></figcaption></figure><figure class="cat-tile" style="--a:#F08BA8;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Rosa atardecer</b><small>#F08BA8</small><small>oklch(75% 0.126 2)</small><span>El último rosa del cielo: romántico, nocturno, de hotel con terraza. Funciona porque es un vecino cálido del violeta, no un extraño.</span><small class="cat-cr">Botón 8.1:1, sobre la base 7.6:1</small></figcaption></figure><figure class="cat-tile" style="--a:#5FD3C6;--at:#111111"><div class="cat-demo"><span class="cat-line"></span><b>Aa</b><span class="cat-btn">Reservar</span></div><figcaption><b>Agua de piscina</b><small>#5FD3C6</small><small>oklch(80% 0.107 185)</small><span>Un turquesa claro sobre violeta oscuro: fresco, nocturno, un poco futurista. Para un club de playa, una marca de música electrónica o un rooftop.</span><small class="cat-cr">Botón 10.4:1, sobre la base 9.9:1</small></figcaption></figure></div></section></div>
+
+      <p>Fíjate en que casi todos los acentos que funcionan sobre bases claras lo hacen como <em>fondo</em> de botón con texto oscuro, y no como color de texto: sobre crema o blanco, muchos acentos vivos no llegan a 4,5:1. En cambio, sobre bases oscuras casi cualquier acento claro sirve también como texto. Es otra razón por la que las webs oscuras se prestan tanto a los acentos.</p>
+
+      <h3>Combínalos tú</h3>
+      <p>Elige una base y un acento: la mini web se tiñe y el laboratorio te dice qué relación hay entre los dos (temperatura, distancia en la rueda y contraste) y qué transmite.</p>
+
+      <figure class="lab" data-title="Base y acento" data-hint="Toca una base y un acento" data-height="540" data-height-mobile="660" style="--hm:660px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pick"><span>Base</span><div id="bases"></div></div>
+          <div class="pick"><span>Acento</span><div id="accs"></div></div>
+          <main class="web" id="web">
+            <nav><b>Nord</b><span>Estudio</span><span>Proyectos</span><a class="cta">Hablemos</a></nav>
+            <h1>Diseñamos marcas que <em>se recuerdan</em>.</h1>
+            <p>Identidad, packaging y webs para negocios de Castellón y Valencia.</p>
+            <a class="cta">Ver proyectos</a>
+          </main>
+          <p class="out" id="out"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #111; color: #eee; font-size: 14px; }
+          .pick { display: flex; align-items: center; gap: 10px; padding: 8px 14px 0; }
+          .pick span { width: 52px; font-size: 12px; color: #aaa; }
+          .pick div { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px; }
+          .pick button { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer; box-shadow: 0 0 0 1px #fff3; }
+          .pick button[aria-pressed="true"] { box-shadow: 0 0 0 2px #111, 0 0 0 4px #fff; }
+          .web { margin: 12px 14px 0; padding: 18px 22px 26px; border-radius: 14px; background: var(--b); color: var(--i); transition: background .3s, color .3s; }
+          nav { display: flex; gap: 18px; align-items: center; font-size: 13px; } nav b { margin-right: auto; font: italic 400 24px var(--f-serif); } nav span { opacity: .75; }
+          h1 { margin: 26px 0 12px; max-width: 15ch; font: 400 clamp(30px, 6vw, 52px)/.95 var(--f-serif); letter-spacing: -.02em; }
+          h1 em { box-shadow: inset 0 -.18em 0 var(--a); }
+          .web p { max-width: 40ch; opacity: .8; margin: 0 0 18px; }
+          .cta { display: inline-flex; align-items: center; min-height: 42px; padding: 0 18px; border-radius: 99px; background: var(--a); color: var(--on); font-weight: 650; transition: background .3s; }
+          .out { margin: 12px 14px; color: #ccc; line-height: 1.5; max-width: 72ch; }
+          @media (max-width: 560px) { nav span { display: none; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // [nombre, hex, tono aproximado, temperatura: 1 cálido, 0 frío, -1 neutro]
+          const B = [['crema', '#F3EEE3', 85, 1], ['marino', '#0F1B3D', 265, 0], ['verde botella', '#173A2B', 163, 0],
+                     ['grafito', '#1C1D1F', 260, -1], ['blanco roto', '#FAFAF7', 100, -1], ['arena', '#EFE6D8', 79, 1]];
+          const A = [['naranja quemado', '#D9541E', 40, 1], ['rosa fuerte', '#FF3D8B', 2, 1], ['mostaza', '#EAB532', 85, 1], ['coral', '#F87B5C', 35, 1],
+                     ['dorado', '#C9AD6E', 85, 1], ['lima', '#C6F432', 123, 1], ['cobalto', '#2B4FD8', 267, 0], ['terracota', '#C0623F', 41, 1]];
+          let b = 0, a = 0;
+          const lum = hex => { const c = hex.match(/\w\w/g).map(x => parseInt(x, 16) / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+          const cr = (x, y) => { const [h, l] = [lum(x), lum(y)].sort((m, n) => n - m); return (h + .05) / (l + .05); };
+          const dark = hex => lum(hex) < .18;
+          function chips(el, list, get, set) {
+            el.innerHTML = list.map((x, i) => `<button title="${x[0]}" aria-label="${x[0]}" style="background:${x[1]}"></button>`).join('');
+            el.querySelectorAll('button').forEach((btn, i) => btn.onclick = () => { set(i); paint(); });
+          }
+          chips(bases, B, () => b, i => b = i); chips(accs, A, () => a, i => a = i);
+          function paint() {
+            const [bn, bh, bH, bw] = B[b], [an, ah, aH, aw] = A[a];
+            const ink = dark(bh) ? '#F5F1E8' : '#121212';
+            const on = cr(ah, '#121212') > cr(ah, '#FFFFFF') ? '#121212' : '#FFFFFF';
+            Object.entries({ b: bh, i: ink, a: ah, on }).forEach(([k, v]) => web.style.setProperty('--' + k, v));
+            [...bases.children].forEach((x, i) => x.setAttribute('aria-pressed', i === b));
+            [...accs.children].forEach((x, i) => x.setAttribute('aria-pressed', i === a));
+            const dist = Math.round(Math.abs(((aH - bH + 540) % 360) - 180)), c = cr(ah, bh);
+            const temp = bw < 0 ? 'Sobre un neutro casi sin color, el acento decide solo la temperatura de toda la marca.' : bw === aw ? (aw ? 'Cálido sobre cálido: coherente y acogedor.' : 'Frío sobre frío: limpio y técnico, algo distante.')
+              : (aw ? 'Cálido sobre frío: da calidez y cercanía.' : 'Frío sobre cálido: da frescura.');
+            const rel = bw < 0 ? '' : dist < 45 ? 'Tono vecino de la base: se integra.' : dist > 140 ? 'Casi opuesto a la base: salta mucho.' : 'Tensión media de tono.';
+            const leg = c >= 4.5 ? `${c.toFixed(1)}:1 sobre la base: sirve incluso para texto.` : c >= 3 ? `${c.toFixed(1)}:1: vale para titulares, subrayados e iconos, no para texto pequeño.` : `${c.toFixed(1)}:1: úsalo solo como fondo de botón con texto ${on === '#121212' ? 'oscuro' : 'claro'}.`;
+            out.textContent = `${an[0].toUpperCase() + an.slice(1)} sobre ${bn}. ${temp} ${rel} Contraste ${leg}`.replace('  ', ' ');
+          }
+          paint();
+        </script>
+        <figcaption>Prueba la lima sobre crema (contraste bajísimo: solo como fondo de botón) y luego sobre grafito (brilla). Prueba el cobalto sobre crema (frío sobre cálido, salta) y sobre marino (se hunde: misma familia y luz parecida). El laboratorio no decide por ti, pero te da los tres datos que necesitas para argumentarlo.</figcaption>
+      </figure>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Una heladería artesana con una web en crema y marrón chocolate te pide «algo más fresco». ¿Qué acento propones?</p>
+        <ol>
+          <li>Un naranja mandarina, porque es alegre.</li>
+          <li>Un dorado, para que parezca más premium.</li>
+          <li>Un turquesa o verde agua, usado en el botón y en algún detalle.</li>
+        </ol>
+        <p class="why">La base es toda cálida (crema y chocolate). Lo que le falta es frío: un acento de temperatura opuesta. El turquesa sobre crema recuerda al agua y al hielo, justo lo que pide un helado. El mandarina sumaría más calor y el dorado cambiaría el mensaje a lujo, no a frescura.</p>
+      </div>
+
+      <h2>Dónde y cuánto</h2>
+      <p>Un acento funciona mientras sea escaso. Como referencia, entre un <strong>5 y un 10 % de la superficie</strong> de una pantalla. Por encima del 15–20 % deja de señalar y se convierte en un color de fondo más. Y tan importante como cuánto es <strong>dónde</strong>: el acento va en lo que quieres que se mire o se haga, y en nada más.</p>
+
+      <div class="where wide">
+        <div class="mw" style="--b:#F3EEE3;--i:#111111;--a:#D9541E;--on:#111111;--p:#111111;--s:#E4DDCF;--a2:#D9541E;--t:#111111;--es:italic">
+          <div class="mw-nav"><b>Ruta</b><span>Producto</span><span>Precios</span><span class="mw-btn">Probar gratis</span><span class="pin">1</span></div>
+          <div class="mw-body"><div class="mw-copy"><small>Software para talleres mecánicos</small><strong>Tu taller, <em>sin papeles.</em><span class="pin">2</span></strong><p>Más de <b style="color:#B8461A">400 talleres</b><span class="pin">3</span> ya gestionan sus citas con Ruta.</p><span class="mw-btn">Empezar ahora</span><span class="pin">1</span></div><div class="mw-art"><i></i><i></i><i></i><span class="pin" style="position:absolute;right:38%;top:14%">4</span></div></div>
+        </div>
+        <ol>
+          <li><b>La acción principal</b>El botón que quieres que se pulse. Si hay dos, el secundario va en contorno o en tinta.</li>
+          <li><b>Una palabra del titular</b>Subrayado o en el color del acento: lo que debe recordarse.</li>
+          <li><b>Un dato</b>Una cifra que convence (400 talleres, 4,9 sobre 5, desde 96 €).</li>
+          <li><b>Un detalle gráfico</b>Un círculo, un filete, el punto de un estado activo. Pequeño.</li>
+        </ol>
+      </div>
+
+      <p>Y dónde <strong>no</strong> va nunca:</p>
+      <ul>
+        <li><strong>En el texto largo.</strong> Un párrafo en naranja o en rosa cansa y se lee peor, y además el acento pierde su función: si un párrafo entero es importante, nada lo es.</li>
+        <li><strong>En todos los iconos, enlaces y títulos a la vez.</strong> Los enlaces del texto pueden ir subrayados en el acento, pero no todos los elementos interactivos de la página.</li>
+        <li><strong>En superficies grandes</strong> (fondos de sección, cabeceras enteras), salvo en una única banda pensada como pausa.</li>
+        <li><strong>En lo que se parece a un estado.</strong> Si el acento es rojo, los errores no pueden ir en el mismo rojo; si es verde, cuidado con los mensajes de éxito. Un acento y un color de estado iguales confunden «haz clic aquí» con «algo ha pasado».</li>
+      </ul>
+
+      <p class="statement">Si tienes que elegir dónde poner el acento, ponlo donde <em>quieres que hagan clic</em>.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Un truco para comprobar si el acento está bien repartido: haz una captura de la página, desenfócala mucho (o mírala con los ojos entrecerrados). Lo que se sigue viendo de color tiene que ser exactamente lo que quieres que hagan: el botón y, como mucho, una palabra. Si ves cinco manchas de acento, sobran cuatro.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil el acento tiene una misión más: ser fácil de encontrar con el pulgar. Pon la acción principal en el acento y al alcance (abajo, o fija al hacer scroll), con al menos 44 px de alto. Y como en vertical ves menos cosas a la vez, cada pantalla de scroll debería tener como máximo un elemento en el acento; si en una misma pantalla del móvil caben el botón, dos etiquetas y un icono en naranja, quita las etiquetas.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">En la ficha de producto de una tienda PrestaShop, el acento coral está en el botón «Añadir al carrito», en el precio, en las estrellas de valoración, en la etiqueta «Envío gratis» y en los iconos de la pestaña. ¿Qué haces primero?</p>
+        <ol>
+          <li>Dejo el coral solo en «Añadir al carrito» (y quizá en el precio) y paso el resto a la tinta o a un gris.</li>
+          <li>Cambio el coral por un color más fuerte para que el botón destaque entre los demás.</li>
+          <li>Añado un segundo acento para el botón y dejo el coral en lo demás.</li>
+        </ol>
+        <p class="why">El problema no es el color, es la cantidad: cinco cosas en coral compiten. Quitar el acento del resto hace que el botón vuelva a ser la señal. Un color más fuerte o un segundo acento solo suben el volumen del ruido.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>El acento es la excepción de la paleta: funciona porque es único. Uno vale más que tres, porque el ojo encuentra al instante lo que se diferencia en un solo rasgo.</li>
+          <li>Elige el acento por lo que le falta a la base: cálido sobre frío da cercanía, frío sobre cálido da frescura; el complementario hace que algo salte, siempre que tenga otra luz.</li>
+          <li>Dorado, neón y tierra son familias con reglas propias: el dorado pide poco, apagado y sobre oscuro; el neón, oscuridad y nunca texto sobre blanco; la tierra, una base de su misma temperatura.</li>
+          <li>Entre el 5 y el 10 % de la superficie, solo en lo importante (la acción, una palabra, un dato) y nunca en el texto largo ni confundido con un color de estado.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Elige una web de la agencia con una base neutra (blanco, crema, marino o gris). Haz tres versiones cambiando solo el acento, por ejemplo uno por temperatura, uno complementario y uno de una de las familias (dorado, neón o tierra). Para cada una escribe una frase de por qué cambia el carácter, como las de la portada de esta lección. Después haz la prueba del desenfoque en cada versión y quita el acento de todo lo que no sea la acción principal, una palabra y un dato. Enséñale las tres al cliente con su frase: así la decisión deja de ser «me gusta más este color».</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  /* Portada: seis acentos sobre la misma landing. El elegido se aplica a toda la página. */
+  (() => {
+    const root = document.documentElement, hero = document.querySelector('.hero');
+    const A = {
+      mostaza:   { hex: '#EAB532', ok: 'oklch(80% 0.15 85)',  cr: '8,5:1', k: 'retro y optimista',
+        why: 'La mostaza es un amarillo con un punto de marrón: recuerda a los setenta y al sol de la tarde. Sobre marino es el contraste clásico de opuestos (azul frente a amarillo), pero sin estridencia.' },
+      coral:     { hex: '#F87B5C', ok: 'oklch(72% 0.16 35)',  cr: '6,1:1', k: 'cercana y veraniega',
+        why: 'El coral es un naranja con un toque de rosa: cálido, de piel, de verano. Un cálido sobre una base fría humaniza la marca: familias, vacaciones, trato cercano.' },
+      dorado:    { hex: '#DBC18C', ok: 'oklch(82% 0.075 85)', cr: '9,2:1', k: 'exclusiva',
+        why: 'Un dorado apagado (champán) sobre marino es la combinación de los uniformes de gala y los clubs náuticos. Lujo tranquilo, siempre que sea poco y fino.' },
+      lima:      { hex: '#C0F447', ok: 'oklch(90% 0.2 125)',  cr: '12,4:1', k: 'deportiva y eléctrica',
+        why: 'Un verde amarillento con un croma que casi no existe en la naturaleza: suena a pantalla, a neón y a energía. Los mismos apartamentos parecen un club de paddle surf.' },
+      rosa:      { hex: '#FC3289', ok: 'oklch(66% 0.24 1)',   cr: '4,6:1', k: 'joven y atrevida',
+        why: 'El rosa fuerte sobre marino es la pareja de «tab»: rompe la seriedad del azul y le habla a un público de veinte años. Noche, verano, grupo de amigos.' },
+      terracota: { hex: '#D3754F', ok: 'oklch(66% 0.13 42)',  cr: '4,9:1', k: 'mediterránea y artesanal',
+        why: 'El color del barro cocido y de la teja: cálido, apagado, hecho a mano. Convierte los apartamentos en una casa de pueblo junto al mar, con persianas de esparto.' }
+    };
+    const name = hero.querySelector('[data-vname]'), why = hero.querySelector('[data-vwhy]');
+    function set(key, first) {
+      const x = A[key];
+      root.style.setProperty('--accent', x.ok);
+      hero.querySelectorAll('.picker button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.a === key)));
+      const label = hero.querySelector(`[data-a="${key}"] span`).textContent;
+      name.innerHTML = `${label}, <span>${x.k}</span>`;
+      why.textContent = x.why;
+      hero.querySelector('[data-hex]').textContent = x.hex;
+      hero.querySelector('[data-ok]').textContent = x.ok;
+      hero.querySelector('[data-cr]').textContent = x.cr;
+      if (!first) try { localStorage.setItem('hora-azul:toque', key); } catch {}
+    }
+    hero.querySelectorAll('.picker button').forEach((b) => b.addEventListener('click', () => set(b.dataset.a)));
+    let saved = null; try { saved = localStorage.getItem('hora-azul:toque'); } catch {}
+    set(A[saved] ? saved : 'mostaza', true);
+  })();
+
+  /* Búsqueda visual: 50 puntos, uno en el acento. Posiciones fijas para que sea igual en cada visita. */
+  (() => {
+    const others = ['oklch(62% 0.14 155)', 'oklch(62% 0.15 250)', 'oklch(60% 0.17 310)'];
+    document.querySelectorAll('[data-dots]').forEach((box) => {
+      const many = box.dataset.dots === '4', target = many ? 33 : 27;
+      let seed = 7, html = '';
+      const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+      for (let i = 0; i < 50; i++) {
+        if (i === target) html += '<i class="t"></i>';
+        else html += many ? `<i style="--d:${others[Math.floor(rnd() * 3)]}"></i>` : '<i></i>';
+      }
+      box.innerHTML = html;
+    });
+  })();
+</script>
+</body>
+</html>

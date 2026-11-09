@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qué transmite una tipografía | Hora azul</title>
+<meta name="description" content="Por qué una garalda suena a tradición, una didona a lujo y una redondeada a cercanía: los rasgos que hablan, once familias con muestras reales, peso y anchura, y cómo elegir la letra de un cliente desde sus tres palabras de marca.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Tipoteca».
+     Papel cálido, tinta casi negra y un rojo de imprenta. Cormorant para titular (una garalda de display:
+     la letra de los libros y de los muestrarios antiguos) y Newsreader para leer. */
+  :root {
+    --bg: oklch(95% 0.02 90);
+    --bg-2: oklch(91.5% 0.024 88);
+    --bg-3: oklch(87% 0.028 86);
+    --fg: oklch(18% 0.01 30);
+    --muted: oklch(42% 0.02 40);
+    --faint: oklch(52% 0.02 40);
+    --accent: oklch(55% 0.2 25);
+    --on-accent: oklch(97% 0.015 90);
+    --code-bg: oklch(20% 0.015 30);
+    --scheme: light;
+    --f-display: "Cormorant", "Cormorant Garamond", Georgia, serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 500;
+    --display-tracking: -0.015em;
+    --red: var(--accent);
+    --ink: var(--fg);
+  }
+  body { font-size: clamp(1.06rem, 1rem + 0.25vw, 1.2rem); }
+  /* Cormorant tiene la altura de x muy baja (0,386 del cuerpo): necesita más tamaño para pesar lo mismo */
+  .prose h2 { font-size: clamp(2.7rem, 1.6rem + 3.6vw, 5rem); line-height: .92; max-width: 15ch; }
+  .prose h2 .n { color: var(--red); }
+  .prose h3 { font-size: clamp(1.9rem, 1.4rem + 1.4vw, 2.6rem); line-height: 1; }
+  .quiz .q { font-size: clamp(1.5rem, 1.3rem + .6vw, 1.9rem); line-height: 1.1; }
+  .recap h2 { font-size: clamp(2.4rem, 2rem + 2vw, 3.6rem) !important; }
+  .pager b { font-size: clamp(1.7rem, 1.4rem + 1vw, 2.4rem); }
+  @media (max-width: 640px) { .lab[data-height-mobile] .lab-stage iframe { height: var(--h); } }
+
+  /* =========================================================
+     Portada: un pliego de muestras. La palabra «Confianza» cambia de familia
+     y con ella las palabras clave, la razón y las líneas de la anatomía
+     (mayúscula, altura de x y línea base), medidas de verdad en cada fuente.
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; padding: 4.9rem var(--gutter) 0; background: var(--bg); color: var(--fg); }
+  .h-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem); align-items: end; gap: 1rem 3rem; padding: 1rem 0 1.1rem; border-bottom: 1px solid var(--fg); }
+  .h-top [data-kicker] { margin: 0 0 .8rem; font: 600 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { margin: 0; font-size: clamp(2.6rem, 1.3rem + 3.7vw, 5rem); line-height: .9; letter-spacing: -0.02em; max-width: 14ch; }
+  .hero h1 em { font-style: italic; color: var(--red); }
+  .h-side { display: grid; gap: .9rem; justify-items: start; }
+  .hero .lede { margin: 0; font-size: var(--step-0); line-height: 1.45; color: var(--muted); }
+  .folio { display: flex; align-items: center; gap: .9rem; font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .folio b { color: var(--fg); font-weight: 650; font-variant-numeric: tabular-nums; }
+
+  .stage { position: relative; min-height: 0; display: grid; place-items: center; overflow: hidden; }
+  .word-btn { all: unset; position: relative; z-index: 2; cursor: pointer; display: block; max-width: 100%; border-radius: 4px; }
+  .word-btn:focus-visible { outline: 2px solid var(--red); outline-offset: 8px; }
+  .word { display: inline-block; white-space: nowrap; line-height: 1; font-family: var(--ff, var(--f-display)); font-weight: var(--fw, 500); font-size: var(--fs, 180px);
+    letter-spacing: var(--ft, 0); font-variation-settings: var(--fv, normal); color: var(--fg);
+    transition: opacity .32s var(--ease-out), filter .32s var(--ease-out), translate .32s var(--ease-out); }
+  .word.out { opacity: 0; filter: blur(8px); translate: 0 .05em; }
+  .word i { display: inline-block; width: 0; height: 0; }
+  /* Líneas de la anatomía, colocadas por JS con medidas reales */
+  .guide { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid color-mix(in oklab, var(--fg) 22%, transparent); top: var(--y, 50%); transition: top .6s var(--ease-out); z-index: 1; pointer-events: none; }
+  .guide.x { border-top: 1px dashed var(--red); }
+  .guide span { position: absolute; right: 0; bottom: .3rem; font: 500 .72rem/1 var(--f-ui); color: var(--muted); background: var(--bg); padding-left: .4rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .guide.x span { color: var(--red); }
+  .guide.base span { bottom: auto; top: .35rem; }
+  /* Palabras clave alrededor de la palabra */
+  .kw { position: absolute; z-index: 3; margin: 0; font: italic 500 clamp(1.3rem, 1rem + 1vw, 2rem)/1 var(--f-display); color: var(--red);
+    opacity: 0; translate: 0 .6rem; transition: opacity .5s var(--ease-out), translate .5s var(--ease-out); display: flex; align-items: center; gap: .55rem; }
+  .kw::before { content: ""; width: 1.6rem; height: 1px; background: currentColor; }
+  .kw.on { opacity: 1; translate: 0 0; }
+  .kw.k1 { left: 2%; top: 9%; }
+  .kw.k2 { right: 14%; top: 14%; transition-delay: .08s; }
+  .kw.k3 { right: 30%; bottom: 8%; transition-delay: .16s; }
+
+  .h-foot { display: grid; grid-template-columns: minmax(0, 1fr) auto; min-width: 0; align-items: end; gap: 1rem 2.4rem; padding: 1rem 0 1.3rem; border-top: 1px solid var(--line-2); }
+  .tag { margin: 0 0 .35rem; font: 600 var(--step--1)/1.2 var(--f-ui); color: var(--red); }
+  .tag span { color: var(--muted); font-weight: 500; }
+  .why { margin: 0; max-width: 54ch; font-size: var(--step-0); line-height: 1.42; min-height: 2.84em; }
+  .picker { display: flex; gap: .3rem; }
+  .picker button { min-width: 50px; padding: 0 .45rem; height: 54px; flex: none; border: 1px solid var(--line-2); border-radius: 6px; background: transparent; color: var(--fg); cursor: pointer;
+    font-size: 1.35rem; line-height: 1; display: grid; place-items: center; transition: background-color .2s, color .2s, border-color .2s; }
+  .picker button:hover { border-color: var(--fg); }
+  .picker button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .hint-tap { margin: .55rem 0 0; font: 500 .78rem/1.2 var(--f-ui); color: var(--muted); text-align: right; }
+
+  @media (max-width: 1100px) {
+    .h-foot { grid-template-columns: minmax(0, 1fr); }
+    .h-foot > * { min-width: 0; }
+    .picker { overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); margin: 0 calc(var(--gutter) * -1); padding: 0 var(--gutter) .2rem; scrollbar-width: none; }
+    .picker button { scroll-snap-align: start; }
+    .hint-tap { text-align: left; }
+  }
+  @media (max-width: 760px) {
+    .hero { padding-top: 4.2rem; }
+    .h-top { grid-template-columns: minmax(0, 1fr); gap: .9rem; padding-top: .8rem; }
+    .hero h1 { font-size: clamp(2.5rem, 1.4rem + 5vw, 3.4rem); }
+    .hero .lede { font-size: 1rem; }
+    .h-side { grid-template-columns: 1fr; }
+    .kw { font-size: 1.3rem; }
+    .kw.k1 { left: 0; top: 10%; }
+    .kw.k2 { right: 0; top: auto; bottom: 20%; }
+    .kw.k3 { right: auto; left: 0; bottom: 6%; }
+    .guide span { font-size: .66rem; }
+    .guide.x span { display: none; }
+    .guide.cap em { font-style: normal; color: var(--red); }
+    .why { font-size: 1rem; min-height: 4.3em; }
+  }
+  @media (max-width: 760px) and (max-height: 720px) { .hero .lede { display: none; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  .statement { font-size: clamp(2.5rem, 1.5rem + 3.6vw, 4.8rem); line-height: .95; letter-spacing: -0.02em; }
+  .statement em { color: var(--red); }
+
+  /* Orígenes: cuatro razones, a cuatro columnas */
+  .origins { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--fg); margin: 2.4rem 0 3rem; }
+  .origins > div { padding: 1.3rem 1.3rem 1.6rem 0; border-right: 1px solid var(--line-2); }
+  .origins > div + div { padding-left: 1.3rem; }
+  .origins > div:last-child { border-right: 0; }
+  .origins .g { height: 7.2rem; display: flex; align-items: flex-end; margin-bottom: 1rem; position: relative; }
+  .origins .g b { font-weight: 400; line-height: .8; }
+  .origins h3 { margin: 0 0 .5rem; font-size: 1.9rem; }
+  .origins p { margin: 0; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .origins p strong { color: var(--fg); }
+  .axis-line { position: absolute; width: 1.5px; background: var(--red); transform-origin: 50% 50%; }
+  @media (max-width: 900px) {
+    .origins { grid-template-columns: 1fr 1fr; }
+    .origins > div:nth-child(2) { border-right: 0; }
+    .origins > div:nth-child(3) { padding-left: 0; }
+    .origins > div:nth-child(n+3) { border-top: 1px solid var(--line-2); }
+  }
+  @media (max-width: 520px) {
+    .origins { grid-template-columns: 1fr; }
+    .origins > div, .origins > div + div { padding: 1.2rem 0; border-right: 0; border-top: 1px solid var(--line-2); }
+    .origins > div:first-child { border-top: 0; }
+    .origins .g { height: 6.4rem; margin-bottom: .7rem; }
+    .origins h3 { font-size: 1.6rem; }
+  }
+
+  /* Rasgos: muestra comparada a la izquierda, explicación a la derecha */
+  .trait { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(1.4rem, 4vw, 3.4rem); align-items: start; padding: 2.2rem 0; border-top: 1px solid var(--line-2); }
+  .trait:first-of-type { border-top-color: var(--fg); }
+  .trait h3 { margin: 0 0 .7rem !important; }
+  .trait p { margin: 0 0 .9rem; }
+  .trait p:last-child { margin-bottom: 0; }
+  .specs { display: grid; grid-template-columns: repeat(var(--n, 3), 1fr); gap: 0; border: 1px solid var(--line-2); border-radius: 4px; background: color-mix(in oklab, var(--bg) 55%, white); }
+  .specs figure { margin: 0; padding: 1rem .9rem .9rem; border-right: 1px solid var(--line-2); display: grid; grid-template-rows: 1fr auto; min-height: 11.5rem; }
+  .specs figure:last-child { border-right: 0; }
+  .specs .gl { position: relative; align-self: center; justify-self: center; font-size: clamp(4.6rem, 3rem + 4vw, 7rem); line-height: 1; color: var(--fg); }
+  .specs figcaption { font: 500 .78rem/1.35 var(--f-ui); color: var(--muted); }
+  .specs figcaption b { display: block; color: var(--fg); font-weight: 650; }
+  .specs .hot { color: var(--red); }
+  .xline { position: absolute; left: -12%; right: -12%; border-top: 1px dashed var(--red); }
+  .bline { position: absolute; left: -12%; right: -12%; border-top: 1px solid color-mix(in oklab, var(--fg) 30%, transparent); }
+  @media (max-width: 760px) {
+    .trait { grid-template-columns: 1fr; }
+    .specs .gl { font-size: clamp(3.6rem, 2rem + 8vw, 5rem); }
+    .specs figure { min-height: 9.5rem; padding: .8rem .6rem; }
+  }
+
+  /* Índice de la tipoteca: cajones de las once familias */
+  .drawers { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 0; margin: 2rem 0 1rem; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--fg); }
+  .drawers a { display: grid; align-content: space-between; gap: .9rem; min-height: 8.5rem; padding: .8rem .6rem .7rem; text-decoration: none; border-right: 1px solid var(--line-2); transition: background-color .2s; }
+  .drawers a:last-child { border-right: 0; }
+  .drawers a:hover { background: var(--bg-2); }
+  .drawers small { font: 600 .7rem/1 var(--f-ui); color: var(--red); font-variant-numeric: tabular-nums; }
+  .drawers b { font-weight: 400; font-size: 2.3rem; line-height: 1; }
+  .drawers span { font: 500 .74rem/1.2 var(--f-ui); color: var(--muted); }
+  @media (max-width: 1100px) {
+    .drawers { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+    .drawers a { flex: 0 0 7.4rem; scroll-snap-align: start; }
+  }
+
+  /* Ficha de familia */
+  .ficha { margin: 4.2rem 0 0; scroll-margin-top: 5rem; }
+  .ficha-head { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: .4rem 1.2rem; padding: .9rem 0; border-top: 2px solid var(--fg); }
+  .ficha-head .num { font: 500 2.6rem/.8 var(--f-display); color: var(--red); font-variant-numeric: lining-nums; }
+  .ficha-head h3 { margin: 0 !important; }
+  .ficha-head .who { font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); text-align: right; }
+  .ficha-show { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 1rem; margin: .4rem 0 1.4rem; }
+  .spec { display: grid; align-content: space-between; gap: 1.2rem; padding: 1.3rem 1.4rem 1.2rem; border: 1px solid var(--line-2); border-radius: 4px; background: color-mix(in oklab, var(--bg) 55%, white); min-height: 17rem; }
+  .spec .w { margin: 0; font-size: clamp(3rem, 1.8rem + 3.4vw, 5.2rem); line-height: .95; overflow-wrap: anywhere; }
+  .spec .abc { margin: 0; font-size: 1.15rem; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
+  .spec .feat { margin: 0; font: 500 .78rem/1.35 var(--f-ui); color: var(--red); }
+  .ficha-txt { display: grid; grid-template-columns: 1fr 1fr; gap: .2rem 2.4rem; }
+  .ficha-txt div { padding-top: .2rem; }
+  .ficha-txt h4 { margin: 0 0 .3rem; font: 650 var(--step--1)/1.2 var(--f-ui); letter-spacing: 0; color: var(--red); }
+  .ficha-txt p { margin: 0 0 1rem; font-size: var(--step-0); }
+  @media (max-width: 860px) {
+    .ficha-show { grid-template-columns: 1fr; }
+    .ficha-txt { grid-template-columns: 1fr; }
+    .ficha-head { grid-template-columns: auto 1fr; }
+    .ficha-head .who { grid-column: 1 / -1; text-align: left; }
+    .spec { min-height: 0; }
+  }
+
+  /* ---- Mini maquetas «en uso» (cada una con su paleta) ---- */
+  .uso { border-radius: 4px; overflow: hidden; min-height: 17rem; display: grid; position: relative; }
+  .uso.duo { grid-template-columns: 1fr 1fr; gap: 1rem; background: none; overflow: visible; }
+  .uso.trio { grid-template-rows: repeat(3, 1fr); gap: .5rem; }
+  .uso .cap { position: absolute; right: .7rem; bottom: .55rem; margin: 0; font: 500 .68rem/1 var(--f-ui); opacity: .8; }
+  @media (max-width: 560px) { .uso.duo { grid-template-columns: 1fr; } }
+
+  /* Garalda: etiqueta de vino */
+  .u-vino { background: oklch(32% 0.05 150); place-items: center; padding: 1.6rem 1rem; }
+  .u-vino .lbl { width: min(17rem, 100%); padding: 1.3rem 1.2rem 1.1rem; background: oklch(93% 0.03 85); color: oklch(30% 0.08 20); text-align: center; outline: 1px solid oklch(30% 0.08 20 / .5); outline-offset: -7px; }
+  .u-vino .lbl small { display: block; font: 500 .62rem/1.3 var(--f-body); letter-spacing: .22em; text-transform: uppercase; }
+  .u-vino .lbl b { display: block; margin: .6rem 0 .2rem; font: 500 2.5rem/.9 var(--f-display); letter-spacing: -0.01em; }
+  .u-vino .lbl i { display: block; font: italic 500 1.25rem/1.1 var(--f-display); }
+  .u-vino .lbl p { margin: .8rem 0 0; padding-top: .7rem; border-top: 1px solid oklch(30% 0.08 20 / .35); font: 400 .74rem/1.4 var(--f-body); }
+  .u-vino .cap { color: oklch(93% 0.03 85); }
+
+  /* Didona: portada de joyería */
+  .u-joya { background: oklch(93% 0.02 50); color: oklch(20% 0.01 40); padding: 1.3rem 1.4rem; align-content: space-between; }
+  .u-joya .top { display: flex; justify-content: space-between; font: 500 .68rem/1 var(--f-ui); }
+  .u-joya h5 { margin: .4rem 0 0; font: 500 clamp(2.9rem, 2rem + 3vw, 4.4rem)/.85 var(--f-display); font-family: "Bodoni Moda", serif; font-variation-settings: "opsz" 96; letter-spacing: -0.02em; }
+  .u-joya h5 em { font-style: italic; font-weight: 400; }
+  .u-joya p { margin: 0; max-width: 30ch; font: 400 .82rem/1.45 "Inter Tight", sans-serif; }
+  .u-joya .bar { display: flex; justify-content: space-between; align-items: end; gap: 1rem; border-top: 1px solid currentColor; padding-top: .7rem; }
+  .u-joya .bar b { font: italic 500 1.1rem/1 "Bodoni Moda", serif; font-variation-settings: "opsz" 24; white-space: nowrap; }
+
+  /* Editorial contemporánea: dos usos */
+  .u-arroz { background: oklch(90% 0.05 75); color: oklch(24% 0.04 40); padding: 1.2rem 1.2rem 1.6rem; border-radius: 4px; align-content: space-between; display: grid; min-height: 17rem; position: relative; }
+  .u-arroz small { font: 500 .68rem/1 var(--f-ui); }
+  .u-arroz h5 { margin: 0; font: 600 clamp(2rem, 1.5rem + 1.6vw, 2.7rem)/.95 "Fraunces", serif; font-variation-settings: "opsz" 144; letter-spacing: -0.03em; }
+  .u-arroz p { margin: 0; font: 400 .82rem/1.45 "Inter Tight", sans-serif; }
+  .u-revista { background: oklch(99% 0.003 90); color: oklch(18% 0.01 260); padding: 1.2rem 1.2rem 1.6rem; border-radius: 4px; border: 1px solid var(--line-2); align-content: space-between; display: grid; min-height: 17rem; position: relative; }
+  .u-revista small { font: 500 .68rem/1 var(--f-ui); }
+  .u-revista h5 { margin: 0; font: 400 clamp(2.2rem, 1.6rem + 1.8vw, 3rem)/.95 "Instrument Serif", serif; letter-spacing: -0.01em; }
+  .u-revista h5 em { color: oklch(52% 0.17 35); }
+  .u-revista p { margin: 0; font: 400 .82rem/1.45 "Inter Tight", sans-serif; }
+
+  /* Egipcia: cervecería */
+  .u-cerveza { background: oklch(78% 0.07 70); color: oklch(22% 0.02 60); padding: 1.3rem 1.4rem; align-content: space-between; }
+  .u-cerveza .row { display: flex; justify-content: space-between; align-items: center; font: 700 .8rem/1 "Zilla Slab", serif; }
+  .u-cerveza .sello { width: 4.4rem; aspect-ratio: 1; border-radius: 50%; border: 2px solid currentColor; display: grid; place-items: center; text-align: center; font: 700 .72rem/1.05 "Zilla Slab", serif; rotate: -10deg; }
+  .u-cerveza h5 { margin: 0; font: 700 clamp(2.4rem, 1.8rem + 2.2vw, 3.6rem)/.88 "Zilla Slab", serif; text-transform: uppercase; letter-spacing: -0.01em; color: oklch(30% 0.09 15); }
+  .u-cerveza p { margin: 0; font: 400 1rem/1.3 "Zilla Slab", serif; }
+
+  /* Grotesca: gestoría */
+  .u-gestoria { background: #fff; color: oklch(22% 0.02 255); font-family: "Inter Tight", sans-serif; align-content: start; border: 1px solid var(--line-2); }
+  .u-gestoria nav { display: flex; justify-content: space-between; align-items: center; padding: .8rem 1.1rem; border-bottom: 1px solid oklch(90% 0.01 255); font-size: .78rem; }
+  .u-gestoria nav b { font-weight: 700; letter-spacing: -0.02em; font-size: .95rem; }
+  .u-gestoria .body { padding: 1.2rem 1.1rem 1.1rem; }
+  .u-gestoria h5 { margin: 0 0 .6rem; font: 650 clamp(1.6rem, 1.2rem + 1.4vw, 2.2rem)/1.02 "Inter Tight", sans-serif; letter-spacing: -0.035em; max-width: 16ch; }
+  .u-gestoria p { margin: 0 0 1rem; font-size: .86rem; line-height: 1.5; color: oklch(42% 0.02 255); max-width: 38ch; }
+  .u-gestoria .act { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; font-size: .8rem; }
+  .u-gestoria .act span:first-child { background: oklch(45% 0.14 255); color: #fff; padding: .55rem .9rem; border-radius: 6px; font-weight: 600; }
+  .u-gestoria .act span:last-child { color: oklch(42% 0.02 255); font-variant-numeric: tabular-nums; }
+
+  /* Geométrica: estudio de arquitectura */
+  .u-arq { background: oklch(94% 0.004 250); color: oklch(20% 0.005 250); font-family: "Jost", sans-serif; padding: 1.2rem 1.3rem; align-content: space-between; position: relative; }
+  .u-arq .logo { font: 500 .9rem/1 "Jost", sans-serif; letter-spacing: .3em; }
+  .u-arq .disc { position: absolute; right: 1.3rem; top: 1.1rem; width: 4.6rem; aspect-ratio: 1; border-radius: 50%; background: oklch(20% 0.005 250); }
+  .u-arq .disc + .disc { right: 3.6rem; background: none; border: 1px solid oklch(20% 0.005 250); }
+  .u-arq h5 { margin: 0; font: 300 clamp(2.2rem, 1.6rem + 2vw, 3.2rem)/1 "Jost", sans-serif; letter-spacing: -0.02em; max-width: 12ch; }
+  @media (max-width: 560px) { .u-arq .disc { width: 2.6rem; top: .9rem; } .u-arq .disc + .disc { right: 2.6rem; } }
+  .u-arq ol { list-style: none; margin: 0; padding: .7rem 0 0; border-top: 1px solid oklch(20% 0.005 250 / .3); display: grid; grid-template-columns: 1fr 1fr; gap: .3rem 1rem; font-size: .8rem; }
+  .u-arq ol span { opacity: .6; margin-right: .4rem; }
+
+  /* Redondeada: moda infantil */
+  .u-peque { background: oklch(94% 0.035 20); color: oklch(35% 0.08 0); font-family: "Nunito", sans-serif; grid-template-columns: 1fr 1fr; align-items: center; gap: 1rem; padding: 1.2rem; }
+  .u-peque .pic { aspect-ratio: 4 / 5; border-radius: 22px; background: oklch(86% 0.06 230); position: relative; overflow: hidden; }
+  .u-peque .pic::before { content: ""; position: absolute; left: 18%; right: 18%; top: 22%; bottom: 8%; border-radius: 30px 30px 14px 14px; background: oklch(97% 0.01 90); }
+  .u-peque .pic::after { content: ""; position: absolute; width: 18%; aspect-ratio: 1; left: 30%; top: 40%; border-radius: 50%; background: oklch(85% 0.12 85); box-shadow: 2.4rem 1.6rem 0 -0.3rem oklch(85% 0.12 85); }
+  .u-peque .brand { font: 900 1.05rem/1 "Nunito", sans-serif; letter-spacing: -0.01em; }
+  .u-peque h5 { margin: .7rem 0 .3rem; font: 800 clamp(1.4rem, 1.1rem + 1vw, 1.8rem)/1.05 "Nunito", sans-serif; }
+  .u-peque p { margin: 0 0 .8rem; font: 600 .8rem/1.4 "Nunito", sans-serif; }
+  .u-peque .price { display: block; font: 900 1.5rem/1 "Nunito", sans-serif; margin-bottom: .7rem; }
+  .u-peque .btn-k { display: inline-block; padding: .6rem 1rem; border-radius: 999px; background: oklch(35% 0.08 0); color: oklch(97% 0.01 20); font: 800 .8rem/1 "Nunito", sans-serif; }
+
+  /* Condensada: box de entrenamiento */
+  .u-box { background: oklch(17% 0.01 260); color: oklch(97% 0.005 260); padding: 1.2rem 1.3rem; align-content: space-between; font-family: "Big Shoulders", sans-serif; }
+  .u-box .row { display: flex; justify-content: space-between; font: 700 .95rem/1 "Big Shoulders", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+  .u-box h5 { margin: 0; font: 900 clamp(3.6rem, 2.6rem + 3.6vw, 5.6rem)/.82 "Big Shoulders", sans-serif; text-transform: uppercase; letter-spacing: -0.005em; }
+  .u-box h5 span { color: oklch(90% 0.17 100); }
+  .u-box p { margin: 0; font: 600 1.05rem/1.2 "Big Shoulders", sans-serif; letter-spacing: .02em; }
+
+  /* Display: tres voces */
+  .u-dsp { border-radius: 4px; padding: .9rem 1.1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; position: relative; }
+  .u-dsp b { font-weight: 800; line-height: .9; }
+  .u-dsp small { font: 500 .7rem/1.25 var(--f-ui); text-align: right; max-width: 12ch; }
+  .u-dsp.syne { background: oklch(88% 0.17 125); color: oklch(18% 0.02 140); }
+  .u-dsp.syne b { font-family: "Syne", sans-serif; font-size: clamp(1.7rem, 1.2rem + 1.6vw, 2.5rem); letter-spacing: -0.03em; }
+  .u-dsp.unb { background: oklch(28% 0.12 290); color: oklch(95% 0.03 300); }
+  .u-dsp.unb b { font-family: "Unbounded", sans-serif; font-weight: 700; font-size: clamp(1.3rem, 1rem + 1.2vw, 1.9rem); letter-spacing: -0.02em; }
+  .u-dsp.bri { background: oklch(70% 0.17 45); color: oklch(18% 0.03 40); }
+  .u-dsp.bri b { font-family: "Bricolage", sans-serif; font-stretch: 75%; font-size: clamp(1.8rem, 1.3rem + 1.6vw, 2.6rem); letter-spacing: -0.02em; }
+
+  /* Mono: estudio de desarrollo */
+  .u-mono { background: oklch(22% 0.04 255); color: oklch(92% 0.02 250); font-family: "JetBrains Mono", monospace; padding: 1.2rem 1.3rem; align-content: space-between; font-size: .8rem; }
+  .u-mono .brand { font-weight: 700; font-size: .9rem; }
+  .u-mono h5 { margin: 0; font: 500 clamp(1.4rem, 1.1rem + 1.2vw, 2rem)/1.15 "JetBrains Mono", monospace; letter-spacing: -0.03em; }
+  .u-mono h5 span { color: oklch(85% 0.12 160); }
+  .u-mono dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: .25rem 1.2rem; padding-top: .8rem; border-top: 1px dashed oklch(92% 0.02 250 / .35); }
+  .u-mono dt { opacity: .75; } .u-mono dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Manuscrita: pizarra de cafetería */
+  .u-cafe { background: oklch(24% 0.03 160); color: oklch(94% 0.02 100); padding: 1.2rem 1.4rem; align-content: space-between; }
+  .u-cafe .top { display: flex; justify-content: space-between; font: 500 .72rem/1 "Jost", sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+  .u-cafe h5 { margin: 0; font: 700 clamp(3rem, 2.4rem + 2vw, 4.2rem)/.85 "Caveat", cursive; color: oklch(88% 0.11 85); rotate: -3deg; transform-origin: left; }
+  .u-cafe ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; font: 400 .88rem/1.35 "Jost", sans-serif; }
+  .u-cafe li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px dotted oklch(94% 0.02 100 / .3); padding-bottom: .25rem; }
+
+  /* ---- Así sí / Así no ---- */
+  .sisi { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2.4rem 0 .6rem; }
+  .sisi figure { margin: 0; display: grid; grid-template-rows: auto 1fr; gap: .55rem; }
+  .sisi figcaption { display: flex; align-items: center; gap: .55rem; font: 650 var(--step--1)/1 var(--f-ui); }
+  .sisi figcaption::before { content: ""; width: 1.4rem; height: 3px; background: currentColor; }
+  .sisi .no figcaption { color: var(--red); }
+  .sisi .si figcaption { color: oklch(42% 0.1 150); }
+  .sisi .box { border-radius: 4px; overflow: hidden; border: 1px solid var(--line-2); }
+  .sisi-why { margin: 0 0 2.4rem !important; font-size: var(--step--1); color: var(--muted); line-height: 1.5; }
+  .sisi-why strong { color: var(--fg); }
+  @media (max-width: 640px) { .sisi { grid-template-columns: 1fr; } }
+
+  /* Inmobiliaria: el mismo anuncio en dos registros de Archivo */
+  .inmo { padding: 1.4rem 1.3rem; background: oklch(96% 0.006 80); color: oklch(18% 0.01 60); min-height: 12rem; display: grid; align-content: space-between; gap: 1rem; }
+  .inmo small { font: 500 .72rem/1 "Inter Tight", sans-serif; }
+  .inmo b { display: block; font-family: "Archivo", sans-serif; line-height: .92; }
+  .inmo .v1 { font-weight: 900; font-stretch: 62%; font-size: clamp(2.4rem, 1.8rem + 2vw, 3.3rem); text-transform: uppercase; letter-spacing: -0.01em; }
+  .inmo .v2 { font-weight: 250; font-stretch: 125%; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.3rem); letter-spacing: -0.02em; }
+  .inmo p { margin: 0; font: 400 .82rem/1.4 "Inter Tight", sans-serif; }
+  /* Manuscrita: nota frente a texto entero */
+  .nota-cafe { padding: 1.2rem 1.3rem; background: oklch(97% 0.012 85); color: oklch(24% 0.02 60); min-height: 12rem; }
+  .nota-cafe h6 { margin: 0 0 .5rem; font: 600 1.25rem/1.1 "Jost", sans-serif; letter-spacing: -0.01em; }
+  .nota-cafe p { margin: 0; font: 400 .9rem/1.5 "Jost", sans-serif; }
+  .nota-cafe .hand { display: inline-block; margin-top: .7rem; font: 700 1.6rem/1 "Caveat", cursive; color: oklch(50% 0.17 30); rotate: -4deg; }
+  .nota-cafe.all h6, .nota-cafe.all p { font-family: "Caveat", cursive; }
+  .nota-cafe.all h6 { font-size: 1.7rem; font-weight: 700; }
+  .nota-cafe.all p { font-size: 1.1rem; line-height: 1.25; }
+
+  /* Banda */
+  .band.ink { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.ink p { margin: 0; font: 500 clamp(2.3rem, 1.3rem + 3.6vw, 4.6rem)/.98 var(--f-display); letter-spacing: -0.02em; max-width: 19ch; text-wrap: balance; }
+  .band.ink p em { color: oklch(72% 0.16 28); }
+
+  /* Retícula de peso y anchura (Archivo) */
+  .wgrid { display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); margin: 2.4rem 0 2.8rem; border-top: 1px solid var(--fg); }
+  .wgrid > * { padding: .9rem .8rem; border-bottom: 1px solid var(--line-2); }
+  .wgrid .h { font: 600 .74rem/1.2 var(--f-ui); color: var(--muted); }
+  .wgrid .c { display: grid; gap: .4rem; align-content: start; border-left: 1px solid var(--line-2); }
+  .wgrid .c b { font-family: "Archivo", sans-serif; font-size: clamp(1.4rem, 0.8rem + 2vw, 2.6rem); line-height: 1; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+  .wgrid .c span { font: 500 .74rem/1.3 var(--f-ui); color: var(--muted); }
+  .wgrid .c.hot span { color: var(--red); }
+  @media (max-width: 640px) { .wgrid { grid-template-columns: 3.2rem repeat(3, minmax(0, 1fr)); } .wgrid > * { padding: .7rem .45rem; } .wgrid .c b { font-size: 1.2rem; } .wgrid .c span { font-size: .66rem; } }
+
+  /* Dos negras distintas */
+  .blacks { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0; }
+  .blacks div { padding: 1.2rem 1.3rem; border: 1px solid var(--line-2); border-radius: 4px; }
+  .blacks b { display: block; font-size: clamp(2.6rem, 1.8rem + 2.6vw, 4rem); line-height: .9; margin-bottom: .6rem; letter-spacing: -0.03em; }
+  .blacks .fr b { font-family: "Fraunces", serif; font-weight: 900; font-variation-settings: "opsz" 144; }
+  .blacks .it b { font-family: "Inter Tight", sans-serif; font-weight: 900; }
+  .blacks span { font: 500 var(--step--1)/1.4 var(--f-ui); color: var(--muted); }
+  @media (max-width: 560px) { .blacks { grid-template-columns: 1fr; } }
+
+  /* Método: cuatro pasos con número grande */
+  .steps4 { list-style: none; padding: 0 !important; margin: 2rem 0 2.6rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--fg); counter-reset: paso; }
+  .steps4 li { margin: 0; padding: 1.1rem 1.2rem 1.3rem 0; counter-increment: paso; border-right: 1px solid var(--line-2); font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .steps4 li + li { padding-left: 1.2rem; }
+  .steps4 li:last-child { border-right: 0; }
+  .steps4 li::before { content: counter(paso); display: block; font: 500 4.2rem/.8 var(--f-display); color: var(--red); margin-bottom: .8rem; }
+  .steps4 b { display: block; color: var(--fg); font: 650 var(--step-0)/1.25 var(--f-ui); margin-bottom: .3rem; letter-spacing: -0.01em; }
+  @media (max-width: 860px) {
+    .steps4 { grid-template-columns: 1fr 1fr; }
+    .steps4 li:nth-child(2) { border-right: 0; }
+    .steps4 li:nth-child(3) { padding-left: 0; }
+    .steps4 li:nth-child(n+3) { border-top: 1px solid var(--line-2); }
+  }
+  @media (max-width: 480px) {
+    .steps4 { grid-template-columns: 1fr; }
+    .steps4 li, .steps4 li + li { padding: 1rem 0; border-right: 0; border-top: 1px solid var(--line-2); display: grid; grid-template-columns: 3rem 1fr; gap: 0 .8rem; }
+    .steps4 li:first-child { border-top: 0; }
+    .steps4 li::before { font-size: 3rem; grid-row: span 2; margin: 0; }
+  }
+
+  /* Tres casos */
+  .casos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0 2.6rem; }
+  .caso { border-top: 2px solid var(--fg); padding-top: .9rem; }
+  .caso h4 { margin: 0 0 .2rem; font: 650 var(--step-0)/1.25 var(--f-ui); letter-spacing: -0.01em; }
+  .caso .words { margin: 0 0 .9rem; font: italic 500 1.35rem/1.1 var(--f-display); color: var(--red); }
+  .caso .demo { padding: 1.1rem 1rem; border-radius: 4px; margin-bottom: .9rem; min-height: 7.6rem; display: grid; align-content: end; }
+  .caso p { margin: 0; font-size: var(--step--1); line-height: 1.55; }
+  .caso .demo b { display: block; line-height: .95; }
+  .caso .demo small { display: block; margin-top: .45rem; font: 400 .78rem/1.35 "Inter Tight", sans-serif; }
+  .c-bodega { background: oklch(30% 0.07 20); color: oklch(93% 0.03 85); }
+  .c-bodega b { font: 500 2.4rem/.95 "Fraunces", serif; font-variation-settings: "opsz" 144; letter-spacing: -0.03em; }
+  .c-clinica { background: oklch(97% 0.012 220); color: oklch(26% 0.05 230); border: 1px solid var(--line-2); }
+  .c-clinica b { font: 600 1.9rem/1 "Inter Tight", sans-serif; letter-spacing: -0.035em; }
+  .c-imprenta { background: oklch(54% 0.23 350); color: oklch(98% 0.01 350); }
+  .c-imprenta b { font: 900 3rem/.85 "Big Shoulders", sans-serif; text-transform: uppercase; }
+  .c-imprenta small { color: oklch(98% 0.01 350); }
+  @media (max-width: 860px) { .casos { grid-template-columns: 1fr; } }
+
+  /* Tabla de rasgos por palabra */
+  .table-wrap table { min-width: 680px; }
+  .table-wrap td:first-child { font: italic 500 1.2rem/1.2 var(--f-display); color: var(--red); white-space: nowrap; }
+
+  /* Nota de la pareja de esta página */
+  .colofon { display: grid; grid-template-columns: auto 1fr; gap: 1.2rem 1.6rem; align-items: center; margin: 3rem 0; padding: 1.4rem 0; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--fg); }
+  .colofon .aa { display: flex; align-items: baseline; gap: .6rem; }
+  .colofon .aa b { font: 500 4.4rem/.8 var(--f-display); }
+  .colofon .aa i { font: 400 3rem/.8 var(--f-body); font-style: normal; color: var(--muted); }
+  .colofon p { margin: 0; font-size: var(--step--1); line-height: 1.55; color: var(--muted); }
+  .colofon p strong { color: var(--fg); }
+  @media (max-width: 560px) { .colofon { grid-template-columns: 1fr; } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="tipo-personalidad">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="h-top">
+      <div>
+        <p data-kicker>Tipografía</p>
+        <h1 id="t">Qué transmite <em>una</em> tipografía</h1>
+      </div>
+      <div class="h-side">
+        <p class="lede">La misma palabra en once familias. Toca la palabra o elige una familia: cambia la voz y, con ella, lo que promete.</p>
+        <div class="folio"><span>Muestra <b data-n>01</b> de 11</span><span class="chip" data-meta>20 min</span></div>
+      </div>
+    </div>
+
+    <div class="stage" data-stage>
+      <div class="guide cap" data-g="cap"><span>altura de mayúscula</span></div>
+      <div class="guide x" data-g="x"><span>altura de x</span></div>
+      <div class="guide base" data-g="base"><span>línea base</span></div>
+      <p class="kw k1" data-kw></p>
+      <p class="kw k2" data-kw></p>
+      <p class="kw k3" data-kw></p>
+      <button class="word-btn" type="button" aria-label="Cambiar la palabra a la siguiente familia"><span class="word" data-word>Confianza<i data-bl></i></span></button>
+    </div>
+
+    <div class="h-foot">
+      <div>
+        <p class="tag" data-tag>Garalda <span>Cormorant</span></p>
+        <p class="why" data-why aria-live="off">Eje inclinado y contraste suave, la huella de la pluma: suena a libro bien impreso, a algo que lleva siglos funcionando.</p>
+      </div>
+      <div>
+        <div class="picker" role="group" aria-label="Familias tipográficas" data-picker></div>
+        <p class="hint-tap">Toca la palabra para pasar a la siguiente.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Antes de leer una palabra ya has decidido algo sobre ella. Un cartel de «Abierto» en Bodoni parece la puerta de una joyería; el mismo cartel en Nunito, la de una guardería. El texto es idéntico; lo que cambia es la <strong>voz</strong> con la que se dice, como la misma frase dicha por un notario o por un monitor de campamento.</p>
+      <p>Esta lección va de esa voz: de dónde sale, qué rasgos de la letra la producen y cómo elegirla para un cliente con argumentos, no con «me gusta». La parte técnica (escalas fluidas, fuentes variables, cifras) está en <a href="03-tipografia.html">Tipografía en CSS</a>; cómo juntar dos fuentes, en <a href="tipo-combinar.html">Combinar tipografías</a>.</p>
+
+      <p class="statement">La letra es la voz del texto: dice lo mismo, pero <em>no suena igual</em>.</p>
+
+      <div class="callout ojo"><span class="t">Antes de empezar</span>
+        <p>Lo que transmite una tipografía es <strong>aprendido</strong>, no una ley de la naturaleza. Hablamos de asociaciones del contexto occidental y español: la misma didona que aquí suena a revista de moda puede sonar a menú de pizzería de barrio si la rodeas de rojo chillón y fotos de stock. El color, la imagen, el texto y lo que hace la competencia pesan tanto como la letra. Aun así, estas asociaciones son muy estables y muy útiles: son las que tiene en la cabeza el cliente y su público.</p>
+      </div>
+
+      <h2>De dónde sale lo que transmite una letra</h2>
+      <p>Cuando una letra «suena» a algo, casi siempre es por una de estas cuatro razones, y a menudo por varias a la vez. Si las conoces, puedes explicar cualquier familia, incluso una que no hayas visto nunca.</p>
+
+      <div class="origins wide">
+        <div>
+          <div class="g"><b style="font-family: Cormorant; font-size: 8rem; position: relative;">o<span class="axis-line" style="height: 5.4rem; left: 50%; top: .05em; rotate: -24deg; margin-left: -1px;"></span></b></div>
+          <h3>La herramienta</h3>
+          <p>La forma guarda la huella de cómo se hacía. La <strong>pluma de punta ancha</strong> deja trazos gruesos y finos con el eje inclinado: por eso las serifas clásicas parecen humanas. La regla y el compás dan letras geométricas, que parecen construidas.</p>
+        </div>
+        <div>
+          <div class="g"><b style="font-family: 'Bodoni Moda'; font-variation-settings: 'opsz' 96; font-size: 4.6rem;">XVIII</b></div>
+          <h3>La época</h3>
+          <p>Cada familia nace con los valores de su momento. El Renacimiento hizo letras para el libro; la Ilustración, letras racionales y cortesanas; la industria, letras para carteles que se leían desde lejos; la Bauhaus, letras de máquina.</p>
+        </div>
+        <div>
+          <div class="g"><b style="font-family: 'Inter Tight'; font-weight: 600; font-size: 3.6rem; letter-spacing: -0.04em; white-space: nowrap;">Puerta B</b></div>
+          <h3>La costumbre</h3>
+          <p>Dónde la hemos visto miles de veces. Las grotescas están en aeropuertos, bancos y apps; las didonas, en las cabeceras de las revistas de moda. Si una letra ha acompañado durante décadas a un sector, <strong>lo trae puesto</strong>.</p>
+        </div>
+        <div>
+          <div class="g"><b style="font-family: Nunito; font-weight: 1000; font-size: 7rem; letter-spacing: -0.04em;">o</b><b style="font-family: 'Big Shoulders'; font-weight: 900; font-size: 7rem; margin-left: .2rem;">I</b></div>
+          <h3>El cuerpo</h3>
+          <p>Leemos las letras como objetos: lo grueso pesa, lo fino es frágil, lo redondo no corta, lo estrecho tiene prisa y lo ancho está tranquilo. Es la misma intuición del efecto <em>bouba/kiki</em>: asociamos las formas redondas a lo blando y las angulosas a lo afilado.</p>
+        </div>
+      </div>
+
+      <p>Un ejemplo con las cuatro a la vez: una didona como Bodoni tiene un contraste extremo entre trazos gruesos y finísimos (<em>herramienta</em>: el grabado en cobre y la tinta y el papel finos de finales del XVIII), nació en la corte de Parma con la razón y el lujo de la Ilustración (<em>época</em>), lleva un siglo en las portadas de las revistas de moda (<em>costumbre</em>) y sus trazos finos parecen frágiles y caros (<em>cuerpo</em>). Las cuatro razones apuntan al mismo sitio: lujo. Por eso funciona tan bien en una joyería y tan mal en un taller mecánico.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando defiendas una fuente ante un cliente, usa estas cuatro razones en lugar de adjetivos: «la elegimos porque su forma viene de…», «porque el público la asocia a…», «porque sus trazos finos dan sensación de…». Una razón de origen convence más que «es elegante», y además te obliga a comprobar que de verdad encaja.</p>
+      </div>
+
+      <h2>Los rasgos que hablan</h2>
+      <p>Una tipografía es un conjunto de decisiones de forma. Siete de ellas cargan casi todo el significado. Aprende a verlas por separado y podrás leer cualquier fuente como lees un color: por su tono, su luz y su saturación.</p>
+
+      <div class="trait wide">
+        <div class="specs" style="--n:3">
+          <figure><span class="gl" style="font-family: Cormorant;">n</span><figcaption><b>Serifa en cuña</b>Cormorant</figcaption></figure>
+          <figure><span class="gl" style="font-family: 'Zilla Slab'; font-weight: 700;">n</span><figcaption><b>Serifa de bloque</b>Zilla Slab</figcaption></figure>
+          <figure><span class="gl" style="font-family: 'Inter Tight'; font-weight: 500;">n</span><figcaption><b>Sin serifa</b>Inter Tight</figcaption></figure>
+        </div>
+        <div>
+          <h3>Serifas</h3>
+          <p>Las serifas son los remates de los extremos. Con serifa suena a <strong>tradición, texto impreso y autoridad</strong>, porque durante quinientos años lo serio (libros, periódicos, leyes, diplomas) se compuso así. Sin serifa suena a <strong>presente y función</strong>: llegaron con la industria, los carteles y la señalética, y hoy son la letra de las pantallas.</p>
+          <p>La forma del remate matiza: fino y en cuña es refinado, porque recuerda el final del trazo de una pluma; grueso y cuadrado es robusto, porque parece una viga; sin remate es neutro, porque no hay ningún gesto que leer.</p>
+        </div>
+      </div>
+
+      <div class="trait wide">
+        <div class="specs" style="--n:3">
+          <figure><span class="gl" style="font-family: 'Bodoni Moda'; font-variation-settings: 'opsz' 96;">o</span><figcaption><b class="hot">Contraste extremo</b>Bodoni Moda</figcaption></figure>
+          <figure><span class="gl" style="font-family: Newsreader; font-variation-settings: 'opsz' 72;">o</span><figcaption><b>Contraste moderado</b>Newsreader</figcaption></figure>
+          <figure><span class="gl" style="font-family: Jost;">o</span><figcaption><b>Monolineal</b>Jost</figcaption></figure>
+        </div>
+        <div>
+          <h3>Contraste de trazo</h3>
+          <p>Es la diferencia entre la parte más gruesa y la más fina de una letra. Mucho contraste transmite <strong>elegancia, tensión y lujo</strong> por dos motivos: históricamente exigía la mejor técnica (grabado, papel satinado, tinta fina) y los trazos finísimos son frágiles, y lo frágil lo asociamos a lo caro, como el cristal fino frente al vaso de duralex.</p>
+          <p>Un trazo de grosor uniforme (monolineal) transmite <strong>estabilidad, sinceridad y técnica</strong>: no hay gesto de mano, parece hecho por una máquina, y eso suena a fiable y moderno.</p>
+        </div>
+      </div>
+
+      <div class="trait wide">
+        <div class="specs" style="--n:2">
+          <figure><span class="gl" style="font-family: Cormorant; font-size: clamp(5.6rem, 4rem + 4vw, 8.4rem);">o<span class="axis-line" style="height: .78em; left: 50%; top: .2em; rotate: -24deg; margin-left: -1px;"></span></span><figcaption><b class="hot">Eje inclinado</b>Cormorant: la pluma</figcaption></figure>
+          <figure><span class="gl" style="font-family: 'Bodoni Moda'; font-variation-settings: 'opsz' 96; font-size: clamp(5.6rem, 4rem + 4vw, 8.4rem);">o<span class="axis-line" style="height: .78em; left: 50%; top: .2em; margin-left: -1px;"></span></span><figcaption><b class="hot">Eje vertical</b>Bodoni Moda: el buril</figcaption></figure>
+        </div>
+        <div>
+          <h3>Eje</h3>
+          <p>Si unes las partes más finas de la «o» obtienes su eje. Inclinado hacia la izquierda suena <strong>humano, cálido y caligráfico</strong>, porque es exactamente lo que hace una pluma de punta ancha en una mano diestra. Vertical suena <strong>racional, ordenado y algo frío</strong>, porque no lo hace ninguna mano: lo impuso la razón de la Ilustración.</p>
+          <p>Es un rasgo sutil, pero explica por qué una garalda parece cercana aunque sea clásica y por qué una didona impone distancia aunque sea bella.</p>
+        </div>
+      </div>
+
+      <div class="trait wide">
+        <div class="specs" style="--n:2">
+          <figure><span class="gl" data-xh style="font-family: Cormorant;">Hx<span class="xline"></span></span><figcaption><b>Altura de x baja</b>Cormorant: 0,386 del cuerpo</figcaption></figure>
+          <figure><span class="gl" data-xh style="font-family: 'Inter Tight'; font-weight: 500;">Hx<span class="xline"></span></span><figcaption><b class="hot">Altura de x alta</b>Inter Tight: 0,546 del cuerpo</figcaption></figure>
+        </div>
+        <div>
+          <h3>Altura de la x</h3>
+          <p>Es lo que miden las minúsculas sin ascendentes, como la «x», en proporción al cuerpo. Una x alta hace que el texto parezca más grande y más <strong>cercano, abierto y moderno</strong>: las minúsculas mandan, como cuando alguien te habla de cerca, y se leen bien en tamaños pequeños. Por eso casi todas las fuentes de pantalla la tienen alta.</p>
+          <p>Una x baja deja ascendentes largos y mucho aire: suena <strong>elegante, clásica y literaria</strong>, porque esas proporciones esbeltas son las de los libros antiguos. El precio: necesita más tamaño. Medido en los archivos de este cuaderno, a 16 px la «x» de Cormorant mide 6,2 px y la de Inter Tight 8,7 px, un 40 % más.</p>
+        </div>
+      </div>
+
+      <div class="trait wide">
+        <div class="specs" style="--n:2">
+          <figure><span class="gl" style="font-family: Nunito; font-weight: 700;">ce</span><figcaption><b>Apertura amplia</b>Nunito: la «c» y la «e» respiran</figcaption></figure>
+          <figure><span class="gl" style="font-family: 'Big Shoulders'; font-weight: 700;">ce</span><figcaption><b class="hot">Apertura cerrada</b>Big Shoulders: casi se tocan</figcaption></figure>
+        </div>
+        <div>
+          <h3>Apertura</h3>
+          <p>Es lo abiertos que quedan los huecos de letras como «c», «e», «a» o «s». Abierta transmite <strong>claridad y amabilidad</strong>, y además es más legible: en pequeño, una «e» abierta nunca se confunde con una «o». Cerrada transmite <strong>firmeza, compacidad y contención</strong>: la letra se recoge sobre sí misma, como alguien con los brazos cruzados.</p>
+          <p>Por eso una fuente para el texto de una clínica o de una app bancaria debería tener aperturas generosas, y una letra para un cartel de boxeo puede permitirse cerrarlas.</p>
+        </div>
+      </div>
+
+      <div class="trait wide">
+        <div class="specs" style="--n:3">
+          <figure><span class="gl" style="font-family: Archivo; font-stretch: 62%; font-weight: 600; font-size: clamp(3.4rem, 2.4rem + 3vw, 5.4rem);">Mar</span><figcaption><b>Estrecha</b>Archivo, 62 %</figcaption></figure>
+          <figure><span class="gl" style="font-family: Archivo; font-stretch: 100%; font-weight: 600; font-size: clamp(3.4rem, 2.4rem + 3vw, 5.4rem);">Mar</span><figcaption><b>Normal</b>Archivo, 100 %</figcaption></figure>
+          <figure><span class="gl" style="font-family: Archivo; font-stretch: 125%; font-weight: 600; font-size: clamp(3.4rem, 2.4rem + 3vw, 5.4rem);">Mar</span><figcaption><b>Ancha</b>Archivo, 125 %</figcaption></figure>
+        </div>
+        <div>
+          <h3>Anchura</h3>
+          <p>Estrecha transmite <strong>urgencia, energía y eficiencia</strong>: cabe más en menos sitio y la hemos visto siempre en titulares de periódico, carteles y dorsales. Ancha transmite <strong>estabilidad, calma y amplitud</strong>: ocupa espacio sin prisa, y el espacio sobrante es un lujo; por eso la usan la moda y la arquitectura.</p>
+          <p>Lo verás con detalle en la sección del peso y la anchura, con un laboratorio para moverlas a la vez.</p>
+        </div>
+      </div>
+
+      <div class="trait wide">
+        <div class="specs" style="--n:2">
+          <figure><span class="gl" style="font-family: Nunito; font-weight: 900;">rt</span><figcaption><b>Terminales redondos</b>Nunito</figcaption></figure>
+          <figure><span class="gl" style="font-family: Syne; font-weight: 800;">rt</span><figcaption><b class="hot">Cortes secos y ángulos</b>Syne</figcaption></figure>
+        </div>
+        <div>
+          <h3>Redondez y terminales</h3>
+          <p>Los terminales son cómo acaban los trazos. Redondeados transmiten <strong>suavidad, seguridad y juego</strong>: un objeto sin esquinas no hace daño, por eso los juguetes, los envases infantiles y las apps que no quieren intimidar los eligen. Cortes secos y ángulos transmiten <strong>tensión, precisión o atrevimiento</strong>, como un objeto afilado.</p>
+          <p>Fíjate en que este rasgo funciona incluso a mucha distancia: aunque no distingas la letra, percibes si su silueta es blanda o afilada.</p>
+        </div>
+      </div>
+
+      <figure class="lab" data-title="La anatomía de cualquier fuente" data-hint="Elige una familia" data-height="470" data-height-mobile="700">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pick" id="pick"></div>
+          <div class="sheet">
+            <div class="spec" id="spec">
+              <div class="g cap"><span>mayúscula</span></div>
+              <div class="g x"><span>altura de x</span></div>
+              <div class="g base"><span>línea base</span></div>
+              <p class="big" id="big">Hxgo<i id="bl"></i></p>
+            </div>
+            <div class="data">
+              <dl>
+                <dt>Altura de x</dt><dd id="dx"></dd>
+                <dt>Mayúscula</dt><dd id="dc"></dd>
+                <dt>x / mayúscula</dt><dd id="dr"></dd>
+                <dt>Anchura media</dt><dd id="dw"></dd>
+              </dl>
+              <p class="read" id="read">Desayunos de 8 a 12. Pan de masa madre, aceite de la Serra d'Espadà y café de tueste propio.</p>
+              <p class="note" id="note"></p>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f6f2ea; color: #1d1714; font-family: var(--f-sans); }
+          .pick { display: flex; gap: 4px; padding: 8px 10px; background: #1d1714; overflow-x: auto; }
+          .pick button { flex: none; min-height: 44px; padding: 0 12px; border: 1px solid #fff3; border-radius: 6px; background: none; color: #eee; font-size: 15px; cursor: pointer; }
+          .pick [aria-pressed="true"] { background: #f6f2ea; color: #1d1714; }
+          .sheet { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; padding: 20px; }
+          .spec { position: relative; height: 300px; display: grid; place-items: center; overflow: hidden; }
+          .big { margin: 0; font-size: 170px; line-height: 1; white-space: nowrap; position: relative; z-index: 1; }
+          .big i { display: inline-block; width: 0; height: 0; }
+          .g { position: absolute; left: 0; right: 0; border-top: 1px solid #1d171444; transition: top .5s; }
+          .g.x { border-top: 1px dashed #c92a2a; }
+          .g span { position: absolute; right: 0; bottom: 3px; font-size: 11px; color: #6b5f58; background: #f6f2ea; padding-left: 4px; }
+          .g.x span { color: #c92a2a; }
+          dl { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; margin: 0 0 16px; font-size: 14px; }
+          dt { color: #6b5f58; } dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+          .read { margin: 0 0 12px; font-size: 16px; line-height: 1.5; padding-top: 12px; border-top: 1px solid #1d171422; }
+          .note { margin: 0; font-size: 13px; line-height: 1.45; color: #6b5f58; }
+          @media (max-width: 620px) { .sheet { grid-template-columns: 1fr; padding: 14px; } .spec { height: 200px; } .big { font-size: 110px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Familia CSS, peso y una nota de lectura
+          const F = [
+            ['Cormorant', 'Cormorant', 500, 'x muy baja: elegante, pero a 16 px se queda pequeña.'],
+            ['Newsreader', 'Newsreader', 400, 'Serif de texto: x moderada y contraste suave para leer mucho.'],
+            ['Bodoni Moda', 'Bodoni Moda', 500, 'Contraste extremo: espectacular grande, frágil en el texto.'],
+            ['Fraunces', 'Fraunces', 500, 'Serif blanda: clásica pero amable.'],
+            ['Zilla Slab', 'Zilla Slab', 400, 'Serifas de bloque: aguanta tamaños pequeños y pantallas malas.'],
+            ['Inter Tight', 'Inter Tight', 400, 'x alta y aperturas claras: la voz neutra de las pantallas.'],
+            ['Jost', 'Jost', 400, 'Círculos perfectos: x baja para ser sans, muy limpia.'],
+            ['Nunito', 'Nunito', 600, 'Terminales redondos y x generosa: amable.'],
+            ['Big Shoulders', 'Big Shoulders', 700, 'x altísima y anchura mínima: impacto en poco sitio.'],
+            ['Syne', 'Syne', 700, 'Display: personalidad fuerte, cansa en párrafos.'],
+            ['JetBrains Mono', 'JetBrains Mono', 400, 'Todas las letras miden lo mismo: técnica.'],
+            ['Caveat', 'Caveat', 600, 'x bajísima e irregular: solo para notas cortas.'],
+          ];
+          const ctx = document.createElement('canvas').getContext('2d');
+          const fmt = (n) => n.toFixed(3).replace('.', ',');
+          pick.innerHTML = F.map((f, i) => `<button style="font-family:'${f[1]}'" data-i="${i}">${f[0]}</button>`).join('');
+          async function show(i) {
+            const [name, fam, w, note] = F[i];
+            pick.querySelectorAll('button').forEach((b, j) => b.setAttribute('aria-pressed', j === i));
+            await document.fonts.load(`${w} 100px "${fam}"`);
+            [big, read].forEach(el => { el.style.fontFamily = `"${fam}"`; el.style.fontWeight = w; });
+            const fs = parseFloat(getComputedStyle(big).fontSize);
+            ctx.font = `${w} ${fs}px "${fam}"`;
+            const xh = ctx.measureText('x').actualBoundingBoxAscent;   // altura de x real
+            const cap = ctx.measureText('H').actualBoundingBoxAscent;  // altura de mayúscula
+            ctx.font = `${w} 100px "${fam}"`;
+            const avg = ctx.measureText('abcdefghijklmnopqrstuvwxyz').width / 26 / 100;
+            // la línea base: un elemento vacío en línea se apoya en ella
+            const base = bl.getBoundingClientRect().top - spec.getBoundingClientRect().top;
+            spec.querySelector('.base').style.top = base + 'px';
+            spec.querySelector('.x').style.top = base - xh + 'px';
+            spec.querySelector('.cap').style.top = base - cap + 'px';
+            dx.textContent = fmt(xh / fs); dc.textContent = fmt(cap / fs);
+            dr.textContent = Math.round(xh / cap * 100) + ' %'; dw.textContent = fmt(avg) + ' em';
+            document.querySelector('#note').textContent = note;
+          }
+          pick.addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(+b.dataset.i); });
+          show(0);
+        </script>
+        <figcaption>Las cifras se miden en vivo con <code>measureText()</code> sobre los archivos de fuente reales. Compara la altura de x de Cormorant (alrededor de 0,39) con la de Big Shoulders (0,60) y mira el párrafo de abajo: con el mismo tamaño en píxeles, una parece casi el doble de grande que la otra.</figcaption>
+      </figure>
+
+      <div class="quiz" data-kind="Predice" data-answer="2">
+        <p class="q">Pones un párrafo en Cormorant y otro en Inter Tight, los dos a 16 px. ¿Cuál parece más grande?</p>
+        <ol>
+          <li>Iguales: el tamaño es el mismo.</li>
+          <li>Inter Tight, porque sus minúsculas son mucho más altas.</li>
+          <li>Cormorant, porque sus ascendentes son más largos.</li>
+        </ol>
+        <p class="why">El tamaño CSS mide la caja, no las letras. La altura de x de Inter Tight es 0,546 del cuerpo y la de Cormorant 0,386: sus minúsculas son un 40 % más altas, y el ojo lee sobre todo minúsculas. Por eso Cormorant pide 22–24 px para leerse como Inter Tight a 16.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los rasgos finos son los primeros que se pierden: al sol, con el brillo bajo o en un Android de gama baja, el contraste extremo de una didona se queda en los trazos gruesos y la letra se rompe. Para el texto en el teléfono busca <strong>x alta, aperturas abiertas y contraste moderado</strong>; guarda las letras delicadas para los titulares, donde el tamaño las protege.</p>
+      </div>
+
+      <h2>Las familias, una a una</h2>
+      <p>Once familias, con muestras reales de las fuentes que tienes en el cuaderno. Cada ficha enseña la letra sola, la letra trabajando en un negocio inventado y cuatro respuestas: qué transmite, por qué, quién la usa y cuándo no.</p>
+
+      <nav class="drawers wide" aria-label="Índice de familias">
+        <a href="#f-garalda"><small>01</small><b style="font-family: Cormorant;">Aa</b><span>Garalda</span></a>
+        <a href="#f-didona"><small>02</small><b style="font-family: 'Bodoni Moda'; font-variation-settings: 'opsz' 36;">Aa</b><span>Didona</span></a>
+        <a href="#f-editorial"><small>03</small><b style="font-family: 'Instrument Serif';">Aa</b><span>Editorial</span></a>
+        <a href="#f-slab"><small>04</small><b style="font-family: 'Zilla Slab'; font-weight: 700;">Aa</b><span>Egipcia</span></a>
+        <a href="#f-grotesca"><small>05</small><b style="font-family: 'Inter Tight'; font-weight: 500;">Aa</b><span>Grotesca</span></a>
+        <a href="#f-geometrica"><small>06</small><b style="font-family: Jost;">Aa</b><span>Geométrica</span></a>
+        <a href="#f-redondeada"><small>07</small><b style="font-family: Nunito; font-weight: 800;">Aa</b><span>Redondeada</span></a>
+        <a href="#f-condensada"><small>08</small><b style="font-family: 'Big Shoulders'; font-weight: 800;">Aa</b><span>Condensada</span></a>
+        <a href="#f-display"><small>09</small><b style="font-family: Syne; font-weight: 800;">Aa</b><span>Display</span></a>
+        <a href="#f-mono"><small>10</small><b style="font-family: 'JetBrains Mono';">Aa</b><span>Mono</span></a>
+        <a href="#f-manuscrita"><small>11</small><b style="font-family: Caveat; font-weight: 700;">Aa</b><span>Manuscrita</span></a>
+      </nav>
+
+      <!-- 01 Garalda -->
+      <section class="ficha wide" id="f-garalda">
+        <header class="ficha-head"><span class="num">01</span><h3>Serif clásica o garalda</h3><span class="who">Cormorant, Newsreader</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: Cormorant;">
+            <p class="feat">Eje inclinado, contraste moderado, serifas en cuña</p>
+            <p class="w">Tradición</p>
+            <p class="abc">abcdefghijklmnñopqrstuvwxyz<br>ABCDEFGHIJKLMNÑ 0123456789</p>
+          </div>
+          <div class="uso u-vino">
+            <div class="lbl">
+              <small>Les Useres, Castelló</small>
+              <b>Mas de Fraga</b>
+              <i>Garnacha, 2023</i>
+              <p>Doce meses en barrica de roble. Viñas viejas de la familia Fraga, en secano desde 1931.</p>
+            </div>
+            <p class="cap">En uso: bodega familiar</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Tradición, cultura, oficio y una confianza culta: la de quien lleva mucho tiempo haciendo bien lo suyo.</p>
+            <h4>Por qué</h4><p>Las garaldas (de Claude Garamond, siglo XVI) copian la estructura de la escritura humanista con pluma: eje inclinado, contraste suave y remates que acaban como un trazo. Son la letra de los libros durante siglos, y el libro es nuestro símbolo de saber y permanencia. Cormorant es una versión de display, para tamaños grandes; Newsreader es una serif de texto contemporánea con la misma estructura clásica, pensada para leer en pantalla.</p></div>
+          <div><h4>Sectores</h4><p>Bodegas y aceites con historia, editoriales y librerías, notarías y despachos con solera, hoteles con casa antigua, museos, instituciones culturales.</p>
+            <h4>Cuándo no</h4><p>Cuando la marca tiene que parecer rápida, joven o tecnológica: una garalda en una app de patinetes suena a disfraz. Y cuidado con las versiones de display como Cormorant en tamaños pequeños: su x baja y sus trazos finos piden 20 px o más.</p></div>
+        </div>
+      </section>
+
+      <!-- 02 Didona -->
+      <section class="ficha wide" id="f-didona">
+        <header class="ficha-head"><span class="num">02</span><h3>Didona</h3><span class="who">Bodoni Moda</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: 'Bodoni Moda'; font-variation-settings: 'opsz' 96;">
+            <p class="feat">Eje vertical, contraste extremo, serifas finísimas y planas</p>
+            <p class="w">Lujo</p>
+            <p class="abc" style="font-variation-settings: 'opsz' 11;">abcdefghijklmnñopqrstuvwxyz<br>ABCDEFGHIJKLMNÑ 0123456789</p>
+          </div>
+          <div class="uso u-joya">
+            <div class="top"><span>Almenara Joyeros</span><span>Colección de otoño</span></div>
+            <h5>Oro <em>que</em><br>no hace ruido</h5>
+            <div class="bar"><p>Piezas únicas hechas a mano en nuestro taller de Castelló desde 1958.</p><b>Ver piezas</b></div>
+            <p class="cap" style="color: oklch(20% 0.01 40)">En uso: joyería</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Lujo, moda, exigencia, sofisticación editorial. También distancia: no es una letra que te dé palmadas en la espalda.</p>
+            <h4>Por qué</h4><p>Didot en Francia y Bodoni en Italia la llevaron al extremo a finales del XVIII, cuando el grabado y el papel permitían trazos finísimos: eje vertical, contraste máximo, remates como un pelo. Racional y cortesana a la vez. Desde hace más de un siglo es la letra de las cabeceras de revistas de moda como Vogue o Harper's Bazaar, y esa costumbre pesa tanto como su forma.</p></div>
+          <div><h4>Sectores</h4><p>Joyería, moda, cosmética, perfumería, inmobiliaria de lujo, revistas, bodas de alto presupuesto, restaurantes de autor.</p>
+            <h4>Cuándo no</h4><p>En el texto corrido y en tamaños pequeños, donde sus trazos finos desaparecen. Y en marcas que tienen que parecer accesibles: una didona en una clínica de barrio o en una ferretería crea una distancia que el cliente no quiere. Usa su tamaño óptico (<code>opsz</code>) si la fuente lo tiene: a 96 los trazos se afinan para titular; a 11 se refuerzan para leer.</p></div>
+        </div>
+      </section>
+
+      <!-- 03 Editorial contemporánea -->
+      <section class="ficha wide" id="f-editorial">
+        <header class="ficha-head"><span class="num">03</span><h3>Serif editorial contemporánea</h3><span class="who">Instrument Serif, Fraunces</span></header>
+        <div class="ficha-show">
+          <div class="spec">
+            <p class="feat">Contraste alto o remates blandos, proporciones de titular, mucho carácter</p>
+            <p class="w"><span style="font-family: 'Instrument Serif';">Criterio</span> <span style="font-family: Fraunces; font-weight: 600; font-variation-settings: 'opsz' 144; letter-spacing: -0.03em;">y calor</span></p>
+            <p class="abc"><span style="font-family: 'Instrument Serif';">abcdefghijklmnñopqrstuvwxyz</span><br><span style="font-family: Fraunces; font-variation-settings: 'opsz' 14;">abcdefghijklmnñopqrstuvwxyz</span></p>
+          </div>
+          <div class="uso duo">
+            <div class="u-arroz"><small>Arrocería Marjal, El Grau</small><h5>Arroz de la huerta, sin prisa</h5><p>Leña de naranjo, verdura de Benicàssim y una mesa que no tiene segundo turno.</p><p class="cap">Fraunces: restaurante</p></div>
+            <div class="u-revista"><small>Taller Norte, estudio de interiorismo</small><h5>Casas que se <em>quedan</em> contigo</h5><p>Reformas integrales en Castelló y Valencia, de la idea a la llave.</p><p class="cap">Instrument Serif: estudio</p></div>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Criterio, voz propia y actualidad con raíces. Instrument Serif suena a revista de diseño; Fraunces, a cocina de mercado y a nostalgia cálida.</p>
+            <h4>Por qué</h4><p>Toman la estructura clásica de la serif (que da credibilidad) y la tuercen con un gesto de hoy. Instrument Serif es estrecha y de contraste alto, con el ritmo apretado de los titulares de revista. Fraunces es una serif «blanda», inspirada en tipos de principios del XX como Windsor, Souvenir o Cooper, los que volvieron a ponerse de moda en los setenta: remates redondeados que hacen que lo clásico parezca amable.</p></div>
+          <div><h4>Sectores</h4><p>Estudios de diseño e interiorismo, restaurantes, marcas de comida y bebida, editoriales, newsletters, landings de producto que quieren sonar humanas (la de «mesa» de los vídeos).</p>
+            <h4>Cuándo no</h4><p>Cuando todos tus competidores ya la usan: Instrument Serif en cursiva es hoy el recurso más repetido de las landings de producto, y repetida delata plantilla. Fraunces en peso muy alto se vuelve retro y caricaturesca; para un despacho de abogados, demasiado simpática.</p></div>
+        </div>
+      </section>
+
+      <!-- 04 Egipcia -->
+      <section class="ficha wide" id="f-slab">
+        <header class="ficha-head"><span class="num">04</span><h3>Egipcia o slab</h3><span class="who">Zilla Slab</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: 'Zilla Slab';">
+            <p class="feat">Serifas gruesas y rectangulares, poco contraste, mucho peso</p>
+            <p class="w" style="font-weight: 700;">Oficio</p>
+            <p class="abc">abcdefghijklmnñopqrstuvwxyz<br>ABCDEFGHIJKLMNÑ 0123456789</p>
+          </div>
+          <div class="uso u-cerveza">
+            <div class="row"><span>Cervecera del Grau</span><span class="sello">Lote<br>14</span></div>
+            <h5>IPA de<br>naranja</h5>
+            <p>Lúpulo, cáscara de naranja de la Plana y nada más. 6,2 % vol.</p>
+            <p class="cap">En uso: cervecería artesana</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Robustez, oficio, honestidad, un punto retro e industrial. Algo hecho para durar y sin adornos de más.</p>
+            <h4>Por qué</h4><p>Nacieron a principios del XIX en Inglaterra para los carteles publicitarios de la Revolución industrial: tenían que gritar desde lejos y aguantar la impresión barata. El nombre de «egipcias» viene de la moda por Egipto tras la campaña de Napoleón. Sus serifas parecen vigas y piezas de máquina, y las asociamos a talleres, ferrocarriles, carteles del Oeste y máquinas de escribir.</p></div>
+          <div><h4>Sectores</h4><p>Cerveza artesana, panaderías y obradores, carpinterías, talleres, marcas de herramientas, cafés con aire industrial, editoriales de no ficción. Zilla Slab, por ejemplo, fue la letra de marca de Mozilla.</p>
+            <h4>Cuándo no</h4><p>En lujo delicado y en salud: su peso y su rotundidad chocan con lo sutil y con lo aséptico. Y ojo con el cliché «cartel de western» si la combinas con kraft, madera y estrellas: una sola referencia retro basta.</p></div>
+        </div>
+      </section>
+
+      <!-- 05 Grotesca -->
+      <section class="ficha wide" id="f-grotesca">
+        <header class="ficha-head"><span class="num">05</span><h3>Grotesca y neogrotesca</h3><span class="who">Inter Tight, Archivo</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: 'Inter Tight';">
+            <p class="feat">Sin serifas, monolineal, formas neutras, x alta</p>
+            <p class="w" style="font-weight: 600; letter-spacing: -0.04em;">Claridad</p>
+            <p class="abc">abcdefghijklmnñopqrstuvwxyz<br><span style="font-family: Archivo;">ABCDEFGHIJKLMNÑ 0123456789</span></p>
+          </div>
+          <div class="uso u-gestoria">
+            <nav><b>Roig Assessors</b><span>Autónomos</span></nav>
+            <div class="body">
+              <h5>Tus impuestos, al día y sin sorpresas</h5>
+              <p>Contabilidad, nóminas y declaraciones para autónomos y pymes de la Plana. Un gestor que te coge el teléfono.</p>
+              <div class="act"><span>Pedir cita</span><span>Próximo trimestre: 20 de enero</span></div>
+            </div>
+            <p class="cap" style="color: oklch(42% 0.02 255)">En uso: gestoría</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Neutralidad, eficacia, modernidad corporativa, transparencia. Es la voz que dice el contenido sin opinar sobre él.</p>
+            <h4>Por qué</h4><p>Las grotescas del XIX parecían tan raras que de ahí les viene el nombre; las neogrotescas de los años cincuenta (Helvetica, Univers) las limpiaron hasta hacerlas casi invisibles, y el estilo suizo las convirtió en la letra de la información objetiva: señalética, transporte, bancos. Inter nació para las interfaces, con x alta y aperturas claras, y hoy es la voz por defecto de las apps. Precisamente porque no tiene gesto, no distrae.</p></div>
+          <div><h4>Sectores</h4><p>Gestorías, bancos, aseguradoras, SaaS, apps, administraciones, tiendas online (fichas, filtros y carrito), cualquier interfaz con muchos datos.</p>
+            <h4>Cuándo no</h4><p>Cuando la marca necesita personalidad y no la va a aportar otra cosa (foto, color, ilustración): una grotesca sola es correcta y olvidable. Para diferenciarte, juega con su peso, su anchura (Archivo tiene un eje de anchura de 62 a 125) o acompáñala de una segunda voz.</p></div>
+        </div>
+      </section>
+
+      <div class="band ink"><div class="inner"><p>Una fuente no es bonita o fea. Es <em>adecuada o inadecuada</em> para lo que tiene que decir.</p></div></div>
+
+      <!-- 06 Geométrica -->
+      <section class="ficha wide" id="f-geometrica">
+        <header class="ficha-head"><span class="num">06</span><h3>Geométrica</h3><span class="who">Jost</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: Jost;">
+            <p class="feat">Círculos y rectas, monolineal, «a» de un piso en muchas versiones</p>
+            <p class="w" style="font-weight: 400;">Precisión</p>
+            <p class="abc">abcdefghijklmnñopqrstuvwxyz<br>ABCDEFGHIJKLMNÑ 0123456789</p>
+          </div>
+          <div class="uso u-arq">
+            <span class="disc"></span><span class="disc"></span>
+            <span class="logo">estudio riu</span>
+            <h5>Casas que miran al mar</h5>
+            <ol><li><span>01</span>Casa en Orpesa</li><li><span>02</span>Ático en Russafa</li><li><span>03</span>Masía en Culla</li><li><span>04</span>Oficinas Grao</li></ol>
+            <p class="cap">En uso: estudio de arquitectura</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Limpieza, precisión, modernidad racional, diseño. Un orden que se ve.</p>
+            <h4>Por qué</h4><p>Se construyen con compás y regla: la «o» es casi un círculo perfecto. Es el ideal de la Bauhaus y de los años veinte, cuando la máquina era el futuro; Futura (1927) es la referencia, y Jost está inspirada en ella. Como no hay rastro de mano, suena a objeto diseñado, a arquitectura y a tecnología. Su x es más baja que la de una grotesca, lo que le da un aire esbelto y elegante.</p></div>
+          <div><h4>Sectores</h4><p>Estudios de arquitectura e interiorismo, marcas de diseño, tecnología premium, coches, cosmética limpia, galerías.</p>
+            <h4>Cuándo no</h4><p>En textos largos, donde los círculos perfectos cansan y algunas letras se parecen demasiado. Y en marcas que necesitan calidez humana: tanta geometría puede sonar fría, a catálogo. En minúsculas y peso fino da mucha elegancia; en negrita y mayúsculas se vuelve publicitaria.</p></div>
+        </div>
+      </section>
+
+      <!-- 07 Redondeada -->
+      <section class="ficha wide" id="f-redondeada">
+        <header class="ficha-head"><span class="num">07</span><h3>Redondeada</h3><span class="who">Nunito</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: Nunito;">
+            <p class="feat">Terminales redondos, x generosa, aperturas abiertas</p>
+            <p class="w" style="font-weight: 800; letter-spacing: -0.02em;">Cercanía</p>
+            <p class="abc" style="font-weight: 500;">abcdefghijklmnñopqrstuvwxyz<br>ABCDEFGHIJKLMNÑ 0123456789</p>
+          </div>
+          <div class="uso u-peque">
+            <div class="pic" aria-hidden="true"></div>
+            <div>
+              <span class="brand">pequeña lluna</span>
+              <h5>Pijama de estrellas</h5>
+              <p>Algodón orgánico, de 2 a 6 años. Botones que no se sueltan en la lavadora.</p>
+              <span class="price">19,90 €</span>
+              <span class="btn-k">Añadir a la cesta</span>
+            </div>
+            <p class="cap">En uso: moda infantil</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Amabilidad, cercanía, juego, seguridad. Una marca que no quiere intimidar.</p>
+            <h4>Por qué</h4><p>Sin esquinas no hay amenaza: es el efecto bouba/kiki aplicado a las letras. Además, los terminales redondos recuerdan a los envases de juguetes, a las chuches y a las apps amables, y la x generosa y las aperturas abiertas la hacen fácil de leer, como si hablara despacio. Nunito es una sans de estructura sencilla con todos los extremos redondeados.</p></div>
+          <div><h4>Sectores</h4><p>Moda y productos infantiles, escuelas infantiles, academias para niños, apps de bienestar, alimentación saludable, odontopediatría, ONG cercanas.</p>
+            <h4>Cuándo no</h4><p>Cuando la marca tiene que transmitir autoridad o lujo: en un bufete o una inmobiliaria cara suena infantil. Y en una clínica para adultos, una redondeada en todo resta seriedad; mejor una grotesca abierta, y la redondeada, si acaso, solo en detalles.</p></div>
+        </div>
+      </section>
+
+      <!-- 08 Condensada -->
+      <section class="ficha wide" id="f-condensada">
+        <header class="ficha-head"><span class="num">08</span><h3>Condensada</h3><span class="who">Big Shoulders</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: 'Big Shoulders';">
+            <p class="feat">Estrecha, alta, x enorme, aperturas cerradas</p>
+            <p class="w" style="font-weight: 900; text-transform: uppercase;">Fuerza</p>
+            <p class="abc" style="font-weight: 600;">abcdefghijklmnñopqrstuvwxyz<br>ABCDEFGHIJKLMNÑ 0123456789</p>
+          </div>
+          <div class="uso u-box">
+            <div class="row"><span>Box Riera</span><span>Castelló</span></div>
+            <h5>Entrena<br><span>sin excusas</span></h5>
+            <p>Clases de 6:30 a 22:00. Primera semana gratis.</p>
+            <p class="cap" style="color: oklch(97% 0.005 260)">En uso: gimnasio</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Fuerza, urgencia, competición, energía industrial. Habla alto y rápido.</p>
+            <h4>Por qué</h4><p>Ocupa poco ancho y mucha altura: la letra se estira hacia arriba, tensa, como un cuerpo en tensión. Viene de los carteles de tipos de madera del XIX, donde había que meter muchas palabras grandes en poco papel, y de ahí pasó a los titulares de prensa deportiva, los dorsales, los carteles de boxeo y los conciertos. Su x enorme hace que cada palabra parezca gritada.</p></div>
+          <div><h4>Sectores</h4><p>Gimnasios y deporte, eventos y festivales, imprentas y agencias de flyers, marcas de calle, ofertas y rebajas, industria.</p>
+            <h4>Cuándo no</h4><p>En párrafos (las aperturas cerradas cansan y se confunden letras) y en marcas que quieren calma o lujo: urgencia y serenidad no caben en la misma letra. Su gran ventaja en el móvil: un titular largo en mayúsculas cabe en 390 px sin bajar a un tamaño ridículo.</p></div>
+        </div>
+      </section>
+
+      <!-- 09 Display -->
+      <section class="ficha wide" id="f-display">
+        <header class="ficha-head"><span class="num">09</span><h3>Display con carácter</h3><span class="who">Syne, Unbounded, Bricolage</span></header>
+        <div class="ficha-show">
+          <div class="spec">
+            <p class="feat">Formas inesperadas, pensadas para verse grandes</p>
+            <p class="w"><span style="font-family: Syne; font-weight: 800; letter-spacing: -0.04em;">Ide</span><span style="font-family: Unbounded; font-weight: 700; letter-spacing: -0.04em;">as</span></p>
+            <p class="abc"><span style="font-family: Syne; font-weight: 600;">abcdefghijklmnñopq</span><br><span style="font-family: Unbounded; font-weight: 400; font-size: .9em;">abcdefghijklm</span> <span style="font-family: Bricolage; font-stretch: 75%; font-weight: 700;">abcdefghijklm</span></p>
+          </div>
+          <div class="uso trio">
+            <div class="u-dsp syne"><b>Estudio Garbí</b><small>Syne: agencia creativa</small></div>
+            <div class="u-dsp unb"><b>Festa 26</b><small>Unbounded: evento o app</small></div>
+            <div class="u-dsp bri"><b>Chips de chufa</b><small>Bricolage: snack con humor</small></div>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Creatividad, riesgo, actitud, juventud. Cada una con su matiz: Syne suena a galería y agencia; Unbounded, ancha y redonda, a tecnología joven y música; Bricolage, irregular y con gracia, a marca con sentido del humor.</p>
+            <h4>Por qué</h4><p>Rompen lo esperado: formas que no has visto en mil sitios, proporciones extremas, detalles raros. Lo que no esperas se recuerda, y eso es justo lo que busca una marca creativa. Al no tener una tradición detrás, no prometen solvencia: prometen novedad.</p></div>
+          <div><h4>Sectores</h4><p>Agencias y estudios creativos, festivales, música, startups de consumo, marcas de snacks y bebidas, portfolios.</p>
+            <h4>Cuándo no</h4><p>En textos de más de una línea (cansan muchísimo), en sectores donde el cliente busca seguridad (salud, finanzas, legal) y cuando ya hay otra cosa con mucha personalidad en la página. Envejecen rápido: lo que hoy es fresco, en tres años es «la letra de 2026».</p></div>
+        </div>
+      </section>
+
+      <!-- 10 Mono -->
+      <section class="ficha wide" id="f-mono">
+        <header class="ficha-head"><span class="num">10</span><h3>Monoespaciada</h3><span class="who">JetBrains Mono</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: 'JetBrains Mono';">
+            <p class="feat">Todas las letras ocupan el mismo ancho</p>
+            <p class="w" style="font-weight: 500; letter-spacing: -0.04em; font-size: clamp(2.4rem, 1.6rem + 2.8vw, 4.4rem);">Técnica</p>
+            <p class="abc" style="font-size: 1rem;">abcdefghijklmnñopqrstuvwxyz<br>iiiii mmmmm 0123456789</p>
+          </div>
+          <div class="uso u-mono">
+            <span class="brand">pixel_forja</span>
+            <h5>Software a medida, <span>sin sustos</span> en producción.</h5>
+            <dl><dt>despliegues/mes</dt><dd>48</dd><dt>latencia media</dt><dd>84 ms</dd><dt>estado</dt><dd>operativo</dd></dl>
+            <p class="cap">En uso: estudio de desarrollo</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Técnica, precisión, datos, transparencia de máquina, cultura programadora.</p>
+            <h4>Por qué</h4><p>En una máquina de escribir y en los primeros terminales cada carácter ocupaba lo mismo por pura mecánica; mira la «i» y la «m» de la muestra, que miden igual. Esa rejilla rígida es la de los ordenadores y el código, así que la mono suena a sistema, a algo medido. JetBrains Mono está hecha para programar: x alta y letras muy distinguibles.</p></div>
+          <div><h4>Sectores</h4><p>Estudios de desarrollo, herramientas para programadores, ciberseguridad, datos, ciencia, y como detalle en marcas de diseño (etiquetas, precios, fechas).</p>
+            <h4>Cuándo no</h4><p>En párrafos largos para el público general: la rejilla fija rompe el ritmo de lectura. Y como única voz de una marca cálida, porque suena a manual. Funciona mejor de acento: cifras, etiquetas, datos técnicos.</p></div>
+        </div>
+      </section>
+
+      <!-- 11 Manuscrita -->
+      <section class="ficha wide" id="f-manuscrita">
+        <header class="ficha-head"><span class="num">11</span><h3>Manuscrita</h3><span class="who">Caveat</span></header>
+        <div class="ficha-show">
+          <div class="spec" style="font-family: Caveat;">
+            <p class="feat" style="font-family: var(--f-ui);">Trazo de rotulador, ritmo irregular, x muy baja</p>
+            <p class="w" style="font-weight: 700;">Hecho a mano</p>
+            <p class="abc" style="font-size: 1.5rem;">abcdefghijklmnñopqrstuvwxyz<br>ABCDEFGHIJKLMNÑ 0123456789</p>
+          </div>
+          <div class="uso u-cafe">
+            <div class="top"><span>Café Terral</span><span>Vila-real</span></div>
+            <h5>Hoy, de la huerta</h5>
+            <ul><li><span>Tostada con tomate y aceite</span><span>3,20</span></li><li><span>Bizcocho de naranja</span><span>2,80</span></li><li><span>Café de especialidad</span><span>1,90</span></li></ul>
+            <p class="cap">En uso: cafetería</p>
+          </div>
+        </div>
+        <div class="ficha-txt">
+          <div><h4>Qué transmite</h4><p>Algo personal, cálido, hecho a mano, del momento. Como una nota que alguien ha escrito para ti.</p>
+            <h4>Por qué</h4><p>Reproduce el gesto de una persona concreta escribiendo ahora: irregularidad, inclinación, letras que no se repiten igual. Lo irregular es humano, y lo humano es cercano. La asociamos a pizarras de bar, etiquetas de mercado y dedicatorias.</p></div>
+          <div><h4>Sectores</h4><p>Cafeterías, panaderías, mercados, floristerías, productos artesanos, marcas personales; casi siempre como acento junto a una sans limpia.</p>
+            <h4>Cuándo no</h4><p>En más de una frase, en menús de navegación y botones, y en sectores de confianza. Si toda la web está en manuscrita, deja de parecer personal y pasa a parecer improvisada. Y una manuscrita digital repite la misma «a» siempre igual: en grande, se nota que es falsa.</p></div>
+        </div>
+      </section>
+
+      <div class="sisi wide">
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="box nota-cafe all"><h6>Nuestro café</h6><p>Tostamos cada semana en pequeños lotes y servimos el café de origen único que más nos gusta en cada temporada. Pregunta en barra por el de esta semana y por los métodos de filtro.</p></div>
+        </figure>
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="box nota-cafe"><h6>Nuestro café</h6><p>Tostamos cada semana en pequeños lotes y servimos el café de origen único que más nos gusta en cada temporada.</p><span class="hand">¡Pregunta por el de esta semana!</span></div>
+        </figure>
+      </div>
+      <p class="sisi-why">La manuscrita en todo el texto cansa y parece un borrador. <strong>Como una sola nota sobre una sans limpia</strong>, sí suena a alguien que te habla: la cercanía funciona porque es la excepción.</p>
+
+      <div class="quiz" data-answer="3">
+        <p class="q">Una clínica de fisioterapia quiere parecer «moderna, cercana y profesional». ¿Qué familia descartas primero para los titulares?</p>
+        <ol>
+          <li>Una grotesca como Inter Tight en peso medio.</li>
+          <li>Una redondeada como Nunito, con cuidado.</li>
+          <li>Una didona como Bodoni Moda.</li>
+        </ol>
+        <p class="why">La didona transmite lujo y distancia (contraste extremo, eje vertical, revistas de moda): justo lo contrario de «cercana», y nada en ella dice «salud». La grotesca cubre «moderna» y «profesional»; la redondeada aporta «cercana», aunque en exceso resta seriedad.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Cada familia se comporta distinto en 390 px. Las condensadas ganan (caben titulares largos); las didonas y las garaldas de display pierden en tamaños pequeños, así que súbelas o deja que solo hagan el titular; las display muy anchas como Unbounded obligan a titulares cortos o a tamaños pequeños, y una palabra larga como «Rehabilitación» puede no caber. Antes de enamorarte de una fuente, escribe la palabra más larga del cliente a 390 px.</p>
+      </div>
+
+      <h2>Lo que cambian el peso y la anchura</h2>
+      <p>Una familia no tiene una sola voz: tiene un registro, como una persona que puede susurrar o gritar sin dejar de ser ella. El peso es el volumen; la anchura, el ritmo. Los dos cambian el mensaje tanto como cambiar de familia.</p>
+
+      <div class="wgrid wide" aria-label="La palabra Taller en Archivo con tres pesos y tres anchuras">
+        <span class="h"></span><span class="h">Estrecha, 62 %</span><span class="h">Normal, 100 %</span><span class="h">Ancha, 125 %</span>
+        <span class="h">200</span>
+        <div class="c"><b style="font-weight: 200; font-stretch: 62%;">Taller</b><span>Técnica, delicada</span></div>
+        <div class="c"><b style="font-weight: 200; font-stretch: 100%;">Taller</b><span>Ligera, discreta</span></div>
+        <div class="c hot"><b style="font-weight: 200; font-stretch: 125%;">Taller</b><span>Lujo silencioso</span></div>
+        <span class="h">500</span>
+        <div class="c"><b style="font-weight: 500; font-stretch: 62%;">Taller</b><span>Eficiente</span></div>
+        <div class="c"><b style="font-weight: 500; font-stretch: 100%;">Taller</b><span>Neutra</span></div>
+        <div class="c"><b style="font-weight: 500; font-stretch: 125%;">Taller</b><span>Estable, de marca</span></div>
+        <span class="h">900</span>
+        <div class="c hot"><b style="font-weight: 900; font-stretch: 62%;">Taller</b><span>Urgente, deportiva</span></div>
+        <div class="c"><b style="font-weight: 900; font-stretch: 100%;">Taller</b><span>Segura, directa</span></div>
+        <div class="c"><b style="font-weight: 900; font-stretch: 125%;">Taller</b><span>Monumental</span></div>
+      </div>
+
+      <h3>El peso es el volumen</h3>
+      <p>Un peso fino (100–300) transmite <strong>elegancia, ligereza y discreción</strong>: un trazo fino es delicado y necesita espacio alrededor, así que solo lo usa quien puede permitirse ese espacio. Es la voz baja del lujo. El regular es la voz de lectura: ni susurra ni grita. La negrita y la black (700–900) transmiten <strong>seguridad, fuerza y urgencia</strong>, porque ocupan más tinta y más superficie, como hablar más alto; por eso las usan el deporte, los supermercados y las ofertas.</p>
+
+      <h3>La anchura es el ritmo</h3>
+      <p>Estrechar una letra la acelera: más letras por línea, más altura que anchura, sensación de prisa y de titular. Ensancharla la calma: cada letra tiene su sitio y la palabra se extiende como un horizonte. Una ancha y fina suena a moda y a arquitectura; una ancha y pesada, a logotipo en una fachada.</p>
+
+      <figure class="lab" data-title="Peso por anchura" data-hint="Mueve los dos controles" data-height="430" data-height-mobile="520">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pad">
+            <p class="word" id="w" contenteditable="true" spellcheck="false">Marjal</p>
+            <p class="say" id="say"></p>
+            <div class="ctrl">
+              <label>Peso <input id="wg" type="range" min="100" max="900" value="400"><b id="wgv"></b></label>
+              <label>Anchura <input id="wd" type="range" min="62" max="125" value="100"><b id="wdv"></b></label>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f7f3ec; color: #1b1512; }
+          .pad { min-height: 100vh; display: grid; grid-template-rows: 1fr auto auto; padding: 18px 22px 20px; }
+          .word { margin: 0; align-self: center; text-align: center; font-family: var(--f-archivo);
+            font-size: clamp(56px, 15vw, 150px); line-height: 1; letter-spacing: -0.02em; outline: none; overflow-wrap: anywhere; }
+          .say { margin: 0 auto 16px; max-width: 46ch; text-align: center; font: 400 17px/1.45 var(--f-read); min-height: 3em; }
+          .say b { color: #c42a2a; font-weight: 600; }
+          .ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; font-size: 14px; }
+          label { display: grid; grid-template-columns: auto 1fr 3.2em; gap: 10px; align-items: center; min-height: 44px; }
+          b { font-variant-numeric: tabular-nums; }
+          @media (max-width: 560px) { .ctrl { grid-template-columns: 1fr; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Archivo es variable: peso de 100 a 900 y anchura de 62 a 125
+          function read(w, s) {
+            const fino = w < 300, gordo = w > 680, estrecha = s < 85, ancha = s > 108;
+            if (fino && ancha) return ['Lujo silencioso', 'fina y ancha, se toma su espacio sin levantar la voz. Moda, arquitectura, hoteles.'];
+            if (fino && estrecha) return ['Técnica y elegante', 'como un rótulo de precisión. Relojería, cosmética, catálogos.'];
+            if (gordo && estrecha) return ['Urgente', 'como un titular de deportes o una oferta. Gimnasios, eventos, rebajas.'];
+            if (gordo && ancha) return ['Monumental', 'ocupa la pantalla como un logotipo en una fachada. Festivales, campañas, marcas jóvenes.'];
+            if (gordo) return ['Segura y directa', 'el peso sube la voz. Titulares de producto, precios, botones.'];
+            if (fino) return ['Ligera y delicada', 'elegante en grande, frágil en pequeño.'];
+            if (estrecha) return ['Eficiente', 'cabe más en menos ancho. Titulares largos en el móvil, tablas, etiquetas.'];
+            if (ancha) return ['Estable y espaciosa', 'tranquila, con aire de marca. Cabeceras y logotipos.'];
+            return ['Neutra', 'la voz de lectura de la familia: ni susurra ni grita.'];
+          }
+          function paint() {
+            const w = +wg.value, s = +wd.value;
+            Object.assign(document.querySelector('#w').style, { fontWeight: w, fontStretch: s + '%' });
+            wgv.textContent = w; wdv.textContent = s + '%';
+            const [t, d] = read(w, s);
+            say.innerHTML = `<b>${t}</b>: ${d}`;
+          }
+          [wg, wd].forEach(i => i.addEventListener('input', paint)); paint();
+        </script>
+        <figcaption>La palabra se puede editar: escribe el nombre de un cliente. Recorre las cuatro esquinas (fina y estrecha, fina y ancha, pesada y estrecha, pesada y ancha) y fíjate en que la familia es siempre la misma; lo que cambia es la actitud.</figcaption>
+      </figure>
+
+      <h3>El mismo peso no suena igual en todas las familias</h3>
+      <p>El peso amplifica lo que la estructura ya decía. La black de una serif blanda como Fraunces no grita: se vuelve redonda, golosa y setentera. La black de una grotesca como Inter Tight sí grita: suena a campaña, a tecnología agresiva.</p>
+      <div class="blacks wide">
+        <div class="fr"><b>Domingo</b><span>Fraunces 900: cálida, retro, de pastelería o de vermut.</span></div>
+        <div class="it"><b>Domingo</b><span>Inter Tight 900: rotunda, publicitaria, de oferta o de deporte.</span></div>
+      </div>
+
+      <h3>La cursiva cambia el tono de voz</h3>
+      <p>En una serif, la cursiva de verdad tiene otro dibujo, más caligráfico: suena personal, emocionada o elegante, como bajar la voz para decir lo importante. En una sans suele ser solo la redonda inclinada: suena a velocidad o a énfasis, pero no a emoción. Por eso la mezcla de los vídeos (sans recta con una palabra en serif cursiva) funciona: el cambio de voz cae justo en la palabra con carga. Lo tienes desarrollado en <a href="03-tipografia.html">Tipografía en CSS</a>.</p>
+
+      <div class="sisi wide">
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="box inmo"><small>Inmobiliaria Portal Azahar</small><b class="v1">Ático con vistas al mar</b><p>Benicàssim, 180 m², terraza de 90 m². 1.200.000 €</p></div>
+        </figure>
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="box inmo"><small>Inmobiliaria Portal Azahar</small><b class="v2">Ático con vistas al mar</b><p>Benicàssim, 180 m², terraza de 90 m². 1.200.000 €</p></div>
+        </figure>
+      </div>
+      <p class="sisi-why">La misma fuente (Archivo) y el mismo anuncio. <strong>Pesada y estrecha</strong> suena a outlet y a «última oportunidad»; <strong>fina y ancha</strong> suena a exclusiva y tranquila. Un ático de un millón no tiene prisa.</p>
+
+      <div class="quiz" data-kind="Predice" data-answer="1">
+        <p class="q">El titular de una inmobiliaria de lujo pasa de Archivo 250 ancha a Archivo 900 estrecha. ¿Qué percibe el visitante?</p>
+        <ol>
+          <li>Urgencia y oferta: la marca parece más barata.</li>
+          <li>Más lujo, porque la negrita da importancia.</li>
+          <li>Nada: es la misma familia.</li>
+        </ol>
+        <p class="why">Peso alto y anchura mínima son las dos señales de la urgencia (titulares de oferta, carteles deportivos). El lujo habla bajo y con espacio. La familia es la misma, pero el registro es el contrario.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Por debajo de unos 20 px, los pesos de 100 a 300 desaparecen en pantallas pequeñas y al sol: el lujo silencioso del escritorio se vuelve ilegible en el teléfono. Usa los pesos finos solo en titulares grandes y sube a 400 o más en el texto. La anchura juega a tu favor: una versión algo más estrecha del titular (<code>font-stretch: 85%</code> en Archivo o Bricolage) mete palabras largas en 390 px sin bajar el tamaño.</p>
+      </div>
+
+      <h2>Cómo elegir para un cliente</h2>
+      <p>Elegir una fuente no es buscar la más bonita: es traducir lo que la marca tiene que transmitir a rasgos de letra, y los rasgos a una familia. El método cabe en cuatro pasos.</p>
+
+      <ol class="steps4 wide">
+        <li><b>Tres palabras de marca</b>Sácalas del brief con el cliente: qué tiene que sentir quien entra. «Tradición, tierra, familia».</li>
+        <li><b>Palabras a rasgos</b>Traduce cada palabra a rasgos con la tabla de abajo: tradición pide serifas y eje inclinado; familia, formas cálidas.</li>
+        <li><b>Rasgos a familia</b>Busca la familia que reúne más rasgos y mira qué usa la competencia: para parecer de fiar en el sector o para diferenciarte.</li>
+        <li><b>Prueba con lo real</b>El nombre del cliente, su palabra más larga, precios, eñes y tildes, a tamaño real en un móvil.</li>
+      </ol>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Palabra</th><th>Rasgos que la transmiten</th><th>Por qué</th><th>Familias</th></tr></thead>
+          <tbody>
+            <tr><td>Tradición</td><td>Serifas, eje inclinado, contraste moderado</td><td>Es la estructura de los libros durante siglos</td><td>Garalda, editorial</td></tr>
+            <tr><td>Lujo</td><td>Contraste alto, x baja, peso fino, anchura generosa</td><td>Lo frágil y lo espacioso parecen caros</td><td>Didona, geométrica fina</td></tr>
+            <tr><td>Cercanía</td><td>x alta, aperturas abiertas, terminales redondos</td><td>Formas blandas y fáciles de leer, sin amenaza</td><td>Redondeada, grotesca abierta</td></tr>
+            <tr><td>Robustez</td><td>Serifas de bloque o peso alto, poco contraste</td><td>Parece una pieza de máquina: aguanta</td><td>Egipcia, condensada</td></tr>
+            <tr><td>Modernidad</td><td>Sin serifas, monolineal, formas limpias</td><td>Llegaron con la industria y las pantallas</td><td>Grotesca, geométrica</td></tr>
+            <tr><td>Precisión</td><td>Geometría, anchos fijos, monolineal</td><td>No hay gesto de mano, todo está medido</td><td>Geométrica, mono</td></tr>
+            <tr><td>Energía</td><td>Estrecha, peso alto, cursiva</td><td>Ocupa altura y empuja, como un titular</td><td>Condensada, display</td></tr>
+            <tr><td>Creatividad</td><td>Formas inesperadas, proporciones extremas</td><td>Lo que no esperas se recuerda</td><td>Display</td></tr>
+            <tr><td>Artesanía</td><td>Irregularidad, serifas de bloque, trazo de mano</td><td>Huella de una persona o de un taller</td><td>Egipcia, manuscrita de acento</td></tr>
+            <tr><td>Calma</td><td>Anchura generosa, peso ligero, contraste suave</td><td>Espacio y voz baja</td><td>Garalda, geométrica fina</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Tres casos de la zona</h3>
+      <div class="casos wide">
+        <div class="caso">
+          <h4>Bodega familiar de la Plana</h4>
+          <p class="words">tradición, tierra, familia</p>
+          <div class="demo c-bodega"><b>Celler Vidal</b><small>Vinos de secano desde 1931</small></div>
+          <p>Tradición pide serif; pero una garalda pura puede sonar señorial y literaria, y «familia» y «tierra» piden calidez. Fraunces da las dos cosas: estructura clásica con remates blandos. Con peso medio y el tamaño óptico alto, suena a casa con historia, no a palacio.</p>
+        </div>
+        <div class="caso">
+          <h4>Clínica dental en Castelló</h4>
+          <p class="words">limpia, cercana, fiable</p>
+          <div class="demo c-clinica"><b>Clínica Sorrís</b><small>Primera visita y revisión sin coste</small></div>
+          <p>Limpia y fiable piden una grotesca: neutra, monolineal, con aperturas abiertas que se leen bien a cualquier edad. Inter Tight en 600 con tracking apretado añade cercanía sin perder seriedad. Una redondeada en todo restaría autoridad; reservada para la sección infantil, sí.</p>
+        </div>
+        <div class="caso">
+          <h4>Imprenta de flyers</h4>
+          <p class="words">impacto, rapidez, color</p>
+          <div class="demo c-imprenta"><b>Flyers en 24 h</b><small>Desde 19 € el millar. Pide presupuesto.</small></div>
+          <p>Vende impacto visual, así que su propia web tiene que demostrarlo. Una condensada pesada como Big Shoulders grita, mete mensajes largos en poco ancho y deja los precios enormes. Lo que no puede ser es tímida: una grotesca fina diría «no sabemos llamar la atención».</p>
+        </div>
+      </div>
+
+      <figure class="lab" data-title="De tres palabras a una familia" data-hint="Elige hasta tres palabras" data-height="450" data-height-mobile="760">
+        <script type="text/x-demo" data-lang="html">
+          <div class="wrap">
+            <div class="words" id="words"></div>
+            <div class="out">
+              <div class="mock" id="mock"><small>Casa Vidal</small><p class="h" id="h">Hecho aquí, desde siempre</p><p class="sub">Una frase de presentación en la fuente de texto.</p></div>
+              <ol class="rank" id="rank"></ol>
+              <p class="why" id="why">Elige tres palabras de marca.</p>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #f6f2ea; color: #1d1714; }
+          .wrap { display: grid; grid-template-columns: 250px 1fr; gap: 20px; padding: 18px; }
+          .words { display: flex; flex-wrap: wrap; gap: 6px; align-content: start; }
+          .words button { min-height: 44px; padding: 0 14px; border: 1px solid #1d171433; border-radius: 99px; background: none; font-size: 15px; cursor: pointer; }
+          .words [aria-pressed="true"] { background: #1d1714; color: #f6f2ea; border-color: #1d1714; }
+          .mock { padding: 18px 20px; background: #fff; border: 1px solid #1d171422; border-radius: 6px; }
+          .mock small { font-size: 12px; color: #6b5f58; }
+          .h { margin: 6px 0 6px; font-size: clamp(30px, 5vw, 46px); line-height: 1; letter-spacing: -0.01em; }
+          .sub { margin: 0; font-size: 15px; color: #574a45; }
+          .rank { list-style: none; margin: 14px 0; padding: 0; display: grid; gap: 6px; }
+          .rank li { display: grid; grid-template-columns: 150px 1fr 2.4em; gap: 10px; align-items: center; font-size: 14px; }
+          .rank i { height: 8px; border-radius: 4px; background: #c42a2a; }
+          .rank li:not(:first-child) i { background: #1d171455; }
+          .why { margin: 0; font: 400 16px/1.5 var(--f-read); }
+          @media (max-width: 640px) { .wrap { grid-template-columns: 1fr; padding: 14px; } .rank li { grid-template-columns: 120px 1fr 2.4em; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const W = ['tradición','lujo','cercanía','robustez','modernidad','precisión','energía','creatividad','artesanía','calma','juventud','técnica'];
+          // familia, CSS, peso, puntuación 0-3 para cada palabra (en el orden de W), por qué, riesgo
+          const F = [
+            ['Garalda', 'Cormorant', 500, [3,2,1,0,0,1,0,0,1,3,0,0], 'su eje inclinado y su contraste suave, la estructura de los libros', 'en pequeño se queda corta: súbela de tamaño'],
+            ['Didona', 'Bodoni Moda', 500, [2,3,0,0,1,2,1,1,0,1,0,0], 'su contraste extremo y su eje vertical, de revista de lujo', 'impone distancia y se rompe en el texto'],
+            ['Serif blanda', 'Fraunces', 600, [2,2,2,1,2,0,1,2,2,2,1,0], 'su estructura clásica con remates redondeados', 'en black se vuelve caricatura retro'],
+            ['Egipcia', 'Zilla Slab', 700, [2,0,2,3,0,1,2,1,3,1,1,1], 'sus serifas como vigas, de oficio que aguanta', 'pesa demasiado para lo delicado'],
+            ['Grotesca', 'Inter Tight', 600, [0,1,1,2,3,2,1,0,0,2,1,2], 'sus formas neutras y legibles, que dicen sin opinar', 'sola, es correcta pero olvidable'],
+            ['Geométrica', 'Jost', 400, [0,2,1,1,3,3,1,1,0,2,1,2], 'su geometría de compás y regla, un orden visible', 'puede sonar fría'],
+            ['Redondeada', 'Nunito', 800, [0,0,3,1,1,0,1,1,1,2,3,0], 'sus terminales sin esquinas, amables y fáciles de leer', 'resta autoridad'],
+            ['Condensada', 'Big Shoulders', 800, [1,0,0,3,1,1,3,1,0,0,2,1], 'su altura y su apriete, que hablan alto y rápido', 'no sabe hablar bajo'],
+            ['Display', 'Syne', 800, [0,1,0,1,2,0,2,3,0,0,3,0], 'sus formas inesperadas, que se recuerdan', 'cansa en el texto y envejece rápido'],
+            ['Mono', 'JetBrains Mono', 500, [0,0,0,1,2,3,0,1,0,1,1,3], 'sus anchos fijos, que suenan a sistema', 'fría para el público general'],
+            ['Manuscrita', 'Caveat', 700, [1,0,3,0,0,0,1,2,3,1,2,0], 'el gesto de una mano concreta', 'solo como acento: en todo parece improvisado'],
+          ];
+          let sel = new Set(['tradición', 'artesanía', 'cercanía']);
+          words.innerHTML = W.map(w => `<button data-w="${w}">${w}</button>`).join('');
+          function paint() {
+            words.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', sel.has(b.dataset.w)));
+            const idx = [...sel].map(w => W.indexOf(w));
+            const scored = F.map(f => ({ f, s: idx.reduce((a, i) => a + f[3][i], 0) })).sort((a, b) => b.s - a.s);
+            const max = Math.max(1, idx.length * 3);
+            rank.innerHTML = scored.slice(0, 4).map(({ f, s }) =>
+              `<li><span style="font-family:'${f[1]}';font-weight:${f[2]}">${f[0]}</span><i style="width:${s / max * 100}%"></i><b>${s}</b></li>`).join('');
+            const best = scored[0].f;
+            Object.assign(h.style, { fontFamily: `"${best[1]}"`, fontWeight: best[2] });
+            if (!idx.length) { why.textContent = 'Elige tres palabras de marca.'; return; }
+            const si = [...sel].filter(w => best[3][W.indexOf(w)] >= 2), no = [...sel].filter(w => best[3][W.indexOf(w)] <= 1);
+            why.innerHTML = `<b>${best[0]}</b> aporta ${si.join(' y ') || 'poco de lo que pides'} gracias a ${best[4]}.` +
+              (no.length ? ` Le cuesta «${no.join('», «')}»: compénsalo con color, imagen o la fuente de texto.` : '') + ` Riesgo: ${best[5]}.`;
+          }
+          words.addEventListener('click', e => {
+            const b = e.target.closest('button'); if (!b) return;
+            const w = b.dataset.w;
+            if (sel.has(w)) sel.delete(w); else { if (sel.size === 3) sel.delete([...sel][0]); sel.add(w); }
+            paint();
+          });
+          paint();
+        </script>
+        <figcaption>Es una tabla de puntuaciones sencilla, no un oráculo: sirve para ver qué familias tiran en la dirección de la marca y qué le falta a cada una. Prueba «lujo, calma, precisión» (geométrica o didona) frente a «energía, juventud, robustez» (condensada).</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Cómo explicárselo al cliente</span>
+        <p>Una frase por decisión, siempre con el porqué: «Para Celler Vidal hemos elegido una serif de remates suaves. La serif dice tradición, porque es la letra de los libros y las etiquetas de siempre, y sus remates redondeados le quitan rigidez: suena a familia, no a palacio». Enséñale dos alternativas descartadas y por qué no: el cliente entiende mejor una decisión cuando ve lo que habría transmitido la otra opción.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El paso 4 se hace en un teléfono, no en el monitor de la agencia. Abre la maqueta en tu móvil, en exterior si puedes: si el titular se parte en una palabra por línea o el texto obliga a acercar la vista, la fuente no está bien elegida para ese cliente, por bonita que se vea a 1440.</p>
+      </div>
+
+      <div class="colofon wide">
+        <div class="aa"><b>Aa</b><i>Aa</i></div>
+        <p><strong>La pareja de esta página.</strong> Los titulares van en Cormorant, una garalda de display: es la letra de los muestrarios y los libros antiguos, lo que pide una «tipoteca». El texto va en Newsreader, de la misma tradición pero hecha para leer: su altura de x (0,426) es mayor que la de Cormorant (0,386) y tiene tamaño óptico. Por qué funciona esa pareja, y cómo se combinan dos fuentes en general, lo ves en <a href="tipo-combinar.html">Combinar tipografías</a>.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Lo que transmite una letra sale de cuatro sitios: la herramienta con la que se hacía, su época, dónde la hemos visto y su forma física.</li>
+          <li>Siete rasgos cargan el significado: serifas, contraste, eje, altura de x, apertura, anchura y redondez.</li>
+          <li>Cada familia trae su voz: la garalda, tradición; la didona, lujo; la grotesca, neutralidad; la redondeada, cercanía; la condensada, urgencia.</li>
+          <li>Peso y anchura cambian el registro dentro de una misma familia: fina y ancha susurra lujo; pesada y estrecha grita oferta.</li>
+          <li>Para un cliente: tres palabras, rasgos, familia y prueba con su texto real en un móvil.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge un cliente real de la agencia y escribe sus tres palabras de marca. Con la tabla de rasgos, elige tres familias candidatas y monta la misma cabecera (nombre, titular, una línea de texto y el precio o el CTA) con cada una. Ábrelas en el móvil y escribe una frase por cada una que empiece por «Esta transmite… porque…». Quédate con la que mejor responda a las tres palabras y guarda las otras dos como alternativas descartadas para enseñárselas al cliente.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: la palabra «Confianza» en once familias. Las líneas de anatomía se miden en cada fuente.
+  (() => {
+    const hero = document.querySelector('.hero');
+    const stage = hero.querySelector('[data-stage]');
+    const word = hero.querySelector('[data-word]');
+    const bl = hero.querySelector('[data-bl]');
+    const btn = hero.querySelector('.word-btn');
+    const kws = [...hero.querySelectorAll('[data-kw]')];
+    const tag = hero.querySelector('[data-tag]');
+    const why = hero.querySelector('[data-why]');
+    const num = hero.querySelector('[data-n]');
+    const picker = hero.querySelector('[data-picker]');
+    const g = Object.fromEntries([...hero.querySelectorAll('[data-g]')].map((n) => [n.dataset.g, n]));
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = document.createElement('canvas').getContext('2d');
+
+    // clase, fuente, peso, tracking, ajustes variables, palabras clave, por qué
+    const F = [
+      ['Garalda', 'Cormorant', 500, '-0.01em', 'normal', ['tradición', 'cultura', 'oficio'], 'Eje inclinado y contraste suave, la huella de la pluma: suena a libro bien impreso, a algo que lleva siglos funcionando.'],
+      ['Didona', 'Bodoni Moda', 500, '-0.02em', '"opsz" 96', ['lujo', 'moda', 'exigencia'], 'Contraste extremo y eje vertical: solo luce grande y bien impresa, así que dice «aquí nadie ha escatimado». Confianza de joyería, no de banco.'],
+      ['Serif editorial', 'Instrument Serif', 400, '-0.01em', 'normal', ['criterio', 'actualidad', 'voz propia'], 'Estructura clásica con el ritmo apretado de una revista de diseño: alguien con gusto te recomienda algo.'],
+      ['Egipcia', 'Zilla Slab', 700, '-0.01em', 'normal', ['solidez', 'oficio', 'honestidad'], 'Serifas como vigas, nacidas para los carteles industriales del XIX: confianza de taller, de lo que aguanta.'],
+      ['Grotesca', 'Inter Tight', 600, '-0.04em', 'normal', ['claridad', 'eficacia', 'neutralidad'], 'No viene de ninguna mano: dice el contenido sin opinar. Por eso es la voz por defecto de bancos, apps y administraciones.'],
+      ['Geométrica', 'Jost', 400, '-0.02em', 'normal', ['precisión', 'limpieza', 'diseño'], 'Círculos y rectas de compás y regla, el ideal de la Bauhaus: la confianza de lo que está bien medido.'],
+      ['Redondeada', 'Nunito', 800, '-0.03em', 'normal', ['cercanía', 'amabilidad', 'juego'], 'Sin esquinas: lo redondo no corta. Confianza de quien te cuida, como la de una escuela infantil.'],
+      ['Condensada', 'Big Shoulders', 800, '0em', 'normal', ['fuerza', 'urgencia', 'competición'], 'Alta y apretada, ocupa poco ancho y mucha altura: la letra del cartel de boxeo. Confianza de equipo que gana.'],
+      ['Display', 'Syne', 800, '-0.04em', 'normal', ['creatividad', 'riesgo', 'actitud'], 'Formas que no has visto antes: se recuerda porque rompe lo esperado. Promete novedad, no solvencia.'],
+      ['Monoespaciada', 'JetBrains Mono', 500, '-0.05em', 'normal', ['técnica', 'precisión', 'sistema'], 'Todas las letras miden lo mismo, como en un terminal: confianza de máquina, de dato verificable.'],
+      ['Manuscrita', 'Caveat', 700, '0em', 'normal', ['personal', 'cálida', 'del momento'], 'Parece escrita por alguien ahora mismo: cercanía máxima. Si abusas, parece improvisado.'],
+    ];
+    let cur = 0, auto = null, touched = false, token = 0;
+    const fmt = (n) => n.toFixed(2).replace('.', ',');
+
+    picker.innerHTML = F.map((f, i) => `<button type="button" aria-label="${f[0]}: ${f[1]}" title="${f[0]}: ${f[1]}" aria-pressed="${i === 0}" style="font-family:'${f[1]}';font-weight:${f[2]};font-variation-settings:${f[4] === 'normal' ? 'normal' : "'opsz' 24"}">Aa</button>`).join('');
+
+    function apply(f) {
+      word.style.setProperty('--ff', `"${f[1]}"`);
+      word.style.setProperty('--fw', f[2]);
+      word.style.setProperty('--ft', f[3]);
+      word.style.setProperty('--fv', f[4]);
+    }
+    function layout() {
+      const f = F[cur];
+      const sr = stage.getBoundingClientRect();
+      if (!sr.width || !sr.height) return;
+      const mobile = innerWidth <= 760;
+      word.style.setProperty('--fs', '100px');
+      const w100 = word.getBoundingClientRect().width || 1;
+      const fs = Math.max(40, Math.min((sr.width * (mobile ? 0.94 : 0.8)) / w100 * 100, sr.height * (mobile ? 0.5 : 0.6), 300));
+      word.style.setProperty('--fs', fs.toFixed(1) + 'px');
+      ctx.font = `${f[2]} ${fs}px "${f[1]}"`;
+      const xh = ctx.measureText('x').actualBoundingBoxAscent;
+      const cap = ctx.measureText('H').actualBoundingBoxAscent;
+      const base = bl.getBoundingClientRect().top - sr.top;
+      g.base.style.setProperty('--y', base + 'px');
+      g.x.style.setProperty('--y', (base - xh) + 'px');
+      g.cap.style.setProperty('--y', (base - cap) + 'px');
+      g.x.firstElementChild.textContent = `altura de x ${fmt(xh / fs)}`;
+      g.cap.firstElementChild.innerHTML = mobile ? `mayúscula ${fmt(cap / fs)}, <em>altura de x ${fmt(xh / fs)}</em>` : `mayúscula ${fmt(cap / fs)}`;
+    }
+    async function show(i, instant) {
+      const my = ++token;
+      cur = (i + F.length) % F.length;
+      const f = F[cur];
+      picker.querySelectorAll('button').forEach((b, j) => b.setAttribute('aria-pressed', String(j === cur)));
+      const on = picker.children[cur];
+      if (picker.scrollWidth > picker.clientWidth && on) picker.scrollTo({ left: on.offsetLeft - picker.clientWidth / 2 + on.offsetWidth / 2, behavior: reduce ? 'auto' : 'smooth' });
+      kws.forEach((k) => k.classList.remove('on'));
+      if (!instant && !reduce) { word.classList.add('out'); await new Promise((r) => setTimeout(r, 260)); }
+      try { await document.fonts.load(`${f[2]} 100px "${f[1]}"`, 'Confianza'); } catch (e) {}
+      if (my !== token) return;
+      apply(f);
+      layout();
+      tag.innerHTML = `${f[0]} <span>${f[1]}</span>`;
+      why.textContent = f[6];
+      num.textContent = String(cur + 1).padStart(2, '0');
+      kws.forEach((k, j) => { k.textContent = f[5][j]; });
+      requestAnimationFrame(() => { word.classList.remove('out'); kws.forEach((k) => k.classList.add('on')); });
+    }
+    function interact() {
+      if (!touched) { touched = true; why.setAttribute('aria-live', 'polite'); }
+      stopAuto();
+    }
+    function startAuto() { if (reduce || touched || auto) return; auto = setInterval(() => show(cur + 1), 3600); }
+    function stopAuto() { clearInterval(auto); auto = null; }
+
+    btn.addEventListener('click', () => { interact(); show(cur + 1); });
+    picker.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; interact(); show([...picker.children].indexOf(b)); });
+    hero.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { interact(); show(cur + (e.key === 'ArrowRight' ? 1 : -1)); }
+    });
+    let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(layout, 120); });
+    new IntersectionObserver((e) => { if (e[0].isIntersecting) startAuto(); else stopAuto(); }).observe(hero);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stopAuto(); else if (hero.getBoundingClientRect().bottom > 0) startAuto(); });
+    show(0, true);
+    document.fonts.ready.then(layout);
+
+    // Líneas de altura de x en la muestra «Hx» de los rasgos: medidas, no a ojo
+    document.querySelectorAll('[data-xh]').forEach((el) => {
+      const line = el.querySelector('.xline');
+      const place = () => {
+        const cs = getComputedStyle(el);
+        ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        const m = ctx.measureText('x');
+        // la caja de línea es 1em: la línea base está en (alto + ascent - descent)/2 aprox.; usamos un marcador real
+        let mk = el.querySelector('i.mk');
+        if (!mk) { mk = document.createElement('i'); mk.className = 'mk'; mk.style.cssText = 'display:inline-block;width:0;height:0'; el.insertBefore(mk, line); }
+        const top = mk.getBoundingClientRect().top - el.getBoundingClientRect().top;
+        line.style.top = (top - m.actualBoundingBoxAscent) + 'px';
+        let b = el.querySelector('.bline');
+        if (!b) { b = document.createElement('span'); b.className = 'bline'; el.append(b); }
+        b.style.top = top + 'px';
+      };
+      document.fonts.ready.then(place);
+      addEventListener('resize', place);
+    });
+  })();
+</script>
+</body>
+</html>

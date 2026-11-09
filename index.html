@@ -25,6 +25,9 @@
   /* Cada planta es una lección con su propia identidad (datos en cuaderno.js) */
   #temario { padding-top: 3.6rem; }
   .tower { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .block-label { padding: 2.6rem clamp(1.1rem, 2.4vw, 1.8rem) 1.2rem; }
+  .block-label h2 { font-size: var(--step-3); font-weight: 560; letter-spacing: -0.03em; }
+  .block-label p { margin: .4rem 0 0; color: var(--muted); font: 400 var(--step--1)/1.5 var(--f-ui); max-width: 52ch; }
   .floor a {
     --pad: clamp(1.1rem, 2.4vw, 1.8rem);
     position: relative; display: grid; grid-template-columns: 3rem 1fr auto; align-items: end; gap: .3rem 1rem;
@@ -84,14 +87,14 @@
     <section class="intro" aria-labelledby="t">
       <div>
         <h1 id="t">Hora azul</h1>
-        <p class="lede">Catorce lecciones de color y movimiento. Cada una está diseñada como una web distinta, con la técnica que enseña funcionando en su portada.</p>
+        <p class="lede">Color, tipografía y diseño web explicados con su porqué: qué transmite cada decisión y por qué funciona. Al final, la técnica para llevarlo a webs de scroll cinematográfico.</p>
         <div class="actions">
           <a class="btn primary" href="lecciones/00-criterio.html" data-continue>Empezar</a>
           <a class="btn" href="landing/index.html">Ver el proyecto final</a>
         </div>
       </div>
       <div class="progress" aria-live="polite">
-        <span>Has terminado <b data-done>0</b> de <b data-total>14</b>. Cada lección hecha enciende su planta.</span>
+        <span>Has terminado <b data-done>0</b> de <b data-total>26</b> lecciones.</span>
         <span class="bar"><i></i></span>
       </div>
     </section>
@@ -137,11 +140,21 @@
       rendimiento: 'Composición, memoria, Core Web Vitals y movimiento reducido.',
       proyecto: 'Desmontaje de la landing Vésper y tu propia versión.',
     };
+    const INTRO = {
+      'Antes de empezar': 'La mirada: qué separa una web cara de una plantilla.',
+      'Color': 'El bloque principal: qué transmite cada color, por qué unos pegan con otros y cómo construir paletas.',
+      'Tipografía': 'Qué dice cada familia, cómo combinarlas y con qué fondo.',
+      'Diseño web': 'Cómo se piensa una web según el negocio, sector a sector.',
+      'Técnica (el extra)': 'CSS moderno, animación, scroll cinematográfico y el proyecto de la torre.',
+    };
+    let lastBlock = '';
     document.querySelector('[data-tower]').innerHTML = LESSONS.map((l, i) => {
       const t = l.t;
+      const head = l.block !== lastBlock ? `<li class="block-label"><h2>${l.block}</h2><p>${INTRO[l.block] || ''}</p></li>` : '';
+      lastBlock = l.block;
       const vars = `--tbg:${t.bg};--tfg:${t.fg};--tac:${t.ac};--tf:${t.f.replace(/"/g, "'")};--tw:${t.w};${t.i ? '--ti:italic;' : ''}${t.s ? `--ts:${t.s};` : ''}`;
       const h = hechas.has(l.id);
-      return `<li class="floor ${h ? 'done' : ''}" style="${vars}"><a href="lecciones/${l.file}">
+      return head + `<li class="floor ${h ? 'done' : ''}" style="${vars}"><a href="lecciones/${l.file}">
         <span class="n">${pad(i)}</span><span class="t">${l.title}</span>
         <span class="m"><i aria-hidden="true"></i>${h ? 'Hecha' : l.min + ' min'}</span>
         <span class="s">${SUB[l.id] || ''}</span></a></li>`;

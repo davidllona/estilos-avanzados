@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Por qué unos colores pegan | Hora azul</title>
+<meta name="description" content="Armonías de color explicadas con su porqué: monocromática, análoga, complementaria, dividida, tríada y tétrada; los tres contrastes que sostienen una paleta, neutros con temperatura y por qué algunas combinaciones chocan.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad de la lección: «Rueda».
+     Blanco casi puro, tinta azulada y violeta. Syne 800 para titulares, Inter Tight para leer.
+     La portada es un círculo cromático: el violeta del tema es solo el punto de partida. */
+  :root {
+    --bg: oklch(98% 0.005 90);
+    --bg-2: oklch(95.5% 0.008 280);
+    --bg-3: oklch(91% 0.012 280);
+    --fg: oklch(18% 0.02 270);
+    --muted: oklch(42% 0.025 270);
+    --faint: oklch(52% 0.02 270);
+    --accent: oklch(58% 0.2 300);
+    --on-accent: oklch(98% 0.005 90);
+    --code-bg: oklch(20% 0.03 275);
+    --scheme: light;
+    --f-display: "Syne", "Inter Tight", system-ui, sans-serif;
+    --f-body: "Inter Tight", system-ui, sans-serif;
+    --f-ui: "Inter Tight", system-ui, sans-serif;
+    --display-weight: 800;
+    --display-tracking: -0.04em;
+    --h0: 300;
+    --f-fraunces: "Fraunces", Georgia, serif;
+    --f-jost: "Jost", system-ui, sans-serif;
+    --f-round: "Nunito", system-ui, sans-serif;
+    --f-slab: "Zilla Slab", Rockwell, serif;
+    --f-shoulders: "Big Shoulders", Impact, sans-serif;
+  }
+  body { font-size: clamp(1.04rem, 1rem + 0.22vw, 1.17rem); line-height: 1.64; }
+  .prose h2 { font-size: clamp(1.7rem, 0.85rem + 3.6vw, 3.7rem); line-height: .94; letter-spacing: -0.05em; max-width: 20ch; }
+  @media (max-width: 640px) { .prose h2 { hyphens: auto; -webkit-hyphens: auto; } }
+  .quiz .q { font: 700 var(--step-1)/1.3 var(--f-ui); letter-spacing: -0.015em; }
+  .prose h3 { letter-spacing: -0.035em; }
+
+  /* =========================================================
+     Portada: la rueda
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1fr) minmax(0, .62fr); grid-template-rows: 1fr auto;
+    column-gap: clamp(1.5rem, 3vw, 3rem); padding: 5.4rem var(--gutter) 0; background: var(--bg); color: var(--fg); }
+  .h-text { grid-column: 1; grid-row: 1; align-self: center; padding-bottom: 1rem; }
+  .hero [data-kicker] { margin: 0 0 1.1rem; font: 600 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { font-size: clamp(2.8rem, 1rem + 3.9vw, 5.4rem); line-height: .86; letter-spacing: -0.06em; margin: 0 0 1.4rem; }
+  .hero h1 em { font-style: normal; color: oklch(52% 0.17 var(--h0)); }
+  .hero .lede { margin: 0 0 1.6rem; max-width: 34ch; font-size: var(--step-1); line-height: 1.38; color: var(--muted); }
+  .modes { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 1.3rem; padding: 0; }
+  .modes button { min-height: 44px; padding: 0 1rem; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; color: var(--fg);
+    font: 600 .92rem/1 var(--f-ui); cursor: pointer; transition: background-color .25s, color .25s, border-color .25s; -webkit-tap-highlight-color: transparent; }
+  .modes button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  @media (hover: hover) { .modes button:not([aria-pressed="true"]):hover { border-color: var(--fg); } }
+  .why { margin: 0; max-width: 40ch; font-size: var(--step--1); line-height: 1.55; color: var(--muted); min-height: 7.8em; }
+  .why b { display: block; margin-bottom: .3rem; font: 800 var(--step-1)/1.05 var(--f-display); letter-spacing: -0.035em; color: var(--fg); }
+
+  .h-wheel { grid-column: 2; grid-row: 1; align-self: center; justify-self: center; width: min(100%, 72vh, 620px); }
+  .wheel { position: relative; aspect-ratio: 1; touch-action: none; cursor: grab; border-radius: 50%; outline-offset: 6px; }
+  .wheel:active { cursor: grabbing; }
+  .ring { position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(oklch(70% .14 0), oklch(70% .14 30), oklch(70% .14 60), oklch(70% .14 90), oklch(70% .14 120), oklch(70% .14 150), oklch(70% .14 180), oklch(70% .14 210), oklch(70% .14 240), oklch(70% .14 270), oklch(70% .14 300), oklch(70% .14 330), oklch(70% .14 360));
+    -webkit-mask: radial-gradient(closest-side, transparent 73%, #000 73.6%, #000 99%, transparent 100%); mask: radial-gradient(closest-side, transparent 73%, #000 73.6%, #000 99%, transparent 100%); }
+  .wheel svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .wheel .poly { fill: color-mix(in oklab, var(--fg) 4%, transparent); stroke: var(--fg); stroke-width: .5; stroke-opacity: .55; stroke-dasharray: 2 2; }
+  .wheel .dot { stroke: var(--bg); stroke-width: 2.2; }
+  .wheel .base { stroke: var(--fg); stroke-width: 2.6; }
+  .wheel .tick { stroke: var(--fg); stroke-opacity: .25; stroke-width: .4; }
+  .hub { position: absolute; inset: 31%; display: grid; place-content: center; text-align: center; pointer-events: none; }
+  .hub b { padding: .2em .35em .25em; border-radius: .4em; background: var(--bg); font: 800 clamp(1.3rem, .7rem + 1.4vw, 2.2rem)/1 var(--f-display); letter-spacing: -0.05em; }
+  .hub small { justify-self: center; padding: .15rem .4rem; border-radius: 4px; background: var(--bg); }
+  .hub small { display: block; margin-top: .4rem; font: 500 .78rem/1.35 var(--f-code); color: var(--muted); }
+  .grab { position: absolute; left: 50%; bottom: -2.1rem; translate: -50% 0; margin: 0; white-space: nowrap; font: 600 .82rem/1 var(--f-ui); color: var(--muted); transition: opacity .4s; }
+  .touched .grab { opacity: 0; }
+
+  /* Mini web de la portada (cervecería) */
+  .h-site { grid-column: 3; grid-row: 1; align-self: center; }
+  .site { --sb: #f6f4ff; --si: #1d1830; --sp: #6b4bd6; --spt: #fff; --sa: #e8a33b; --sat: #1d1830;
+    container-type: inline-size; display: grid; gap: 0; border-radius: 22px; overflow: hidden; background: var(--sb); color: var(--si);
+    box-shadow: 0 0 0 1px var(--line), 0 40px 70px -40px oklch(20% .05 270 / .45); font-family: var(--f-ui); transition: background-color .3s; }
+  .site * { transition: background-color .3s, color .3s; }
+  .s-nav { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1rem; font-size: .8rem; }
+  .s-nav b { font: 800 1.15rem/1 var(--f-display); letter-spacing: -0.05em; }
+  .s-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 0 .9rem; border-radius: 999px; background: var(--sa); color: var(--sat); font-weight: 650; font-size: .78rem; }
+  .s-hero { margin: 0 .6rem; padding: 1.1rem 1rem 1.2rem; border-radius: 16px; background: var(--sp); color: var(--spt); }
+  .s-hero small { font-size: .72rem; opacity: .85; }
+  .s-hero p { margin: .4rem 0 0; font: 800 clamp(1.3rem, 9cqi, 2rem)/.95 var(--f-display); letter-spacing: -0.05em; }
+  .cans { display: flex; justify-content: center; gap: 7%; padding: 1.3rem 1rem .6rem; }
+  .can { position: relative; width: 22%; aspect-ratio: .52; border-radius: 10px 10px 8px 8px; background: var(--c); box-shadow: inset -6px 0 0 oklch(0% 0 0 / .08), inset 5px 0 0 oklch(100% 0 0 / .12); }
+  .can::before { content: ""; position: absolute; left: 8%; right: 8%; top: -5px; height: 6px; border-radius: 4px 4px 0 0; background: color-mix(in oklab, var(--si) 30%, var(--sb)); }
+  .can span { position: absolute; left: 0; right: 0; top: 50%; text-align: center; font: 700 .58rem/1 var(--f-ui); letter-spacing: .02em; color: var(--t); writing-mode: vertical-rl; rotate: 180deg; translate: 0 -50%; display: grid; place-items: center; }
+  .s-foot { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .7rem 1rem 1rem; font-size: .74rem; }
+  .s-foot p { margin: 0; max-width: 16ch; line-height: 1.3; }
+  .s-chips { display: flex; gap: 2px; padding: 0 1rem 1rem; }
+  .s-chips i { flex: 1; height: 1.6rem; border-radius: 4px; display: grid; place-items: end start; padding: 0 0 .2rem .3rem; font: 500 .56rem/1 var(--f-code); font-style: normal; }
+  .site[data-n="4"] .can { width: 17%; } .site[data-n="4"] .cans { gap: 5%; }
+
+  .h-foot { grid-column: 1 / -1; grid-row: 2; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.4rem; margin-top: 2.6rem; padding: 1rem 0 1.3rem; border-top: 1px solid var(--line-2); font: 500 var(--step--1)/1.3 var(--f-ui); color: var(--muted); }
+  .h-foot code { background: none; padding: 0; color: var(--fg); font-size: .86rem; }
+  .h-foot i { display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; vertical-align: -.08em; margin-right: .4rem; background: oklch(58% .15 var(--h0)); }
+  .h-foot .chip { margin-left: auto; color: var(--fg); }
+
+  @media (max-width: 1199px) {
+    .hero { grid-template-columns: minmax(0, 1fr) minmax(0, .7fr); grid-template-rows: auto 1fr auto; padding-top: 5rem; }
+    .h-text { grid-column: 1 / -1; grid-row: 1; padding-bottom: 1.4rem; }
+    .h-text .lede { max-width: 50ch; }
+    .why { max-width: 60ch; min-height: 0; }
+    .h-wheel { grid-column: 1; grid-row: 2; width: min(100%, 52vh, 520px); }
+    .h-site { grid-column: 2; grid-row: 2; }
+    .h-foot { grid-row: 3; }
+  }
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; padding-top: 4.6rem; }
+    .h-text, .h-wheel, .h-site, .h-foot { grid-column: 1; grid-row: auto; }
+    .hero [data-kicker] { margin-bottom: .7rem; }
+    .hero h1 { font-size: clamp(2.6rem, 1rem + 8.4vw, 3.6rem); margin-bottom: .9rem; }
+    .hero .lede { display: none; }
+    .modes { flex-wrap: nowrap; overflow-x: auto; margin: 0 calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) .2rem; scrollbar-width: none; }
+    .modes button { flex: none; }
+    .why { display: none; }
+    .h-wheel { width: min(64vw, 250px); margin: 1rem 0 .2rem; }
+    .grab { display: none; }
+    .hub b { font-size: 1.3rem; }
+    .h-site { margin-top: .6rem; }
+    /* En el móvil la mini web se pone en horizontal */
+    .site { grid-template-columns: 1fr 1fr; border-radius: 16px; }
+    .s-nav { grid-column: 1 / -1; padding: .65rem .8rem; }
+    .s-hero { grid-column: 1; margin: 0 0 0 .6rem; padding: .8rem; }
+    .s-hero p { font-size: 1.02rem; }
+    .s-hero small { display: none; }
+    .cans { grid-column: 2; padding: .6rem .6rem 0; align-items: end; }
+    .s-foot { grid-column: 1 / -1; padding: .7rem .8rem .5rem; }
+    .s-chips { display: none; }
+    .cans { padding-top: .9rem; }
+    .can { width: 24%; }
+    .h-foot { margin-top: 1rem; padding-bottom: 1rem; }
+    .h-foot .hint-m { flex-basis: 100%; color: var(--fg); }
+    .h-foot .chip { margin-left: 0; }
+  }
+  @media (min-width: 761px) { .h-foot .hint-m { display: none; } }
+
+  /* =========================================================
+     Cuerpo: componentes propios
+     ========================================================= */
+  /* Paleta con proporción y valores */
+  .pal { margin: 1.8rem 0 2.2rem; }
+  .pal-bar { display: flex; height: 3.4rem; border-radius: var(--radius-s); overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+  .pal-leg { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .9rem 1rem; margin: .9rem 0 0 !important; padding: 0 !important; }
+  .pal-leg li { display: grid; grid-template-columns: 1rem 1fr; gap: 0 .55rem; margin: 0; font: 500 .8rem/1.4 var(--f-ui); }
+  .pal-leg li i { grid-row: span 3; width: 1rem; height: 1rem; border-radius: 50%; margin-top: .15rem; box-shadow: 0 0 0 1px var(--line-2); }
+  .pal-leg b { font-weight: 650; }
+  .pal-leg small { color: var(--muted); font: 400 .74rem/1.35 var(--f-code); }
+  .pal-name { margin: 2rem 0 -.8rem; font: 700 var(--step--1)/1.3 var(--f-ui); }
+  .pal-name span { color: var(--muted); font-weight: 500; }
+
+  /* Ficha de cada armonía: mini rueda + tres preguntas */
+  .ficha { display: grid; grid-template-columns: 11rem 1fr; gap: 1.6rem 2.4rem; align-items: center; margin: 1.6rem 0 2.4rem; padding: 1.6rem 0; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--line-2); }
+  .mini-wheel { position: relative; width: 11rem; aspect-ratio: 1; border-radius: 50%; }
+  .mini-wheel::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(oklch(72% .13 0), oklch(72% .13 60), oklch(72% .13 120), oklch(72% .13 180), oklch(72% .13 240), oklch(72% .13 300), oklch(72% .13 360));
+    -webkit-mask: radial-gradient(closest-side, transparent 70%, #000 71%); mask: radial-gradient(closest-side, transparent 70%, #000 71%); opacity: .35; }
+  .mini-wheel i { position: absolute; left: 50%; top: 50%; width: 1.25rem; height: 1.25rem; margin: -.625rem; border-radius: 50%; background: var(--c, oklch(66% .15 var(--h)));
+    transform: rotate(calc(var(--h) * 1deg)) translateY(calc(var(--r, 4.6) * -1rem)) rotate(calc(var(--h) * -1deg)); box-shadow: 0 0 0 3px var(--bg); }
+  .mini-wheel i::after { content: ""; position: absolute; left: 50%; bottom: 50%; width: 1px; height: calc(var(--r, 4.6) * 1rem); background: var(--fg); opacity: .2; transform-origin: bottom; transform: rotate(calc(var(--h) * 1deg)); translate: 0 calc(var(--r, 4.6) * 1rem); display: none; }
+  .ficha dl { display: grid; gap: .8rem; margin: 0; }
+  .ficha dl div { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1rem; }
+  .ficha dt { font: 700 var(--step--1)/1.5 var(--f-ui); }
+  .ficha dd { margin: 0; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  @media (max-width: 640px) { .ficha { grid-template-columns: 1fr; justify-items: start; gap: 1.2rem; } .ficha dl div { grid-template-columns: 1fr; gap: .1rem; } }
+
+  /* Mini web reutilizable (las maquetas de los ejemplos) */
+  .mw { --mf: var(--f-ui); container-type: inline-size; overflow: hidden; border-radius: 14px; background: var(--b); color: var(--i); box-shadow: 0 0 0 1px var(--line); font-family: var(--f-ui); }
+  .mw-nav { display: flex; align-items: center; gap: 1rem; padding: .8rem 1.1rem; font-size: .76rem; }
+  .mw-nav b { margin-right: auto; font: 700 1rem/1 var(--mf); letter-spacing: -0.02em; }
+  .mw-nav span { opacity: .75; }
+  .mw-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 0 1rem; border-radius: 999px; background: var(--a); color: var(--on, var(--b)); font: 650 .76rem/1 var(--f-ui); white-space: nowrap; }
+  .mw-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 1rem; align-items: end; padding: .6rem 1.1rem 1.2rem; }
+  .mw-copy small { display: block; margin-bottom: .5rem; font-size: .72rem; color: var(--k, var(--i)); opacity: .8; }
+  .mw-copy strong { display: block; margin-bottom: .6rem; font: var(--mw, 700) clamp(1.25rem, 7cqi, 2.1rem)/.98 var(--mf); letter-spacing: -0.03em; text-wrap: balance; }
+  .mw-copy strong em { color: var(--e, var(--a)); font-style: var(--es, normal); }
+  .mw-copy p { margin: 0 0 .9rem; font-size: .78rem; line-height: 1.45; opacity: .82; max-width: 32ch; }
+  .mw-art { position: relative; aspect-ratio: 1.05; border-radius: 10px; overflow: hidden; background: var(--s); }
+  .mw-art i { position: absolute; display: block; }
+  .mw-art i:nth-child(1) { left: 14%; right: 30%; bottom: 0; top: 22%; border-radius: 999px 999px 0 0; background: var(--p); }
+  .mw-art i:nth-child(2) { right: 12%; top: 12%; width: 26%; aspect-ratio: 1; border-radius: 50%; background: var(--a2, var(--a)); }
+  .mw-art i:nth-child(3) { left: 0; right: 0; bottom: 0; height: 18%; background: var(--t, var(--i)); opacity: var(--to, 1); }
+  .mw-art.blocks i:nth-child(1) { left: 10%; right: 46%; top: 30%; border-radius: 0; }
+  .mw-art.blocks i:nth-child(2) { left: 46%; right: 10%; top: 12%; width: auto; bottom: 18%; aspect-ratio: auto; border-radius: 0; background: var(--a2, var(--p)); opacity: .55; }
+  .mw-art.bands i:nth-child(1) { left: 0; right: 0; top: 0; bottom: 55%; border-radius: 0; }
+  .mw-art.bands i:nth-child(2) { left: 50%; top: 32%; translate: -50% 0; width: 34%; }
+  .mw.wide .mw-art { aspect-ratio: 1.7; }
+  .mw-art.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; }
+  .mw-art.tiles i { position: static; border-radius: 6px; background: var(--q); opacity: 1; height: auto; }
+  .mw-art.tiles i:nth-child(n) { inset: auto; width: auto; aspect-ratio: auto; }
+  @container (max-width: 440px) {
+    .mw-nav span { display: none; }
+    .mw-body { grid-template-columns: 1fr; }
+    .mw-art { aspect-ratio: 2.2; order: -1; }
+  }
+
+  /* Así sí / Así no */
+  .sino { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem 1.6rem; margin: 2.4rem 0 2.8rem; }
+  .sino figure { margin: 0; }
+  .sino figcaption { display: flex; align-items: center; gap: .5rem; margin-bottom: .7rem; font: 700 var(--step--1)/1 var(--f-ui); }
+  .sino figcaption::before { content: ""; width: .9rem; height: .9rem; border-radius: 50%; background: var(--ok); }
+  .sino .no figcaption::before { background: var(--ko); border-radius: 2px; rotate: 45deg; width: .75rem; height: .75rem; }
+  .sino figure > p { margin: .7rem 0 0; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .sino .diff { grid-column: 1 / -1; margin: 0; padding-top: 1rem; border-top: 1px solid var(--line-2); font: 600 var(--step-0)/1.45 var(--f-ui); max-width: 70ch; }
+  @media (max-width: 700px) { .sino { grid-template-columns: 1fr; } }
+
+  /* Cuatro formas de compartir (sección 1) */
+  .share { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 2.4rem 0; border-top: 1px solid var(--fg); }
+  .share > div { padding: 1.2rem 1.2rem 1.4rem 0; }
+  .share > div + div { padding-left: 1.2rem; border-left: 1px solid var(--line-2); }
+  .share .comp { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 3px; height: 8.5rem; margin-bottom: 1rem; }
+  .share .comp i { border-radius: 3px; }
+  .share .comp i:first-child { grid-row: span 2; }
+  .share h3 { margin: 0 0 .4rem; font-size: var(--step-1); }
+  .share p { margin: 0; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  @media (max-width: 900px) { .share { grid-template-columns: 1fr 1fr; } .share > div:nth-child(3) { padding-left: 0; border-left: 0; } .share > div:nth-child(n+3) { border-top: 1px solid var(--line-2); } }
+  @media (max-width: 520px) { .share { grid-template-columns: 1fr; } .share > div, .share > div + div { padding: 1.2rem 0; border-left: 0; } .share > div + div { border-top: 1px solid var(--line-2); } .share .comp { height: 6.5rem; } }
+
+  /* Banda en violeta */
+  .band.rueda { --band-bg: var(--fg); --band-fg: var(--bg); }
+  .band.rueda p { margin: 0; max-width: 18ch; font: 800 clamp(2rem, .9rem + 4.6vw, 5.4rem)/.92 var(--f-display); letter-spacing: -0.055em; }
+  .band.rueda em { font-style: normal; color: oklch(78% .13 300); }
+
+  /* Tira de atardecer a sangre (análoga) */
+  .sunset { display: grid; grid-template-columns: repeat(5, 1fr); height: clamp(9rem, 20vw, 14rem); margin-block: 2.6rem; }
+  .sunset i { position: relative; }
+  .sunset i span { position: absolute; left: .8rem; bottom: .8rem; font: 500 .74rem/1.35 var(--f-code); color: var(--tc, #2a1608); }
+  @media (max-width: 640px) { .sunset i span { left: .4rem; font-size: .58rem; } }
+
+  /* Los tres contrastes */
+  .tres { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--fg); margin: 2.4rem 0; }
+  .tres > div { padding: 1.4rem 1.4rem 1.6rem 0; }
+  .tres > div + div { padding-left: 1.4rem; border-left: 1px solid var(--line-2); }
+  .tres .vs { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-bottom: 1rem; }
+  .tres .vs div { aspect-ratio: 1.1; border-radius: 6px; display: grid; place-items: center; font: 800 1.6rem/1 var(--f-display); letter-spacing: -0.04em; position: relative; }
+  .tres .vs div small { position: absolute; left: .5rem; bottom: .4rem; font: 600 .66rem/1 var(--f-ui); letter-spacing: 0; }
+  .tres h3 { margin: 0 0 .4rem; font-size: var(--step-2); }
+  .tres p { margin: 0; font-size: var(--step--1); color: var(--muted); }
+  @media (max-width: 760px) { .tres { grid-template-columns: 1fr; } .tres > div, .tres > div + div { padding: 1.3rem 0; border-left: 0; border-bottom: 1px solid var(--line-2); } .tres .vs div { aspect-ratio: 2; } }
+
+  /* Probador de neutros */
+  .tester { margin: 2.4rem 0; }
+  .t-colors { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: 1rem; }
+  .t-colors button { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1rem 0 .5rem; border-radius: 999px; border: 1px solid var(--line-2); background: var(--bg); color: var(--fg); font: 600 .88rem/1 var(--f-ui); cursor: pointer; }
+  .t-colors button i { width: 1.7rem; height: 1.7rem; border-radius: 50%; background: var(--c); }
+  .t-colors button[aria-pressed="true"] { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg); }
+  .t-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .t-grid > div { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: .8rem; min-height: 15rem; padding: .9rem; border-radius: 10px; background: var(--n); color: var(--nt); box-shadow: 0 0 0 1px var(--line); }
+  .t-grid .blk { height: 5.6rem; border-radius: 6px; background: var(--tc, #102E52); display: grid; align-content: end; padding: .6rem; color: var(--tct, #fff); font: 800 1.15rem/.95 var(--f-display); letter-spacing: -0.04em; transition: background-color .35s, color .35s; }
+  .t-grid p { margin: 0; font: 500 .74rem/1.35 var(--f-ui); }
+  .t-grid p b { display: block; font-size: .86rem; }
+  .t-grid p small { font-family: var(--f-code); opacity: .8; }
+  .t-grid .tag { position: absolute; top: .55rem; right: .55rem; padding: .25rem .5rem; border-radius: 999px; font: 700 .66rem/1 var(--f-ui); background: var(--fg); color: var(--bg); }
+  .t-grid .tag:empty { display: none; }
+  .t-grid .tag.no { background: oklch(55% .19 25); color: #fff; }
+  .t-out { margin: 1rem 0 0; padding: 1rem 1.2rem; border-left: 3px solid var(--fg); background: var(--bg-2); font-size: var(--step--1); line-height: 1.55; max-width: none !important; }
+  .t-out b { font-weight: 700; }
+  @media (max-width: 900px) { .t-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 520px) { .t-grid { grid-template-columns: 1fr 1fr; } .t-grid > div { min-height: 12.5rem; } .t-grid .blk { height: 4.4rem; font-size: 1rem; } }
+
+  /* Choques y arreglos */
+  .clash { display: grid; gap: 0; margin: 2rem 0; border-top: 1px solid var(--fg); }
+  .clash > div { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 1.2rem; align-items: center; padding: 1.4rem 0; border-bottom: 1px solid var(--line-2); }
+  .clash .ex { position: relative; height: 8.5rem; border-radius: 8px; overflow: hidden; display: grid; place-items: center; font: 800 clamp(1.6rem, 1rem + 2vw, 2.6rem)/1 var(--f-display); letter-spacing: -0.03em; text-align: center; padding: .8rem; }
+  .clash .ex small { position: absolute; left: .55rem; top: .5rem; padding: .25rem .5rem; border-radius: 999px; background: oklch(100% 0 0 / .9); color: oklch(20% 0 0); font: 700 .66rem/1 var(--f-ui); letter-spacing: 0; }
+  .clash h3 { margin: 0 0 .4rem; font-size: var(--step-1); }
+  .clash p { margin: 0; font-size: var(--step--1); line-height: 1.5; color: var(--muted); }
+  .bars { display: flex; gap: 4px; width: 100%; height: 100%; padding: 0 !important; }
+  .bars i { flex: 1; border-radius: 4px; }
+  @media (max-width: 760px) { .clash > div { grid-template-columns: 1fr 1fr; } .clash > div > :last-child { grid-column: 1 / -1; } .clash .ex { height: 6.5rem; font-size: 1.15rem; } }
+
+  .statement { font-size: clamp(2rem, 1.1rem + 3.4vw, 4.2rem); line-height: .95; letter-spacing: -0.05em; max-width: 18ch !important; }
+  .statement em { font-style: normal; color: var(--accent); }
+  @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="color-armonia">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="h-text">
+      <p data-kicker>Lección, Color</p>
+      <h1 id="t">Por qué unos colores <em>pegan</em></h1>
+      <p class="lede">Arrastra el color base por la rueda. Las armonías se dibujan en vivo y se aplican a una web de verdad, con la razón de por qué funcionan.</p>
+      <div class="modes" role="group" aria-label="Tipo de armonía">
+        <button type="button" data-mode="mono" aria-pressed="false">Monocromática</button>
+        <button type="button" data-mode="analog" aria-pressed="false">Análoga</button>
+        <button type="button" data-mode="comp" aria-pressed="true">Complementaria</button>
+        <button type="button" data-mode="split" aria-pressed="false">Dividida</button>
+        <button type="button" data-mode="triad" aria-pressed="false">Tríada</button>
+        <button type="button" data-mode="tetrad" aria-pressed="false">Tétrada</button>
+      </div>
+      <p class="why" data-why><b>Complementaria</b>Violeta frente a lima, su opuesto. Cada uno hace que el otro parezca más intenso.</p>
+    </div>
+
+    <div class="h-wheel">
+      <div class="wheel" role="slider" tabindex="0" aria-label="Color base de la armonía" aria-valuemin="0" aria-valuemax="359" aria-valuenow="300" aria-valuetext="violeta">
+        <div class="ring" aria-hidden="true"></div>
+        <svg viewBox="-100 -100 200 200" aria-hidden="true"><g data-ticks></g><polygon class="poly" points=""></polygon><g data-dots></g></svg>
+        <div class="hub" aria-hidden="true"><b data-hub>Violeta</b><small data-hubv>300°</small></div>
+        <p class="grab" aria-hidden="true">Arrastra el punto grande</p>
+      </div>
+    </div>
+
+    <div class="h-site">
+      <div class="site" data-n="3" aria-label="Mini web de ejemplo con la armonía aplicada">
+        <div class="s-nav"><b>Marjal</b><span class="s-btn">Cata</span></div>
+        <div class="s-hero"><small>Cervecería artesana, Castelló</small><p>Cerveza de marjal, hecha despacio.</p></div>
+        <div class="cans" data-cans></div>
+        <div class="s-foot"><p>Catas los viernes en la fábrica del Grau.</p><span class="s-btn">Reservar</span></div>
+        <div class="s-chips" data-chips></div>
+      </div>
+    </div>
+
+    <div class="h-foot">
+      <span class="hint-m">Arrastra el punto grande por la rueda y prueba cada armonía.</span>
+      <span><i></i>Base <code data-hex>#8A4FD0</code> <code data-ok>oklch(58% 0.15 300)</code></span>
+      <span data-roles>Base 60 %, apoyo 30 %, acento 10 %</span>
+      <span class="chip" data-meta>22 min</span>
+    </div>
+    <p class="vh" aria-live="polite" data-live></p>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Tienes buen ojo: sabes cuándo una combinación funciona. Lo que te falta, y lo que te pide un cliente cuando duda, es la razón. Esta lección te da el vocabulario para decir «este azul pega con este naranja porque son opuestos y uno hace brillar al otro» en lugar de «porque queda bien».</p>
+      <p>Una advertencia antes de empezar: las armonías del círculo cromático no son leyes. Son relaciones que se repiten en las paletas que funcionan, y sirven como punto de partida. Lo que convierte una armonía en una buena paleta es lo que hagas después con la luz, la saturación y la proporción.</p>
+
+      <h2>La regla de fondo</h2>
+      <p>Si tuvieras que quedarte con una sola idea de toda la lección, sería esta: <strong>los colores pegan cuando comparten algo o cuando se oponen de forma controlada.</strong> Un color tiene tres propiedades: tono (qué color es), luz (lo claro u oscuro que es) y saturación (lo vivo que es). Si dos colores coinciden en alguna de ellas, el ojo los agrupa como familia. Si no comparten nada, tiene que haber una oposición clara y una jerarquía, o se pelean.</p>
+
+      <div class="share wide">
+        <div>
+          <div class="comp" aria-hidden="true"><i style="background:#3F5A79"></i><i style="background:#8CA1B7"></i><i style="background:#D6DFE8"></i></div>
+          <h3>Comparten tono</h3>
+          <p>Tres azules de distinta luz. Pegan porque son el mismo color: el ojo los lee como una sola idea. Es la base de las armonías monocromática y análoga.</p>
+        </div>
+        <div>
+          <div class="comp" aria-hidden="true"><i style="background:#F2C6C2"></i><i style="background:#C7E3D3"></i><i style="background:#F3E2B3"></i></div>
+          <h3>Comparten luz</h3>
+          <p>Rosa, verde y amarillo, todos muy claros. Tonos distintos, pero la misma luz y poca saturación: por eso los pasteles casan entre sí casi siempre.</p>
+        </div>
+        <div>
+          <div class="comp" aria-hidden="true"><i style="background:#A8633F"></i><i style="background:#7D7A4E"></i><i style="background:#C9A46B"></i></div>
+          <h3>Comparten saturación</h3>
+          <p>Teja, oliva y ocre: todos apagados. Los colores tierra combinan entre ellos por eso, porque ninguno grita más que otro.</p>
+        </div>
+        <div>
+          <div class="comp" aria-hidden="true"><i style="background:#102E52"></i><i style="background:#D4DFEB"></i><i style="background:#F0720A"></i></div>
+          <h3>Se oponen con control</h3>
+          <p>Marino y naranja no comparten nada: tono opuesto, luz opuesta. Funciona porque uno manda (el marino ocupa casi todo) y el otro es la excepción.</p>
+        </div>
+      </div>
+
+      <p>Fíjate en que las tres primeras columnas son tranquilas y la cuarta tiene energía. Esa es la primera decisión cuando eliges colores para un cliente: ¿quieres que la web transmita <em>coherencia</em> (compartir) o <em>energía</em> (oponer)? Una clínica o un estudio de arquitectura suelen pedir lo primero; una imprenta, un gimnasio o una marca juvenil, lo segundo.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando una paleta «no termina de funcionar» y no sabes por qué, haz la pregunta al revés: ¿qué comparten estos colores? Si la respuesta es «nada» y además ninguno manda, ahí está el problema. Haz que dos de ellos compartan algo (acércalos en luz o en saturación) o que uno ocupe claramente más superficie que el resto.</p>
+      </div>
+
+      <details class="more">
+        <summary>Entender más: qué rueda usa esta lección</summary>
+        <p>Hay dos círculos cromáticos. El de los pintores (rojo, amarillo y azul como primarios, el que popularizó Johannes Itten en la Bauhaus) pone el rojo frente al verde y el amarillo frente al violeta. El de esta lección es el de OKLCH, el que mide cómo vemos la luz de una pantalla. Coinciden casi en todo (naranja frente a azul, amarillo frente a violeta azulado), pero en el perceptual el opuesto del rojo es un verde azulado, más cerca del turquesa. No es un error de ninguno: la post-imagen que te queda al mirar un rojo intenso un rato también tira a verde azulado. Para diseñar webs, usa la rueda de OKLCH y recuerda que lo importante es la oposición, no el grado exacto.</p>
+      </details>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En una pantalla de 390 px ves menos colores a la vez: la cabecera ocupa media pantalla y el resto llega al hacer scroll. Una paleta que en escritorio se percibe entera, en el móvil se vive por partes. Por eso las paletas que comparten algo (tono o luz) aguantan mejor en el teléfono: cada trozo que ves sigue pareciendo de la misma marca.</p>
+      </div>
+
+      <h2>Monocromática</h2>
+      <div class="ficha">
+        <div class="mini-wheel" aria-hidden="true"><i style="--h:250;--r:4.6;--c:#3F5A79"></i><i style="--h:250;--r:2.9;--c:#8CA1B7"></i><i style="--h:250;--r:1.3;--c:#D6DFE8"></i></div>
+        <dl>
+          <div><dt>Qué es</dt><dd>Un solo tono en distintas luces y saturaciones. Del azul pizarra casi blanco al casi negro.</dd></div>
+          <div><dt>Transmite</dt><dd>Calma, coherencia, seriedad, elegancia. Una marca que sabe lo que es.</dd></div>
+          <div><dt>Cuándo</dt><dd>Arquitectura, consultoras, marcas de producto premium, sostenibilidad (en verdes), portfolios donde manda el trabajo.</dd></div>
+          <div><dt>Riesgo</dt><dd>Monotonía y que nada destaque. Si todos los tonos son medios, la página se ve plana.</dd></div>
+        </dl>
+      </div>
+
+      <p>La monocromática pega por definición: todos los colores son el mismo, así que es imposible que se peleen por el tono. Lo que transmite viene de ahí: una sola idea repetida en distintas intensidades se lee como seguridad y control. Por eso la usan tanto los estudios de arquitectura y las marcas que quieren parecer serias sin recurrir al blanco y negro.</p>
+      <p>El precio es que pierdes la herramienta más rápida para dirigir la mirada: el cambio de tono. Toda la jerarquía la tiene que hacer la <strong>luz</strong>. Por eso una monocromática buena siempre usa los extremos: un fondo casi blanco, un texto casi negro, y los tonos medios solo para superficies y detalles.</p>
+
+      <p class="pal-name">Estudio de arquitectura <span>en azul pizarra</span></p>
+      <div class="pal"><div class="pal-bar" role="img" aria-label="Proporción: Fondo #F2F5F9, Superficie #D6DFE8, Detalle #8CA1B7, Principal #3F5A79, Tinta #131E2B"><i style="background:#F2F5F9;flex:46"></i><i style="background:#D6DFE8;flex:22"></i><i style="background:#8CA1B7;flex:10"></i><i style="background:#3F5A79;flex:12"></i><i style="background:#131E2B;flex:10"></i></div><ul class="pal-leg"><li><i style="background:#F2F5F9"></i><b>Fondo</b><small>#F2F5F9</small><small>oklch(97% 0.006 255)</small></li><li><i style="background:#D6DFE8"></i><b>Superficie</b><small>#D6DFE8</small><small>oklch(90% 0.016 248)</small></li><li><i style="background:#8CA1B7"></i><b>Detalle</b><small>#8CA1B7</small><small>oklch(70% 0.040 250)</small></li><li><i style="background:#3F5A79"></i><b>Principal</b><small>#3F5A79</small><small>oklch(46% 0.060 253)</small></li><li><i style="background:#131E2B"></i><b>Tinta</b><small>#131E2B</small><small>oklch(23% 0.030 253)</small></li></ul></div>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="mw" style="--b:#F2F5F9;--i:#131E2B;--p:#3F5A79;--s:#D6DFE8;--a:#131E2B;--on:#F2F5F9;--a2:#8CA1B7;--t:#8CA1B7;--mf:var(--f-display);--e:#3F5A79">
+            <div class="mw-nav"><b>Taller Vidal</b><span>Obras</span><span>Estudio</span><span class="mw-btn">Contacto</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Arquitectura, Castelló</small><strong>Casas que envejecen <em>bien</em>.</strong><p>Vivienda unifamiliar y rehabilitación en la Plana.</p><span class="mw-btn">Ver obras</span></div><div class="mw-art blocks"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Del 97 % al 23 % de luz: el fondo respira, el titular pesa y el botón casi negro es lo más contrastado de la página.</p>
+        </figure>
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="mw" style="--b:#8CA1B7;--i:#131E2B;--p:#6583A3;--s:#7B95B0;--a:#597797;--on:#131E2B;--a2:#6583A3;--t:#597797;--mf:var(--f-display);--e:#3F5A79">
+            <div class="mw-nav"><b>Taller Vidal</b><span>Obras</span><span>Estudio</span><span class="mw-btn">Contacto</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Arquitectura, Castelló</small><strong>Casas que envejecen <em>bien</em>.</strong><p>Vivienda unifamiliar y rehabilitación en la Plana.</p><span class="mw-btn">Ver obras</span></div><div class="mw-art blocks"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>El mismo azul, pero todo entre el 56 % y el 70 % de luz. Nada destaca, la ilustración se pierde y la palabra de acento desaparece.</p>
+        </figure>
+        <p class="diff">La monocromática vive del contraste de luz. Si no usas los extremos, no tienes jerarquía.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Una monocromática admite una sola excepción sin dejar de serlo: un neutro de otra temperatura (un crema junto a los azules) o un punto mínimo de color para el estado activo. Si añades un segundo color con superficie, ya es otra armonía y tienes que decidir cuál.</p>
+      </div>
+
+      <h2>Análoga</h2>
+      <div class="ficha">
+        <div class="mini-wheel" aria-hidden="true"><i style="--h:40;--c:#C85C2E"></i><i style="--h:68;--c:#E7A04C"></i><i style="--h:90;--c:#EACE8C"></i></div>
+        <dl>
+          <div><dt>Qué es</dt><dd>Tonos vecinos en la rueda, separados entre 20° y 40°: amarillo, naranja y teja; o verde agua, turquesa y azul.</dd></div>
+          <div><dt>Transmite</dt><dd>Armonía natural, suavidad. Calidez si están del lado cálido, frescura si están del frío.</dd></div>
+          <div><dt>Cuándo</dt><dd>Alimentación, hoteles y turismo, salud y bienestar, marcas de naturaleza, todo lo que quiera parecer acogedor.</dd></div>
+          <div><dt>Riesgo</dt><dd>Falta de contraste. Tres vecinos a la misma luz forman una mancha.</dd></div>
+        </dl>
+      </div>
+
+      <p>Los colores análogos pegan porque <strong>cada uno contiene un poco de su vecino</strong>. El naranja tiene algo de amarillo y algo de rojo, así que puesto entre los dos hace de puente. El ojo no ve tres colores, ve una gradación. Y es la gradación que conocemos de la naturaleza: un atardecer pasa del amarillo al naranja y al rosa sin saltos; un bosque, del verde lima al verde oscuro; el mar, del turquesa al azul.</p>
+
+      <div class="sunset bleed" aria-label="Cinco tonos análogos de un atardecer, de trigo a teja">
+        <i style="background:#EACE8C"><span>#EACE8C</span></i><i style="background:#E7B66A"><span>#E7B66A</span></i><i style="background:#E7A04C"><span>#E7A04C</span></i><i style="background:#D97B3A"><span>#D97B3A</span></i><i style="background:#C85C2E;--tc:#fff"><span>#C85C2E</span></i>
+      </div>
+
+      <p>Esa asociación es la que hace que las análogas transmitan algo «natural»: no sorprenden, acompañan. Pero el lado de la rueda decide el mensaje. Las análogas cálidas (amarillos, naranjas, rojos) recuerdan al pan, al fuego, a la tarde: cercanía y apetito. Las frías (verdes, turquesas, azules) recuerdan al agua y a la vegetación: limpieza, frescura, calma.</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Análoga cálida</figcaption>
+          <div class="mw" style="--b:#F7F1E5;--i:#341E12;--p:#C85C2E;--s:#EACE8C;--a:#B5501F;--on:#FFFFFF;--a2:#E7A04C;--t:#341E12;--to:.9;--mf:var(--f-fraunces);--mw:600">
+            <div class="mw-nav"><b>Forn del Raval</b><span>Pan</span><span>Dulces</span><span class="mw-btn">Encargar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Horno de leña desde 1958</small><strong>Masa madre, <em>cada mañana</em>.</strong><p>Pan de horno de leña y coca de llanda los domingos.</p><span class="mw-btn">Encargar para mañana</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Trigo, albaricoque y teja: los colores de la corteza del pan. El botón usa la teja un punto más oscura, para que el texto blanco encima pase de 4,5:1.</p>
+        </figure>
+        <figure class="si"><figcaption>Análoga fría</figcaption>
+          <div class="mw" style="--b:#ECF8F8;--i:#0B2230;--p:#30A4AA;--s:#9BE3C9;--a:#005D83;--on:#FFFFFF;--a2:#005D83;--t:#0B2230;--to:.9;--mf:var(--f-jost);--mw:500;--e:#005D83">
+            <div class="mw-nav"><b>Fisio Mar</b><span>Tratamientos</span><span>Equipo</span><span class="mw-btn">Pedir cita</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Fisioterapia, Benicàssim</small><strong>Vuelve a moverte <em>sin dolor</em>.</strong><p>Fisioterapia deportiva y suelo pélvico. Cita en 48 horas.</p><span class="mw-btn">Pedir cita</span></div><div class="mw-art bands"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Verde agua, turquesa y azul petróleo. Mismo esquema, otro lado de la rueda: ahora transmite limpieza y alivio en lugar de calor.</p>
+        </figure>
+        <p class="diff">La estructura es idéntica (tres vecinos, el más oscuro para el texto y el botón). Lo único que cambia es el lado de la rueda, y con él la temperatura del mensaje.</p>
+      </div>
+
+      <div class="pal"><div class="pal-bar" role="img" aria-label="Proporción: Fondo crema #F7F1E5, Trigo #EACE8C, Albaricoque #E7A04C, Teja #C85C2E, Teja oscura (botón) #B5501F, Tinta tostada #341E12"><i style="background:#F7F1E5;flex:50"></i><i style="background:#EACE8C;flex:16"></i><i style="background:#E7A04C;flex:12"></i><i style="background:#C85C2E;flex:8"></i><i style="background:#B5501F;flex:4"></i><i style="background:#341E12;flex:10"></i></div><ul class="pal-leg"><li><i style="background:#F7F1E5"></i><b>Fondo crema</b><small>#F7F1E5</small><small>oklch(96% 0.017 85)</small></li><li><i style="background:#EACE8C"></i><b>Trigo</b><small>#EACE8C</small><small>oklch(86% 0.090 87)</small></li><li><i style="background:#E7A04C"></i><b>Albaricoque</b><small>#E7A04C</small><small>oklch(76% 0.130 68)</small></li><li><i style="background:#C85C2E"></i><b>Teja</b><small>#C85C2E</small><small>oklch(60% 0.150 42)</small></li><li><i style="background:#B5501F"></i><b>Teja oscura (botón)</b><small>#B5501F</small><small>oklch(55% 0.144 43)</small></li><li><i style="background:#341E12"></i><b>Tinta tostada</b><small>#341E12</small><small>oklch(26% 0.040 49)</small></li></ul></div>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>El riesgo de la análoga es que no tiene contraste de tono. Si además sus tres colores tienen la misma luz, se funden. Haz siempre que uno sea claramente más oscuro (la teja en el horno, el petróleo en la fisio) y úsalo para lo que tiene que leerse.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Al sol, los colores vecinos de luz parecida se convierten en uno solo: la pantalla refleja luz blanca y se comen las diferencias suaves. Si la web de un hotel o de un restaurante se va a mirar en la calle (y se va a mirar en la calle), aumenta la distancia de luz entre el fondo y los textos más de lo que te pide el monitor de la agencia.</p>
+      </div>
+
+      <h2>Complementaria</h2>
+      <div class="ficha">
+        <div class="mini-wheel" aria-hidden="true"><i style="--h:255;--c:#102E52"></i><i style="--h:50;--c:#F0720A"></i></div>
+        <dl>
+          <div><dt>Qué es</dt><dd>Dos tonos opuestos en la rueda: azul y naranja, violeta y amarillo, verde y magenta.</dd></div>
+          <div><dt>Transmite</dt><dd>Energía, dinamismo, contraste, llamada de atención.</dd></div>
+          <div><dt>Cuándo</dt><dd>Deporte, ocio, marcas juveniles, imprentas y agencias, cualquier web que necesite que el botón salte.</dd></div>
+          <div><dt>Riesgo</dt><dd>Vibración y agresividad si los dos están a la misma luz, igual de vivos y en la misma cantidad.</dd></div>
+        </dl>
+      </div>
+
+      <p>Los complementarios son los que menos tienen en común: tono opuesto. ¿Por qué pegan entonces? Porque <strong>cada uno hace que el otro parezca más intenso</strong>. Es el contraste simultáneo que estudió Chevreul en el siglo XIX: el ojo tiende a «añadir» el opuesto alrededor de un color, así que cuando el opuesto ya está, los dos se refuerzan. Un naranja sobre azul parece más naranja que sobre gris.</p>
+      <p>Por eso la complementaria es la armonía de la energía. Y por eso mismo hay que domarla: dos colores que se refuerzan mutuamente, si ocupan lo mismo, compiten. La regla práctica es que <strong>uno manda y el otro es la excepción</strong>. Uno ocupa el 80 o 90 % del color de la página; el otro aparece solo donde algo tiene que saltar.</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="mw" style="--b:#F7F5EF;--i:#0D1B2D;--p:#102E52;--s:#D4DFEB;--a:#F0720A;--on:#0D1B2D;--a2:#F0720A;--t:#102E52;--mf:var(--f-display)">
+            <div class="mw-nav"><b>Escola de Vela</b><span>Cursos</span><span>Flota</span><span class="mw-btn">Reservar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Grau de Castelló</small><strong>Tu primer bordo <em>este verano</em>.</strong><p>Cursos de iniciación de una semana para adultos y niños.</p><span class="mw-btn">Ver cursos</span></div><div class="mw-art bands"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Marino oscuro como color dominante y naranja solo en el botón, una palabra y el sol. El naranja tiene además mucha más luz que el marino: no vibran, se separan.</p>
+        </figure>
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="mw" style="--b:#2F6FD6;--i:#FFFFFF;--p:#F0720A;--s:#2F6FD6;--a:#F0720A;--on:#FFFFFF;--a2:#2F6FD6;--t:#F0720A;--mf:var(--f-display);--e:#F0720A">
+            <div class="mw-nav"><b>Escola de Vela</b><span>Cursos</span><span>Flota</span><span class="mw-btn">Reservar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Grau de Castelló</small><strong>Tu primer bordo <em>este verano</em>.</strong><p>Cursos de iniciación de una semana para adultos y niños.</p><span class="mw-btn">Ver cursos</span></div><div class="mw-art bands"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Azul y naranja vivos, con una luz parecida y repartidos a medias. Los bordes entre ellos vibran, el texto naranja sobre azul cuesta leerlo y no hay un sitio adonde mirar.</p>
+        </figure>
+        <p class="diff">Los mismos dos tonos. Lo que cambia es la proporción (90/10 frente a 50/50) y la luz (oscuro frente a claro en vez de dos medios).</p>
+      </div>
+
+      <p class="pal-name">Escuela de vela <span>marino y naranja</span></p>
+      <div class="pal"><div class="pal-bar" role="img" aria-label="Proporción: Fondo #F7F5EF, Superficie #D4DFEB, Marino #102E52, Naranja #F0720A, Tinta #0D1B2D"><i style="background:#F7F5EF;flex:52"></i><i style="background:#D4DFEB;flex:14"></i><i style="background:#102E52;flex:22"></i><i style="background:#F0720A;flex:6"></i><i style="background:#0D1B2D;flex:6"></i></div><ul class="pal-leg"><li><i style="background:#F7F5EF"></i><b>Fondo</b><small>#F7F5EF</small><small>oklch(97% 0.008 91)</small></li><li><i style="background:#D4DFEB"></i><b>Superficie</b><small>#D4DFEB</small><small>oklch(90% 0.020 250)</small></li><li><i style="background:#102E52"></i><b>Marino</b><small>#102E52</small><small>oklch(30% 0.075 255)</small></li><li><i style="background:#F0720A"></i><b>Naranja</b><small>#F0720A</small><small>oklch(69% 0.180 50)</small></li><li><i style="background:#0D1B2D"></i><b>Tinta</b><small>#0D1B2D</small><small>oklch(22% 0.041 255)</small></li></ul></div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Para que una complementaria parezca cara y no de feria, baja la saturación del color dominante. Un azul marino o petróleo (apagado y oscuro) con un naranja vivo es elegante; un azul eléctrico con un naranja eléctrico es un cartel de rebajas. El color que manda, tranquilo; el que salta, vivo.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Las pantallas OLED de los móviles tienen negros profundos y mucha saturación, y la vibración entre complementarios a la misma luz se nota todavía más. Revisa en un teléfono real cualquier texto de color sobre fondo de color: lo que en el monitor «casi se lee», en el móvil baila.</p>
+      </div>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">Pones un titular rojo vivo sobre un fondo verde vivo, los dos con la misma luminosidad. ¿Qué pasa?</p>
+        <ol>
+          <li>Se lee perfecto: son complementarios y tienen el máximo contraste.</li>
+          <li>Se ve apagado, porque se neutralizan.</li>
+          <li>Los bordes de las letras vibran y cuesta leerlo, aunque el tono sea opuesto.</li>
+        </ol>
+        <p class="why">El contraste que hace legible un texto es el de luz, no el de tono. Dos complementarios a la misma luz y muy saturados producen una vibración en el borde (el ojo no sabe dónde enfocar). Oscurece uno y aclara el otro, y la pareja pasa a funcionar.</p>
+      </div>
+
+      <h2>Complementaria dividida</h2>
+      <div class="ficha">
+        <div class="mini-wheel" aria-hidden="true"><i style="--h:175;--c:#7FCDB6"></i><i style="--h:30;--c:#F47C6B"></i><i style="--h:345;--c:#EE97C9"></i></div>
+        <dl>
+          <div><dt>Qué es</dt><dd>Un color base y los dos vecinos de su opuesto (a 150° y 210°). En lugar de verde agua frente a rosa, verde agua frente a coral y rosa chicle.</dd></div>
+          <div><dt>Transmite</dt><dd>Vitalidad con matices. Alegre sin ser estridente.</dd></div>
+          <div><dt>Cuándo</dt><dd>Moda, infancia, cosmética, ocio, alimentación fresca. Es la armonía más agradecida para quien empieza.</dd></div>
+          <div><dt>Riesgo</dt><dd>Tres colores con personalidad: si los tres ocupan lo mismo, parece un estampado.</dd></div>
+        </dl>
+      </div>
+
+      <p>La dividida es una complementaria «suavizada». Mantiene la oposición (los dos acentos están en el lado contrario de la rueda), pero en lugar de un solo opuesto exacto usa sus dos vecinos. ¿Por qué funciona mejor muchas veces? Porque esos dos acentos son análogos entre sí: comparten tono, así que juntos forman una pequeña familia que se opone al color base. Tienes la energía del contraste y la armonía de los vecinos a la vez.</p>
+      <p>En la práctica es más fácil de usar que la complementaria pura, porque perdona más: el choque es menos frontal y tienes dos colores para repartir funciones (uno para el botón, otro para etiquetas o ilustraciones).</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Así sí</figcaption>
+          <div class="mw" style="--b:#ECF9F3;--i:#023536;--p:#AFE5D5;--s:#ECF9F3;--a:#023536;--on:#ECF9F3;--a2:#F47C6B;--t:#EE97C9;--mf:var(--f-round);--mw:800;--e:#C2410C">
+            <div class="mw-nav"><b>Menuda</b><span>Bebé</span><span>2 a 8 años</span><span class="mw-btn">Cesta</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Moda infantil de algodón orgánico</small><strong>Ropa que aguanta <em>el recreo</em>.</strong><p>Tejida en Ontinyent. Envío gratis desde 40 €.</p><span class="mw-btn">Ver novedades</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Verde agua de base, coral y rosa como acentos pequeños. El botón va en el petróleo oscuro, porque necesita contraste de luz, no de tono.</p>
+        </figure>
+        <figure class="no"><figcaption>Así no</figcaption>
+          <div class="mw" style="--b:#F47C6B;--i:#023536;--p:#7FCDB6;--s:#EE97C9;--a:#7FCDB6;--on:#023536;--a2:#F47C6B;--t:#EE97C9;--mf:var(--f-round);--mw:800;--e:#ECF9F3">
+            <div class="mw-nav"><b>Menuda</b><span>Bebé</span><span>2 a 8 años</span><span class="mw-btn">Cesta</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Moda infantil de algodón orgánico</small><strong>Ropa que aguanta <em>el recreo</em>.</strong><p>Tejida en Ontinyent. Envío gratis desde 40 €.</p><span class="mw-btn">Ver novedades</span></div><div class="mw-art"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Los mismos tres colores, cada uno con un tercio de la superficie. Ya no hay base ni acentos: hay un estampado, y el ojo no sabe por dónde empezar.</p>
+        </figure>
+        <p class="diff">En una armonía de tres colores, uno es la base y los otros dos se reparten menos del 20 % de la superficie.</p>
+      </div>
+
+      <p class="pal-name">Moda infantil <span>verde agua, coral y rosa</span></p>
+      <div class="pal"><div class="pal-bar" role="img" aria-label="Proporción: Fondo #ECF9F3, Verde agua #AFE5D5, Coral #F47C6B, Rosa #EE97C9, Petróleo #023536"><i style="background:#ECF9F3;flex:48"></i><i style="background:#AFE5D5;flex:22"></i><i style="background:#F47C6B;flex:7"></i><i style="background:#EE97C9;flex:7"></i><i style="background:#023536;flex:16"></i></div><ul class="pal-leg"><li><i style="background:#ECF9F3"></i><b>Fondo</b><small>#ECF9F3</small><small>oklch(97% 0.016 167)</small></li><li><i style="background:#AFE5D5"></i><b>Verde agua</b><small>#AFE5D5</small><small>oklch(88% 0.060 175)</small></li><li><i style="background:#F47C6B"></i><b>Coral</b><small>#F47C6B</small><small>oklch(72% 0.150 30)</small></li><li><i style="background:#EE97C9"></i><b>Rosa</b><small>#EE97C9</small><small>oklch(78% 0.121 345)</small></li><li><i style="background:#023536"></i><b>Petróleo</b><small>#023536</small><small>oklch(30% 0.050 197)</small></li></ul></div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>En la dividida, decide cuál de los dos acentos es el «de acción» y úsalo siempre igual: si el coral es el color de comprar, que no aparezca también en decoraciones. El otro acento (el rosa) queda para lo emocional: ilustraciones, etiquetas de «nuevo», detalles.</p>
+      </div>
+
+      <h2>Tríada y tétrada</h2>
+      <div class="ficha">
+        <div class="mini-wheel" aria-hidden="true"><i style="--h:85;--c:#EAB532"></i><i style="--h:205;--c:#086A73"></i><i style="--h:330;--c:#C33DBD"></i></div>
+        <dl>
+          <div><dt>Qué es</dt><dd>Tríada: tres tonos repartidos a 120°. Tétrada: dos parejas de complementarios, cuatro tonos en rectángulo.</dd></div>
+          <div><dt>Transmite</dt><dd>Alegría, fiesta, creatividad, juego. Mucha energía y mucha variedad.</dd></div>
+          <div><dt>Cuándo</dt><dd>Festivales, ocio infantil, educación, marcas ilustradas, webs con varias secciones que necesitan un código de color.</dd></div>
+          <div><dt>Riesgo</dt><dd>Parecer un circo. Es la armonía que más disciplina exige.</dd></div>
+        </dl>
+      </div>
+
+      <p>La tríada es la combinación con más variedad que todavía tiene orden: tres tonos tan distintos como pueden ser, pero equidistantes, así que ninguno queda descolgado. Es la lógica de los primarios de la Bauhaus (rojo, amarillo y azul, la tríada de la rueda de los pintores): máxima diferencia, repartida con equilibrio. Transmite juego y creatividad porque es lo contrario de la contención.</p>
+      <p>El truco para que no parezca una caja de ceras es el mismo de siempre, llevado al extremo: <strong>uno manda, los otros se apagan o se encogen</strong>. Y casi siempre hace falta un neutro generoso (crema, blanco roto, tinta) que dé aire entre ellos.</p>
+
+      <p class="pal-name">Festival de verano <span>mostaza, petróleo y fucsia</span></p>
+      <div class="pal"><div class="pal-bar" role="img" aria-label="Proporción: Crema #F5EEE0, Mostaza #EAB532, Petróleo #086A73, Fucsia #C33DBD, Tinta #101C28"><i style="background:#F5EEE0;flex:44"></i><i style="background:#EAB532;flex:26"></i><i style="background:#086A73;flex:12"></i><i style="background:#C33DBD;flex:6"></i><i style="background:#101C28;flex:12"></i></div><ul class="pal-leg"><li><i style="background:#F5EEE0"></i><b>Crema</b><small>#F5EEE0</small><small>oklch(95% 0.020 85)</small></li><li><i style="background:#EAB532"></i><b>Mostaza</b><small>#EAB532</small><small>oklch(80% 0.150 85)</small></li><li><i style="background:#086A73"></i><b>Petróleo</b><small>#086A73</small><small>oklch(48% 0.080 205)</small></li><li><i style="background:#C33DBD"></i><b>Fucsia</b><small>#C33DBD</small><small>oklch(60% 0.220 330)</small></li><li><i style="background:#101C28"></i><b>Tinta</b><small>#101C28</small><small>oklch(22% 0.029 249)</small></li></ul></div>
+
+      <p>Esta tríada funciona por dos razones además de la geometría. Una: los tres colores están a luces muy distintas (la mostaza clara, el petróleo oscuro, el fucsia en medio), así que en escala de grises siguen separándose. Dos: solo el fucsia está muy saturado; la mostaza y el petróleo son algo más sobrios. Suena a cartel de los setenta, a verano y a música, sin hacer daño a la vista.</p>
+
+      <h3>La tétrada: mejor como código que como decoración</h3>
+      <p>Cuatro tonos en rectángulo (por ejemplo tomate, mostaza, turquesa y azul violeta) es la armonía más rica y la más difícil. Como paleta decorativa de una landing casi nunca funciona: hay demasiadas cosas que compiten. Donde brilla es como <strong>sistema de señales</strong>: cada sección o categoría tiene su color, y el usuario aprende el código.</p>
+
+      <div class="mw wide" style="--b:#F7F5EF;--i:#221811;--p:#E54E3C;--s:#F7F5EF;--a:#221811;--on:#F7F5EF;--mf:var(--f-display)">
+        <div class="mw-nav"><b>Mercat del Barri</b><span>Puestos</span><span>Horarios</span><span class="mw-btn">Pedido a domicilio</span></div>
+        <div class="mw-body"><div class="mw-copy"><small>Mercado municipal, abierto de 7 a 14 h</small><strong>Cuatro pasillos, <em style="color:#E54E3C">cien puestos</em>.</strong><p>Cada pasillo tiene su color en la web, en los carteles y en las bolsas: verdura, pescado, carne y panadería.</p><span class="mw-btn">Ver puestos</span></div>
+        <div class="mw-art tiles"><i style="--q:#E54E3C"></i><i style="--q:#E1B942"></i><i style="--q:#0897A9"></i><i style="--q:#4A61B9"></i></div></div>
+      </div>
+      <div class="pal"><div class="pal-bar" role="img" aria-label="Proporción: Fondo #F7F5EF, Carne #E54E3C, Panadería #E1B942, Pescado #0897A9, Verdura #4A61B9, Tinta #221811"><i style="background:#F7F5EF;flex:50"></i><i style="background:#E54E3C;flex:8"></i><i style="background:#E1B942;flex:8"></i><i style="background:#0897A9;flex:8"></i><i style="background:#4A61B9;flex:8"></i><i style="background:#221811;flex:18"></i></div><ul class="pal-leg"><li><i style="background:#F7F5EF"></i><b>Fondo</b><small>#F7F5EF</small><small>oklch(97% 0.008 91)</small></li><li><i style="background:#E54E3C"></i><b>Carne</b><small>#E54E3C</small><small>oklch(63% 0.190 30)</small></li><li><i style="background:#E1B942"></i><b>Panadería</b><small>#E1B942</small><small>oklch(80% 0.140 90)</small></li><li><i style="background:#0897A9"></i><b>Pescado</b><small>#0897A9</small><small>oklch(62% 0.106 210)</small></li><li><i style="background:#4A61B9"></i><b>Verdura</b><small>#4A61B9</small><small>oklch(52% 0.141 270)</small></li><li><i style="background:#221811"></i><b>Tinta</b><small>#221811</small><small>oklch(22% 0.021 56)</small></li></ul></div>
+
+      <p>Aquí los cuatro colores tienen la misma saturación a propósito: ninguno es más importante, todos son categorías del mismo nivel. Lo que sostiene la página es el fondo neutro enorme y la tinta: los cuatro colores aparecen en piezas pequeñas, nunca juntos en grandes superficies.</p>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>En un código de color, uno de los cuatro no puede ser el mismo color que usas para los botones, ni el rojo de los errores. Si la carne es tomate, el botón de comprar va en tinta y los errores en un rojo distinto con icono. Si no, el usuario no sabe si algo es una categoría, una acción o un problema.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Los códigos de color funcionan especialmente bien en el móvil, donde no cabe un menú largo: una pestaña inferior o unas píldoras con el color de cada sección orientan sin texto. Pero nunca dependas solo del color: añade siempre el nombre o un icono, porque alrededor de un 8 % de los hombres tiene algún tipo de daltonismo y el rojo frente al verde es la confusión más común.</p>
+      </div>
+
+      <h3>Pruébalas todas</h3>
+      <p>Este generador aplica cada armonía a la misma web con los papeles bien repartidos (base, apoyo y acento) y te explica por qué funciona. Mueve el tono y cambia de armonía: verás que todas pueden salir bien si se respeta la proporción.</p>
+
+      <figure class="lab" data-title="Generador de armonías" data-hint="Cambia el tono y la armonía" data-height="560" data-height-mobile="760" style="--hm:760px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <label>Tono base <input id="h" type="range" min="0" max="359" value="200"></label>
+            <div class="modes" id="modes"></div>
+          </div>
+          <main class="web" id="web">
+            <nav><b>Lluna</b><span>Clases</span><span>Horarios</span><a class="cta">Primera clase gratis</a></nav>
+            <section>
+              <div><p class="k">Escuela de danza, Vila-real</p>
+                <h1>Baila como si nadie <em>mirara</em>.</h1>
+                <p>Contemporáneo, urbano y clásico para todas las edades.</p>
+                <a class="cta">Reservar clase</a></div>
+              <div class="art"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div>
+            </section>
+          </main>
+          <ul class="sw" id="sw"></ul>
+          <p class="why" id="why"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #111; color: #eee; font-size: 14px; }
+          .ctrl { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 10px 14px; }
+          .ctrl label { display: flex; gap: 8px; align-items: center; } .ctrl input { width: 150px; height: 40px; }
+          .modes { display: flex; gap: 4px; overflow-x: auto; }
+          .modes button { min-height: 40px; padding: 0 12px; border-radius: 99px; border: 1px solid #fff3; background: none; color: inherit; cursor: pointer; white-space: nowrap; }
+          .modes [aria-pressed="true"] { background: #fff; color: #111; }
+          .web { margin: 0 14px; border-radius: 14px; overflow: hidden; background: var(--bg); color: var(--ink); transition: background .3s; }
+          nav { display: flex; gap: 18px; align-items: center; padding: 14px 18px; font-size: 13px; }
+          nav b { font: 800 20px var(--f-syne); margin-right: auto; letter-spacing: -.04em; }
+          .cta { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 99px; background: var(--acc); color: var(--on); font-weight: 650; }
+          section { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; align-items: center; padding: 6px 18px 20px; }
+          .k { margin: 0 0 8px; font-size: 12px; opacity: .75; }
+          h1 { margin: 0 0 10px; font: 800 clamp(28px, 5vw, 42px)/.95 var(--f-syne); letter-spacing: -.05em; }
+          h1 em { font-style: normal; color: var(--main); }
+          section p { margin: 0 0 14px; max-width: 34ch; }
+          .art { position: relative; aspect-ratio: 1.35; border-radius: 12px; background: var(--soft); overflow: hidden; }
+          .art i { position: absolute; border-radius: 50%; transition: background .3s; }
+          .c1 { inset: 18% 30% 0 -10%; border-radius: 999px 999px 0 0 !important; background: var(--main); }
+          .c2 { width: 34%; aspect-ratio: 1; right: 12%; top: 12%; background: var(--sup); }
+          .c3 { width: 20%; aspect-ratio: 1; right: 22%; bottom: 14%; background: var(--acc); }
+          .sw { display: flex; gap: 6px; list-style: none; margin: 12px 14px 0; padding: 0; flex-wrap: wrap; }
+          .sw li { display: flex; gap: 6px; align-items: center; font: 500 11px var(--f-mono); }
+          .sw i { width: 18px; height: 18px; border-radius: 50%; }
+          .why { margin: 10px 14px 14px; max-width: 70ch; color: #ccc; line-height: 1.5; }
+          @media (max-width: 560px) { nav span { display: none; } section { grid-template-columns: 1fr; } .art { aspect-ratio: 2; order: -1; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Cada armonía: desplazamientos de tono y papel de cada color
+          const H = {
+            'Análoga':        { d: [0, -30, 30],   why: 'Vecinos en la rueda: comparten tono y se leen como una familia. El acento es el más oscuro para que haya contraste de luz.' },
+            'Complementaria': { d: [0, 0, 180],    why: 'Opuestos: cada uno intensifica al otro. El base manda en grande y apagado; el opuesto, vivo y pequeño, solo en el botón.' },
+            'Dividida':       { d: [0, 150, 210],  why: 'El base frente a los dos vecinos de su opuesto: tensión suave. Un acento para la acción, el otro para lo decorativo.' },
+            'Tríada':         { d: [0, 120, 240],  why: 'Tres tonos a 120°: festiva. Funciona porque el base domina y los otros dos son manchas pequeñas a luces distintas.' },
+            'Monocromática':  { d: [0, 0, 0],      why: 'Un solo tono: toda la jerarquía la hace la luz. Fondo casi blanco, titular profundo y un botón muy oscuro.' }
+          };
+          const name = h => ['rosa','rojo','naranja','ámbar','amarillo','lima','verde','verde agua','turquesa','azul','azul ultramar','violeta','magenta','rosa']
+            [[15,40,65,90,115,135,165,190,215,245,275,318,345,361].findIndex(t => ((h % 360) + 360) % 360 < t)];
+          let mode = 'Complementaria';
+          modes.innerHTML = Object.keys(H).map(m => `<button aria-pressed="${m === mode}">${m}</button>`).join('');
+          modes.onclick = e => { if (e.target.tagName === 'BUTTON') { mode = e.target.textContent; paint(); } };
+          function paint() {
+            const h = +document.querySelector('#h').value, d = H[mode].d, mono = mode === 'Monocromática';
+            const c = {
+              bg:   `oklch(97% 0.014 ${h})`, ink: `oklch(22% 0.04 ${h})`, soft: `oklch(91% 0.035 ${h})`,
+              main: `oklch(${mono ? 42 : 55}% ${mono ? .1 : .15} ${h + d[0]})`,
+              sup:  `oklch(${mono ? 72 : 78}% ${mono ? .09 : .12} ${h + d[1]})`,
+              acc:  `oklch(${mono ? 28 : 66}% ${mono ? .07 : .17} ${h + d[2]})`
+            };
+            // En la análoga el acento es el vecino oscuro
+            if (mode === 'Análoga') c.acc = `oklch(40% 0.12 ${h + 30})`;
+            c.on = /oklch\((2|3|4)/.test(c.acc) ? '#fff' : `oklch(20% 0.04 ${h})`;
+            Object.entries(c).forEach(([k, v]) => web.style.setProperty('--' + k, v));
+            modes.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.textContent === mode));
+            sw.innerHTML = ['main', 'sup', 'acc'].map(k => `<li><i style="background:${c[k]}"></i>${k === 'main' ? 'base' : k === 'sup' ? 'apoyo' : 'acento'}</li>`).join('');
+            const ns = [...new Set(d.map(x => name(h + x)))];      // sin repetir nombres
+            why.textContent = `${mode}: ${ns.length > 1 ? ns.slice(0, -1).join(', ') + ' y ' + ns.at(-1) : ns[0]}. ${H[mode].why}`;
+          }
+          document.querySelector('#h').oninput = paint; paint();
+        </script>
+        <figcaption>Fíjate en que el generador nunca usa los colores a la misma luz ni con la misma superficie: la base (la ilustración y la palabra destacada) es media, el apoyo es claro y el acento es o muy vivo o muy oscuro. Por eso todas las armonías salen dignas con cualquier tono. Prueba a cambiar los valores de <code>L</code> en el JS y pon los tres al 60 %: verás cómo se estropean.</figcaption>
+      </figure>
+
+      <div class="band rueda"><div class="inner"><p>La rueda te da los tonos. <em>La luz, la saturación y la proporción</em> deciden si pegan.</p></div></div>
+
+      <h2>Los tres contrastes que sostienen una paleta</h2>
+      <p>Itten describió siete contrastes de color en su libro <em>El arte del color</em> (1961). Para diseñar webs, tres de ellos hacen casi todo el trabajo. Cuando una armonía «de manual» no funciona, casi siempre falla uno de estos tres.</p>
+
+      <div class="tres wide">
+        <div>
+          <div class="vs" aria-hidden="true"><div style="background:#4F7A6E;color:#7E9A6B">Aa<small style="color:#fff">Igual luz</small></div><div style="background:#173B33;color:#E9D9A6">Aa<small style="color:#E9D9A6">Distinta luz</small></div></div>
+          <h3>Luz</h3>
+          <p>Lo claro frente a lo oscuro. Es el contraste que hace legible el texto y el que da estructura. Si dos colores tienen luces parecidas, se pelean o se funden, por muy distinto que sea su tono.</p>
+        </div>
+        <div>
+          <div class="vs" aria-hidden="true"><div style="background:#E8352E;color:#1F6FE0">Aa<small style="color:#fff">Todo vivo</small></div><div style="background:#E9E2D6;color:#E8352E">Aa<small style="color:#5a534a">Uno vivo</small></div></div>
+          <h3>Saturación</h3>
+          <p>Lo vivo frente a lo apagado. Un color vivo necesita compañeros apagados para brillar. Dos vivos juntos se anulan: ninguno destaca porque los dos gritan.</p>
+        </div>
+        <div>
+          <div class="vs" aria-hidden="true"><div style="background:#2F5F8A;color:#8FB3D9">Aa<small style="color:#fff">Todo frío</small></div><div style="background:#2F5F8A;color:#F2B05E">Aa<small style="color:#fff">Toque cálido</small></div></div>
+          <h3>Temperatura</h3>
+          <p>Lo cálido frente a lo frío. Lo cálido avanza y lo frío retrocede: un punto cálido sobre una base fría se ve más cerca y pide atención. Sirve para dar vida a una paleta que se ha quedado seria.</p>
+        </div>
+      </div>
+
+      <p>Una paleta que funciona suele tener <strong>al menos dos de los tres contrastes</strong> bien marcados. La marina con naranja de la escuela de vela tiene los tres: luz (marino oscuro, naranja claro), saturación (marino apagado, naranja vivo) y temperatura (frío frente a cálido). Por eso salta tanto el botón. Una monocromática solo tiene el de luz, y por eso lo tiene que exagerar.</p>
+      <p>La frase que debes recordar es esta: <strong>un color vivo necesita compañeros apagados.</strong> Si te enamoras de un color muy saturado para un cliente, no le busques un compañero igual de vivo: rodéalo de neutros con temperatura y de versiones apagadas de su propia familia. Brillará más.</p>
+
+      <figure class="lab" data-title="Los tres mandos" data-hint="Activa y desactiva cada contraste" data-height="500" data-height-mobile="600" style="--hm:600px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="ctrl">
+            <button id="luz" aria-pressed="true">Contraste de luz</button>
+            <button id="sat" aria-pressed="true">Un solo color vivo</button>
+            <button id="tmp" aria-pressed="true">Acento cálido</button>
+            <button id="gris" aria-pressed="false">Ver en grises</button>
+          </div>
+          <article class="card" id="card">
+            <p class="k">Hotel rural, Maestrazgo</p>
+            <h1>Seis habitaciones y <em>un silencio</em> enorme.</h1>
+            <p class="txt">Masía del siglo XVIII restaurada a 1.100 metros, entre Morella y Ares.</p>
+            <a class="cta">Ver disponibilidad</a>
+            <div class="art"><i></i><i></i></div>
+          </article>
+          <p class="out" id="out"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { background: #111; color: #eee; font-size: 14px; }
+          .ctrl { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px; }
+          .ctrl button { min-height: 42px; padding: 0 12px; border-radius: 99px; border: 1px solid #fff3; background: none; color: inherit; cursor: pointer; }
+          .ctrl [aria-pressed="true"] { background: #fff; color: #111; }
+          .card { position: relative; overflow: hidden; margin: 0 14px; padding: 22px 22px 24px; border-radius: 14px; background: var(--bg); color: var(--ink); transition: all .4s; }
+          .k { margin: 0 0 8px; font-size: 12px; color: var(--soft-ink); }
+          h1 { position: relative; z-index: 1; max-width: 13ch; margin: 0 0 12px; font: 400 clamp(30px, 6vw, 46px)/1 var(--f-fraunces); letter-spacing: -.03em; }
+          h1 em { color: var(--acc); }
+          .txt { position: relative; z-index: 1; max-width: 32ch; margin: 0 0 18px; color: var(--soft-ink); }
+          .cta { position: relative; z-index: 1; display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 99px; background: var(--acc); color: var(--on); font-weight: 650; }
+          .art i { position: absolute; border-radius: 50%; transition: background .4s; }
+          .art i:first-child { width: 46%; aspect-ratio: 1; right: -8%; bottom: -16%; background: var(--hill); }
+          .art i:last-child { width: 13%; aspect-ratio: 1; right: 14%; top: 14%; background: var(--sun); }
+          .gray { filter: grayscale(1); }
+          .out { margin: 12px 14px; color: #ccc; line-height: 1.5; max-width: 70ch; }
+          @media (max-width: 560px) {
+            .art i:first-child { width: 62%; bottom: -30%; right: -16%; }
+            .art i:last-child { width: 10%; top: auto; bottom: 18%; right: 8%; }
+          }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const on = id => document.getElementById(id).getAttribute('aria-pressed') === 'true';
+          function paint() {
+            const L = on('luz'), S = on('sat'), T = on('tmp');
+            const accH = T ? 55 : 230;                          // cálido (ámbar tostado) o frío (azul)
+            const v = {
+              bg:   L ? 'oklch(30% 0.04 240)' : 'oklch(58% 0.06 240)',
+              ink:  L ? 'oklch(95% 0.015 85)' : 'oklch(68% 0.05 240)',
+              'soft-ink': L ? 'oklch(82% 0.02 240)' : 'oklch(66% 0.05 240)',
+              hill: S ? 'oklch(40% 0.05 200)' : 'oklch(58% 0.19 150)',
+              acc:  `oklch(${L ? 78 : 62}% ${S ? 0.14 : 0.2} ${accH})`,
+              sun:  `oklch(${L ? 85 : 64}% ${S ? 0.12 : 0.2} ${T ? 85 : 260})`,
+              on:   L ? 'oklch(22% 0.04 240)' : 'oklch(60% 0.06 240)'
+            };
+            Object.entries(v).forEach(([k, x]) => card.style.setProperty('--' + k, x));
+            card.classList.toggle('gray', on('gris'));
+            const n = [L, S, T].filter(Boolean).length;
+            out.textContent = [
+              'Sin ninguno de los tres contrastes la página es una mancha: nada se lee ni destaca.',
+              'Con un solo contraste ya se distingue algo, pero la página sigue sin carácter o sin legibilidad.',
+              'Con dos contrastes la paleta funciona. Prueba a quitar el de luz: es el único sin el que no hay lectura.',
+              'Los tres contrastes a la vez: luz para leer, un único color vivo para mirar y un acento cálido sobre base fría que da calidez.'
+            ][n] + (on('gris') ? ' En grises solo sobrevive el contraste de luz: así compruebas si la estructura aguanta.' : '');
+          }
+          document.querySelectorAll('.ctrl button').forEach(b => b.onclick = () => {
+            b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'); paint();
+          });
+          paint();
+        </script>
+        <figcaption>Quita los contrastes uno a uno. Sin el de luz el texto deja de leerse aunque los tonos sigan siendo bonitos. Sin el de saturación la colina verde compite con el botón. Sin el de temperatura el hotel se queda correcto pero frío, como una notaría. Y «Ver en grises» te enseña que la estructura de la página depende casi solo de la luz.</figcaption>
+      </figure>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Antes de enseñar una paleta al cliente, pásala a escala de grises (en Figma, con un filtro; en el navegador, con <code>filter: grayscale(1)</code>). Si en grises el botón y el titular siguen siendo lo más visible, la paleta está bien construida. Si todo se convierte en el mismo gris medio, falta contraste de luz y ningún tono lo va a arreglar.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Con el brillo bajo de noche o con el modo de ahorro de batería, la saturación y la temperatura se aplanan; la luz es lo único que se mantiene. Un móvil con Night Shift, además, tiñe todo de cálido y se come los acentos cálidos sutiles. Otra razón para que la jerarquía de la web descanse en la luz.</p>
+      </div>
+
+      <h2>Neutros con temperatura</h2>
+      <p>La mayor parte de una web no es color: es fondo, texto y aire. Esos neutros también tienen temperatura, y elegirlos bien es la mitad de que una paleta pegue. Hay tres decisiones:</p>
+      <ul>
+        <li><strong>Blanco puro o crema.</strong> El blanco puro es nítido, digital, frío y algo clínico. El crema (un blanco con un toque de amarillo) es cálido, recuerda al papel y a la piedra, y se siente más humano y más «caro».</li>
+        <li><strong>Gris frío o gris cálido.</strong> El gris frío (con un toque de azul) suena a tecnología, acero y oficina. El cálido (con un toque de marrón o rosa, lo que se llama gris topo o greige) suena a interiorismo, tejido y casa.</li>
+        <li><strong>Negro puro o tinta.</strong> El negro puro es tajante, de moda y de cartel. La tinta (un negro con un poco de azul o de marrón) es más suave al leer y se integra mejor con el resto de colores.</li>
+      </ul>
+      <p>La regla es sencilla: <strong>el neutro tiene que estar de acuerdo con el mensaje, no solo con el color</strong>. Un neutro de la misma temperatura que el color principal refuerza su carácter; uno de temperatura contraria lo equilibra. Lo que nunca funciona es un neutro que se parezca en luz al color, porque se funden.</p>
+
+      <div class="tester wide" data-tester>
+        <div class="t-colors" role="group" aria-label="Color principal">
+          <button type="button" aria-pressed="true" data-c="marino" style="--c:#102E52"><i></i>Marino</button>
+          <button type="button" aria-pressed="false" data-c="botella" style="--c:#124227"><i></i>Verde botella</button>
+          <button type="button" aria-pressed="false" data-c="terracota" style="--c:#C06240"><i></i>Terracota</button>
+          <button type="button" aria-pressed="false" data-c="rosa" style="--c:#E1AEB5"><i></i>Rosa palo</button>
+          <button type="button" aria-pressed="false" data-c="violeta" style="--c:#8254C4"><i></i>Violeta</button>
+          <button type="button" aria-pressed="false" data-c="amarillo" style="--c:#EDCC48"><i></i>Amarillo</button>
+        </div>
+        <div class="t-grid">
+          <div style="--n:#FFFFFF;--nt:#101622" data-n="blanco"><span class="tag"></span><div class="blk">Marca</div><p><b>Blanco puro</b><small>#FFFFFF</small></p></div>
+          <div style="--n:#F4EEE1;--nt:#1E130E" data-n="crema"><span class="tag"></span><div class="blk">Marca</div><p><b>Crema</b><small>#F4EEE1</small></p></div>
+          <div style="--n:#E1E5EA;--nt:#101622" data-n="frio"><span class="tag"></span><div class="blk">Marca</div><p><b>Gris frío</b><small>#E1E5EA</small></p></div>
+          <div style="--n:#E6E0DA;--nt:#1E130E" data-n="calido"><span class="tag"></span><div class="blk">Marca</div><p><b>Gris cálido</b><small>#E6E0DA</small></p></div>
+          <div style="--n:#000000;--nt:#F4F4F4" data-n="negro"><span class="tag"></span><div class="blk">Marca</div><p><b>Negro puro</b><small>#000000</small></p></div>
+          <div style="--n:#101622;--nt:#E9ECF2" data-n="tinta"><span class="tag"></span><div class="blk">Marca</div><p><b>Tinta azulada</b><small>#101622</small></p></div>
+        </div>
+        <p class="t-out" data-tout aria-live="polite"></p>
+      </div>
+
+      <p>El ejemplo más claro es el <strong>azul marino</strong>. Con blanco nieve es náutico, nítido y corporativo: un banco, una naviera, una escuela de vela. Con crema se vuelve clásico y cálido: un club de tenis de toda la vida, una librería, un despacho de abogados con historia. El azul es el mismo; el neutro decide si la marca suena a ahora o a siempre.</p>
+
+      <div class="sino wide">
+        <figure class="si"><figcaption>Marino con blanco: nítido y frío</figcaption>
+          <div class="mw" style="--b:#FFFFFF;--i:#102E52;--p:#102E52;--s:#E1E5EA;--a:#102E52;--on:#FFFFFF;--a2:#E1E5EA;--t:#102E52;--mf:var(--f-display)">
+            <div class="mw-nav"><b>Brisa Asesores</b><span>Servicios</span><span>Equipo</span><span class="mw-btn">Llamar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Asesoría fiscal y laboral</small><strong>Tus papeles, <em>en orden</em>.</strong><p>Autónomos y pymes de la Plana desde 1994.</p><span class="mw-btn">Pedir cita</span></div><div class="mw-art bands"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>Eficiente y moderno, pero también distante. Bien para una asesoría que quiere parecer ágil.</p>
+        </figure>
+        <figure class="si"><figcaption>Marino con crema: clásico y cálido</figcaption>
+          <div class="mw" style="--b:#F4EEE1;--i:#102E52;--p:#102E52;--s:#E6DCC8;--a:#102E52;--on:#F4EEE1;--a2:#E6DCC8;--t:#102E52;--mf:var(--f-fraunces);--mw:500">
+            <div class="mw-nav"><b>Brisa Asesores</b><span>Servicios</span><span>Equipo</span><span class="mw-btn">Llamar</span></div>
+            <div class="mw-body"><div class="mw-copy"><small>Asesoría fiscal y laboral</small><strong>Tus papeles, <em>en orden</em>.</strong><p>Autónomos y pymes de la Plana desde 1994.</p><span class="mw-btn">Pedir cita</span></div><div class="mw-art bands"><i></i><i></i><i></i></div></div>
+          </div>
+          <p>El mismo marino se siente de confianza y con historia. Bien para una asesoría familiar que quiere transmitir trato cercano.</p>
+        </figure>
+        <p class="diff">Si el cliente pide calidez con un azul marino, la respuesta no es cambiar el azul: es cambiar el blanco por crema.</p>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>No mezcles temperaturas de neutro en la misma página: un fondo crema con tarjetas gris azulado o un texto negro azulado sobre crema amarillo parecen dos webs pegadas. Elige una familia de neutros (todos cálidos o todos fríos) y saca de ella fondo, superficies, filetes y texto.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Muchos móviles ajustan el blanco de la pantalla según la luz ambiente (True Tone en iPhone, «color adaptativo» en Android). Un crema muy sutil puede verse blanco a mediodía y amarillento de noche. Si la calidez es parte de la marca, dale al crema algo más de croma del que te parece necesario en el monitor y compruébalo en dos o tres teléfonos.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Un cliente con una marca azul marino te dice: «la web me parece muy fría, como de banco». ¿Qué cambias primero?</p>
+        <ol>
+          <li>Subo la saturación del azul para que tenga más vida.</li>
+          <li>Cambio el fondo blanco puro por un crema y el texto negro por una tinta cálida.</li>
+          <li>Añado un segundo color de marca cálido con la misma superficie que el azul.</li>
+        </ol>
+        <p class="why">El azul marino no es el problema: es lo que lo rodea. Un neutro cálido (crema) le cambia el carácter sin tocar la marca. Saturar el azul lo haría más tecnológico, no más cálido, y un segundo color con la misma superficie rompería la jerarquía. Si después quieres más calidez, añade un acento cálido pequeño.</p>
+      </div>
+
+      <h2>Por qué algunas combinaciones chocan</h2>
+      <p>Igual que hay razones para que dos colores peguen, hay razones concretas para que choquen. Casi todas las combinaciones feas que verás en webs de clientes caen en uno de estos cuatro casos, y todos tienen arreglo sin cambiar de colores.</p>
+
+      <div class="clash wide">
+        <div>
+          <div class="ex"><span class="bars"><i style="background:#E8352E"></i><i style="background:#1F6FE0"></i><i style="background:#1FA650"></i><i style="background:#F2C500"></i></span><small>Choca</small></div>
+          <div class="ex"><span class="bars"><i style="background:#E9E2D6;flex:3"></i><i style="background:#6E8FB0"></i><i style="background:#8FA88B"></i><i style="background:#E8352E;flex:.6"></i></span><small>Arreglo</small></div>
+          <div><h3>Saturaciones iguales que compiten</h3><p>Cuatro colores vivos al máximo. Cada uno reclama atención con la misma fuerza, así que ninguno la consigue y el conjunto parece un juguete barato. El arreglo: deja uno vivo y apaga el resto.</p></div>
+        </div>
+        <div>
+          <div class="ex" style="background:#279936;color:#DE3D34">Oferta<small>Choca</small></div>
+          <div class="ex" style="background:#033816;color:#F3AFB3">Oferta<small>Arreglo</small></div>
+          <div><h3>Complementarios a la misma luz</h3><p>Rojo sobre verde, los dos al 60 % de luz y muy saturados: el borde vibra, como si temblara. El arreglo es separar las luces: verde muy oscuro y rosa claro siguen siendo rojo y verde, pero ya no vibran.</p></div>
+        </div>
+        <div>
+          <div class="ex"><span class="bars"><i style="background:#A9C8EC"></i><i style="background:#9C9A6A"></i><i style="background:#F5B8CB"></i><i style="background:#8A7F74"></i></span><small>Choca</small></div>
+          <div class="ex"><span class="bars"><i style="background:#A9C8EC"></i><i style="background:#BFE3C8"></i><i style="background:#F5B8CB"></i><i style="background:#F3E2B3"></i></span><small>Arreglo</small></div>
+          <div><h3>Mezclas sucias</h3><p>Pasteles limpios junto a colores agrisados (un caqui, un marrón grisáceo). Al lado de un rosa limpio, el caqui parece sucio, como una mancha. El arreglo: o todos limpios o todos tierra, pero de la misma familia de saturación.</p></div>
+        </div>
+        <div>
+          <div class="ex" style="background:#F7F5EF"><span class="bars" style="flex-direction:column;padding:1rem !important"><i style="background:#D63A2F"></i><i style="background:#E5533C"></i></span><small>Choca</small></div>
+          <div class="ex" style="background:#F7F5EF"><span class="bars" style="flex-direction:column;padding:1rem !important"><i style="background:#D63A2F"></i><i style="background:#D63A2F;opacity:.18"></i></span><small>Arreglo</small></div>
+          <div><h3>Casi iguales</h3><p>Dos rojos que se diferencian un poco (el del logo y el del botón, por ejemplo). No parece una decisión, parece un error. El arreglo: o el mismo color exacto, o una diferencia clara (otra luz, otra opacidad, otro tono).</p></div>
+        </div>
+      </div>
+
+      <p>Detrás de los cuatro hay la misma idea de la primera sección. Las saturaciones iguales fallan porque los colores comparten algo (la intensidad) que provoca competencia en lugar de familia, y además no hay jerarquía. Los complementarios a la misma luz fallan porque se oponen sin control. Las mezclas sucias fallan porque mezclan dos familias de saturación. Y los casi iguales fallan porque no están ni juntos ni separados.</p>
+
+      <p class="statement">Si dos colores no son <em>el mismo</em>, que se note que son distintos.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Los «casi iguales» son la señal número uno de web hecha a trozos: el azul del logo que mandó el cliente, el azul por defecto del tema de WordPress y el azul que elegiste tú para el botón. Antes de entregar, haz inventario de colores (en DevTools, el panel de CSS Overview te los lista todos) y unifica los que se parecen.</p>
+      </div>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el móvil los colores se ven en piezas más pequeñas (un botón de 44 px, una etiqueta) y el ojo distingue peor los matices: dos verdes parecidos que en escritorio separabas, en el teléfono son el mismo. Lo contrario también pasa: un texto rojo pequeño sobre verde vibra más cuanto más pequeño es.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">Una bodega quiere burdeos y verde oliva. Los pones juntos y algo no funciona: se ven pesados y sucios. ¿Qué es lo más probable?</p>
+        <ol>
+          <li>Tienen una luz y una saturación parecidas, y no hay ningún claro ni ningún color que mande.</li>
+          <li>Burdeos y oliva no pueden combinar porque no son complementarios.</li>
+          <li>Les falta un tercer color vivo, como un azul eléctrico.</li>
+        </ol>
+        <p class="why">Burdeos y oliva combinan muy bien (casi opuestos, los dos apagados: comparten saturación y tienen oposición de tono). Lo que suele fallar es que los dos son oscuros y medios: falta contraste de luz. Añade un crema generoso como fondo, deja que el burdeos mande y usa el oliva en pequeño. Un azul eléctrico sería añadir un problema.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Los colores pegan cuando comparten algo (tono, luz o saturación) o cuando se oponen de forma controlada, con uno que manda.</li>
+          <li>Cada armonía tiene su carácter: monocromática y análoga transmiten calma y coherencia; complementaria, dividida y tríada, energía. La tétrada sirve sobre todo como código de secciones.</li>
+          <li>La rueda da los tonos, pero la paleta la sostienen tres contrastes: luz, saturación y temperatura. Un color vivo necesita compañeros apagados.</li>
+          <li>Los neutros también tienen temperatura: crema o blanco, gris frío o cálido, negro o tinta cambian el mensaje del mismo color.</li>
+          <li>Las combinaciones chocan por saturaciones que compiten, opuestos a la misma luz, mezclas de familias sucias y limpias, o colores casi iguales.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Coge la web de un cliente de la agencia que tenga más de tres colores. Haz inventario (CSS Overview en DevTools) y clasifícalos: ¿qué armonía intentan formar, aunque sea sin querer? Escribe en una línea qué comparten o cómo se oponen. Después rehaz su paleta con una armonía elegida a propósito, decide qué color manda, cuál es el acento y qué neutro les va (cálido o frío), y pásala a grises para comprobar la luz. Presenta el antes y el después con una frase de por qué para cada cambio: así se lo explicarías al cliente.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  /* Portada: círculo cromático con armonías en vivo.
+     El tono base se arrastra con el dedo o el ratón (o con las flechas del teclado). */
+  (() => {
+    const root = document.documentElement, hero = document.querySelector('.hero');
+    const wheel = hero.querySelector('.wheel'), dotsG = hero.querySelector('[data-dots]'), poly = hero.querySelector('.poly');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const NAMES = ['rosa', 'rojo', 'naranja', 'ámbar', 'amarillo', 'lima', 'verde', 'verde agua', 'turquesa', 'azul', 'azul ultramar', 'violeta', 'magenta', 'rosa'];
+    const CUT = [15, 40, 65, 90, 115, 135, 165, 190, 215, 245, 275, 318, 345, 361];
+    const norm = (h) => ((h % 360) + 360) % 360;
+    const name = (h) => NAMES[CUT.findIndex((t) => norm(h) < t)];
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    // Cada armonía: [desplazamiento de tono, luz, croma] por color. El primero es la base.
+    const MODES = {
+      mono:   { t: 'Monocromática', c: [[0, .5, .13], [0, .72, .1], [0, .88, .05]], acc: 0, r: [86, 58, 34],
+                why: (h) => `Todo sale de ${name(h)}: solo cambian la luz y la saturación. Por eso es tan coherente y tranquila; la jerarquía la pone la diferencia entre claro y oscuro.` },
+      analog: { t: 'Análoga', c: [[0, .58, .15], [-30, .76, .13], [30, .44, .12]], acc: 2,
+                why: (h) => `${cap(name(h))} con sus vecinos, ${name(h - 30)} y ${name(h + 30)}. Comparten parte del tono y se leen como una familia, como la luz de un atardecer. Natural y suave; el contraste lo pone la luz.` },
+      comp:   { t: 'Complementaria', c: [[0, .44, .12], [0, .86, .05], [180, .72, .16]], acc: 2, skip: 1,
+                why: (h) => `${cap(name(h))} frente a ${name(h + 180)}, su opuesto. Cada uno hace que el otro parezca más intenso: la combinación con más energía. Uno manda en grande; el otro, solo donde algo tiene que saltar.` },
+      split:  { t: 'Dividida', c: [[0, .5, .13], [150, .74, .15], [210, .82, .1]], acc: 1,
+                why: (h) => `${cap(name(h))} con los dos vecinos de su opuesto, ${name(h + 150)} y ${name(h + 210)}. Conserva la tensión de la complementaria, pero más suave y con matices. La más fácil de usar bien.` },
+      triad:  { t: 'Tríada', c: [[0, .55, .15], [120, .8, .13], [240, .45, .12]], acc: 1,
+                why: (h) => `${cap(name(h))}, ${name(h + 120)} y ${name(h + 240)}, repartidos a 120°. Tres tonos muy distintos: alegre y festiva. Funciona si uno domina y los otros van en pequeño.` },
+      tetrad: { t: 'Tétrada', c: [[0, .55, .15], [60, .82, .12], [180, .5, .11], [240, .68, .12]], acc: 2,
+                why: (h) => `Dos parejas de opuestos: ${name(h)} y ${name(h + 180)}, ${name(h + 60)} y ${name(h + 240)}. La más rica y la más difícil: mejor como código de secciones que como decoración.` }
+    };
+    const CANS = ['Salobre', 'Taronja', 'Fang', 'Llum'];
+    let hue = 300, mode = 'comp', touched = false;
+
+    // OKLCH a HEX (para enseñar los valores)
+    function toHex(L, C, H) {
+      const a = C * Math.cos(H * Math.PI / 180), b = C * Math.sin(H * Math.PI / 180);
+      const l = (L + .3963377774 * a + .2158037573 * b) ** 3, m = (L - .1055613458 * a - .0638541728 * b) ** 3, s = (L - .0894841775 * a - 1.291485548 * b) ** 3;
+      const lin = [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s, -.0041960863 * l - .7034186147 * m + 1.707614701 * s];
+      return '#' + lin.map((v) => { v = Math.min(1, Math.max(0, v)); v = v <= .0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - .055; return Math.round(v * 255).toString(16).padStart(2, '0'); }).join('').toUpperCase();
+    }
+    const ok = (L, C, H) => `oklch(${Math.round(L * 100)}% ${C} ${Math.round(norm(H))})`;
+
+    // Anillo suave: paradas cada 10°
+    hero.querySelector('.ring').style.background = `conic-gradient(${Array.from({ length: 37 }, (_, i) => `oklch(70% .14 ${i * 10})`).join(',')})`;
+    hero.querySelector('[data-ticks]').innerHTML = Array.from({ length: 12 }, (_, i) => { const a = i * 30 * Math.PI / 180; return `<line class="tick" x1="${Math.sin(a) * 68}" y1="${-Math.cos(a) * 68}" x2="${Math.sin(a) * 71}" y2="${-Math.cos(a) * 71}"/>`; }).join('');
+
+    const site = hero.querySelector('.site'), cansEl = hero.querySelector('[data-cans]'), chipsEl = hero.querySelector('[data-chips]');
+    const whyEl = hero.querySelector('[data-why]'), live = hero.querySelector('[data-live]');
+    let lastMode = '';
+    function paint(announce) {
+      const M = MODES[mode], cols = M.c.map(([d, L, C]) => ({ h: hue + d, L, C, css: `oklch(${L * 100}% ${C} ${norm(hue + d)})` }));
+      root.style.setProperty('--h0', norm(hue).toFixed(1));
+      // Rueda: puntos y polígono
+      const pts = [];
+      dotsG.innerHTML = cols.map((c, i) => {
+        if (M.skip === i) return '';
+        const r = M.r ? M.r[i] : 86, a = norm(c.h) * Math.PI / 180, x = Math.sin(a) * r, y = -Math.cos(a) * r;
+        if (!M.r) pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+        return `<circle class="dot${i ? '' : ' base'}" cx="${x}" cy="${y}" r="${i ? 6.5 : 9.5}" fill="${c.css}"/>`;
+      }).reverse().join('');
+      if (M.r) { const a = norm(hue) * Math.PI / 180; pts.push('0,0', `${(Math.sin(a) * 86).toFixed(1)},${(-Math.cos(a) * 86).toFixed(1)}`); }
+      poly.setAttribute('points', pts.join(' '));
+      hero.querySelector('[data-hub]').textContent = cap(name(hue));
+      hero.querySelector('[data-hubv]').textContent = Math.round(norm(hue)) + '°';
+      wheel.setAttribute('aria-valuenow', Math.round(norm(hue)));
+      wheel.setAttribute('aria-valuetext', `${name(hue)}, ${Math.round(norm(hue))} grados`);
+      // Mini web: fondo y tinta de la familia de la base; panel = base; latas = armonía; botón = acento
+      const base = cols[0], acc = cols[M.acc];
+      const v = { '--sb': `oklch(97% 0.014 ${norm(hue)})`, '--si': `oklch(22% 0.04 ${norm(hue)})`, '--sp': base.css, '--spt': base.L < .62 ? `oklch(97% 0.014 ${norm(hue)})` : `oklch(22% 0.04 ${norm(hue)})`,
+        '--sa': acc.css, '--sat': acc.L < .62 ? '#fff' : `oklch(22% 0.04 ${norm(hue)})` };
+      Object.entries(v).forEach(([k, x]) => site.style.setProperty(k, x));
+      const cans = cols;
+      site.dataset.n = cans.length;
+      cansEl.innerHTML = cans.map((c, i) => `<i class="can" style="--c:${c.css};--t:${c.L < .62 ? '#fff' : '#1a1a1a'}"><span>${CANS[i]}</span></i>`).join('');
+      chipsEl.innerHTML = cols.map((c) => `<i style="background:${c.css};color:${c.L < .62 ? '#fff' : '#1a1a1a'}">${toHex(c.L, c.C, c.h)}</i>`).join('');
+      hero.querySelector('[data-hex]').textContent = toHex(base.L, base.C, base.h);
+      hero.querySelector('[data-ok]').textContent = ok(base.L, base.C, base.h);
+      hero.querySelector('[data-roles]').textContent = cols.length === 4 ? 'Base 60 %, tres apoyos de 10 %' : (mode === 'mono' ? 'Un tono, tres luces' : 'Base 60 %, apoyo 30 %, acento 10 %');
+      whyEl.innerHTML = `<b>${M.t}</b>${M.why(hue)}`;
+      if (announce) live.textContent = `${M.t}. ${M.why(hue)}`;
+    }
+
+    // Arrastre en la rueda
+    function fromPointer(e) {
+      const r = wheel.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2;
+      hue = norm(Math.atan2(x, -y) * 180 / Math.PI); paint();
+    }
+    function touch() { if (!touched) { touched = true; hero.classList.add('touched'); } }
+    wheel.addEventListener('pointerdown', (e) => { touch(); wheel.setPointerCapture(e.pointerId); fromPointer(e); });
+    wheel.addEventListener('pointermove', (e) => { if (wheel.hasPointerCapture(e.pointerId)) fromPointer(e); });
+    wheel.addEventListener('pointerup', () => { live.textContent = `${MODES[mode].t}. ${MODES[mode].why(hue)}`; });
+    wheel.addEventListener('keydown', (e) => {
+      const step = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5, PageUp: 30, PageDown: -30 }[e.key];
+      if (step) { e.preventDefault(); touch(); hue = norm(hue + step); paint(true); }
+    });
+    hero.querySelectorAll('.modes button').forEach((b) => b.addEventListener('click', () => {
+      touch(); mode = b.dataset.mode;
+      hero.querySelectorAll('.modes button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      paint(true);
+    }));
+
+    // En reposo la base gira muy despacio, hasta que alguien toca
+    function loop() {
+      if (touched) return;
+      if (hero.getBoundingClientRect().bottom > 0) { hue = norm(hue + .12); paint(); }
+      requestAnimationFrame(loop);
+    }
+    paint();
+    if (!reduce) requestAnimationFrame(loop);
+  })();
+
+  /* Probador de neutros */
+  (() => {
+    const box = document.querySelector('[data-tester]'); if (!box) return;
+    const C = {
+      marino:    { c: '#102E52', t: '#FFFFFF', best: ['crema', 'blanco'], bad: ['negro', 'frio'],
+        why: '<b>Marino:</b> con crema se vuelve clásico y cálido; con blanco puro, náutico y corporativo. Evita el negro puro (tienen una luz parecida y el marino parece un negro sucio) y el gris frío, que lo apaga todo y suena a oficina.' },
+      botella:   { c: '#124227', t: '#F4EEE1', best: ['crema', 'calido'], bad: ['frio', 'negro'],
+        why: '<b>Verde botella:</b> pide neutros cálidos. Con crema o gris cálido suena a tradición, a botica, a club inglés. Con gris frío parece de hospital y con negro puro desaparece: los dos son muy oscuros.' },
+      terracota: { c: '#C06240', t: '#FFFFFF', best: ['crema', 'calido'], bad: ['frio', 'negro'],
+        why: '<b>Terracota:</b> es barro y cal, así que va con crema y gris cálido, la misma temperatura. Junto a un gris frío parece sucio (el contraste de temperatura lo agrisa) y con negro puro se vuelve agresivo, de cartel.' },
+      rosa:      { c: '#E1AEB5', t: '#2A1418', best: ['calido', 'negro'], bad: ['crema', 'blanco'],
+        why: '<b>Rosa palo:</b> con gris cálido (topo) es sofisticado, de interiorismo o de moda; con negro puro, atrevido y editorial. Con crema se empalaga (los dos claros y cálidos, sin contraste) y con blanco puro queda infantil.' },
+      violeta:   { c: '#8254C4', t: '#FFFFFF', best: ['tinta', 'blanco'], bad: ['calido', 'crema'],
+        why: '<b>Violeta:</b> va con neutros fríos. Con tinta azulada es nocturno y tecnológico; con blanco puro, limpio y digital. Con gris cálido o crema el violeta se ensucia y tira a lavanda antigua (puede ser una decisión vintage, pero rara vez es lo que buscas).' },
+      amarillo:  { c: '#EDCC48', t: '#1E130E', best: ['tinta', 'frio'], bad: ['blanco', 'crema'],
+        why: '<b>Amarillo:</b> es el color más claro de la rueda, así que necesita un neutro oscuro o frío para separarse. Con tinta tiene fuerza (con negro puro suena a obra y peligro); con gris frío es escandinavo. Sobre blanco o crema casi desaparece: misma luz.' }
+    };
+    const out = box.querySelector('[data-tout]'), tiles = [...box.querySelectorAll('[data-n]')];
+    function set(k) {
+      const x = C[k];
+      box.querySelectorAll('.t-colors button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.c === k)));
+      tiles.forEach((t) => {
+        t.style.setProperty('--tc', x.c); t.style.setProperty('--tct', x.t);
+        const tag = t.querySelector('.tag'), n = t.dataset.n;
+        tag.textContent = x.best[0] === n ? 'La mejor' : x.best[1] === n ? 'También' : x.bad.includes(n) ? 'Evita' : '';
+        tag.classList.toggle('no', x.bad.includes(n));
+      });
+      out.innerHTML = x.why;
+    }
+    box.querySelectorAll('.t-colors button').forEach((b) => b.addEventListener('click', () => set(b.dataset.c)));
+    set('marino');
+  })();
+</script>
+</body>
+</html>

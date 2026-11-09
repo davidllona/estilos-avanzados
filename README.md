@@ -8,15 +8,15 @@ Está pensado para repasarse desde el **móvil**. Cada demo tiene un botón «Ve
 
 ## Qué contiene
 
+El cuaderno explica **el porqué** del diseño: qué transmite cada color, por qué unos pegan con otros, qué tipografía va con qué fondo y cómo se piensa una web según el negocio. La técnica de CSS y el scroll cinematográfico quedan como bloque extra.
+
 | Bloque | Lecciones |
 | --- | --- |
-| Criterio | 00 · Qué hace que una web parezca cara |
-| Color | 01 · Color que se comporta (OKLCH) · 02 · Paletas con criterio |
-| Forma | 03 · Tipografía que manda · 04 · Más allá de las cards |
-| Movimiento | 05 · Movimiento con intención · 06 · Scroll animado solo con CSS · 07 · View Transitions |
-| Scroll cinematográfico | 08 · GSAP, ScrollTrigger y Lenis · 09 · Secuencias de imágenes y vídeo · 10 · Capas interactivas sobre imagen |
-| Producción | 11 · Recursos visuales con IA · 12 · Rendimiento y accesibilidad |
-| Proyecto | 13 · Proyecto final: la torre (desmontaje de la landing) |
+| Antes de empezar | Qué hace que una web parezca cara |
+| **Color** | Cómo se lee un color · Qué transmite cada color · Por qué unos colores pegan · El toque: acentos que lo cambian todo · Construir una paleta paso a paso · Catálogo de paletas explicadas |
+| **Tipografía** | Qué transmite una tipografía · Combinar tipografías · Tipografía, color y fondo |
+| **Diseño web** | Cómo se piensa una web · Webs que venden emoción · Webs que venden confianza |
+| Técnica (el extra) | OKLCH · Paletas en CSS · Tipografía en CSS · Composición · Movimiento · Scroll con CSS · View Transitions · GSAP · Secuencias · Capas interactivas · Recursos con IA · Rendimiento · Proyecto final: la torre |
 
 Además:
 

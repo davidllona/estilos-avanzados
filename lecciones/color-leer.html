@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cómo se lee un color | Hora azul</title>
+<meta name="description" content="Tono, luz y saturación; cálidos y fríos; peso visual y contexto. Aprende a leer un color y a explicar por qué transmite lo que transmite.">
+<link rel="stylesheet" href="../assets/css/base.css">
+<style>
+  /* Identidad «Albers»: gris cálido de papel, tinta y un azul de lámina.
+     Jost (geométrica, Bauhaus) para titulares; Newsreader para leer. */
+  :root {
+    --bg: oklch(93% 0.008 85);
+    --bg-2: oklch(90% 0.01 85);
+    --bg-3: oklch(86% 0.012 85);
+    --fg: oklch(20% 0.01 60);
+    --muted: oklch(43% 0.012 60);
+    --faint: oklch(52% 0.012 60);
+    --accent: oklch(56% 0.2 262);
+    --accent-ink: oklch(48% 0.2 262);   /* el azul para texto pequeño: 5,5:1 sobre el fondo */
+    --on-accent: oklch(99% 0 0);
+    --code-bg: oklch(21% 0.015 260);
+    --scheme: light;
+    --f-display: "Jost", "Inter Tight", system-ui, sans-serif;
+    --f-body: "Newsreader", Georgia, serif;
+    --f-ui: "Jost", "Inter Tight", system-ui, sans-serif;
+    --display-weight: 500;
+    --display-tracking: -0.035em;
+  }
+  body { font-size: clamp(1.06rem, 1rem + 0.25vw, 1.2rem); }
+  .prose h2 { font-size: clamp(2.3rem, 1.4rem + 3.4vw, 4.4rem); line-height: .95; letter-spacing: -0.045em; font-weight: 500; }
+  .prose h2 .n { color: var(--accent-ink); letter-spacing: 0; }
+  .prose h3 { font-weight: 500; letter-spacing: -0.025em; }
+  .prose a { text-decoration-color: var(--accent); }
+  .callout.criterio .t { color: var(--accent-ink); }
+  @media (max-width: 640px) { .lab[style*="--hm"] .lab-stage iframe { height: var(--hm); } }
+
+  /* =========================================================
+     Portada: lámina de Albers. El mismo cuadrado sobre dos fondos.
+     ========================================================= */
+  .hero { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: center; gap: 0 clamp(2rem, 4vw, 4.5rem); padding: 6rem var(--gutter) 3rem; background: var(--bg); color: var(--fg); }
+  .hero-copy { display: grid; gap: 1.3rem; align-content: center; }
+  .hero [data-kicker] { margin: 0; font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .hero h1 { font-size: clamp(3.3rem, 0.8rem + 6.6vw, 8rem); font-weight: 500; line-height: .88; letter-spacing: -0.055em; margin: 0; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero .lede { margin: 0; max-width: 34ch; font-size: var(--step-1); line-height: 1.38; color: var(--muted); }
+  .ctrl { display: grid; gap: .55rem; }
+  .ctrl > span { font: 500 var(--step--1)/1 var(--f-ui); color: var(--muted); }
+  .studies { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .studies button { font: 500 .95rem/1 var(--f-ui); color: var(--fg); background: transparent; border: 1px solid var(--line-2); border-radius: 999px; padding: 0 1rem; min-height: 44px; cursor: pointer; transition: background-color .25s, color .25s, border-color .25s; }
+  .studies button b { font-weight: 500; color: var(--muted); margin-right: .45rem; }
+  .studies button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .studies button[aria-pressed="true"] b { color: inherit; opacity: .6; }
+  .centers { display: flex; gap: .5rem; align-items: center; }
+  .centers button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12); transition: box-shadow .25s; }
+  .centers button[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--fg); }
+  .hero-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.2rem; }
+  .reveal { font: 500 1rem/1 var(--f-ui); background: var(--accent); color: var(--on-accent); border: 0; border-radius: 999px; padding: 0 1.4rem; min-height: 50px; cursor: pointer; transition: background-color .25s; }
+  .reveal:hover { background: var(--accent-ink); }
+  .reveal[aria-pressed="true"] { background: var(--fg); }
+
+  .plate-wrap { margin: 0; display: grid; gap: .9rem; }
+  .plate { --a: #E8B537; --b: #3B2A6B; --c: #9B8A93; position: relative; display: grid; grid-template-columns: 1fr 1fr; aspect-ratio: 1.32; cursor: pointer; box-shadow: 0 1px 0 rgb(0 0 0 / .06), 0 30px 60px -30px rgb(40 30 20 / .35); -webkit-tap-highlight-color: transparent; }
+  .plate .f { position: relative; transition: background-color .9s var(--ease-out); }
+  .plate .f1 { background: var(--a); } .plate .f2 { background: var(--b); }
+  .plate .sq { position: absolute; z-index: 2; width: 34%; aspect-ratio: 1; left: 33%; top: 40%; background: var(--c); transition: background-color .5s; }
+  .plate.bare .f { background: var(--bg-2); }
+  .plate .bar { position: absolute; z-index: 1; top: 47.7%; height: 7%; left: 25%; right: 25%; background: var(--c); opacity: 0; transform: scaleX(.2); transition: opacity .5s .3s, transform .7s .3s var(--ease-out), background-color .5s; }
+  .plate.bare .bar { opacity: 1; transform: scaleX(1); }
+  .plate-cap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem 1rem; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  .plate-cap b { font-weight: 500; color: var(--fg); }
+  .plate-cap code { font-size: .82rem; background: none; padding: 0; color: var(--fg); }
+  .why-line { margin: 0; min-height: 3em; font: 400 var(--step-0)/1.45 var(--f-body); color: var(--fg); max-width: 52ch; }
+  .tap-hint { position: absolute; z-index: 3; right: .8rem; bottom: .8rem; font: 500 .8rem/1 var(--f-ui); background: oklch(99% 0 0 / .9); color: var(--fg); padding: .5rem .75rem; border-radius: 999px; pointer-events: none; transition: opacity .4s; }
+  .touched .tap-hint { opacity: 0; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; align-content: start; gap: 1.4rem; padding-top: 5rem; padding-bottom: 1.6rem; }
+    .hero-copy { gap: .9rem; }
+    .hero h1 { font-size: clamp(2.9rem, 1.2rem + 8vw, 4.6rem); }
+    .hero .lede { font-size: 1.04rem; }
+    .plate { aspect-ratio: 1.55; }
+    .plate .sq { width: 40%; left: 30%; top: 32%; }
+    .plate .bar { top: 44%; }
+    .why-line { font-size: .98rem; min-height: 0; }
+    .studies { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
+    .studies button { flex: none; }
+    .hero-copy .ctrl, .hero-copy .hero-foot { display: none; }
+    .ctrl.m, .hero-foot.m { display: grid; }
+    .hero-foot.m { display: flex; }
+  }
+  @media (min-width: 901px) { .ctrl.m, .hero-foot.m { display: none; } }
+  @media (max-width: 900px) and (max-height: 700px) { .hero .lede { display: none; } }
+
+  /* =========================================================
+     Cuerpo
+     ========================================================= */
+  /* Las tres preguntas: tres escaleras de color */
+  .q3 { display: grid; gap: 0; border-top: 1px solid var(--fg); margin: 2.4rem 0 3rem; }
+  .q3 > div { display: grid; grid-template-columns: minmax(10rem, 14rem) 1fr; gap: 1.4rem; align-items: center; padding: 1.3rem 0; border-bottom: 1px solid var(--line-2); }
+  .q3 h3 { margin: 0 0 .35rem; font-size: var(--step-2); }
+  .q3 p { margin: 0; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  .ladder { display: grid; grid-template-columns: repeat(9, 1fr); height: 5.4rem; }
+  .ladder i { position: relative; }
+  .ladder i.on::after { content: ""; position: absolute; left: 50%; bottom: -.7rem; width: .5rem; height: .5rem; translate: -50% 0; border-radius: 50%; background: var(--fg); }
+  .ladder.hue i { background: oklch(62% 0.15 calc(var(--k) * 40 + 0)); }
+  .ladder.lig i { background: oklch(calc(14% + var(--k) * 10%) 0.12 40); }
+  .ladder.chr i { background: oklch(62% calc(var(--k) * 0.026) 40); }
+  .ladder-ends { display: flex; justify-content: space-between; grid-column: 2; margin-top: -.6rem; font: 400 .8rem/1 var(--f-ui); color: var(--muted); }
+  @media (max-width: 760px) { .q3 > div { grid-template-columns: 1fr; gap: .8rem; } .ladder { height: 3.6rem; } .ladder-ends { grid-column: 1; margin-top: 0; } }
+
+  .vocab { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 2rem 0; border-top: 1px solid var(--line-2); }
+  .vocab div { padding: 1rem 1.2rem 1rem 0; }
+  .vocab div + div { padding-left: 1.2rem; border-left: 1px solid var(--line-2); }
+  .vocab b { display: block; font: 500 var(--step-0)/1.2 var(--f-display); margin-bottom: .5rem; }
+  .vocab ul { list-style: none; padding: 0 !important; margin: 0 !important; font: 400 var(--step--1)/1.5 var(--f-ui); color: var(--muted); }
+  .vocab li { margin: 0 0 .2rem; }
+  .vocab li em { font-style: normal; color: var(--fg); }
+  @media (max-width: 760px) { .vocab { grid-template-columns: 1fr; } .vocab div, .vocab div + div { padding: 1rem 0; border-left: 0; border-bottom: 1px solid var(--line-2); } }
+
+  /* Pares cálido / frío */
+  .temps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; margin: 2.4rem 0 1rem; }
+  .temps figure { margin: 0; display: grid; grid-template-rows: 7rem 7rem auto; }
+  .temps i { display: flex; align-items: flex-end; padding: .55rem .65rem; font: 500 .74rem/1.2 var(--f-ui); font-style: normal; background: var(--s); color: var(--t, oklch(99% 0 0)); }
+  .temps figcaption { padding: .7rem .65rem 0; font: 500 .85rem/1.3 var(--f-ui); }
+  .temps-legend { display: flex; justify-content: space-between; font: 400 var(--step--1)/1.3 var(--f-ui); color: var(--muted); margin: 0 0 2.4rem; }
+  @media (max-width: 760px) { .temps { grid-template-columns: repeat(3, 1fr); row-gap: 1.2rem; } .temps figure { grid-template-rows: 5rem 5rem auto; } }
+
+  /* El mismo verde entre dos vecinos */
+  .neighbors { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0; }
+  .neighbors figure { margin: 0; }
+  .neighbors .row { display: grid; grid-template-columns: 1fr 1.2fr; height: 9rem; }
+  .neighbors figcaption { margin-top: .6rem; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  @media (max-width: 640px) { .neighbors { grid-template-columns: 1fr; } .neighbors .row { height: 6.5rem; } }
+
+  /* Así sí / Así no */
+  .sisno { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 2.5vw, 2rem); margin: 2.6rem 0; }
+  .sisno figure { margin: 0; display: grid; grid-template-rows: auto 1fr auto; }
+  .sisno .tag { display: flex; align-items: center; gap: .55rem; margin-bottom: .7rem; font: 500 var(--step--1)/1 var(--f-ui); }
+  .sisno .tag::before { content: ""; width: 1.6rem; height: 3px; background: var(--accent); }
+  .sisno .no .tag::before { background: oklch(55% 0.19 28); }
+  .sisno figcaption { margin-top: .8rem; font: 400 var(--step--1)/1.5 var(--f-ui); color: var(--muted); }
+  .sisno figcaption b { color: var(--fg); font-weight: 500; }
+  .mini { position: relative; min-height: 15rem; padding: 1.3rem 1.4rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; overflow: hidden; font-family: var(--f-ui); }
+  .mini .nav { display: flex; justify-content: space-between; align-items: center; font: 500 .8rem/1 var(--f-ui); }
+  .mini .nav span:last-child { display: flex; gap: .9rem; opacity: .75; }
+  .mini h4 { font: 500 clamp(1.5rem, 1.1rem + 1.2vw, 2.1rem)/1 var(--f-display); letter-spacing: -0.035em; margin: 0; max-width: 13ch; }
+  .mini p { margin: 0; font: 400 .88rem/1.4 var(--f-ui); max-width: 30ch; }
+  .mini .btn-m { align-self: flex-start; font: 600 .86rem/1 var(--f-ui); padding: .8rem 1.1rem; border-radius: 999px; }
+  @media (max-width: 640px) { .sisno { grid-template-columns: 1fr; } }
+
+  /* Banda de afirmación en azul */
+  .band.blue { --band-bg: var(--accent); --band-fg: var(--on-accent); }
+  .band.blue p { margin: 0; max-width: 17ch; font: 500 clamp(2.2rem, 1rem + 4.6vw, 5.6rem)/.95 var(--f-display); letter-spacing: -0.05em; }
+  .band.blue small { display: block; margin-top: 1.6rem; max-width: 46ch; font: 400 var(--step-0)/1.5 var(--f-body); letter-spacing: 0; opacity: .88; }
+
+  /* Clave alta / clave baja */
+  .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2.2rem 0; }
+  .keys figure { margin: 0; }
+  .keys .bars { display: flex; height: 6.5rem; }
+  .keys .bars i { flex: var(--w); background: oklch(var(--l) 0.01 70); }
+  .keys figcaption { margin-top: .7rem; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  .keys figcaption b { display: block; color: var(--fg); font: 500 var(--step-1)/1.2 var(--f-display); margin-bottom: .2rem; }
+  @media (max-width: 640px) { .keys { grid-template-columns: 1fr; } }
+
+  /* Saturación: cinco voces del mismo tono */
+  .voices { display: grid; grid-template-columns: repeat(5, 1fr); margin: 2.2rem 0; }
+  .voices div { display: flex; flex-direction: column; justify-content: flex-end; min-height: 11rem; padding: .8rem; background: oklch(58% var(--c) 165); color: oklch(99% 0 0); }
+  .voices b { font: 500 var(--step-1)/1 var(--f-display); letter-spacing: -0.03em; }
+  .voices span { font: 400 .78rem/1.35 var(--f-ui); margin-top: .35rem; opacity: .92; }
+  @media (max-width: 640px) { .voices { grid-template-columns: 1fr; } .voices div { min-height: 0; padding: 1rem; flex-direction: row; justify-content: space-between; align-items: baseline; gap: 1rem; } .voices span { margin: 0; text-align: right; } }
+
+  /* Tríptico a sangre: el mismo naranja en tres casas */
+  .tript { display: grid; grid-template-columns: repeat(3, 1fr); margin-block: 3rem 1rem; }
+  .tript > div { position: relative; min-height: clamp(16rem, 32vw, 24rem); display: grid; place-items: center; padding: 2rem 1rem 4.5rem; }
+  .tript .dot { width: clamp(5rem, 11vw, 9rem); aspect-ratio: 1; background: #D9541E; }
+  .tript p { position: absolute; left: clamp(1rem, 2.5vw, 2rem); right: clamp(1rem, 2.5vw, 2rem); bottom: 1.2rem; margin: 0; font: 400 var(--step--1)/1.4 var(--f-ui); }
+  .tript p b { display: block; font-weight: 500; font-size: var(--step-0); }
+  @media (max-width: 640px) { .tript { grid-template-columns: 1fr; } .tript > div { min-height: 11rem; grid-template-columns: auto 1fr; place-items: center start; gap: 1.2rem; padding: 1.4rem var(--gutter); } .tript .dot { width: 5rem; } .tript p { position: static; } }
+
+  /* Lectura guiada de «mesa» */
+  @media (min-width: 761px) { .split.read { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  .steps code { white-space: nowrap; }
+  .mesa { background: #F3EEE3; color: #111; padding: 1.4rem 1.4rem 1.6rem; font-family: "Inter Tight", system-ui, sans-serif; box-shadow: 0 0 0 1px var(--line); overflow: hidden; }
+  .mesa .nav { display: flex; justify-content: space-between; align-items: center; font: 600 .8rem/1 "Inter Tight", sans-serif; }
+  .mesa .nav > span:last-child { display: flex; gap: .9rem; font-weight: 500; opacity: .7; }
+  .mesa h4 { margin: 1.6rem 0 1rem; font: 700 clamp(1.8rem, 1.2rem + 1.8vw, 2.7rem)/.95 "Inter Tight", sans-serif; letter-spacing: -0.055em; }
+  .mesa h4 em { display: block; font: italic 400 1.08em/1 "Instrument Serif", serif; letter-spacing: -0.02em; }
+  .mesa h4 em span { background: linear-gradient(#D9541E, #D9541E) 0 92% / 100% .09em no-repeat; }
+  .mesa .cta { display: inline-block; background: #D9541E; color: #111; font: 600 .82rem/1 "Inter Tight", sans-serif; padding: .8rem 1.1rem; border-radius: 999px; }
+  .mesa .pic { position: relative; height: 9.5rem; margin: 1.4rem 0 0 1.4rem; }
+  .mesa .pic::before { content: ""; position: absolute; inset: -0.8rem 1.6rem 1.2rem -0.8rem; background: #D9541E; }
+  .mesa .city { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mesa .card { position: absolute; z-index: 2; right: -.4rem; bottom: -1rem; width: 10.5rem; background: #fff; color: #111; padding: .7rem .8rem; font: 500 .72rem/1.5 "Inter Tight", sans-serif; box-shadow: 0 14px 30px -12px rgb(0 0 0 / .35); }
+  .mesa .card b { display: block; font-weight: 600; margin-bottom: .2rem; }
+  .mesa .card i { font-style: normal; color: #D9541E; margin-right: .3rem; }
+  .mesa-key { display: grid; grid-template-columns: 70fr 22fr 8fr; height: 2.6rem; margin-top: 1.2rem; font: 500 .75rem/1 var(--f-ui); }
+  .mesa-key i { display: flex; align-items: center; padding: 0 .6rem; font-style: normal; white-space: nowrap; overflow: hidden; }
+  .mesa-cap { margin: .6rem 0 0; font: 400 var(--step--1)/1.45 var(--f-ui); color: var(--muted); }
+  .steps { list-style: none; padding: 0 !important; margin: 0 !important; counter-reset: st; }
+  .steps li { counter-increment: st; position: relative; padding: 0 0 1.6rem 3.2rem; margin: 0; }
+  .steps li::before { content: counter(st); position: absolute; left: 0; top: -.15rem; font: 500 2.2rem/1 var(--f-display); color: var(--accent-ink); letter-spacing: -0.04em; }
+  .steps h3 { margin: 0 0 .4rem !important; font-size: var(--step-1) !important; }
+  .steps p { margin: 0 0 .5rem; }
+  @media (max-width: 760px) { .mesa .pic { margin-right: .6rem; } .mesa .nav > span:last-child { gap: .6rem; } .split.read .stick { max-width: 26rem; } }
+
+  /* Ficha de lectura */
+  .ficha { list-style: none; padding: 1.6rem 1.8rem !important; margin: 2rem 0 !important; background: var(--fg); color: var(--bg); counter-reset: f; }
+  .ficha li { counter-increment: f; display: grid; grid-template-columns: 2.2rem 1fr; margin: 0; padding: .7rem 0; border-bottom: 1px solid color-mix(in oklab, var(--bg) 18%, transparent); font: 400 var(--step-0)/1.45 var(--f-ui); }
+  .ficha li:last-child { border-bottom: 0; }
+  .ficha li::before { content: counter(f, decimal-leading-zero); font: 500 .85rem/1.9 var(--f-ui); color: oklch(78% 0.1 262); }
+</style>
+<script src="../vendor/prism/prism.min.js" defer></script>
+<script src="../assets/js/cuaderno.js" defer></script>
+</head>
+<body data-lesson="color-leer">
+<main id="main">
+  <header class="hero" aria-labelledby="t">
+    <div class="hero-copy">
+      <p data-kicker>Lección</p>
+      <h1 id="t">Cómo se lee <em>un color</em></h1>
+      <p class="lede">Los dos cuadrados de la lámina son exactamente del mismo color. Tu ojo no se lo cree, porque nunca mira un color solo: lo lee contra lo que tiene alrededor.</p>
+      <div class="ctrl">
+        <span>Estudio</span>
+        <div class="studies" data-studies></div>
+      </div>
+      <div class="ctrl">
+        <span>Color del centro</span>
+        <div class="centers" data-centers></div>
+      </div>
+      <div class="hero-foot">
+        <button class="reveal" type="button" aria-pressed="false" data-reveal>Quitar el fondo</button>
+        <span class="chip" data-meta>15 min</span>
+      </div>
+    </div>
+
+    <div class="plate-wrap">
+      <div class="plate" data-plate role="img" aria-label="Lámina: el mismo cuadrado de color sobre dos fondos distintos">
+        <div class="f f1"><div class="sq"></div></div>
+        <div class="f f2"><div class="sq"></div></div>
+        <span class="bar" aria-hidden="true"></span>
+        <span class="tap-hint" aria-hidden="true">Toca la lámina</span>
+      </div>
+      <div class="plate-cap"><span><b data-num>Lámina I</b>, <span data-name>Uno parece dos</span></span><span>Los dos cuadrados: <code data-val>#9B8A93</code></span></div>
+      <p class="why-line" aria-live="polite" data-why></p>
+      <div class="ctrl m">
+        <div class="studies" data-studies></div>
+      </div>
+      <div class="hero-foot m">
+        <button class="reveal" type="button" aria-pressed="false" data-reveal>Quitar el fondo</button>
+        <div class="centers" data-centers></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="lesson">
+    <article class="prose">
+
+      <p>Tienes buen ojo: sabes cuándo una paleta funciona. Lo que te falta es poder decir <em>por qué</em>, decidir sin probar veinte veces y explicárselo a un cliente que «quiere el azul más alegre». Esta lección te da el método para leer un color como lee un músico una nota: qué es, cuánto pesa, con qué suena.</p>
+      <p>Una advertencia que vale para todo el bloque: cuando digamos que un color «transmite» algo, hablamos de asociaciones aprendidas, sobre todo en un contexto occidental y español. No son leyes de la física. Pero lo que vas a ver aquí, la luz, la saturación y el contexto, sí es percepción, y funciona igual para todos los ojos.</p>
+
+      <h2>Las tres preguntas que hay que hacerle a un color</h2>
+      <p>Cualquier color, el que sea, se describe con tres respuestas. Si las tienes claras, sabes dónde va ese color en una web antes de probarlo.</p>
+
+      <div class="q3 wide">
+        <div>
+          <div><h3>¿Qué color es?</h3><p>El tono: su sitio en la rueda. Rojo, naranja, azul… y hacia dónde tira.</p></div>
+          <div class="ladder hue" aria-hidden="true"><i style="--k:0"></i><i style="--k:1" class="on"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i><i style="--k:6"></i><i style="--k:7"></i><i style="--k:8"></i></div>
+        </div>
+        <div>
+          <div><h3>¿Claro u oscuro?</h3><p>La luz. La pregunta más importante de las tres, aunque parezca la más aburrida.</p></div>
+          <div class="ladder lig" aria-hidden="true"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4" class="on"></i><i style="--k:5"></i><i style="--k:6"></i><i style="--k:7"></i><i style="--k:8"></i></div>
+        </div>
+        <div>
+          <div><h3>¿Vivo o apagado?</h3><p>La saturación: cuánto color tiene frente a un gris de la misma luz.</p></div>
+          <div class="ladder chr" aria-hidden="true"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i><i style="--k:6"></i><i style="--k:7" class="on"></i><i style="--k:8"></i></div>
+        </div>
+      </div>
+      <p>El punto negro marca dónde cae el naranja quemado de la landing «mesa» (<code>#D9541E</code>) en cada escalera: un naranja que tira a rojo, de luz media y bastante vivo, pero sin llegar al máximo. Ese «sin llegar al máximo» es parte de por qué parece sofisticado y no de oferta de supermercado.</p>
+
+      <h3>Por qué la luz va primero</h3>
+      <p>El ojo lee las formas, los bordes y las letras sobre todo por diferencias de luz. El tono y la saturación llegan después y con menos detalle. Por eso un titular azul sobre un fondo naranja de la misma luz cuesta de leer aunque los colores sean «opuestos», y por eso una foto en blanco y negro se entiende perfectamente. Cuando dudes con un color, pregúntate primero cuánta luz tiene; casi siempre ahí está el problema.</p>
+
+      <h3>El vocabulario para hablar de color</h3>
+      <p>Con el cliente no digas «croma 0.18». Di cosas que se entiendan y que sean precisas:</p>
+      <div class="vocab wide">
+        <div><b>Tono: hacia dónde tira</b><ul><li>Un rojo que tira a <em>naranja</em> (tomate) o a <em>rosa</em> (frambuesa)</li><li>Un verde <em>amarillento</em> (oliva, lima) o <em>azulado</em> (esmeralda, menta)</li><li>Un azul <em>verdoso</em> (petróleo) o <em>violáceo</em> (ultramar)</li></ul></div>
+        <div><b>Luz: dónde cae</b><ul><li><em>Pastel</em> o muy claro: sirve de fondo</li><li><em>Medio</em>: acentos, botones, ilustración</li><li><em>Profundo</em> u oscuro: texto, fondos oscuros, peso</li></ul></div>
+        <div><b>Saturación: cuánto grita</b><ul><li><em>Empolvado</em>, grisáceo: discreto, elegante</li><li><em>Natural</em>: el color de las cosas</li><li><em>Vivo</em>, <em>eléctrico</em>, <em>neón</em>: señal, energía</li></ul></div>
+      </div>
+
+      <p>Si quieres medir estas tres cosas con números fiables en CSS, el espacio <strong>OKLCH</strong> las separa casi exactamente igual que las percibes: L es la luz, C es el croma (cuánto color) y H es el tono. Lo tienes explicado en la lección técnica <a href="01-oklch.html">Color en CSS: OKLCH</a>. Aquí usaremos sus valores como regla de medir.</p>
+
+      <figure class="lab" data-title="El lector de color" data-hint="Elige un color o prueba los de la fila" data-height="420" data-height-mobile="720" style="--hm:720px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="reader">
+            <div class="sw" id="sw"><span class="big">Aa</span><code id="code"></code></div>
+            <div class="info">
+              <div class="row">
+                <label class="pick"><input type="color" id="pick" value="#d9541e"> Tu color</label>
+                <div class="presets" id="presets"></div>
+              </div>
+              <dl>
+                <div><dt>Tono</dt><dd id="t"></dd></div>
+                <div><dt>Luz</dt><dd id="l"></dd></div>
+                <div><dt>Saturación</dt><dd id="s"></dd></div>
+                <div><dt>Temperatura</dt><dd id="k"></dd></div>
+              </dl>
+              <p id="say"></p>
+            </div>
+          </div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 18px; background: #f1efea; color: #1a1512; font-family: var(--f-sans); }
+          .reader { display: grid; grid-template-columns: 1fr 1.25fr; gap: 20px; min-height: calc(100vh - 36px); }
+          .sw { display: flex; flex-direction: column; justify-content: space-between; padding: 18px; border-radius: 4px; transition: background .3s; }
+          .big { font: 500 84px/1 var(--f-sans); letter-spacing: -0.04em; }
+          code { align-self: start; font: 500 12px/1.4 var(--f-mono); background: rgb(0 0 0 / .2); color: #fff; padding: 6px 8px; border-radius: 4px; }
+          .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+          .pick { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+          input[type=color] { width: 44px; height: 44px; border: 0; padding: 0; background: none; cursor: pointer; }
+          .presets { display: flex; gap: 6px; }
+          .presets button { width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .15); }
+          dl { margin: 16px 0 12px; display: grid; gap: 0; }
+          dl div { display: grid; grid-template-columns: 110px 1fr; padding: 8px 0; border-bottom: 1px solid #d9d4cc; font-size: 14px; }
+          dt { color: #6b625b; } dd { margin: 0; font-weight: 600; }
+          #say { margin: 0; font: 400 16px/1.45 var(--f-read); }
+          @media (max-width: 560px) { .reader { grid-template-columns: 1fr; } .sw { min-height: 150px; } .big { font-size: 56px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const presets = ['#d9541e', '#0f1b3d', '#ff3d8b', '#f3eee3', '#6b7f5a', '#e8c547', '#8c847b', '#5b2c83'];
+          presets.forEach(h => { const b = document.createElement('button'); b.style.background = h; b.title = h; b.onclick = () => { pick.value = h; read(); }; document.querySelector('#presets').append(b); });
+
+          // HEX → OKLCH (L 0-1, C, H en grados)
+          function oklch(hex) {
+            const [r, g, b] = [1, 3, 5].map(i => { const c = parseInt(hex.slice(i, i + 2), 16) / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+            const l = Math.cbrt(0.4122214708*r + 0.5363325363*g + 0.0514459929*b), m = Math.cbrt(0.2119034982*r + 0.6806995451*g + 0.1073969566*b), s = Math.cbrt(0.0883024619*r + 0.2817188376*g + 0.6299787005*b);
+            const L = 0.2104542553*l + 0.7936177850*m - 0.0040720468*s, A = 1.9779984951*l - 2.4285922050*m + 0.4505937099*s, B = 0.0259040371*l + 0.7827717662*m - 0.8086757660*s;
+            return { L, C: Math.hypot(A, B), H: (Math.atan2(B, A) * 180 / Math.PI + 360) % 360, Y: 0.2126*r + 0.7152*g + 0.0722*b };
+          }
+          // Nombre del tono según el ángulo (aproximado, en palabras de diseñador)
+          const HUES = [[18,'rosa frambuesa'],[40,'rojo'],[70,'naranja'],[90,'ámbar'],[115,'amarillo'],[135,'verde amarillento'],[165,'verde'],[205,'verde azulado'],[245,'azul celeste'],[275,'azul'],[305,'violeta'],[345,'magenta'],[361,'rosa']];
+          function read() {
+            const hex = pick.value, { L, C, H, Y } = oklch(hex);
+            let name = HUES.find(([max]) => H < max)[1];
+            if (C < 0.03) name = L > 0.9 ? (H > 40 && H < 115 ? 'crema, blanco roto' : 'blanco') : L < 0.25 ? 'tinta, casi negro' : 'gris';
+            else if (H >= 40 && H < 115 && L < 0.55) name = 'marrón (un naranja o amarillo oscuro)';
+            const luz = L > .9 ? 'muy claro' : L > .75 ? 'claro' : L > .55 ? 'medio' : L > .35 ? 'oscuro' : 'muy oscuro';
+            const sat = C < .03 ? 'casi gris' : C < .07 ? 'apagado, empolvado' : C < .13 ? 'natural' : C < .2 ? 'vivo' : 'muy vivo, eléctrico';
+            const warm = (H < 115 || H >= 345), cool = H >= 165 && H < 290;
+            const temp = C < .015 ? 'neutro' : warm ? 'cálido' : cool ? 'frío' : 'templado: depende de su vecino';
+            // Contraste WCAG con blanco y con negro
+            const cw = 1.05 / (Y + .05), cb = (Y + .05) / .05;
+            const role = L > .88 ? 'Sirve de fondo o superficie.' : L < .3 ? 'Sirve de texto o de fondo oscuro.' : C > .13 ? 'Pesa mucho: úsalo poco, como acento.' : 'Sirve de color secundario o de superficie con carácter.';
+            sw.style.background = hex; sw.style.color = cb > cw ? '#111' : '#fff';
+            code.textContent = `${hex.toUpperCase()}  oklch(${(L * 100).toFixed(0)}% ${C.toFixed(3)} ${H.toFixed(0)})`;
+            t.textContent = name; l.textContent = `${luz} (L ${(L * 100).toFixed(0)} %)`; s.textContent = `${sat} (C ${C.toFixed(2)})`; k.textContent = temp;
+            say.textContent = `${role} Texto encima: mejor en ${cb > cw ? 'negro' : 'blanco'} (${Math.max(cb, cw).toFixed(1)}:1).`;
+          }
+          pick.addEventListener('input', read); read();
+        </script>
+        <figcaption>Prueba el marrón: el lector te dirá que es un naranja oscuro, y es exactamente eso. Los marrones no tienen tono propio; son naranjas y amarillos con poca luz. Y prueba el crema: casi gris, pero con el tono de un amarillo, por eso se siente cálido.</figcaption>
+      </figure>
+
+      <div class="quiz" data-kind="Predice" data-answer="3">
+        <p class="q">Un cliente dice que su verde corporativo «se ve sucio» en la web. ¿Qué es lo primero que revisas?</p>
+        <ol>
+          <li>El tono: seguro que tira demasiado a amarillo.</li>
+          <li>El tamaño: se ve sucio porque ocupa poco.</li>
+          <li>La luz y la saturación: un verde con poca luz y poco croma se lee como «verde con gris», que es lo que el ojo llama sucio.</li>
+        </ol>
+        <p class="why">«Sucio» casi siempre significa poco croma para la luz que tiene, o que se ha mezclado con su complementario. Subir el croma o mover la luz lo limpia sin cambiar de verde.</p>
+      </div>
+
+      <h2>Cálidos y fríos</h2>
+      <p>La división más útil que existe: los colores <strong>cálidos</strong> (rojos, naranjas, amarillos, y los marrones que salen de ellos) y los <strong>fríos</strong> (azules, verdes azulados, violetas que tiran a azul). No es una propiedad física del color. Es memoria.</p>
+      <ul>
+        <li><strong>Cálido</strong> es lo que tiene que ver con el calor y con lo cercano: el fuego, el sol de la tarde, la piel, la madera, la fruta madura, la luz de una casa por la noche. Por eso transmite <em>cercanía, energía, apetito, hogar</em>.</li>
+        <li><strong>Frío</strong> es lo que tiene que ver con el aire, el agua y la distancia: el cielo, el mar, la sombra, el hielo, la noche. Por eso transmite <em>calma, limpieza, orden, distancia, tecnología</em>.</li>
+      </ul>
+
+      <h3>Los cálidos avanzan, los fríos se alejan</h3>
+      <p>Hay una razón visual de verdad detrás de esto. Las montañas lejanas se ven azuladas porque entre ellas y tú hay kilómetros de aire, que dispersa la luz azul; los pintores lo llaman perspectiva atmosférica y Leonardo ya lo describía. Llevamos toda la vida viendo que lo lejano es frío y apagado y lo cercano es cálido y nítido. Por eso, en una composición, un elemento cálido parece estar más cerca que uno frío del mismo tamaño.</p>
+      <p>Traducido a una web: <strong>un botón cálido sobre un fondo frío salta hacia ti</strong>. Un fondo frío da sensación de espacio. Una web toda cálida se siente acogedora, pero nada sobresale si no lo fuerzas con luz o saturación.</p>
+
+      <div class="sisno">
+        <figure>
+          <span class="tag">Así sí</span>
+          <div class="mini" style="background:#DCE3E6; color:#1F2A33">
+            <div class="nav"><span>Mas del Pinar</span><span><span>Casas</span><span>Rutas</span></span></div>
+            <div><h4>Silencio a 1.200 metros</h4><p style="margin-top:.6rem">Hotel rural en el Maestrazgo, con seis habitaciones de piedra.</p></div>
+            <span class="btn-m" style="background:#B5512B; color:#fff">Ver disponibilidad</span>
+          </div>
+          <figcaption><b>Base fría, botón cálido.</b> El gris azulado de piedra se queda atrás y el terracota avanza. El ojo va directo a reservar.</figcaption>
+        </figure>
+        <figure class="no">
+          <span class="tag">Así no (si quieres que el botón se vea)</span>
+          <div class="mini" style="background:#EAD9C4; color:#3B2A1E">
+            <div class="nav"><span>Mas del Pinar</span><span><span>Casas</span><span>Rutas</span></span></div>
+            <div><h4>Silencio a 1.200 metros</h4><p style="margin-top:.6rem">Hotel rural en el Maestrazgo, con seis habitaciones de piedra.</p></div>
+            <span class="btn-m" style="background:#C98A5B; color:#3B2A1E">Ver disponibilidad</span>
+          </div>
+          <figcaption><b>Todo cálido.</b> Es acogedora, pero el botón es uno más de la familia: misma temperatura, luz parecida. No avanza.</figcaption>
+        </figure>
+      </div>
+
+      <h3>La temperatura es relativa</h3>
+      <p>Aquí está lo que casi nadie explica: dentro de cada familia hay versiones cálidas y frías. Un color es más cálido cuanto más tira hacia el naranja y más frío cuanto más tira hacia el azul. Verde, rojo, gris, blanco y negro tienen las dos caras:</p>
+
+      <div class="temps wide" role="list">
+        <figure role="listitem"><i style="--s:#7A8B3A">Oliva<br>#7A8B3A</i><i style="--s:#1E8C6E">Esmeralda<br>#1E8C6E</i><figcaption>Verde</figcaption></figure>
+        <figure role="listitem"><i style="--s:#E0452B">Tomate<br>#E0452B</i><i style="--s:#C8275A">Frambuesa<br>#C8275A</i><figcaption>Rojo</figcaption></figure>
+        <figure role="listitem"><i style="--s:#F2B33D; --t:#1A1512">Yema<br>#F2B33D</i><i style="--s:#E8E23A; --t:#1A1512">Limón<br>#E8E23A</i><figcaption>Amarillo</figcaption></figure>
+        <figure role="listitem"><i style="--s:#8C847B">Topo<br>#8C847B</i><i style="--s:#7D8590">Pizarra<br>#7D8590</i><figcaption>Gris</figcaption></figure>
+        <figure role="listitem"><i style="--s:#F3EEE3; --t:#1A1512">Crema<br>#F3EEE3</i><i style="--s:#F2F5F8; --t:#1A1512">Nieve<br>#F2F5F8</i><figcaption>Blanco</figcaption></figure>
+        <figure role="listitem"><i style="--s:#1E1814">Café<br>#1E1814</i><i style="--s:#141821">Tinta azul<br>#141821</i><figcaption>Negro</figcaption></figure>
+      </div>
+      <p class="temps-legend"><span>Arriba, la versión cálida (tira a naranja)</span><span>Abajo, la fría (tira a azul)</span></p>
+
+      <p>Mira el amarillo: el limón es frío porque tira hacia el verde, y el yema es cálido porque tira hacia el naranja. Y el gris topo (<code>oklch(62% 0.016 71)</code>) frente al pizarra (<code>oklch(61% 0.019 256)</code>): tienen casi la misma luz y casi nada de color, y aun así uno parece una piedra al sol y el otro un día nublado. Ese poquito de tono en un neutro decide el ambiente de toda la web.</p>
+
+      <p>Y como es relativa, el vecino también la cambia. El mismo verde parece cálido o frío según lo que tenga al lado:</p>
+      <div class="neighbors">
+        <figure><div class="row"><i style="background:#2F5FA8"></i><i style="background:#6FA35A"></i></div><figcaption>Junto a un azul, el verde <code>#6FA35A</code> parece cálido: es el que tiene más amarillo de los dos.</figcaption></figure>
+        <figure><div class="row"><i style="background:#E8C23A"></i><i style="background:#6FA35A"></i></div><figcaption>Junto a un amarillo, el mismo verde parece frío: ahora es el que tiene más azul.</figcaption></figure>
+      </div>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Decide primero la temperatura de la web entera y haz que los neutros la sigan: crema, gris topo y negro café para una marca cálida (una bodega, una panadería, un hotel rural); blanco nieve, gris pizarra y tinta azul para una fría (una clínica, una ingeniería, un SaaS). Después rompe la regla <strong>una sola vez</strong>, con el acento: es lo que hace que salte.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Por la noche, muchos móviles calientan la pantalla (Night Shift en iPhone, el modo de luz nocturna o de lectura en Android). Con ese filtro tu blanco nieve se ve crema y tus grises fríos se ven neutros: la paleta fría pierde su temperatura. Revisa la web con el filtro activado y desactivado, y no te fíes de una captura que te mande el cliente a las once de la noche para opinar sobre el color.</p>
+      </div>
+
+      <h2>La luz manda</h2>
+      <p>Si solo pudieras controlar una de las tres preguntas, elige la luz. Una paleta funciona o no funciona por su <strong>estructura de claros y oscuros</strong>; el tono y la saturación la visten, pero no la sostienen.</p>
+
+      <div class="band blue"><div class="inner"><p>Si funciona en blanco y negro, funciona en color.</p><small>Es la prueba más rápida y más honesta que existe. Los pintores la hacen entornando los ojos; tú puedes hacerla con un filtro.</small></div></div>
+
+      <h3>Dos colores con la misma luz se pelean</h3>
+      <p>Cuando dos colores tienen luminosidades parecidas, el ojo no encuentra un borde claro entre ellos: la parte de la visión que dibuja formas (la que trabaja con luz) dice «aquí no hay nada», y la que ve el color dice «aquí hay un cambio». El resultado es que el borde tiembla o vibra. La neurocientífica Margaret Livingstone lo explica con el sol de <em>Impresión, sol naciente</em> de Monet: tiene la misma luz que el cielo que lo rodea, y por eso parece que palpita. En gris, el sol casi desaparece.</p>
+      <p>En un cuadro es un efecto precioso. En un titular es un desastre.</p>
+
+      <div class="sisno">
+        <figure class="no">
+          <span class="tag">Así no</span>
+          <div class="mini" style="background:#3A9742; color:#DE3D34">
+            <div class="nav" style="color:#fff"><span>Celler La Plana</span><span><span>Vinos</span><span>Visitas</span></span></div>
+            <h4 style="font-size:clamp(2rem, 1.4rem + 2vw, 3rem); font-weight:600">Vendimia 2026</h4>
+            <p style="color:#fff">Rojo y verde con la misma luz (1,2:1).</p>
+          </div>
+          <figcaption><b>Misma luz, tonos opuestos.</b> Rojo y verde son complementarios y aun así el titular vibra y cansa. La pareja no es el problema; la luz igual, sí.</figcaption>
+        </figure>
+        <figure>
+          <span class="tag">Así sí</span>
+          <div class="mini" style="background:#1F4A33; color:#F2A096">
+            <div class="nav" style="color:#F4EEE4"><span>Celler La Plana</span><span><span>Vinos</span><span>Visitas</span></span></div>
+            <h4 style="font-size:clamp(2rem, 1.4rem + 2vw, 3rem); font-weight:600">Vendimia 2026</h4>
+            <p style="color:#F4EEE4">Los mismos tonos, con luces separadas (4,9:1).</p>
+          </div>
+          <figcaption><b>Mismo rojo y mismo verde, con luces distintas.</b> El verde baja a botella y el rojo sube a coral. Se lee al instante y sigue siendo la misma idea.</figcaption>
+        </figure>
+      </div>
+
+      <p>La prueba de grises consiste en quitarle a una composición el tono y la saturación y quedarte solo con la luz. Si el titular, el botón y el fondo siguen separándose, la paleta está bien construida. Si todo se funde en una papilla gris, da igual lo bonitos que sean los colores.</p>
+
+      <figure class="lab" data-title="La prueba de grises" data-hint="Cambia de paleta y quita el color" data-height="470" data-height-mobile="700" style="--hm:700px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="bar">
+            <div class="seg"><button data-p="a" class="on">Paleta A: misma luz</button><button data-p="b">Paleta B: con estructura</button></div>
+            <button id="gray" aria-pressed="false">Ver en grises</button>
+          </div>
+          <div class="mock" id="mock">
+            <nav><b>Celler La Plana</b><span>Vinos</span><span>Visitas</span></nav>
+            <h1>Vinos de piedra y viento</h1>
+            <p>Bodega familiar en la Plana Alta desde 1958. Monastrell, garnacha y un blanco de merseguera que no encontrarás en otro sitio.</p>
+            <div class="cta"><button class="buy">Reservar visita</button><span class="chip">Nuevo: rosado 2026</span></div>
+          </div>
+          <div class="lums" id="lums"></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          /* Paleta A: tonos bonitos, todos con L entre 62 y 70 */
+          .a { --fondo: oklch(70% 0.08 50); --titular: oklch(64% 0.11 150); --texto: oklch(62% 0.06 260); --boton: oklch(64% 0.14 20); --en-boton: oklch(72% 0.07 50); --chip: oklch(66% 0.1 300); }
+          /* Paleta B: los mismos tonos, con claros y oscuros separados */
+          .b { --fondo: oklch(95% 0.015 80); --titular: oklch(30% 0.07 20); --texto: oklch(40% 0.02 40); --boton: oklch(52% 0.15 30); --en-boton: oklch(99% 0 0); --chip: oklch(45% 0.09 150); }
+          body { margin: 0; padding: 14px; background: #ece9e3; font-family: var(--f-sans); }
+          .bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-bottom: 12px; }
+          .seg { display: flex; background: #fff; border-radius: 99px; padding: 3px; }
+          button { font: 600 13px var(--f-sans); border: 0; border-radius: 99px; padding: 0 14px; min-height: 40px; cursor: pointer; background: none; color: #222; }
+          .seg .on, #gray[aria-pressed=true] { background: #1a1512; color: #fff; }
+          #gray { background: #fff; }
+          .mock { background: var(--fondo); padding: 22px 26px 26px; transition: filter .4s, background .4s; }
+          .mock.g { filter: grayscale(1); }
+          nav { display: flex; gap: 18px; font-size: 13px; color: var(--texto); } nav b { margin-right: auto; color: var(--titular); }
+          h1 { font: 400 clamp(30px, 6vw, 46px)/1 var(--f-serif); color: var(--titular); margin: 26px 0 12px; letter-spacing: -0.02em; }
+          p { margin: 0; max-width: 46ch; font-size: 15px; line-height: 1.5; color: var(--texto); }
+          .cta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-top: 20px; }
+          .buy { background: var(--boton); color: var(--en-boton); padding: 0 20px; min-height: 44px; }
+          .chip { font-size: 13px; font-weight: 600; color: var(--chip); border: 1.5px solid currentColor; border-radius: 99px; padding: 6px 10px; }
+          .lums { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 10px; font: 500 11px var(--f-mono); }
+          .lums div { padding: 18px 6px 6px; border-radius: 3px; }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const mock = document.querySelector('#mock'), gray = document.querySelector('#gray');
+          const names = ['fondo', 'titular', 'texto', 'boton', 'en-boton', 'chip'];
+          function set(p) {
+            document.body.className = p;
+            document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+            // Debajo: la luz (L) de cada color, pintada en gris
+            const cs = getComputedStyle(document.body);
+            lums.innerHTML = names.map(n => {
+              const L = parseFloat(cs.getPropertyValue('--' + n).match(/oklch\(([\d.]+)%/)[1]);
+              return `<div style="background:oklch(${L}% 0 0); color:${L > 60 ? '#111' : '#fff'}">${n}<br>L ${L}</div>`;
+            }).join('');
+          }
+          document.querySelectorAll('.seg button').forEach(b => b.onclick = () => set(b.dataset.p));
+          gray.onclick = () => { const on = gray.getAttribute('aria-pressed') !== 'true'; gray.setAttribute('aria-pressed', on); mock.classList.toggle('g', on); };
+          set('a');
+        </script>
+        <figcaption>La paleta A tiene un terracota, un verde, un azul y un violeta: en color parece «rica». En grises es una mancha: todo está entre L 62 y L 70. La B usa los mismos tonos, pero reparte la luz en tres niveles (fondo a 95, botón a 52, texto a 30-40), y por eso se lee incluso sin color.</figcaption>
+      </figure>
+
+      <h3>Tres niveles de luz y una clave</h3>
+      <p>Casi todas las paletas que funcionan reparten sus colores en tres niveles: <strong>uno claro</strong> (fondos y superficies), <strong>uno medio</strong> (acentos, botones, ilustración) y <strong>uno oscuro</strong> (texto y elementos de peso). Los colores de cada nivel pueden cambiar de tono todo lo que quieras; lo que no puedes es mezclar los niveles.</p>
+      <p>Y luego está la <strong>clave</strong>, otro término de pintores: dónde se concentra la mayor parte de la superficie.</p>
+      <div class="keys">
+        <figure><div class="bars" aria-hidden="true"><i style="--l:96%; --w:5"></i><i style="--l:88%; --w:3"></i><i style="--l:62%; --w:1"></i><i style="--l:22%; --w:1"></i></div><figcaption><b>Clave alta</b>Casi todo claro, con un oscuro pequeño para el texto. Se siente aireada, limpia, tranquila: clínicas, estudios de arquitectura, bodas, cosmética.</figcaption></figure>
+        <figure><div class="bars" aria-hidden="true"><i style="--l:14%; --w:5"></i><i style="--l:24%; --w:3"></i><i style="--l:58%; --w:1"></i><i style="--l:92%; --w:1"></i></div><figcaption><b>Clave baja</b>Casi todo oscuro, con luces pequeñas. Se siente íntima, dramática, cara: la torre al anochecer, una coctelería, una sastrería, una marca de whisky.</figcaption></figure>
+      </div>
+      <p>El salto entre niveles también habla: <strong>saltos grandes</strong> (negro sobre blanco, amarillo sobre negro) dan impacto y energía, y por eso los usa una imprenta de flyers o un gimnasio; <strong>saltos pequeños</strong> (crema sobre arena, gris sobre gris) dan suavidad y calma, y por eso los usa un spa. Por debajo de cierto salto, eso sí, el texto deja de leerse: para el texto normal, el mínimo es un contraste de 4,5:1.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Cuando una paleta «no termina de funcionar» y no sabes por qué, pásala a grises antes de tocar ningún tono. En nueve de cada diez casos el problema es que dos colores que deberían separarse están a la misma luz. Arréglalo moviendo la luz de uno de ellos y deja el tono como estaba: el cliente ni notará el cambio, pero la web respirará.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Al sol, la pantalla refleja luz y los oscuros se aclaran: las diferencias pequeñas de luz desaparecen y solo sobreviven las grandes. Un gris medio sobre blanco que en la oficina se lee bien, en la terraza no existe. En el otro extremo, una pantalla OLED con el brillo bajo hunde los oscuros: un gris carbón sobre negro se vuelve invisible. Para lo que tiene que leerse sí o sí (precio, botón, aviso), deja un salto de luz generoso, mayor que el mínimo.</p>
+      </div>
+
+      <div class="quiz" data-answer="2">
+        <p class="q">Alrededor de un 8 % de los hombres de origen europeo tienen algún tipo de daltonismo, casi siempre con el rojo y el verde. ¿Qué hace que una web siga funcionando para ellos?</p>
+        <ol>
+          <li>Evitar el rojo y el verde en toda la paleta.</li>
+          <li>Que la información no dependa solo del tono: si el error y el éxito también se diferencian por luz, icono o texto, se entienden igual.</li>
+          <li>Usar colores muy saturados para que se distingan mejor.</li>
+        </ol>
+        <p class="why">El daltonismo más común confunde tonos, pero no luces. Una paleta que pasa la prueba de grises pasa casi siempre la del daltonismo. El rojo y el verde se pueden usar; lo que no se puede es que la diferencia entre ellos sea solo de tono.</p>
+      </div>
+
+      <h2>Saturación y peso visual</h2>
+      <p>La saturación es el volumen de un color. Lo saturado grita y lo apagado acompaña. Mira el mismo verde azulado, a la misma luz, con cinco cantidades de color:</p>
+
+      <div class="voices wide">
+        <div style="--c:0.012"><b>Gris verdoso</b><span>Discreto, casi invisible. Hormigón, papel reciclado.</span></div>
+        <div style="--c:0.04"><b>Empolvado</b><span>Elegante, calmado, adulto. Cosmética, hogar, decoración.</span></div>
+        <div style="--c:0.075"><b>Natural</b><span>Creíble, como las cosas. Salud, educación, alimentación.</span></div>
+        <div style="--c:0.11"><b>Vivo</b><span>Seguro, enérgico. Deporte, apps, infancia.</span></div>
+        <div style="--c:0.145"><b>Eléctrico</b><span>Señal pura. Ofertas, gaming, avisos.</span></div>
+      </div>
+
+      <h3>Por qué lo vivo grita</h3>
+      <p>Piensa en la naturaleza: casi todo lo que vemos a diario es apagado. La tierra, la piedra, los troncos, las hojas en sombra, el cielo con calima. Los colores muy saturados son escasos y casi siempre significan algo: una flor que quiere atraer, una fruta madura, un animal venenoso que avisa. Llevamos esa lectura de serie: lo saturado es una <strong>señal</strong>, lo apagado es el <strong>paisaje</strong>.</p>
+      <p>De ahí salen dos consecuencias para el diseño:</p>
+      <ul>
+        <li><strong>Lo apagado parece caro y tranquilo</strong>, porque no pide atención: está seguro de sí mismo. Por eso el lujo, la arquitectura y la cosmética trabajan con colores empolvados.</li>
+        <li><strong>Lo vivo parece joven, enérgico o urgente</strong>, porque pide atención todo el rato. Por eso funciona en infancia, deporte y ofertas, y cansa si lo pones en todas partes.</li>
+      </ul>
+
+      <h3>El peso visual y la proporción de áreas</h3>
+      <p>Un color pesa más cuanto más saturado, más contrastado con su fondo y más cálido es. Y como pesa más, <strong>necesita menos superficie</strong> para equilibrar a otro. Johannes Itten, profesor de la Bauhaus, lo llamó el contraste de cantidad (o de extensión). Partiendo de la luminosidad que Goethe asignó a cada color puro (amarillo 9, naranja 8, rojo y verde 6, azul 4, violeta 3), propuso áreas inversas para equilibrarlos: <strong>amarillo y violeta, 1 a 3; naranja y azul, 1 a 2; rojo y verde, 1 a 1</strong>.</p>
+
+      <figure class="lab" data-title="La balanza de Itten" data-hint="Elige una pareja y reparte la superficie" data-height="400" data-height-mobile="560" style="--hm:560px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="pairs" id="pairs"></div>
+          <div class="field" id="field"><div id="A"></div><div id="B"></div></div>
+          <div class="scale"><i id="beam"><b></b><b></b></i></div>
+          <label>Superficie del primer color <input id="share" type="range" min="5" max="95" value="50"><output id="out">50 %</output></label>
+          <p id="say"></p>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 16px 18px; background: #f1efea; color: #1a1512; font-family: var(--f-sans); }
+          .pairs { display: flex; flex-wrap: wrap; gap: 6px; }
+          .pairs button { font: 600 13px var(--f-sans); border: 1px solid #cfc8bf; background: #fff; border-radius: 99px; padding: 0 14px; min-height: 40px; cursor: pointer; }
+          .pairs button.on { background: #1a1512; color: #fff; border-color: #1a1512; }
+          .field { display: flex; height: 120px; margin: 14px 0 6px; }
+          .field div { transition: flex-grow .3s; }
+          .scale { height: 84px; display: grid; place-items: center; }
+          #beam { position: relative; display: block; width: min(46%, 300px); height: 3px; background: #1a1512; transition: transform .4s cubic-bezier(.3,1.4,.5,1); }
+          #beam::after { content: ""; position: absolute; left: 50%; top: 3px; border: 9px solid transparent; border-top: 12px solid #1a1512; translate: -50% 0; }
+          #beam b { position: absolute; top: -18px; width: 30px; height: 15px; border-radius: 0 0 4px 4px; }
+          #beam b:first-child { left: -6px; } #beam b:last-child { right: -6px; }
+          label { display: grid; grid-template-columns: auto 1fr 46px; gap: 10px; align-items: center; font-size: 14px; }
+          output { font: 600 13px var(--f-mono); text-align: right; }
+          #say { margin: 10px 0 0; font: 400 15px/1.45 var(--f-read); min-height: 3em; }
+          @media (max-width: 520px) { label { grid-template-columns: 1fr 46px; } label input { grid-row: 2; grid-column: 1 / -1; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          // Luminosidad de Goethe y la pareja de Itten
+          const P = [
+            { n: 'Amarillo y violeta', a: '#F2CF1D', b: '#5B2C83', va: 9, vb: 3 },
+            { n: 'Naranja y azul',     a: '#EE7A22', b: '#2453A6', va: 8, vb: 4 },
+            { n: 'Rojo y verde',       a: '#D2302C', b: '#2E8B57', va: 6, vb: 6 },
+          ];
+          let cur = P[0];
+          P.forEach((p, i) => { const b = document.createElement('button'); b.textContent = p.n; b.onclick = () => pickPair(i, b); pairs.append(b); if (!i) b.classList.add('on'); });
+          function pickPair(i, btn) { cur = P[i]; pairs.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === btn)); paint(); }
+          function paint() {
+            const s = +share.value / 100, ideal = cur.vb / (cur.va + cur.vb);
+            A.style.background = cur.a; B.style.background = cur.b;
+            A.style.flexGrow = s; B.style.flexGrow = 1 - s;
+            beam.children[0].style.background = cur.a; beam.children[1].style.background = cur.b;
+            const wa = s * cur.va, wb = (1 - s) * cur.vb;           // peso = área × luminosidad
+            beam.style.transform = `rotate(${((wb - wa) / (wa + wb)) * 11}deg)`;
+            out.textContent = Math.round(s * 100) + ' %';
+            const off = Math.abs(s - ideal) < 0.05;
+            say.textContent = off ? `Equilibrio. Itten propone un ${Math.round(ideal * 100)} % para el primero: ${cur.va > cur.vb ? 'como es mucho más luminoso, con menos superficie pesa lo mismo.' : 'tienen la misma luminosidad, así que se reparten la superficie.'}`
+              : wa > wb ? 'Gana el primero: con esta superficie se come al segundo.' : 'Gana el segundo: el primero se queda pequeño.';
+          }
+          share.addEventListener('input', paint); paint();
+        </script>
+        <figcaption>Es una guía, no una ley: Itten trabajaba con colores puros, y en una web real casi nunca lo son. Pero el principio se cumple siempre: <strong>lo luminoso y saturado necesita poca superficie</strong>. Por eso un amarillo funciona mejor como detalle que como fondo de toda una página violeta.</figcaption>
+      </figure>
+
+      <p>La aplicación práctica es la base de casi todas las paletas profesionales: <strong>mucho color apagado y un poco de color vivo</strong>. El apagado ocupa la superficie y no cansa; el vivo, en poca cantidad, se convierte en el punto donde mira todo el mundo. Lo verás a fondo en <a href="color-acento.html">El toque: acentos que lo cambian todo</a>.</p>
+
+      <div class="callout criterio"><span class="t">Criterio</span>
+        <p>Si en una web hay dos colores saturados ocupando superficies parecidas, compiten y la web parece barata, porque no hay jerarquía: el ojo no sabe dónde mirar. Apaga uno (bájale la saturación hasta que parezca «su versión empolvada») o redúcelo a un detalle. Una sola voz alta por pantalla.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>En el teléfono las proporciones cambian solas. Un botón de reserva fijo, a todo el ancho y en naranja vivo, ocupa fácilmente un 10 % de la pantalla, mucho más que en el escritorio. Si en el móvil la web se siente chillona, no es tu imaginación: compensa con un botón un punto menos saturado, o con una barra fija en el color de la tinta y solo el texto o el icono en el acento.</p>
+      </div>
+
+      <h2>El contexto cambia el color</h2>
+      <p>Esto es lo que demostraba la portada. Un color no tiene un aspecto fijo: depende de lo que tiene alrededor. Mira el mismo naranja quemado, <code>#D9541E</code>, en tres casas distintas:</p>
+
+      <div class="tript bleed">
+        <div style="background:#FFFFFF; color:#1A1512"><span class="dot"></span><p><b>Sobre blanco</b>Más oscuro y más serio. El blanco lo «aprieta».</p></div>
+        <div style="background:#0E0E0E; color:#F2EEE8"><span class="dot"></span><p><b>Sobre negro</b>Más claro, casi encendido. Parece que emite luz.</p></div>
+        <div style="background:#F3EEE3; color:#1A1512"><span class="dot"></span><p><b>Sobre crema</b>Más suave y más de la familia. El crema lo acoge.</p></div>
+      </div>
+
+      <h3>Contraste simultáneo: el ojo exagera las diferencias</h3>
+      <p>El químico Michel-Eugène Chevreul lo describió en 1839, cuando dirigía los tintes de la manufactura de tapices de los Gobelinos y le llegaban quejas de que ciertos colores «salían mal». Los tintes estaban bien; lo que cambiaba era el color de al lado. Más de un siglo después, Josef Albers dedicó un libro entero a demostrarlo, <em>Interaction of Color</em> (1963), con láminas como la de la portada.</p>
+      <p>La razón es que tu sistema visual no mide colores absolutos: mide <strong>diferencias</strong>. Y para verlas mejor, las exagera. En la práctica:</p>
+      <ul>
+        <li><strong>Junto a algo oscuro, un color se aclara</strong>; junto a algo claro, se oscurece.</li>
+        <li><strong>Junto a algo vivo, un color se apaga</strong>; junto a un gris, se aviva.</li>
+        <li><strong>Un neutro se tiñe del contrario de su vecino</strong>: un gris junto a un naranja parece azulado, y junto a un verde parece rosado.</li>
+      </ul>
+
+      <h3>El tamaño también cambia el color</h3>
+      <p>Hay un segundo efecto, más traicionero: un color en una superficie grande parece más claro y más intenso que en una muestra pequeña. Es lo que le pasa a quien pinta una habitación a partir de un taco de la tienda de pinturas. En diseño web pasa lo mismo cuando un cliente elige su color en un cuadradito del selector y lo aplicas como fondo de toda la portada: «no era tan fuerte». Sí lo era; solo que ocupaba un centímetro.</p>
+
+      <figure class="lab" data-title="El mismo color en cuatro casas" data-hint="Elige un color y únelo" data-height="430" data-height-mobile="760" style="--hm:760px">
+        <script type="text/x-demo" data-lang="html">
+          <div class="top">
+            <label><input type="color" id="pick" value="#d9541e"> Tu color</label>
+            <button id="join" aria-pressed="false">Unir las cuatro muestras</button>
+          </div>
+          <div class="houses" id="houses"></div>
+        </script>
+        <script type="text/x-demo" data-lang="css">
+          body { padding: 14px; background: #ece9e3; font-family: var(--f-sans); }
+          .top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 600; }
+          .top label { display: flex; gap: 8px; align-items: center; }
+          input[type=color] { width: 44px; height: 44px; border: 0; padding: 0; background: none; }
+          #join { font: 600 13px var(--f-sans); border: 0; border-radius: 99px; padding: 0 16px; min-height: 42px; background: #1a1512; color: #fff; cursor: pointer; }
+          .houses { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); }
+          .house { position: relative; padding: 18px 16px; min-height: 300px; display: flex; flex-direction: column; gap: 12px; }
+          .house small { font-size: 12px; font-weight: 600; opacity: .8; }
+          .house .w { font: 400 34px/1 var(--f-serif); color: var(--c); }
+          .house .sq { width: 64px; height: 64px; background: var(--c); margin: 6px 0; }
+          .house .b { align-self: flex-start; background: var(--c); color: var(--on); font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 99px; }
+          .house .cr { margin-top: auto; font: 500 11px/1.4 var(--f-mono); opacity: .85; }
+          .strip { position: absolute; left: 50px; right: 50px; top: 151px; height: 18px; background: var(--c); transform: scaleX(0); transform-origin: left; transition: transform .6s cubic-bezier(.2,1,.3,1); }
+          .joined .strip { transform: scaleX(1); }
+          @media (max-width: 560px) { .houses { grid-template-columns: 1fr 1fr; } .house { min-height: 260px; } .strip { display: none; } .joined .house .sq { outline: 3px solid var(--c); outline-offset: 4px; } }
+        </script>
+        <script type="text/x-demo" data-lang="js">
+          const H = [['Blanco', '#ffffff'], ['Negro', '#0e0e0e'], ['Crema', '#f3eee3'], ['Marino', '#0f1b3d']];
+          const lum = h => [1, 3, 5].map(i => { const c = parseInt(h.slice(i, i + 2), 16) / 255; return c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; }).reduce((s, v, i) => s + v * [.2126, .7152, .0722][i], 0);
+          const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + .05) / (y + .05); };
+          function paint() {
+            const c = pick.value, on = ratio(c, '#ffffff') > ratio(c, '#111111') ? '#fff' : '#111';
+            houses.style.setProperty('--c', c);
+            houses.innerHTML = H.map(([n, bg]) => {
+              const fg = lum(bg) > .5 ? '#1a1512' : '#f2eee8', r = ratio(c, bg);
+              return `<div class="house" style="background:${bg}; color:${fg}; --on:${on}"><small>${n}</small><span class="w">Reserva</span><span class="sq"></span><span class="b">Pedir cita</span>
+                <span class="cr">Texto de color: ${r.toFixed(1)}:1<br>${r >= 4.5 ? 'vale para texto normal' : r >= 3 ? 'solo texto grande' : 'no vale para texto'}</span></div>`;
+            }).join('') + '<i class="strip"></i>';
+          }
+          join.onclick = () => { const v = join.getAttribute('aria-pressed') !== 'true'; join.setAttribute('aria-pressed', v); houses.classList.toggle('joined', v); join.textContent = v ? 'Separar' : 'Unir las cuatro muestras'; };
+          pick.addEventListener('input', paint); paint();
+        </script>
+        <figcaption>Al unir las muestras con una tira del mismo color, la ilusión se rompe: son idénticas. Fíjate también en el contraste: el naranja quemado sirve para texto sobre negro y marino, pero sobre blanco o crema solo para titulares grandes. El color no cambió; cambió su casa.</figcaption>
+      </figure>
+
+      <h3>Por qué nunca hay que elegir un color aislado</h3>
+      <p>Todo lo anterior lleva a una regla de trabajo: <strong>un color no se elige, se elige una relación</strong>. El naranja perfecto en el selector, sobre el gris de Figma, no es el naranja que verá nadie. El que se verá es ese naranja junto a tu crema, junto a tu tinta, en un botón de 44 px de alto y en un fondo de 1440 px de ancho.</p>
+      <ol>
+        <li>Elige siempre los colores de dos en dos o de tres en tres, sobre una mini maqueta, nunca en muestras sueltas.</li>
+        <li>Prueba el color en su tamaño real: un acento en un botón, un fondo a pantalla completa.</li>
+        <li>Si la web tiene modo oscuro, el acento necesita su propia versión: sobre oscuro parecerá más claro y más vivo, así que normalmente le bajas un poco la luz o la saturación.</li>
+      </ol>
+
+      <div class="callout ojo"><span class="t">Ojo</span>
+        <p>Cuando el cliente te mande «el color de la marca» en un PDF o en una foto del rótulo, ese color ya viene con su contexto: el papel, la iluminación del local, el material. En la pantalla, rodeado de blanco, puede parecer otro. No es que esté mal convertido: necesitas ajustarlo a su nueva casa y explicárselo así.</p>
+      </div>
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>El modo oscuro del sistema cambia la casa de tu web sin pedirte permiso. Si tu web es blanca y el resto del teléfono está en oscuro, ese blanco se percibe deslumbrante, mucho más que en el escritorio de la agencia. Y en una pantalla OLED con fondo negro, los acentos parecen encendidos. Si haces versión oscura con <code>prefers-color-scheme</code>, ajusta el acento por separado en lugar de reutilizar el mismo valor.</p>
+      </div>
+
+      <div class="quiz" data-answer="1">
+        <p class="q">La dueña de una clínica dental elige un verde menta precioso en una muestra pequeña sobre blanco. Lo aplicas como fondo de toda la portada y te dice que «no es el que eligió». ¿Qué ha pasado?</p>
+        <ol>
+          <li>A gran tamaño un color parece más claro e intenso, y además ya no está rodeado de blanco: el contexto y la superficie han cambiado cómo se ve.</li>
+          <li>El navegador ha convertido mal el color.</li>
+          <li>Las pantallas siempre muestran los verdes más saturados.</li>
+        </ol>
+        <p class="why">El valor es el mismo; su tamaño y sus vecinos, no. Enséñale el color en una maqueta real desde el principio y la conversación cambia: ya no discutís un cuadradito, discutís una web.</p>
+      </div>
+
+      <h2>Cómo mirar una web que te gusta</h2>
+      <p>Con las preguntas de esta lección puedes desmontar cualquier web que te guste y entender por qué funciona. Vamos a hacerlo con la landing «mesa» de los vídeos: crema, tinta y naranja quemado.</p>
+
+      <div class="split read">
+        <div class="stick">
+          <div class="mesa" aria-label="Recreación de la landing mesa">
+            <div class="nav"><span>mesa</span><span><span>Producto</span><span>Precios</span><span>Entrar</span></span></div>
+            <h4>El compañero de operaciones que <em><span>nunca duerme.</span></em></h4>
+            <span class="cta">Empieza gratis</span>
+            <div class="pic"><svg class="city" viewBox="0 0 300 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8d6d2"/><stop offset="1" stop-color="#a9a7a3"/></linearGradient><pattern id="win" width="8" height="10" patternUnits="userSpaceOnUse"><rect width="8" height="10" fill="none"/><rect x="2" y="2" width="4" height="5" fill="#cfcdc9" opacity=".55"/></pattern></defs><rect width="300" height="150" fill="url(#sky)"/><rect x="8" y="40" width="58" height="110" fill="#4a4846"/><rect x="8" y="40" width="58" height="110" fill="url(#win)"/><rect x="70" y="12" width="44" height="138" fill="#2b2a29"/><rect x="70" y="12" width="44" height="138" fill="url(#win)" opacity=".7"/><rect x="118" y="58" width="66" height="92" fill="#6a6865"/><rect x="118" y="58" width="66" height="92" fill="url(#win)"/><rect x="188" y="28" width="40" height="122" fill="#383736"/><rect x="188" y="28" width="40" height="122" fill="url(#win)" opacity=".8"/><rect x="232" y="70" width="64" height="80" fill="#555351"/><rect x="232" y="70" width="64" height="80" fill="url(#win)"/><rect y="138" width="300" height="12" fill="#1f1e1d"/></svg><div class="card"><b>Mientras dormías</b><span><i>✓</i>38 pedidos conciliados</span><br><span><i>✓</i>Stock revisado</span><br><span><i>✓</i>2 avisos al proveedor</span></div></div>
+          </div>
+          <div class="mesa-key" aria-hidden="true"><i style="background:#F3EEE3; color:#111; box-shadow: inset 0 0 0 1px var(--line-2)">Crema ≈ 70 %</i><i style="background:#111; color:#F3EEE3">Tinta ≈ 22 %</i><i style="background:#D9541E; color:#111"></i></div>
+          <p class="mesa-cap">Proporción aproximada de superficie: el naranja ocupa menos de un 10 %.</p>
+        </div>
+        <ol class="steps">
+          <li><h3>Cuenta los colores y su área</h3><p>Tres colores de verdad. El crema ocupa casi todo; la tinta, los textos y la foto; el naranja, solo el subrayado, el botón y el panel detrás de la foto. La proporción ya te dice quién es la base y quién la voz.</p></li>
+          <li><h3>Hazle las tres preguntas a cada uno</h3><p><strong>Crema</strong> <code>#F3EEE3</code>, <code>oklch(95% 0.016 86)</code>: amarillo anaranjado, muy claro, casi gris. <strong>Tinta</strong> <code>#111111</code>, <code>oklch(18% 0 0)</code>: neutro, muy oscuro, sin llegar al negro puro. <strong>Naranja</strong> <code>#D9541E</code>, <code>oklch(62% 0.178 40)</code>: naranja que tira a rojo, luz media, vivo.</p></li>
+          <li><h3>Mira la temperatura</h3><p>Todo es cálido o neutro: no hay ni un azul. En un SaaS, donde lo habitual es el azul de «software serio», esto es una decisión: la marca se presenta como un compañero de equipo, cercano, no como una herramienta fría.</p></li>
+          <li><h3>Comprueba la luz</h3><p>Tres niveles limpios: 95, 62 y 18. Pasada a grises, la página se lee perfecta. El naranja cae justo en medio, por eso funciona tanto de relleno (el botón, con texto en tinta a 4,7:1) como de línea fina sobre crema.</p></li>
+          <li><h3>Busca dónde está la saturación</h3><p>Solo el naranja es vivo. Y la foto está en blanco y negro precisamente para no competir con él: una foto en color metería verdes, azules y pieles en la misma pantalla y el acento dejaría de ser el único.</p></li>
+          <li><h3>Lee el contexto</h3><p>El crema hace que el naranja parezca más suave y más de la familia que sobre blanco, y el negro no es puro, para que el contraste sea firme sin hacer daño. El resultado es cálido, editorial y seguro de sí mismo, con una sola cosa que pide acción.</p></li>
+        </ol>
+      </div>
+
+      <h3>Tu ficha de lectura</h3>
+      <p>Cada vez que una web te llame la atención, pásale estas preguntas. En diez minutos tendrás algo mejor que una captura en una carpeta de inspiración: sabrás <em>qué</em> copiar.</p>
+      <ol class="ficha">
+        <li>¿Cuántos colores hay de verdad y qué superficie ocupa cada uno?</li>
+        <li>Para cada uno: ¿qué tono, cuánta luz, cuánta saturación?</li>
+        <li>¿Qué temperatura tiene la web y qué color rompe esa temperatura?</li>
+        <li>En grises, ¿cuántos niveles de luz hay y qué se separa de qué?</li>
+        <li>¿Dónde está la saturación y qué se ha apagado para que destaque?</li>
+        <li>¿Cómo cambia el contexto a cada color (fondo, fotos, tamaño)?</li>
+        <li>Resumen en tres palabras: ¿qué transmite y por qué?</li>
+      </ol>
+
+      <div class="callout movil"><span class="t">En el móvil</span>
+        <p>Haz la lectura también en el teléfono, porque las proporciones cambian. En vertical, la foto de la portada suele ocupar media pantalla, el menú se esconde y el botón se vuelve fijo: puede que en el móvil el acento ocupe el doble y la foto mande más que el titular. Una web bien pensada mantiene su jerarquía de color en los dos formatos.</p>
+      </div>
+
+      <section class="recap">
+        <h2 class="no-toc">Resumen</h2>
+        <ol>
+          <li>Todo color se lee con tres preguntas: tono, luz y saturación. La luz es la que más decide.</li>
+          <li>Lo cálido se acerca y lo frío se aleja, por memoria de fuego y de distancia. La temperatura es relativa: un verde, un gris o un blanco pueden ser de las dos.</li>
+          <li>Dos colores con la misma luz se pelean. Si una paleta funciona en grises, funciona en color.</li>
+          <li>Lo saturado es señal y lo apagado es paisaje: mucho apagado y poco vivo, en proporción inversa a su peso.</li>
+          <li>El contexto y el tamaño cambian el color. Nunca lo elijas aislado: elige relaciones, sobre una maqueta.</li>
+        </ol>
+      </section>
+
+      <section class="reto">
+        <h3>Reto</h3>
+        <p>Elige un cliente real de la agencia (una tienda PrestaShop o una empresa local) y busca dos webs de su competencia directa. Pásales la ficha de lectura a las dos y a la del cliente. Después haz la prueba de grises a la portada del cliente con <code>filter: grayscale(1)</code> en DevTools. Escribe en cinco líneas qué tres cambios harías y por qué, usando el vocabulario de esta lección: tono, luz, saturación, temperatura, peso y contexto.</p>
+      </section>
+
+    </article>
+  </div>
+</main>
+<script>
+  // Portada: lámina de Albers. Cambia el estudio o el centro; «Quitar el fondo» revela que es el mismo color.
+  (() => {
+    const STUDIES = [
+      { n: 'I', name: 'Uno parece dos', a: '#E8B537', b: '#3B2A6B', c: '#9B8A93',
+        why: 'Sobre el amarillo, claro y cálido, el centro se oscurece y tira a violeta. Sobre el violeta oscuro se aclara y tira a ocre. El ojo exagera la diferencia con lo que lo rodea.' },
+      { n: 'II', name: 'Luz', a: '#F4F2EE', b: '#1C1B1F', c: '#8E8A86',
+        why: 'Junto al blanco, el gris parece oscuro; junto al negro, casi claro. La luz de un color no es absoluta: se mide contra su vecino.' },
+      { n: 'III', name: 'Temperatura', a: '#E2702F', b: '#2E8C87', c: '#8E8A86',
+        why: 'Un gris neutro se tiñe del contrario de su fondo: azulado sobre el naranja, rosado sobre el verde azulado. Es el contraste simultáneo que describió Chevreul.' },
+      { n: 'IV', name: 'Saturación', a: '#D63A2E', b: '#8F8B88', c: '#C98778',
+        why: 'Junto a un rojo puro, el coral parece desvaído, casi gris. Sobre gris parece vivo y rosado. Lo apagado al lado de lo vivo se apaga todavía más.' },
+    ];
+    const CENTERS = [['Malva gris', '#9B8A93'], ['Gris piedra', '#8E8A86'], ['Coral apagado', '#C98778'], ['Verde gris', '#7F9A8C']];
+    const hero = document.querySelector('.hero'), plate = hero.querySelector('[data-plate]');
+    const $ = (s) => hero.querySelector(s), $$ = (s) => [...hero.querySelectorAll(s)];
+    let si = 0, center = STUDIES[0].c, bare = false;
+
+    function toOklch(hex) {
+      const [r, g, b] = [1, 3, 5].map((i) => { const c = parseInt(hex.slice(i, i + 2), 16) / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+      const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+      const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+      return `oklch(${(L * 100).toFixed(0)}% ${Math.hypot(A, B).toFixed(3)} ${((Math.atan2(B, A) * 180 / Math.PI + 360) % 360).toFixed(0)})`;
+    }
+    function render() {
+      const s = STUDIES[si];
+      plate.style.setProperty('--a', s.a); plate.style.setProperty('--b', s.b); plate.style.setProperty('--c', center);
+      plate.classList.toggle('bare', bare);
+      $('[data-num]').textContent = 'Lámina ' + s.n; $('[data-name]').textContent = s.name;
+      $('[data-val]').textContent = `${center} ${toOklch(center)}`;
+      $('[data-why]').textContent = bare ? 'Sin fondo, la ilusión desaparece: es exactamente el mismo color. Lo que cambiaba era su casa.' : s.why;
+      $$('[data-studies] button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.i === si));
+      $$('[data-centers] button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.c === center));
+      $$('[data-reveal]').forEach((b) => { b.setAttribute('aria-pressed', bare); b.textContent = bare ? 'Devolver el fondo' : 'Quitar el fondo'; });
+    }
+    $$('[data-studies]').forEach((box) => STUDIES.forEach((s, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.dataset.i = i;
+      b.innerHTML = `<b>${s.n}</b>${s.name}`;
+      b.addEventListener('click', () => { si = i; center = s.c; bare = false; touch(); render(); });
+      box.append(b);
+    }));
+    $$('[data-centers]').forEach((box) => CENTERS.forEach(([name, c]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.dataset.c = c; b.style.setProperty('--c', c);
+      b.setAttribute('aria-label', 'Centro ' + name);
+      b.addEventListener('click', () => { center = c; touch(); render(); });
+      box.append(b);
+    }));
+    const toggle = () => { bare = !bare; touch(); render(); };
+    $$('[data-reveal]').forEach((b) => b.addEventListener('click', toggle));
+    plate.addEventListener('click', toggle);
+    function touch() { hero.classList.add('touched'); }
+    render();
+  })();
+</script>
+</body>
+</html>
